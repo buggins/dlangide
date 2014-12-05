@@ -189,6 +189,12 @@
   <filesToClean>*.obj;*.cmd;*.build;*.json;*.dep</filesToClean>
  </Config>
  <Folder name="dlangide">
+  <Folder name="dlangide">
+   <Folder name="ui">
+    <File path="commands.d" />
+    <File path="frame.d" />
+   </Folder>
+  </Folder>
   <File path="src/app.d" />
  </Folder>
 </DProject>

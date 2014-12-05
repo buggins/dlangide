@@ -3,6 +3,7 @@ module app;
 import dlangui.all;
 import std.stdio;
 import std.conv;
+import dlangide.ui.frame;
 
 
 mixin APP_ENTRY_POINT;
@@ -11,10 +12,10 @@ mixin APP_ENTRY_POINT;
 extern (C) int UIAppMain(string[] args) {
     // resource directory search paths
     string[] resourceDirs = [
-        appendPath(exePath, "../../../res/"),   // for Visual D and DUB builds
-        appendPath(exePath, "../../../res/mdpi/"),   // for Visual D and DUB builds
-        appendPath(exePath, "../../../../res/"),// for Mono-D builds
-        appendPath(exePath, "../../../../res/mdpi/"),// for Mono-D builds
+        //appendPath(exePath, "../../../res/"),   // for Visual D and DUB builds
+        //appendPath(exePath, "../../../res/mdpi/"),   // for Visual D and DUB builds
+        //appendPath(exePath, "../../../../res/"),// for Mono-D builds
+        //appendPath(exePath, "../../../../res/mdpi/"),// for Mono-D builds
 		appendPath(exePath, "res/"), // when res dir is located at the same directory as executable
 		appendPath(exePath, "../res/"), // when res dir is located at project directory
 		appendPath(exePath, "../../res/"), // when res dir is located at the same directory as executable
@@ -31,10 +32,10 @@ extern (C) int UIAppMain(string[] args) {
 	Platform.instance.uiTheme = "theme_default";
 
     // create window
-    Window window = Platform.instance.createWindow("My Window", null);
+    Window window = Platform.instance.createWindow("Dlang IDE", null);
 	
     // create some widget to show in window
-    window.mainWidget = (new Button()).text("Hello world"d).margins(Rect(20,20,20,20));
+    window.mainWidget = new IDEFrame(window);
 
     // show window
     window.show();
