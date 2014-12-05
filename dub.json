@@ -1,0 +1,29 @@
+{
+    "name": "dlangide",
+    "description": "trying to make D language IDE based on dlangui library",
+    "homepage": "https://github.com/buggins/dlangide",
+    "license": "Boost",
+    "authors": ["Vadim Lopatin"],
+
+    "targetName": "dlangide",
+    "targetPath": "bin",
+    "targetType": "executable",
+
+    "sourcePaths": ["src"],
+
+    "sourceFiles": [
+         "src/app.d"
+    ],
+
+    "copyFiles-windows": [
+        "lib/FreeImage.dll",
+    ],
+
+    "mainSourceFile": "src/app.d",
+
+    "libs-windows": ["dlanguilib", "phobos", "ole32", "kernel32", "user32", "comctl32", "comdlg32"],
+
+    "dependencies": {
+        "dlangui:dlanguilib": "~master"
+    }
+}
