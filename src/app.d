@@ -12,16 +12,18 @@ mixin APP_ENTRY_POINT;
 extern (C) int UIAppMain(string[] args) {
     // resource directory search paths
     string[] resourceDirs = [
-        //appendPath(exePath, "../../../res/"),   // for Visual D and DUB builds
-        //appendPath(exePath, "../../../res/mdpi/"),   // for Visual D and DUB builds
-        //appendPath(exePath, "../../../../res/"),// for Mono-D builds
-        //appendPath(exePath, "../../../../res/mdpi/"),// for Mono-D builds
 		appendPath(exePath, "res/"), // when res dir is located at the same directory as executable
 		appendPath(exePath, "../res/"), // when res dir is located at project directory
 		appendPath(exePath, "../../res/"), // when res dir is located at the same directory as executable
 		appendPath(exePath, "res/mdpi/"), // when res dir is located at the same directory as executable
 		appendPath(exePath, "../res/mdpi/"), // when res dir is located at project directory
-		appendPath(exePath, "../../res/mdpi/") // when res dir is located at the same directory as executable
+		appendPath(exePath, "../../res/mdpi/"), // when res dir is located at the same directory as executable
+        appendPath(exePath, "res/stdres/"), // when res dir is located at the same directory as executable
+		appendPath(exePath, "../res/stdres/"), // when res dir is located at project directory
+		appendPath(exePath, "../../res/stdres/"), // when res dir is located at the same directory as executable
+		appendPath(exePath, "res/stdres/mdpi/"), // when res dir is located at the same directory as executable
+		appendPath(exePath, "../res/stdres/mdpi/"), // when res dir is located at project directory
+		appendPath(exePath, "../../res/stdres/mdpi/") // when res dir is located at the same directory as executable
 	];
 
     // setup resource directories - will use only existing directories

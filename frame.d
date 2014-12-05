@@ -5,6 +5,8 @@ import dlangui.widgets.tabs;
 import dlangui.widgets.layouts;
 import dlangui.widgets.editors;
 import dlangui.widgets.controls;
+import dlangui.dialogs.dialog;
+import dlangui.dialogs.filedlg;
 
 import std.conv;
 
@@ -13,10 +15,11 @@ enum : int {
     ACTION_FILE_SAVE,
     ACTION_FILE_CLOSE,
     ACTION_FILE_EXIT,
+    ACTION_HELP_ABOUT,
 }
 
 
-class IDEFrame : VerticalLayout {
+class IDEFrame : VerticalLayout, MenuItemClickHandler {
 
     MainMenu mainMenu;
     MenuItem mainMenuItems;
@@ -35,6 +38,7 @@ class IDEFrame : VerticalLayout {
     }
 
     void createTabs() {
+        // editor tabs
         TabWidget tabs = new TabWidget("TABS");
         tabs.layoutWidth = FILL_PARENT;
         tabs.layoutHeight = FILL_PARENT;
@@ -49,7 +53,7 @@ class IDEFrame : VerticalLayout {
         editBox.minFontSize(12).maxFontSize(75); // allow font zoom with Ctrl + MouseWheel
 		editors.addChild(editBox);
 		//editBox.popupMenu = editPopupItem;
-        tabs.addTab(editors, "TAB_EDITORS"c);
+        tabs.addTab(editors, "Sample"d);
 
         addChild(tabs);
 
@@ -74,7 +78,7 @@ class IDEFrame : VerticalLayout {
         windowItem.add(new Action(30, "MENU_WINDOW_PREFERENCES"));
         MenuItem helpItem = new MenuItem(new Action(4, "MENU_HELP"c));
         helpItem.add(new Action(40, "MENU_HELP_VIEW_HELP"));
-		MenuItem aboutItem = new MenuItem(new Action(41, "MENU_HELP_ABOUT"));
+		MenuItem aboutItem = new MenuItem(new Action(ACTION_HELP_ABOUT, "MENU_HELP_ABOUT"));
         helpItem.add(aboutItem);
 		aboutItem.onMenuItemClick = delegate(MenuItem item) {
 			Window wnd = Platform.instance.createWindow("About...", window, WindowFlag.Modal);
@@ -89,9 +93,42 @@ class IDEFrame : VerticalLayout {
         mainMenuItems.add(helpItem);
         mainMenu = new MainMenu(mainMenuItems);
         addChild(mainMenu);
+
+		mainMenu.onMenuItemClickListener = this;
+
+    }
+	
+    override bool onMenuItemClick(MenuItem item) {
+        Log.d("mainMenu.onMenuItemListener", item.label);
+        const Action a = item.action;
+        if (a) {
+            switch (a.id) {
+                case ACTION_FILE_EXIT:
+                    return true;
+                case ACTION_HELP_ABOUT:
+                    Window wnd = Platform.instance.createWindow("About...", window, WindowFlag.Modal);
+                    wnd.mainWidget = createAboutWidget();
+                    wnd.show();
+                    return true;
+                case ACTION_FILE_OPEN:
+                    UIString caption;
+                    caption = "Open Text File"d;
+                    FileDialog dlg = new FileDialog(caption, window);
+                    dlg.onDialogResult = delegate(Dialog dlg, Action result) {
+                        //
+                    };
+                    dlg.show();
+                    return true;
+                default:
+                    if (window.focusedWidget)
+                        return window.focusedWidget.handleAction(a);
+                    else
+                        return handleAction(a);
+            }
+        }
+        return false;
     }
 }
-
 
 Widget createAboutWidget() 
 {
