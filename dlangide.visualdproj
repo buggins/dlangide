@@ -191,8 +191,8 @@
  <Folder name="dlangide">
   <Folder name="dlangide">
    <Folder name="ui">
-    <File path="commands.d" />
-    <File path="frame.d" />
+    <File path="src/dlangide/ui/commands.d" />
+    <File path="src/dlangide/ui/frame.d" />
    </Folder>
   </Folder>
   <File path="src/app.d" />
