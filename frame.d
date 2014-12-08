@@ -8,6 +8,8 @@ import dlangui.widgets.controls;
 import dlangui.dialogs.dialog;
 import dlangui.dialogs.filedlg;
 
+import dlangide.ui.commands;
+
 import std.conv;
 
 enum : int {

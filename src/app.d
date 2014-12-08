@@ -4,6 +4,7 @@ import dlangui.all;
 import std.stdio;
 import std.conv;
 import dlangide.ui.frame;
+import dlangide.ui.commands;
 
 
 mixin APP_ENTRY_POINT;
