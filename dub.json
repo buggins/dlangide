@@ -23,6 +23,10 @@
         "res"
     ],
 
+    "versions-posix": [
+        "USE_SDL", "USE_OPENGL"
+    ],
+
     "mainSourceFile": "src/app.d",
 
     "dependencies": {
