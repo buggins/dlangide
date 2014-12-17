@@ -16,7 +16,11 @@
     ],
 
     "copyFiles-windows": [
-        "lib/FreeImage.dll",
+        "lib/FreeImage.dll"
+    ],
+
+    "copyFiles": [
+        "res"
     ],
 
     "mainSourceFile": "src/app.d",
