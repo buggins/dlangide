@@ -116,7 +116,7 @@ class IDEFrame : VerticalLayout, MenuItemClickHandler {
                     UIString caption;
                     caption = "Open Text File"d;
                     FileDialog dlg = new FileDialog(caption, window, null);
-                    dlg.onDialogResult = delegate(Dialog dlg, Action result) {
+                    dlg.onDialogResult = delegate(Dialog dlg, const Action result) {
                         //
                     };
                     dlg.show();
