@@ -5,8 +5,8 @@ Trying to write D language IDE using dlangUI library.
 
 Build and run with DUB:
 
-	git clone git@github.com:buggins/dlangide.git
-	cd dlang ide
+	git clone https://github.com/buggins/dlangide.git
+	cd dlangide
 	dub run
 
 To develop in VisualD together with DlangUI, put this project on the same level as dlangui repository, and dependencies.
