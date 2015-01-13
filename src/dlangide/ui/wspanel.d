@@ -2,6 +2,7 @@ module dlangide.ui.wspanel;
 
 import dlangui.all;
 import dlangide.workspace.workspace;
+import dlangide.workspace.project;
 
 class WorkspacePanel : VerticalLayout {
     protected Workspace _workspace;
@@ -21,6 +22,20 @@ class WorkspacePanel : VerticalLayout {
         return _workspace;
     }
 
+    void addProjectItems(TreeItem root, ProjectItem items) {
+        for (int i = 0; i < items.childCount; i++) {
+            ProjectItem child = items.child(i);
+            if (child.isFolder) {
+                TreeItem p = root.newChild(child.filename, child.name, "folder");
+                p.objectParam = child;
+                addProjectItems(p, child);
+            } else {
+                TreeItem p = root.newChild(child.filename, child.name, "text-plain");
+                p.objectParam = child;
+            }
+        }
+    }
+
     @property void workspace(Workspace w) {
         _workspace = w;
         _tree.requestLayout();
@@ -29,6 +44,7 @@ class WorkspacePanel : VerticalLayout {
             TreeItem root = _tree.items.newChild(w.filename, w.name, "project-development");
             foreach(project; w.projects) {
                 TreeItem p = root.newChild(project.filename, project.name, "project-open");
+                addProjectItems(p, project.items);
             }
         } else {
             _tree.items.newChild("none", "New workspace"d, "project-development");

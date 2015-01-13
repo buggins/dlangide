@@ -66,7 +66,7 @@ class ProjectFolder : ProjectItem {
     }
 
     @property override bool isFolder() {
-        return false;
+        return true;
     }
     @property override int childCount() {
         return _children.count;
@@ -78,13 +78,14 @@ class ProjectFolder : ProjectItem {
     void addChild(ProjectItem item) {
         _children.add(item);
         item._parent = this;
-        item._project = this;
+        item._project = _project;
     }
     bool loadDir(string path) {
         string src = relativeToAbsolutePath(path);
-        if (isDir(src) && exists(src)) {
+        if (exists(src) && isDir(src)) {
             ProjectFolder dir = new ProjectFolder(src);
             addChild(dir);
+            Log.d("    added project folder ", src);
             dir.loadItems();
             return true;
         }
@@ -92,9 +93,10 @@ class ProjectFolder : ProjectItem {
     }
     bool loadFile(string path) {
         string src = relativeToAbsolutePath(path);
-        if (isFile(src) && exists(src)) {
+        if (exists(src) && isFile(src)) {
             ProjectSourceFile f = new ProjectSourceFile(src);
             addChild(f);
+            Log.d("    added project file ", src);
             return true;
         }
         return false;
@@ -194,6 +196,10 @@ class Project : WorkspaceItem {
         if (isAbsolute(path))
             return path;
         return buildNormalizedPath(_dir, path);
+    }
+
+    @property ProjectFolder items() {
+        return _items;
     }
 
     @property Workspace workspace() {
