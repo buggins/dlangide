@@ -10,6 +10,7 @@ class WorkspacePanel : VerticalLayout {
     this(string id) {
         super(id);
         layoutHeight = FILL_PARENT;
+        layoutWidth = 200;
         _tree = new TreeWidget("wstree");
         _tree.layoutHeight = FILL_PARENT;
         addChild(_tree);
