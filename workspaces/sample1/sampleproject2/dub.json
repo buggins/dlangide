@@ -7,5 +7,5 @@
 
     "targetName": "sample2",
     "targetPath": "bin",
-    "targetType": "executable",
+    "targetType": "executable"
 }

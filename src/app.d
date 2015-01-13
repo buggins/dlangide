@@ -5,6 +5,7 @@ import std.stdio;
 import std.conv;
 import dlangide.ui.frame;
 import dlangide.ui.commands;
+import dlangide.workspace.workspace;
 
 
 mixin APP_ENTRY_POINT;
@@ -39,6 +40,10 @@ extern (C) int UIAppMain(string[] args) {
 	
     // create some widget to show in window
     window.mainWidget = new IDEFrame(window);
+
+    // testing workspace loader
+    Workspace ws = new Workspace();
+    ws.load(appendPath(exePath, "../workspaces/sample1/sample1.dlangidews"));
 
     // show window
     window.show();
