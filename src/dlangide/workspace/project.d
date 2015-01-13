@@ -33,6 +33,26 @@ class WorkspaceItem {
         }
     }
 
+    /// name
+    @property dstring name() {
+        return _name;
+    }
+
+    /// name
+    @property void name(dstring s) {
+        _name = s;
+    }
+
+    /// name
+    @property dstring description() {
+        return _description;
+    }
+
+    /// name
+    @property void description(dstring s) {
+        _description = s;
+    }
+
     /// load
     bool load(string fname) {
         // override it

@@ -66,7 +66,7 @@
   <debuglevel>0</debuglevel>
   <debugids />
   <versionlevel>0</versionlevel>
-  <versionids>USE_SDL USE_OPENGL</versionids>
+  <versionids>Unicode USE_OPENGL</versionids>
   <dump_source>0</dump_source>
   <mapverbosity>3</mapverbosity>
   <createImplib>0</createImplib>
@@ -190,15 +190,16 @@
  </Config>
  <Folder name="dlangide">
   <Folder name="dlangide">
+   <Folder name="ui">
+    <File path="src\dlangide\ui\commands.d" />
+    <File path="src\dlangide\ui\frame.d" />
+    <File path="src\dlangide\ui\wspanel.d" />
+   </Folder>
    <Folder name="workspace">
     <File path="src\dlangide\workspace\project.d" />
     <File path="src\dlangide\workspace\workspace.d" />
    </Folder>
-   <Folder name="ui">
-    <File path="src/dlangide/ui/commands.d" />
-    <File path="src/dlangide/ui/frame.d" />
-   </Folder>
   </Folder>
-  <File path="src/app.d" />
+  <File path="src\app.d" />
  </Folder>
 </DProject>

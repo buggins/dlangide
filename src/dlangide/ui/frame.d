@@ -9,6 +9,8 @@ import dlangui.dialogs.dialog;
 import dlangui.dialogs.filedlg;
 
 import dlangide.ui.commands;
+import dlangide.ui.wspanel;
+import dlangide.workspace.workspace;
 
 import std.conv;
 
@@ -25,6 +27,7 @@ class IDEFrame : VerticalLayout, MenuItemClickHandler {
 
     MainMenu mainMenu;
     MenuItem mainMenuItems;
+    WorkspacePanel _wsPanel;
 
     this(Window window) {
         super("IDEFrame");
@@ -33,11 +36,14 @@ class IDEFrame : VerticalLayout, MenuItemClickHandler {
         createMenu();
         createTabs();
 
+
         layoutWidth = FILL_PARENT;
         layoutHeight = FILL_PARENT;
 
         //window.mainWidget = this;
     }
+
+    
 
     void createTabs() {
         // editor tabs
@@ -45,6 +51,9 @@ class IDEFrame : VerticalLayout, MenuItemClickHandler {
         tabs.layoutWidth = FILL_PARENT;
         tabs.layoutHeight = FILL_PARENT;
 
+        _wsPanel = new WorkspacePanel("workspace");
+        HorizontalLayout wsLayout = new HorizontalLayout();
+        wsLayout.layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT);
 
 		// create Editors test tab
 		VerticalLayout editors = new VerticalLayout("editors");
@@ -57,7 +66,10 @@ class IDEFrame : VerticalLayout, MenuItemClickHandler {
 		//editBox.popupMenu = editPopupItem;
         tabs.addTab(editors, "Sample"d);
 
-        addChild(tabs);
+        wsLayout.addChild(tabs);
+        wsLayout.addChild(new ResizerWidget("wsresizer"));
+        wsLayout.addChild(_wsPanel);
+        addChild(wsLayout);
 
 		tabs.selectTab("editors");
 
@@ -129,6 +141,15 @@ class IDEFrame : VerticalLayout, MenuItemClickHandler {
             }
         }
         return false;
+    }
+
+    bool loadWorkspace(string path) {
+        // testing workspace loader
+        Workspace ws = new Workspace();
+        ws.load(path);
+        currentWorkspace = ws;
+        _wsPanel.workspace = ws;
+        return true;
     }
 }
 

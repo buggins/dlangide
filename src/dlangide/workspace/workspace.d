@@ -27,6 +27,10 @@ class Workspace : WorkspaceItem {
         super(fname);
     }
 
+    @property Project[] projects() {
+        return _projects;
+    }
+
     override bool load(string fname = null) {
         if (fname.length > 0)
             filename = fname;
@@ -62,4 +66,9 @@ class Workspace : WorkspaceItem {
         }
         return true;
     }
+    void close() {
+    }
 }
+
+/// global workspace
+__gshared Workspace currentWorkspace;
