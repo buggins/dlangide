@@ -1,11 +1,14 @@
 module dlangide.ui.commands;
 
+import dlangui.core.events;
+
 enum IDEActions : int {
     None = 0,
-    FileOpen = 10000,
+    ProjectOpen = 1010000,
+    FileOpen,
     FileClose,
     FileExit,
-    EditCopy = 11000,
+    EditCopy = 1011000,
     EditPaste,
     EditCut,
     EditUndo,

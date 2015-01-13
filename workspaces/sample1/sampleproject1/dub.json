@@ -1,0 +1,11 @@
+{
+    "name": "sampleproject1",
+    "description": "dlangide sample project 1",
+    "homepage": "https://github.com/buggins/dlangide",
+    "license": "Boost",
+    "authors": ["Vadim Lopatin"],
+
+    "targetName": "sample1",
+    "targetPath": "bin",
+    "targetType": "executable",
+}
