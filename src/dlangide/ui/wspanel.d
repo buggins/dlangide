@@ -4,18 +4,21 @@ import dlangui.all;
 import dlangide.workspace.workspace;
 import dlangide.workspace.project;
 
-class WorkspacePanel : VerticalLayout {
+class WorkspacePanel : DockWindow {
     protected Workspace _workspace;
     protected TreeWidget _tree;
 
     this(string id) {
         super(id);
-        layoutHeight = FILL_PARENT;
+        workspace = null;
         layoutWidth = 200;
+        _caption.text = "Workspace Explorer"d;
+    }
+
+    override protected Widget createBodyWidget() {
         _tree = new TreeWidget("wstree");
         _tree.layoutHeight = FILL_PARENT;
-        addChild(_tree);
-        workspace = null;
+        return _tree;
     }
 
     @property Workspace workspace() {
