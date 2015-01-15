@@ -5,6 +5,7 @@ import dlangui.widgets.tabs;
 import dlangui.widgets.layouts;
 import dlangui.widgets.editors;
 import dlangui.widgets.controls;
+import dlangui.widgets.appframe;
 import dlangui.dialogs.dialog;
 import dlangui.dialogs.filedlg;
 
@@ -23,29 +24,22 @@ enum : int {
 }
 
 
-class IDEFrame : VerticalLayout, MenuItemClickHandler {
+class IDEFrame : AppFrame {
 
-    MainMenu mainMenu;
     MenuItem mainMenuItems;
     WorkspacePanel _wsPanel;
 
     this(Window window) {
-        super("IDEFrame");
-
-
-        createMenu();
-        createTabs();
-
-
-        layoutWidth = FILL_PARENT;
-        layoutHeight = FILL_PARENT;
-
-        //window.mainWidget = this;
+        super();
     }
 
-    
+    override protected void init() {
+        super.init();
+    }
 
-    void createTabs() {
+
+    /// create app body widget
+    override protected Widget createBody() {
         // editor tabs
         TabWidget tabs = new TabWidget("TABS");
         tabs.layoutWidth = FILL_PARENT;
@@ -69,13 +63,13 @@ class IDEFrame : VerticalLayout, MenuItemClickHandler {
         wsLayout.addChild(tabs);
         wsLayout.addChild(new ResizerWidget("wsresizer"));
         wsLayout.addChild(_wsPanel);
-        addChild(wsLayout);
-
 		tabs.selectTab("editors");
-
+        return wsLayout;
     }
 
-    void createMenu() {
+    /// create main menu
+    override protected MainMenu createMainMenu() {
+
         mainMenuItems = new MenuItem();
         MenuItem fileItem = new MenuItem(new Action(1, "MENU_FILE"));
         fileItem.add(new Action(ACTION_FILE_OPEN, "MENU_FILE_OPEN"c, "document-open", KeyCode.KEY_O, KeyFlag.Control));
@@ -105,11 +99,9 @@ class IDEFrame : VerticalLayout, MenuItemClickHandler {
 		//mainMenuItems.add(viewItem);
 		mainMenuItems.add(windowItem);
         mainMenuItems.add(helpItem);
-        mainMenu = new MainMenu(mainMenuItems);
-        addChild(mainMenu);
 
-		mainMenu.onMenuItemClickListener = this;
-
+        MainMenu mainMenu = new MainMenu(mainMenuItems);
+        return mainMenu;
     }
 	
     override bool onMenuItemClick(MenuItem item) {
