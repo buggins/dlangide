@@ -6,6 +6,7 @@ import dlangui.widgets.layouts;
 import dlangui.widgets.editors;
 import dlangui.widgets.controls;
 import dlangui.widgets.appframe;
+import dlangui.widgets.docks;
 import dlangui.dialogs.dialog;
 import dlangui.dialogs.filedlg;
 
@@ -28,6 +29,7 @@ class IDEFrame : AppFrame {
 
     MenuItem mainMenuItems;
     WorkspacePanel _wsPanel;
+    DockHost _dockHost;
 
     this(Window window) {
         super();
@@ -40,15 +42,15 @@ class IDEFrame : AppFrame {
 
     /// create app body widget
     override protected Widget createBody() {
+        _dockHost = new DockHost();
+
+        //=============================================================
+        // Create body - Tabs
+
         // editor tabs
         TabWidget tabs = new TabWidget("TABS");
-        tabs.layoutWidth = FILL_PARENT;
-        tabs.layoutHeight = FILL_PARENT;
-
-        _wsPanel = new WorkspacePanel("workspace");
-        HorizontalLayout wsLayout = new HorizontalLayout();
-        wsLayout.layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT);
-
+        tabs.styleId = STYLE_DOCK_HOST_BODY;
+        
 		// create Editors test tab
 		VerticalLayout editors = new VerticalLayout("editors");
         editors.layoutWidth = FILL_PARENT;
@@ -59,12 +61,17 @@ class IDEFrame : AppFrame {
 		editors.addChild(editBox);
 		//editBox.popupMenu = editPopupItem;
         tabs.addTab(editors, "Sample"d);
-
-        wsLayout.addChild(tabs);
-        wsLayout.addChild(new ResizerWidget("wsresizer"));
-        wsLayout.addChild(_wsPanel);
 		tabs.selectTab("editors");
-        return wsLayout;
+
+
+        _dockHost.bodyWidget = tabs;
+
+        //=============================================================
+        // Create workspace docked panel
+        _wsPanel = new WorkspacePanel("workspace");
+        _dockHost.addDockedWindow(_wsPanel);
+
+        return _dockHost;
     }
 
     /// create main menu
