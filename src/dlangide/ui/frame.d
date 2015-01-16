@@ -27,6 +27,7 @@ class IDEFrame : AppFrame {
 
     this(Window window) {
         super();
+        window.mainWidget = this;
     }
 
     override protected void init() {
@@ -46,16 +47,20 @@ class IDEFrame : AppFrame {
         tabs.styleId = STYLE_DOCK_HOST_BODY;
         
 		// create Editors test tab
-		VerticalLayout editors = new VerticalLayout("editors");
-        editors.layoutWidth = FILL_PARENT;
-        editors.layoutHeight = FILL_PARENT;
+		//VerticalLayout editors = new VerticalLayout("editors");
+        //editors.layoutWidth = FILL_PARENT;
+        //editors.layoutHeight = FILL_PARENT;
         EditBox editBox = new EditBox("editbox1", "Some text\nSecond line\nYet another line\n\n\tforeach(s;lines);\n\t\twriteln(s);\n"d);
+        editBox.enabled = true;
         editBox.layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT);
         editBox.minFontSize(12).maxFontSize(75); // allow font zoom with Ctrl + MouseWheel
-		editors.addChild(editBox);
+        editBox.fontFamily = FontFamily.MonoSpace;
+        editBox.focusable = true;
+		//editors.addChild(editBox);
 		//editBox.popupMenu = editPopupItem;
-        tabs.addTab(editors, "Sample"d);
-		tabs.selectTab("editors");
+        tabs.addTab(editBox, "Sample"d);
+        //tabs.addTab(editors, "Sample"d);
+		tabs.selectTab("editbox1");
 
 
         _dockHost.bodyWidget = tabs;
@@ -73,15 +78,11 @@ class IDEFrame : AppFrame {
 
         mainMenuItems = new MenuItem();
         MenuItem fileItem = new MenuItem(new Action(1, "MENU_FILE"));
-        fileItem.add(ACTION_FILE_OPEN);
-		fileItem.add(ACTION_FILE_SAVE);
-		fileItem.add(ACTION_FILE_EXIT);
+        fileItem.add(ACTION_FILE_NEW, ACTION_FILE_OPEN, ACTION_FILE_SAVE, ACTION_FILE_EXIT);
+
         MenuItem editItem = new MenuItem(new Action(2, "MENU_EDIT"));
-		editItem.add(new Action(EditorActions.Copy, "MENU_EDIT_COPY"c, "edit-copy", KeyCode.KEY_C, KeyFlag.Control));
-		editItem.add(new Action(EditorActions.Paste, "MENU_EDIT_PASTE"c, "edit-paste", KeyCode.KEY_V, KeyFlag.Control));
-		editItem.add(new Action(EditorActions.Cut, "MENU_EDIT_CUT"c, "edit-cut", KeyCode.KEY_X, KeyFlag.Control));
-		editItem.add(new Action(EditorActions.Undo, "MENU_EDIT_UNDO"c, "edit-undo", KeyCode.KEY_Z, KeyFlag.Control));
-		editItem.add(new Action(EditorActions.Redo, "MENU_EDIT_REDO"c, "edit-redo", KeyCode.KEY_Y, KeyFlag.Control));
+		editItem.add(ACTION_EDIT_COPY, ACTION_EDIT_PASTE, ACTION_EDIT_CUT, ACTION_EDIT_UNDO, ACTION_EDIT_REDO);
+
 		editItem.add(new Action(20, "MENU_EDIT_PREFERENCES"));
 		MenuItem windowItem = new MenuItem(new Action(3, "MENU_WINDOW"c));
         windowItem.add(new Action(30, "MENU_WINDOW_PREFERENCES"));
@@ -111,7 +112,8 @@ class IDEFrame : AppFrame {
         ToolBarHost res = new ToolBarHost();
         ToolBar tb;
         tb = res.getOrAddToolbar("Standard");
-        tb.addButtons(ACTION_FILE_OPEN, ACTION_FILE_SAVE, ACTION_SEPARATOR, ACTION_FILE_EXIT);
+        tb.addButtons(ACTION_FILE_OPEN, ACTION_FILE_SAVE, ACTION_SEPARATOR, 
+                      ACTION_EDIT_COPY, ACTION_EDIT_PASTE, ACTION_EDIT_CUT);
         return res;
     }
 

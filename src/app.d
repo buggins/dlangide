@@ -41,7 +41,6 @@ extern (C) int UIAppMain(string[] args) {
     IDEFrame frame = new IDEFrame(window);
 
     // create some widget to show in window
-    window.mainWidget = frame;
     window.windowIcon = drawableCache.getImage("dlangui-logo1");
 
     frame.loadWorkspace(appendPath(exePath, "../workspaces/sample1/sample1.dlangidews"));
