@@ -44,6 +44,7 @@ class IDEFrame : AppFrame {
 
         // editor tabs
         TabWidget tabs = new TabWidget("TABS");
+        tabs.setStyles("TAB_UP_DARK", "TAB_UP_BUTTON_DARK", "TAB_UP_BUTTON_DARK_TEXT");
         tabs.styleId = STYLE_DOCK_HOST_BODY;
         
 		// create Editors test tab
