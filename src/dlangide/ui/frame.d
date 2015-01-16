@@ -7,6 +7,7 @@ import dlangui.widgets.editors;
 import dlangui.widgets.controls;
 import dlangui.widgets.appframe;
 import dlangui.widgets.docks;
+import dlangui.widgets.toolbars;
 import dlangui.dialogs.dialog;
 import dlangui.dialogs.filedlg;
 
@@ -16,13 +17,6 @@ import dlangide.workspace.workspace;
 
 import std.conv;
 
-enum : int {
-    ACTION_FILE_OPEN = 5500,
-    ACTION_FILE_SAVE,
-    ACTION_FILE_CLOSE,
-    ACTION_FILE_EXIT,
-    ACTION_HELP_ABOUT,
-}
 
 
 class IDEFrame : AppFrame {
@@ -79,9 +73,9 @@ class IDEFrame : AppFrame {
 
         mainMenuItems = new MenuItem();
         MenuItem fileItem = new MenuItem(new Action(1, "MENU_FILE"));
-        fileItem.add(new Action(ACTION_FILE_OPEN, "MENU_FILE_OPEN"c, "document-open", KeyCode.KEY_O, KeyFlag.Control));
-		fileItem.add(new Action(ACTION_FILE_SAVE, "MENU_FILE_SAVE"c, "document-save", KeyCode.KEY_S, KeyFlag.Control));
-		fileItem.add(new Action(ACTION_FILE_EXIT, "MENU_FILE_EXIT"c, "document-close"c, KeyCode.KEY_X, KeyFlag.Alt));
+        fileItem.add(ACTION_FILE_OPEN);
+		fileItem.add(ACTION_FILE_SAVE);
+		fileItem.add(ACTION_FILE_EXIT);
         MenuItem editItem = new MenuItem(new Action(2, "MENU_EDIT"));
 		editItem.add(new Action(EditorActions.Copy, "MENU_EDIT_COPY"c, "edit-copy", KeyCode.KEY_C, KeyFlag.Control));
 		editItem.add(new Action(EditorActions.Paste, "MENU_EDIT_PASTE"c, "edit-paste", KeyCode.KEY_V, KeyFlag.Control));
@@ -108,22 +102,32 @@ class IDEFrame : AppFrame {
         mainMenuItems.add(helpItem);
 
         MainMenu mainMenu = new MainMenu(mainMenuItems);
+        mainMenu.backgroundColor = 0xd6dbe9;
         return mainMenu;
     }
 	
+    /// create app toolbars
+    override protected ToolBarHost createToolbars() {
+        ToolBarHost res = new ToolBarHost();
+        ToolBar tb;
+        tb = res.getOrAddToolbar("Standard");
+        tb.addButtons(ACTION_FILE_OPEN, ACTION_FILE_SAVE, ACTION_SEPARATOR, ACTION_FILE_EXIT);
+        return res;
+    }
+
     override bool onMenuItemClick(MenuItem item) {
         Log.d("mainMenu.onMenuItemListener", item.label);
         const Action a = item.action;
         if (a) {
             switch (a.id) {
-                case ACTION_FILE_EXIT:
+                case IDEActions.FileExit:
                     return true;
                 case ACTION_HELP_ABOUT:
                     Window wnd = Platform.instance.createWindow("About...", window, WindowFlag.Modal);
                     wnd.mainWidget = createAboutWidget();
                     wnd.show();
                     return true;
-                case ACTION_FILE_OPEN:
+                case IDEActions.FileOpen:
                     UIString caption;
                     caption = "Open Text File"d;
                     FileDialog dlg = new FileDialog(caption, window, null);

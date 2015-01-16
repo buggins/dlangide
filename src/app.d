@@ -39,10 +39,12 @@ extern (C) int UIAppMain(string[] args) {
     Window window = Platform.instance.createWindow("Dlang IDE", null);
 	
     IDEFrame frame = new IDEFrame(window);
-    frame.loadWorkspace(appendPath(exePath, "../workspaces/sample1/sample1.dlangidews"));
+
     // create some widget to show in window
     window.mainWidget = frame;
+    window.windowIcon = drawableCache.getImage("dlangui-logo1");
 
+    frame.loadWorkspace(appendPath(exePath, "../workspaces/sample1/sample1.dlangidews"));
 
     // show window
     window.show();
