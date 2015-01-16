@@ -52,7 +52,6 @@ class IDEFrame : AppFrame {
         //editors.layoutWidth = FILL_PARENT;
         //editors.layoutHeight = FILL_PARENT;
         EditBox editBox = new EditBox("editbox1", "Some text\nSecond line\nYet another line\n\n\tforeach(s;lines);\n\t\twriteln(s);\n"d);
-        editBox.enabled = true;
         editBox.layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT);
         editBox.minFontSize(12).maxFontSize(75); // allow font zoom with Ctrl + MouseWheel
         editBox.fontFamily = FontFamily.MonoSpace;
@@ -60,6 +59,16 @@ class IDEFrame : AppFrame {
 		//editors.addChild(editBox);
 		//editBox.popupMenu = editPopupItem;
         tabs.addTab(editBox, "Sample"d);
+
+        EditBox editBox2 = new EditBox("editboxw", "Second tab editor"d);
+        editBox2.layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT);
+        editBox2.minFontSize(12).maxFontSize(75); // allow font zoom with Ctrl + MouseWheel
+        editBox2.fontFamily = FontFamily.MonoSpace;
+        editBox2.focusable = true;
+		//editors.addChild(editBox);
+		//editBox.popupMenu = editPopupItem;
+        tabs.addTab(editBox2, "Sample text 2"d);
+
         //tabs.addTab(editors, "Sample"d);
 		tabs.selectTab("editbox1");
 
