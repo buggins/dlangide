@@ -117,9 +117,8 @@ class IDEFrame : AppFrame {
         return res;
     }
 
-    override bool onMenuItemClick(MenuItem item) {
-        Log.d("mainMenu.onMenuItemListener", item.label);
-        const Action a = item.action;
+    /// override to handle specific actions
+	override bool handleAction(const Action a) {
         if (a) {
             switch (a.id) {
                 case IDEActions.FileExit:
@@ -145,8 +144,8 @@ class IDEFrame : AppFrame {
                         return handleAction(a);
             }
         }
-        return false;
-    }
+		return false;
+	}
 
     bool loadWorkspace(string path) {
         // testing workspace loader
