@@ -11,13 +11,13 @@ class WorkspacePanel : DockWindow {
     this(string id) {
         super(id);
         workspace = null;
-        layoutWidth = 200;
+        //layoutWidth = 200;
         _caption.text = "Workspace Explorer"d;
     }
 
     override protected Widget createBodyWidget() {
         _tree = new TreeWidget("wstree");
-        _tree.layoutHeight = FILL_PARENT;
+        _tree.layoutHeight(FILL_PARENT).layoutHeight(FILL_PARENT);
         return _tree;
     }
 

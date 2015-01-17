@@ -17,7 +17,23 @@ import dlangide.workspace.workspace;
 
 import std.conv;
 
-
+class SourceEdit : EditBox {
+	this(string ID) {
+		super(ID);
+		styleId = null;
+		fontFamily = FontFamily.MonoSpace;
+		fontFace = "Consolas Bold,Consolas,Courier New";
+		fontSize = 20;
+		fontWeight = 800;
+		backgroundColor = 0xFFFFFF;
+		layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT);
+        minFontSize(12).maxFontSize(75); // allow font zoom with Ctrl + MouseWheel
+        //focusable = true;
+	}
+	this() {
+		this("SRCEDIT");
+	}
+}
 
 class IDEFrame : AppFrame {
 
@@ -51,20 +67,14 @@ class IDEFrame : AppFrame {
 		//VerticalLayout editors = new VerticalLayout("editors");
         //editors.layoutWidth = FILL_PARENT;
         //editors.layoutHeight = FILL_PARENT;
-        EditBox editBox = new EditBox("editbox1", "Some text\nSecond line\nYet another line\n\n\tforeach(s;lines);\n\t\twriteln(s);\n"d);
-        editBox.layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT);
-        editBox.minFontSize(12).maxFontSize(75); // allow font zoom with Ctrl + MouseWheel
-        editBox.fontFamily = FontFamily.MonoSpace;
-        editBox.focusable = true;
+        EditBox editBox = new SourceEdit("editbox1");
+		editBox.text = "Some text\nSecond line\nYet another line\n\n\tforeach(s;lines);\n\t\twriteln(s);\n"d;
 		//editors.addChild(editBox);
 		//editBox.popupMenu = editPopupItem;
         tabs.addTab(editBox, "Sample"d);
 
-        EditBox editBox2 = new EditBox("editboxw", "Second tab editor"d);
-        editBox2.layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT);
-        editBox2.minFontSize(12).maxFontSize(75); // allow font zoom with Ctrl + MouseWheel
-        editBox2.fontFamily = FontFamily.MonoSpace;
-        editBox2.focusable = true;
+        EditBox editBox2 = new SourceEdit("editbox2");
+		editBox2.text = "Second tab editor\n\nBlah Blah."d;
 		//editors.addChild(editBox);
 		//editBox.popupMenu = editPopupItem;
         tabs.addTab(editBox2, "Sample text 2"d);
