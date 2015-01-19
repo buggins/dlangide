@@ -4,6 +4,7 @@ import dlangui.widgets.menu;
 import dlangui.widgets.tabs;
 import dlangui.widgets.layouts;
 import dlangui.widgets.editors;
+import dlangui.widgets.srcedit;
 import dlangui.widgets.controls;
 import dlangui.widgets.appframe;
 import dlangui.widgets.docks;
@@ -14,32 +15,45 @@ import dlangui.dialogs.filedlg;
 import dlangide.ui.commands;
 import dlangide.ui.wspanel;
 import dlangide.workspace.workspace;
+import dlangide.workspace.project;
 
 import std.conv;
+import std.utf;
 
-class SourceEdit : EditBox {
+/// DIDE source file editor
+class DSourceEdit : SourceEdit {
 	this(string ID) {
 		super(ID);
 		styleId = null;
-		fontFamily = FontFamily.MonoSpace;
-		fontFace = "Consolas Bold,Consolas,Courier New";
-		fontSize = 20;
-		fontWeight = 800;
 		backgroundColor = 0xFFFFFF;
-		layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT);
-        minFontSize(12).maxFontSize(75); // allow font zoom with Ctrl + MouseWheel
-        //focusable = true;
 	}
 	this() {
 		this("SRCEDIT");
 	}
+    protected ProjectSourceFile _projectSourceFile;
+    @property ProjectSourceFile projectSourceFile() { return _projectSourceFile; }
+    /// load by filename
+    override bool load(string fn) {
+        return super.load(fn);
+    }
+    /// load by project item
+    bool load(ProjectSourceFile f) {
+        if (!load(f.filename)) {
+            _projectSourceFile = null;
+            return false;
+        }
+        _projectSourceFile = f;
+        return true;
+    }
 }
 
+/// DIDE app frame
 class IDEFrame : AppFrame {
 
     MenuItem mainMenuItems;
     WorkspacePanel _wsPanel;
     DockHost _dockHost;
+    TabWidget _tabs;
 
     this(Window window) {
         super();
@@ -50,6 +64,46 @@ class IDEFrame : AppFrame {
         super.init();
     }
 
+    /// source file selected in workspace tree
+    bool onSourceFileSelected(ProjectSourceFile file, bool activate) {
+        Log.d("onSourceFileSelected ", file.filename);
+        int index = _tabs.tabIndex(file.filename);
+        if (index >= 0) {
+            // file is already opened in tab
+            _tabs.selectTab(index, true);
+        } else {
+            // open new file
+            DSourceEdit editor = new DSourceEdit(file.filename);
+            if (editor.load(file)) {
+                _tabs.addTab(editor, toUTF32(file.name));
+                index = _tabs.tabIndex(file.filename);
+                TabItem tab = _tabs.tab(file.filename);
+                tab.objectParam = file;
+                _tabs.selectTab(index, true);
+            } else {
+                destroy(editor);
+                if (window)
+                    window.showMessageBox(UIString("File open error"d), UIString("Failed to open file "d ~ toUTF32(file.filename)));
+                return false;
+            }
+        }
+        if (activate)
+            _tabs.setFocus();
+        requestLayout();
+        return true;
+    }
+
+    void onTabChanged(string newActiveTabId, string previousTabId) {
+        int index = _tabs.tabIndex(newActiveTabId);
+        if (index >= 0) {
+            TabItem tab = _tabs.tab(index);
+            ProjectSourceFile file = cast(ProjectSourceFile)tab.objectParam;
+            if (file) {
+                // tab is source file editor
+                _wsPanel.selectItem(file);
+            }
+        }
+    }
 
     /// create app body widget
     override protected Widget createBody() {
@@ -59,35 +113,16 @@ class IDEFrame : AppFrame {
         // Create body - Tabs
 
         // editor tabs
-        TabWidget tabs = new TabWidget("TABS");
-        tabs.setStyles("TAB_UP_DARK", "TAB_UP_BUTTON_DARK", "TAB_UP_BUTTON_DARK_TEXT");
-        tabs.styleId = STYLE_DOCK_HOST_BODY;
+        _tabs = new TabWidget("TABS");
+        _tabs.setStyles(STYLE_DOCK_HOST_BODY, STYLE_TAB_UP_DARK, STYLE_TAB_UP_BUTTON_DARK, STYLE_TAB_UP_BUTTON_DARK_TEXT);
+        _tabs.onTabChangedListener = &onTabChanged;
         
-		// create Editors test tab
-		//VerticalLayout editors = new VerticalLayout("editors");
-        //editors.layoutWidth = FILL_PARENT;
-        //editors.layoutHeight = FILL_PARENT;
-        EditBox editBox = new SourceEdit("editbox1");
-		editBox.text = "Some text\nSecond line\nYet another line\n\n\tforeach(s;lines);\n\t\twriteln(s);\n"d;
-		//editors.addChild(editBox);
-		//editBox.popupMenu = editPopupItem;
-        tabs.addTab(editBox, "Sample"d);
-
-        EditBox editBox2 = new SourceEdit("editbox2");
-		editBox2.text = "Second tab editor\n\nBlah Blah."d;
-		//editors.addChild(editBox);
-		//editBox.popupMenu = editPopupItem;
-        tabs.addTab(editBox2, "Sample text 2"d);
-
-        //tabs.addTab(editors, "Sample"d);
-		tabs.selectTab("editbox1");
-
-
-        _dockHost.bodyWidget = tabs;
+        _dockHost.bodyWidget = _tabs;
 
         //=============================================================
         // Create workspace docked panel
         _wsPanel = new WorkspacePanel("workspace");
+        _wsPanel.sourceFileSelectionListener = &onSourceFileSelected;
         _dockHost.addDockedWindow(_wsPanel);
 
         return _dockHost;

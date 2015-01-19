@@ -35,6 +35,11 @@ extern (C) int UIAppMain(string[] args) {
 	// load theme from file "theme_default.xml"
 	Platform.instance.uiTheme = "theme_default";
 
+    // you can override default hinting mode here
+    FontManager.instance.hintingMode = HintingMode.Normal;
+    // you can override antialiasing setting here
+    FontManager.instance.minAnitialiasedFontSize = 0;
+
     // create window
     Window window = Platform.instance.createWindow("Dlang IDE", null);
 	
