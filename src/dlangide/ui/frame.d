@@ -17,8 +17,84 @@ import dlangide.ui.wspanel;
 import dlangide.workspace.workspace;
 import dlangide.workspace.project;
 
+import ddc.lexer.textsource;
+import ddc.lexer.exceptions;
+import ddc.lexer.Tokenizer;
+
 import std.conv;
 import std.utf;
+import std.algorithm;
+
+class SimpleDSyntaxHighlighter : SyntaxHighlighter {
+
+    SourceFile _file;
+    ArraySourceLines _lines;
+    Tokenizer _tokenizer;
+    this (string filename) {
+        _file = new SourceFile(filename);
+        _lines = new ArraySourceLines();
+        _tokenizer = new Tokenizer(_lines);
+    }
+
+    TokenPropString[] _props;
+
+    /// categorize characters in content by token types
+    void updateHighlight(dstring[] lines, TokenPropString[] props, int changeStartLine, int changeEndLine) {
+        _props = props;
+        changeStartLine = 0;
+        changeEndLine = lines.length;
+        _lines.init(lines[changeStartLine..$], _file, changeStartLine);
+        _tokenizer.init(_lines);
+        uint tokenPos = 0;
+        uint tokenLine = 0;
+        ubyte category = 0;
+        for (;;) {
+            Token token = _tokenizer.nextToken();
+            if (token is null) {
+                //writeln("Null token returned");
+                break;
+            }
+            if (token.type == TokenType.EOF) {
+                //writeln("EOF token");
+                break;
+            }
+            uint newPos = token.pos;
+            uint newLine = token.line;
+
+            if (category) {
+                // fill with category
+                for (uint i = tokenLine - 1; i <= newLine - 1; i++) {
+                    uint start = i > tokenLine - 1 ? 0 : tokenPos;
+                    uint end = i < newLine - 1 ? lines[i].length : tokenPos;
+                    for (uint j = start; j < end; j++) {
+                        assert(i < _props.length);
+                        if (j - 1 < _props[i].length)
+                            _props[i][j - 1] = category;
+                    }
+                }
+            }
+
+            TokenType t = token.type;
+            // handle token
+            if (t == TokenType.COMMENT) {
+                category = TokenCategory.Comment;
+            } else if (t == TokenType.KEYWORD) {
+                category = TokenCategory.Keyword;
+            } else if (t == TokenType.IDENTIFIER) {
+                category = TokenCategory.Identifier;
+            } else if (t == TokenType.STRING) {
+                category = TokenCategory.String;
+            } else {
+                category = 0;
+            }
+            tokenPos = newPos;
+            tokenLine= newLine;
+            
+        }
+        _lines.close();
+        _props = null;
+    }
+}
 
 /// DIDE source file editor
 class DSourceEdit : SourceEdit {
@@ -26,6 +102,10 @@ class DSourceEdit : SourceEdit {
 		super(ID);
 		styleId = null;
 		backgroundColor = 0xFFFFFF;
+        setTokenHightlightColor(TokenCategory.Comment, 0x808080); // gray
+        setTokenHightlightColor(TokenCategory.Keyword, 0x0020C0); // blue
+        setTokenHightlightColor(TokenCategory.String, 0xC02000);  // red
+        setTokenHightlightColor(TokenCategory.Identifier, 0x206000);  // green
 	}
 	this() {
 		this("SRCEDIT");
@@ -34,8 +114,20 @@ class DSourceEdit : SourceEdit {
     @property ProjectSourceFile projectSourceFile() { return _projectSourceFile; }
     /// load by filename
     override bool load(string fn) {
-        return super.load(fn);
+        _projectSourceFile = null;
+        bool res = super.load(fn);
+        setHighlighter();
+        return res;
     }
+
+    void setHighlighter() {
+        if (filename.endsWith(".d") || filename.endsWith(".dd") || filename.endsWith(".dh") || filename.endsWith(".ddoc")) {
+            content.syntaxHighlighter = new SimpleDSyntaxHighlighter(filename);
+        } else {
+            content.syntaxHighlighter = null;
+        }
+    }
+
     /// load by project item
     bool load(ProjectSourceFile f) {
         if (!load(f.filename)) {
@@ -43,6 +135,7 @@ class DSourceEdit : SourceEdit {
             return false;
         }
         _projectSourceFile = f;
+        setHighlighter();
         return true;
     }
 }

@@ -66,7 +66,7 @@
   <debuglevel>0</debuglevel>
   <debugids />
   <versionlevel>0</versionlevel>
-  <versionids>Unicode</versionids>
+  <versionids>Unicode USE_SDL USE_OPENGL</versionids>
   <dump_source>0</dump_source>
   <mapverbosity>3</mapverbosity>
   <createImplib>0</createImplib>
@@ -189,6 +189,17 @@
   <filesToClean>*.obj;*.cmd;*.build;*.json;*.dep</filesToClean>
  </Config>
  <Folder name="dlangide">
+  <Folder name="ddc">
+   <Folder name="lexer">
+    <File path="src\ddc\lexer\exceptions.d" />
+    <File path="src\ddc\lexer\Lexer.d" />
+    <File path="src\ddc\lexer\LexerException.d" />
+    <File path="src\ddc\lexer\LineStream.d" />
+    <File path="src\ddc\lexer\SourceEncodingException.d" />
+    <File path="src\ddc\lexer\textsource.d" />
+    <File path="src\ddc\lexer\Tokenizer.d" />
+   </Folder>
+  </Folder>
   <Folder name="dlangide">
    <Folder name="ui">
     <File path="src\dlangide\ui\commands.d" />
