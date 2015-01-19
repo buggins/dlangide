@@ -64,6 +64,15 @@ class IDEFrame : AppFrame {
         super.init();
     }
 
+    /// move focus to editor in currently selected tab
+    void focusEditor(string id) {
+        Widget w = _tabs.tabBody(id);
+        if (w) {
+            if (w.visible)
+                w.setFocus();
+        }
+    }
+
     /// source file selected in workspace tree
     bool onSourceFileSelected(ProjectSourceFile file, bool activate) {
         Log.d("onSourceFileSelected ", file.filename);
@@ -87,8 +96,9 @@ class IDEFrame : AppFrame {
                 return false;
             }
         }
-        if (activate)
-            _tabs.setFocus();
+        if (activate) {
+            focusEditor(file.filename);
+        }
         requestLayout();
         return true;
     }
@@ -101,6 +111,7 @@ class IDEFrame : AppFrame {
             if (file) {
                 // tab is source file editor
                 _wsPanel.selectItem(file);
+                focusEditor(file.filename);
             }
         }
     }
