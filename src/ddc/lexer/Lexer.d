@@ -1,7 +1,7 @@
 // D grammar - according to http://dlang.org/grammar
 
 module ddc.lexer.Lexer;
-import ddc.lexer.Tokenizer;
+import ddc.lexer.tokenizer;
 
 /** Lexem type constants */
 enum LexemType : ushort {

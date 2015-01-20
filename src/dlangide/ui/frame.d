@@ -19,7 +19,7 @@ import dlangide.workspace.project;
 
 import ddc.lexer.textsource;
 import ddc.lexer.exceptions;
-import ddc.lexer.Tokenizer;
+import ddc.lexer.tokenizer;
 
 import std.conv;
 import std.utf;
