@@ -897,22 +897,24 @@ class Token {
 	protected int _line;
 	protected int _pos;
 	protected TokenType _type;
-	public @property TokenType type() { return _type; }
-	public @property string filename() { return _file.filename; }
-	public @property int line() { return _line; }
-	public @property int pos() { return _pos; }
-	public @property dchar[] text() { return null; }
-	public @property dchar literalType() { return 0; }
-	public @property ulong intValue() { return 0; }
-	public @property bool isUnsigned() { return false; }
-	public @property ulong isLong() { return false; }
-	public @property real realValue() { return 0; }
-	public @property double doubleValue() { return 0; }
-	public @property float floatValue() { return 0; }
-	public @property byte precision() { return 0; }
-	public @property bool isImaginary() { return false; }
-	public @property OpCode opCode() { return OpCode.NONE; }
-	public @property Keyword keyword() { return Keyword.NONE; }
+	@property TokenType type() { return _type; }
+	@property string filename() { return _file.filename; }
+	@property int line() { return _line; }
+	@property int pos() { return _pos; }
+	@property dchar[] text() { return null; }
+	@property dchar literalType() { return 0; }
+	@property ulong intValue() { return 0; }
+	@property bool isUnsigned() { return false; }
+	@property ulong isLong() { return false; }
+	@property real realValue() { return 0; }
+	@property double doubleValue() { return 0; }
+	@property float floatValue() { return 0; }
+	@property byte precision() { return 0; }
+	@property bool isImaginary() { return false; }
+	@property OpCode opCode() { return OpCode.NONE; }
+	@property Keyword keyword() { return Keyword.NONE; }
+    @property bool isDocumentationComment() { return false; }
+
 
 	this(TokenType type) {
 		_type = type;
@@ -1025,9 +1027,19 @@ class KeywordToken : Token {
 // do we need comment text?
 
 class CommentToken : Token {
-	dchar[] _text;
-	public @property override dchar[] text() { return _text; }
-	public @property void text(dchar[] text) { _text = text; }
+	protected dchar[] _text;
+    protected bool _isDocumentationComment;
+
+    override @property bool isDocumentationComment() {
+        return _isDocumentationComment;
+    }
+
+    @property void isDocumentationComment(bool f) {
+        _isDocumentationComment = f;
+    }
+
+	@property override dchar[] text() { return _text; }
+	@property void text(dchar[] text) { _text = text; }
 	this() {
 		super(TokenType.COMMENT);
 	}
@@ -1258,36 +1270,51 @@ struct StringAppender {
 
 class Tokenizer
 {
-	SourceLines _lineStream;
-	dchar[] _lineText;
-	int _line; // current line number
-	int _len; // current line length
-	int _pos; // current line read position
-    int _prevLineLength; // previous line length
-	uint _state; // tokenizer state
+	protected SourceLines _lineStream;
+	protected dchar[] _lineText;
+	protected int _line; // current line number
+	protected int _len; // current line length
+	protected int _pos; // current line read position
+    protected int _prevLineLength; // previous line length
+	protected uint _state; // tokenizer state
 	
 	enum : int {
 		EOF_CHAR = 0x001A,
 		EOL_CHAR = 0x000A
 	};
 	
-	WhiteSpaceToken _sharedWhiteSpaceToken = new WhiteSpaceToken();
-	CommentToken _sharedCommentToken = new CommentToken();
-	StringLiteralToken _sharedStringLiteralToken = new StringLiteralToken();
-	IdentToken _sharedIdentToken = new IdentToken();
-	OpToken _sharedOpToken = new OpToken();
-	KeywordToken _sharedKeywordToken = new KeywordToken();
-	IntegerLiteralToken _sharedIntegerToken = new IntegerLiteralToken();
-	RealLiteralToken _sharedRealToken = new RealLiteralToken();
-	StringAppender _stringLiteralAppender;
-	StringAppender _commentAppender;
-	StringAppender _identAppender;
+	protected WhiteSpaceToken _sharedWhiteSpaceToken = new WhiteSpaceToken();
+	protected CommentToken _sharedCommentToken = new CommentToken();
+	protected StringLiteralToken _sharedStringLiteralToken = new StringLiteralToken();
+	protected IdentToken _sharedIdentToken = new IdentToken();
+	protected OpToken _sharedOpToken = new OpToken();
+	protected KeywordToken _sharedKeywordToken = new KeywordToken();
+	protected IntegerLiteralToken _sharedIntegerToken = new IntegerLiteralToken();
+	protected RealLiteralToken _sharedRealToken = new RealLiteralToken();
+	protected StringAppender _stringLiteralAppender;
+	protected StringAppender _commentAppender;
+	protected StringAppender _identAppender;
 	
-	bool _enableCommentText = true;
-	public void enableCommentText(bool enabled) {
+	protected bool _enableCommentText = true;
+    /// when false, does not put comment text into comment token - for less allocations
+	@property void enableCommentText(bool enabled) {
 		_enableCommentText = enabled;
 	}
-	
+    /// when false, does not put comment text into comment token - for less allocations
+	@property bool enableCommentText() {
+		return _enableCommentText;
+	}
+
+	protected bool _errorTolerant = false;
+    /// when true, returns BadToken instead of throwing exception
+	@property void errorTolerant(bool enabled) {
+		_errorTolerant = enabled;
+	}
+    /// when true, returns BadToken instead of throwing exception
+	@property bool errorTolerant() {
+		return _errorTolerant;
+	}
+
 	this(SourceLines lineStream) {
         init(lineStream);
 	}
@@ -1314,7 +1341,7 @@ class Tokenizer
 	}
 	
 	// fetch next line from source stream
-	bool nextLine() {
+	protected bool nextLine() {
         _prevLineLength = _lineText.length;
 		_lineText = _lineStream.readLine();
 		if (!_lineText) {
@@ -1334,7 +1361,7 @@ class Tokenizer
 		return true;
 	}
 	
-	dchar nextChar() {
+	protected dchar nextChar() {
 		if (_lineText is null) {
 			if (!nextLine()) {
 				return EOF_CHAR;
@@ -1348,7 +1375,7 @@ class Tokenizer
 		return _lineText[_pos++];
 	}
 	
-	dchar peekChar() {
+	protected dchar peekChar() {
 		if (_lineText is null) {
 			if (!nextLine()) {
 				return EOF_CHAR;
@@ -1359,12 +1386,12 @@ class Tokenizer
 		return _lineText[_pos++];
 	}
 	
-	Token emitEof() {
+	protected Token emitEof() {
 		// TODO: check for current state
 		return new EofToken(_lineStream.file, _line, _pos);
 	}
 	
-	Token processWhiteSpace(dchar firstChar) {
+	protected Token processWhiteSpace(dchar firstChar) {
 		// reuse the same token instance, to avoid extra heap spamming
         if (_pos == 0) {
             _sharedWhiteSpaceToken.setPos(_line - 1, _prevLineLength);
@@ -1388,8 +1415,9 @@ class Tokenizer
 		return _sharedWhiteSpaceToken;
 	}
 	
-	Token processOneLineComment() {
+	protected Token processOneLineComment() {
 		_sharedCommentToken.setPos(_line, _pos - 1);
+        _sharedCommentToken.isDocumentationComment = _pos + 1 < _lineText.length && _lineText[_pos + 1] == '/';
 		if (_enableCommentText) {
 			_sharedCommentToken.text = _lineText[_pos + 1 .. $];
 		}
@@ -1397,7 +1425,7 @@ class Tokenizer
 		return _sharedCommentToken;
 	}
 
-	Token processOneLineSharpComment() {
+	protected Token processOneLineSharpComment() {
 		_sharedCommentToken.setPos(_line, _pos - 1);
 		if (_enableCommentText) {
 			_sharedCommentToken.text = _lineText[_pos .. $];
@@ -1407,8 +1435,9 @@ class Tokenizer
 	}
 
 	// Comment /*   */	
-	Token processMultilineComment() {
+	protected Token processMultilineComment() {
 		_sharedCommentToken.setPos(_line, _pos - 1);
+        _sharedCommentToken.isDocumentationComment = _pos + 1 < _lineText.length && _lineText[_pos + 1] == '*';
 		_commentAppender.reset();
 		int textStart = _pos + 1;
 		for (;;) {
@@ -1439,9 +1468,10 @@ class Tokenizer
 		return _sharedCommentToken;
 	}
 	
-	// Comment /*   */	
-	Token processNestedComment() {
+	// Comment /+   +/	
+	protected Token processNestedComment() {
 		_sharedCommentToken.setPos(_line, _pos - 1);
+        _sharedCommentToken.isDocumentationComment = _pos + 1 < _lineText.length && _lineText[_pos + 1] == '+';
 		_commentAppender.reset();
 		dchar[] text;
 		int textStart = _pos + 1;
@@ -1481,26 +1511,26 @@ class Tokenizer
 		return _sharedCommentToken;
 	}
 	
-	Token processHexString() {
+	protected Token processHexString() {
 		_pos++;
 		// TODO:
 		return null;
 	}
 	
-	Token processDelimitedString() {
+	protected Token processDelimitedString() {
 		_pos++;
 		// TODO:
 		return null;
 	}
 	
 	// r"string"   or    `string`
-	Token processWysiwygString(dchar ch) {
+	protected Token processWysiwygString(dchar ch) {
 		_pos++;
 		// TODO:
 		return null;
 	}
 	
-	Token processIdent() {
+	protected Token processIdent() {
 		_sharedIdentToken.setPos(_line, _pos - 1);
 		_identAppender.reset();
 		int startPos = _pos - 1;
@@ -1517,7 +1547,7 @@ class Tokenizer
 		return _sharedIdentToken;
 	}
 
-	Token processIntegerSuffix() {
+	protected Token processIntegerSuffix() {
 		if (_pos >= _len)
 			return _sharedIntegerToken;
 		bool longFlag = false;
@@ -1546,7 +1576,7 @@ class Tokenizer
 		return _sharedIntegerToken;
 	}
 	
-	Token processBinaryNumber() {
+	protected Token processBinaryNumber() {
 		_sharedIntegerToken.setPos(_line, _pos - 1);
 		_pos++;
 		if (_pos >= _len)
@@ -1568,7 +1598,7 @@ class Tokenizer
 		return processIntegerSuffix();
 	}
 
-	Token processHexNumber() {
+	protected Token processHexNumber() {
 		_sharedIntegerToken.setPos(_line, _pos - 1);
 		_sharedRealToken.setPos(_line, _pos - 1);
 		_pos++;
@@ -1600,7 +1630,7 @@ class Tokenizer
 		return processIntegerSuffix();
 	}
 	
-	Token processOctNumber() {
+	protected Token processOctNumber() {
 		_sharedIntegerToken.setPos(_line, _pos - 1);
 		if (_pos >= _len)
 			parserError("Unexpected end of line in octal number");
@@ -1635,14 +1665,14 @@ class Tokenizer
 	}
 	
 	// 
-	Token processDecFloatSuffix(real value) {
+	protected Token processDecFloatSuffix(real value) {
 		_sharedRealToken.setValue(value);
 		// TODO
 		return _sharedRealToken;
 	}
 	
 	// after E char
-	Token processDecFloatExponent(real value) {
+	protected Token processDecFloatExponent(real value) {
 		dchar next = _pos < _len ? _lineText[_pos] : 0;
 		int sign = 1;
 		if (next == '+') {
@@ -1683,7 +1713,7 @@ class Tokenizer
 		return processDecFloatSuffix(value);
 	}
 		
-	Token processDecFloatSecondPart(ulong firstPart) {
+	protected Token processDecFloatSecondPart(ulong firstPart) {
 		if (_pos >= _len) {
 			_sharedRealToken.setValue(cast(real)firstPart);
 			return _sharedRealToken;
@@ -1722,7 +1752,7 @@ class Tokenizer
 		return processDecFloatSuffix(value);
 	}
 		
-	Token processDecNumber(dchar c) {
+	protected Token processDecNumber(dchar c) {
 		_pos--;
 		_sharedIntegerToken.setPos(_line, _pos);
 		_sharedRealToken.setPos(_line, _pos);
@@ -1765,11 +1795,11 @@ class Tokenizer
 		return processIntegerSuffix();
 	}
 		
-	void parserError(string msg) {
+	protected void parserError(string msg) {
 		throw new ParserException(msg, _lineStream.file.filename, _line, _pos);
 	}
 
-	Keyword detectKeyword(dchar ch) {
+	protected Keyword detectKeyword(dchar ch) {
 		if (ch > 'z')
 			return Keyword.NONE;
 		int len = _len - _pos;
@@ -1928,7 +1958,7 @@ class Tokenizer
 			default: return Keyword.NONE;				
 		}
 	}	
-	OpCode detectOp(dchar ch) nothrow {
+	protected OpCode detectOp(dchar ch) nothrow {
 		if (ch >= 128)
 			return OpCode.NONE;
 		dchar ch2 = _pos < _len ? _lineText[_pos] : 0;
@@ -2195,7 +2225,7 @@ class Tokenizer
 		}
 	}
 	
-	Token processDoubleQuotedOrWysiwygString(dchar delimiter) {
+	protected Token processDoubleQuotedOrWysiwygString(dchar delimiter) {
 		bool wysiwyg = (delimiter == 'r' || delimiter == '`');
 		//writeln("processDoubleQuotedString()");
 		_sharedStringLiteralToken.setPos(_line, _pos - 1);
@@ -2251,22 +2281,22 @@ class Tokenizer
 		return _sharedStringLiteralToken;
 	}
 
-	SysTime buildTime;
+	protected SysTime buildTime;
 	
 	//	string literal of the date of compilation "mmm dd yyyy"
-	dstring formatBuildDate() {
+	protected dstring formatBuildDate() {
 		// TODO: provide proper format
 		return to!dstring(buildTime);
 	}
 	
 	//	string literal of the time of compilation "hh:mm:ss"
-	dstring formatBuildTime() {
+	protected dstring formatBuildTime() {
 		// TODO: provide proper format
 		return to!dstring(buildTime);
 	}
 	
 	//	string literal of the date and time of compilation "www mmm dd hh:mm:ss yyyy"
-	dstring formatBuildTimestamp() {
+	protected dstring formatBuildTimestamp() {
 		// TODO: provide proper format
 		return to!dstring(buildTime);
 	}
@@ -2274,13 +2304,13 @@ class Tokenizer
 	static immutable dstring VERSION = "0.1";
 	static immutable dstring VENDOR = "coolreader.org";
 	
-	Token makeSpecialTokenString(dstring str, int pos) {
+	protected Token makeSpecialTokenString(dstring str, int pos) {
 		_sharedStringLiteralToken.setPos(_line, pos);
 		_sharedStringLiteralToken.setText(cast(dchar[])str, 0);
 		return _sharedStringLiteralToken;
 	}
 	
-	Token processSpecialToken(Keyword keyword, int pos) {
+	protected Token processSpecialToken(Keyword keyword, int pos) {
 		switch (keyword) {
 			//Special Token	Replaced with
 			case Keyword.DATE: //	string literal of the date of compilation "mmm dd yyyy"
@@ -2300,7 +2330,7 @@ class Tokenizer
 	}
 	
 	// returns next token (clone it if you want to store for future usage, otherwise it may be overwritten by further nextToken() calls).
-	public Token nextToken() {
+	Token nextToken() {
 		dchar ch = nextChar();
 		if (ch == EOF_CHAR) {
 			return emitEof();
