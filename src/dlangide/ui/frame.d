@@ -40,52 +40,56 @@ class SimpleDSyntaxHighlighter : SyntaxHighlighter {
 
     /// categorize characters in content by token types
     void updateHighlight(dstring[] lines, TokenPropString[] props, int changeStartLine, int changeEndLine) {
+        Log.d("updateHighlight");
+        long ms0 = currentTimeMillis();
         _props = props;
         changeStartLine = 0;
         changeEndLine = lines.length;
         _lines.init(lines[changeStartLine..$], _file, changeStartLine);
         _tokenizer.init(_lines);
-        uint tokenPos = 0;
-        uint tokenLine = 0;
+        int tokenPos = 0;
+        int tokenLine = 0;
         ubyte category = 0;
         for (;;) {
             Token token = _tokenizer.nextToken();
             if (token is null) {
-                //writeln("Null token returned");
+                //Log.d("Null token returned");
                 break;
             }
             if (token.type == TokenType.EOF) {
-                //writeln("EOF token");
+                //Log.d("EOF token");
                 break;
             }
             uint newPos = token.pos - 1;
             uint newLine = token.line - 1;
 
-            //if (category) {
-            // fill with category
-            for (uint i = tokenLine; i <= newLine; i++) {
-                uint start = i > tokenLine ? 0 : tokenPos;
-                uint end = i < newLine ? lines[i].length : tokenPos;
-                for (uint j = start; j < end; j++) {
-                    assert(i < _props.length);
-                    if (j - 1 < _props[i].length)
-                        _props[i][j - 1] = category;
-                }
-            }
-            //}
+            //Log.d("", token.line, ":", token.pos, "\t", tokenLine + 1, ":", tokenPos + 1, "\t", token.toString);
 
-            TokenType t = token.type;
+            // fill with category
+            for (int i = tokenLine; i <= newLine; i++) {
+                int start = i > tokenLine ? 0 : tokenPos;
+                int end = i < newLine ? lines[i].length : newPos;
+                for (int j = start; j < end; j++)
+                    _props[i][j] = category;
+            }
+
             // handle token - convert to category
-            if (t == TokenType.COMMENT) {
-                category = TokenCategory.Comment;
-            } else if (t == TokenType.KEYWORD) {
-                category = TokenCategory.Keyword;
-            } else if (t == TokenType.IDENTIFIER) {
-                category = TokenCategory.Identifier;
-            } else if (t == TokenType.STRING) {
-                category = TokenCategory.String;
-            } else {
-                category = 0;
+            switch(token.type) {
+                case TokenType.COMMENT:
+                    category = TokenCategory.Comment;
+                    break;
+                case TokenType.KEYWORD:
+                    category = TokenCategory.Keyword;
+                    break;
+                case TokenType.IDENTIFIER:
+                    category = TokenCategory.Identifier;
+                    break;
+                case TokenType.STRING:
+                    category = TokenCategory.String;
+                    break;
+                default:
+                    category = 0;
+                    break;
             }
             tokenPos = newPos;
             tokenLine= newLine;
@@ -93,6 +97,7 @@ class SimpleDSyntaxHighlighter : SyntaxHighlighter {
         }
         _lines.close();
         _props = null;
+        Log.d("updateHighlight took ", currentTimeMillis() - ms0, "ms");
     }
 }
 
@@ -102,10 +107,10 @@ class DSourceEdit : SourceEdit {
 		super(ID);
 		styleId = null;
 		backgroundColor = 0xFFFFFF;
-        setTokenHightlightColor(TokenCategory.Comment, 0x808080); // gray
-        setTokenHightlightColor(TokenCategory.Keyword, 0x0020C0); // blue
-        setTokenHightlightColor(TokenCategory.String, 0xC02000);  // red
-        setTokenHightlightColor(TokenCategory.Identifier, 0x206000);  // green
+        setTokenHightlightColor(TokenCategory.Comment, 0x008000); // green
+        setTokenHightlightColor(TokenCategory.Keyword, 0x0000FF); // blue
+        setTokenHightlightColor(TokenCategory.String, 0xA31515);  // red
+        //setTokenHightlightColor(TokenCategory.Identifier, 0x206000);  // no colors
 	}
 	this() {
 		this("SRCEDIT");

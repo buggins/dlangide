@@ -867,7 +867,7 @@ public dstring getKeywordNameD(Keyword keyword) pure nothrow {
 	return KEYWORD_STRINGS[keyword];
 };
 
-public Keyword findKeyword(Keyword start, Keyword end, dchar * name, uint len, ref uint pos) pure nothrow {
+public Keyword findKeyword(Keyword start, Keyword end, dchar * name, int len, ref int pos) pure nothrow {
 	for (Keyword i = start; i <= end; i++) {
 		dstring s = KEYWORD_STRINGS[i];
 		if (s.length > len + 1)
@@ -894,13 +894,13 @@ public Keyword findKeyword(Keyword start, Keyword end, dchar * name, uint len, r
  */
 class Token {
 	protected SourceFile _file;
-	protected uint _line;
-	protected uint _pos;
+	protected int _line;
+	protected int _pos;
 	protected TokenType _type;
 	public @property TokenType type() { return _type; }
 	public @property string filename() { return _file.filename; }
-	public @property uint line() { return _line; }
-	public @property uint pos() { return _pos; }
+	public @property int line() { return _line; }
+	public @property int pos() { return _pos; }
 	public @property dchar[] text() { return null; }
 	public @property dchar literalType() { return 0; }
 	public @property ulong intValue() { return 0; }
@@ -918,14 +918,14 @@ class Token {
 		_type = type;
 	}
 
-	this(TokenType type, SourceFile file, uint line, uint pos) {
+	this(TokenType type, SourceFile file, int line, int pos) {
 		_type = type;
 		_file = file;
 		_line = line;
 		_pos = pos;
 	}
 
-	void setPos(SourceFile file, uint line, uint pos) {
+	void setPos(SourceFile file, int line, int pos) {
 		_file = file;
 		_line = line;
 		_pos = pos + 1;
@@ -935,7 +935,7 @@ class Token {
 		_file = file;
 	}
 
-	void setPos(uint line, uint pos) {
+	void setPos(int line, int pos) {
 		_line = line;
 		_pos = pos + 1;
 	}
@@ -1260,9 +1260,10 @@ class Tokenizer
 {
 	SourceLines _lineStream;
 	dchar[] _lineText;
-	uint _line; // current line number
-	uint _len; // current line length
-	uint _pos; // current line read position
+	int _line; // current line number
+	int _len; // current line length
+	int _pos; // current line read position
+    int _prevLineLength; // previous line length
 	uint _state; // tokenizer state
 	
 	enum : int {
@@ -1304,6 +1305,7 @@ class Tokenizer
 		buildTime = Clock.currTime();
         _line = lineStream.line;
         _pos = 0;
+        _prevLineLength = 0;
         _lineText = null;
     }
 	
@@ -1313,17 +1315,22 @@ class Tokenizer
 	
 	// fetch next line from source stream
 	bool nextLine() {
+        _prevLineLength = _lineText.length;
 		_lineText = _lineStream.readLine();
-		if (_lineText is null) {
+		if (!_lineText) {
 			if (_lineStream.errorCode != 0)
 				throw new SourceEncodingException(_lineStream.errorMessage, _lineStream.file.filename, _lineStream.errorLine, _lineStream.errorPos);
-			_pos = 0;
-			_len = 0;
-			return false;
+            if (_lineStream.eof) {
+                // end of file
+                _pos = 0;
+			    _len = 0;
+			    return false;
+            }
+            // just an empty line
 		}
 		_line = _lineStream.line;
 		_pos = 0;
-		_len = cast(uint)_lineText.length; // do not support lines longer that 4Gb
+		_len = cast(int)_lineText.length; // do not support lines longer that 4Gb
 		return true;
 	}
 	
@@ -1358,13 +1365,17 @@ class Tokenizer
 	}
 	
 	Token processWhiteSpace(dchar firstChar) {
-		uint line = _line;
-		uint pos = _pos - 1;
+		// reuse the same token instance, to avoid extra heap spamming
+        if (_pos == 0) {
+            _sharedWhiteSpaceToken.setPos(_line - 1, _prevLineLength);
+        } else {
+            _sharedWhiteSpaceToken.setPos(_line, _pos - 1);
+        }
 		for (;;) {
-			uint i = _pos;
+			int i = _pos;
 			for (; i < _len; i++) {
 				dchar ch = _lineText[i];
-				if (!(ch == 0x0020 || ch == 0x0009 || ch == 0x000B || ch == 0x000C))
+				if (!(ch == 0x0020 || ch == 0x0009 || ch == 0x000B || ch == 0x000C || ch == EOL_CHAR))
 					break;
 			}
 			_pos = i;
@@ -1374,8 +1385,6 @@ class Tokenizer
 			if (!nextLine())
 				break;
 		}
-		// reuse the same token instance, to avoid extra heap spamming
-		_sharedWhiteSpaceToken.setPos(line, pos);
 		return _sharedWhiteSpaceToken;
 	}
 	
@@ -1388,21 +1397,30 @@ class Tokenizer
 		return _sharedCommentToken;
 	}
 
+	Token processOneLineSharpComment() {
+		_sharedCommentToken.setPos(_line, _pos - 1);
+		if (_enableCommentText) {
+			_sharedCommentToken.text = _lineText[_pos .. $];
+		}
+		_pos = _len;
+		return _sharedCommentToken;
+	}
+
 	// Comment /*   */	
 	Token processMultilineComment() {
 		_sharedCommentToken.setPos(_line, _pos - 1);
 		_commentAppender.reset();
-		uint textStart = _pos + 1;
+		int textStart = _pos + 1;
 		for (;;) {
-			uint textEnd = uint.max;
-			uint i = textStart;
+			int textEnd = int.max;
+			int i = textStart;
 			for (; i < _len - 1; i++) {
 				if (_lineText[i] == '*' && _lineText[i + 1] == '/') {
 					textEnd = i;
 					break;
 				}
 			}
-			if (textEnd != uint.max) {
+			if (textEnd != int.max) {
 				if (_enableCommentText)
 					_commentAppender.append(_lineText[textStart .. textEnd]);
 				_pos = textEnd + 2;
@@ -1426,11 +1444,11 @@ class Tokenizer
 		_sharedCommentToken.setPos(_line, _pos - 1);
 		_commentAppender.reset();
 		dchar[] text;
-		uint textStart = _pos + 1;
+		int textStart = _pos + 1;
 		int level = 1;
 		for (;;) {
-			uint textEnd = uint.max;
-			uint i = textStart;
+			int textEnd = int.max;
+			int i = textStart;
 			for (; i < _len - 1; i++) {
 				if (_lineText[i] == '/' && _lineText[i + 1] == '+') {
 					level++;
@@ -1442,7 +1460,7 @@ class Tokenizer
 					}
 				}
 			}
-			if (textEnd != uint.max) {
+			if (textEnd != int.max) {
 				if (_enableCommentText)
 					_commentAppender.append(_lineText[textStart .. textEnd]);
 				_pos = textEnd + 2;
@@ -1485,9 +1503,9 @@ class Tokenizer
 	Token processIdent() {
 		_sharedIdentToken.setPos(_line, _pos - 1);
 		_identAppender.reset();
-		uint startPos = _pos - 1;
-		uint endPos = _len;
-		for (uint i = _pos; i < _len; i++) {
+		int startPos = _pos - 1;
+		int endPos = _len;
+		for (int i = _pos; i < _len; i++) {
 			dchar ch = _lineText[i];
 			if (!isIdentMiddleChar(ch)) {
 				endPos = i;
@@ -1535,7 +1553,7 @@ class Tokenizer
 			parserError("Unexpected end of line in binary number");
 		int digits = 0;
 		ulong number = 0;
-		uint i = _pos;
+		int i = _pos;
 		for (;i < _len; i++) {
 			dchar ch = _lineText[i];
 			if (ch != '0' && ch != '1')
@@ -1558,7 +1576,7 @@ class Tokenizer
 			parserError("Unexpected end of line in hex number");
 		int digits = 0;
 		ulong number = 0;
-		uint i = _pos;
+		int i = _pos;
 		for (;i < _len; i++) {
 			dchar ch = _lineText[i];
 			uint digit = 0;
@@ -1588,11 +1606,11 @@ class Tokenizer
 			parserError("Unexpected end of line in octal number");
 		int digits = 0;
 		ulong number = 0;
-		uint i = _pos;
+		int i = _pos;
 		bool overflow = false;
 		for (;i < _len; i++) {
 			dchar ch = _lineText[i];
-			uint digit = 0;
+			int digit = 0;
 			if (ch >= '0' && ch <= '7')
 				digit = ch - '0';
 			else if (ch == '_')
@@ -1637,7 +1655,7 @@ class Tokenizer
 			parserError("Invalid exponent");
 		ulong digits = 0;
 		ulong number = 0;
-		uint i = _pos;
+		int i = _pos;
 		bool overflow = false;
 		for (;i < _len; i++) {
 			dchar ch = _lineText[i];
@@ -1672,7 +1690,7 @@ class Tokenizer
 		}
 		ulong divider = 1;
 		ulong number = 0;
-		uint i = _pos;
+		int i = _pos;
 		bool overflow = false;
 		for (;i < _len; i++) {
 			dchar ch = _lineText[i];
@@ -1712,7 +1730,7 @@ class Tokenizer
 			parserError("Unexpected end of line in number");
 		int digits = 0;
 		ulong number = 0;
-		uint i = _pos;
+		int i = _pos;
 		bool overflow = false;
 		for (;i < _len; i++) {
 			dchar ch = _lineText[i];
@@ -1754,7 +1772,7 @@ class Tokenizer
 	Keyword detectKeyword(dchar ch) {
 		if (ch > 'z')
 			return Keyword.NONE;
-		uint len = _len - _pos;
+		int len = _len - _pos;
 		switch (cast(ubyte)ch) {
 			//	ABSTRACT,
 			//	ALIAS,
@@ -2188,15 +2206,15 @@ class Tokenizer
 		}
 		dchar type = 0;
 		for (;;) {
-			uint i = _pos;
-			uint endPos = uint.max;
+			int i = _pos;
+			int endPos = int.max;
 			for(; i < _len; i++) {
 				if (_lineText[i] == delimiter && (i == 0 || _lineText[i - 1] != '\\')) {
 					endPos = i;
 					break;
 				}
 			}
-			if (endPos != uint.max) {
+			if (endPos != int.max) {
 				// found end quote
 				_stringLiteralAppender.append(_lineText[_pos .. endPos]);
 				_pos = endPos + 1;
@@ -2256,13 +2274,13 @@ class Tokenizer
 	static immutable dstring VERSION = "0.1";
 	static immutable dstring VENDOR = "coolreader.org";
 	
-	Token makeSpecialTokenString(dstring str, uint pos) {
+	Token makeSpecialTokenString(dstring str, int pos) {
 		_sharedStringLiteralToken.setPos(_line, pos);
 		_sharedStringLiteralToken.setText(cast(dchar[])str, 0);
 		return _sharedStringLiteralToken;
 	}
 	
-	Token processSpecialToken(Keyword keyword, uint pos) {
+	Token processSpecialToken(Keyword keyword, int pos) {
 		switch (keyword) {
 			//Special Token	Replaced with
 			case Keyword.DATE: //	string literal of the date of compilation "mmm dd yyyy"
@@ -2300,6 +2318,8 @@ class Tokenizer
 			else if (next == '+')
 				return processNestedComment();
 		}
+        if (ch == '#' && _line == 1)
+            return processOneLineSharpComment();
 		if (ch == '\"')
 			return processDoubleQuotedOrWysiwygString(ch);
 		if (ch == 'x' && next == '\"')
@@ -2308,7 +2328,7 @@ class Tokenizer
 			return processDelimitedString();
 		if ((ch == 'r' && next == '\"') || (ch == '`'))
 			return processDoubleQuotedOrWysiwygString(ch);
-		uint oldPos = _pos - 1;
+		int oldPos = _pos - 1;
 		
 		if (ch == '0') {
 			if (next == 'b' || next == 'B')
@@ -2361,9 +2381,9 @@ class Tokenizer
 unittest {
 	import std.algorithm;
 	class TokenTest {
-		uint _line;
+		int _line;
 		string _file;
-		this(string file, uint line) {
+		this(string file, int line) {
 			_file = file;
 			_line = line;
 		}
@@ -2382,7 +2402,7 @@ unittest {
 	}
 	void testTokenizer(string code, TokenTest[] tokens, string file = __FILE__, uint line = __LINE__) {
 		Tokenizer tokenizer = new Tokenizer(code, "tokenizerTest:" ~ file ~ ":" ~ to!string(line));
-		for (uint i = 0; i < tokens.length; i++) {
+		for (int i = 0; i < tokens.length; i++) {
 			tokens[i].execute(tokenizer);
 		}
 	}

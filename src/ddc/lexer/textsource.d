@@ -31,10 +31,14 @@ interface SourceLines {
 	@property int errorLine();
     /// error position
 	@property int errorPos();
+    /// end of file reached
+    @property bool eof();
 
     /// read line, return null if EOF reached or error occured
     dchar[] readLine();
 }
+
+const TEXT_SOURCE_ERROR_EOF = 1;
 
 /// Simple text source based on array
 class ArraySourceLines : SourceLines {
@@ -75,6 +79,10 @@ class ArraySourceLines : SourceLines {
         return true;
     }
 
+    /// end of file reached
+    override @property bool eof() {
+        return _line >= _lines.length;
+    }
     /// source file
     override @property SourceFile file() { return _file; }
     /// last read line
