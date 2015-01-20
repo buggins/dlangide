@@ -1,4 +1,4 @@
-module ddc.lexer.Tokenizer;
+module ddc.lexer.tokenizer;
 
 import ddc.lexer.textsource;
 import ddc.lexer.exceptions;

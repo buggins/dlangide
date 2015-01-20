@@ -196,7 +196,7 @@
     <File path="src\ddc\lexer\LexerException.d" />
     <File path="src\ddc\lexer\SourceEncodingException.d" />
     <File path="src\ddc\lexer\textsource.d" />
-    <File path="src\ddc\lexer\Tokenizer.d" />
+    <File path="src\ddc\lexer\tokenizer.d" />
    </Folder>
   </Folder>
   <Folder name="dlangide">
