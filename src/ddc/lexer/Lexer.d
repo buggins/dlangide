@@ -1,7 +1,6 @@
 // D grammar - according to http://dlang.org/grammar
 
 module ddc.lexer.Lexer;
-import ddc.lexer.LineStream;
 import ddc.lexer.Tokenizer;
 
 /** Lexem type constants */
@@ -280,9 +279,4 @@ class AltDeclarator : Lexem {
 
 class Lexer
 {
-	LineStream _lineStream;
-    this(LineStream lineStream)
-    {
-        _lineStream = lineStream;
-    }
 }

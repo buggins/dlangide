@@ -1,6 +1,9 @@
 #!/usr/bin/env rdmd
 // Computes average line length for standard input.
 import std.stdio;
+import exlib.logger;
+import exlib.files;
+import exlib.i18n;
 
 void main()
 {

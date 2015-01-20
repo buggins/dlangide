@@ -58,24 +58,24 @@ class SimpleDSyntaxHighlighter : SyntaxHighlighter {
                 //writeln("EOF token");
                 break;
             }
-            uint newPos = token.pos;
-            uint newLine = token.line;
+            uint newPos = token.pos - 1;
+            uint newLine = token.line - 1;
 
-            if (category) {
-                // fill with category
-                for (uint i = tokenLine - 1; i <= newLine - 1; i++) {
-                    uint start = i > tokenLine - 1 ? 0 : tokenPos;
-                    uint end = i < newLine - 1 ? lines[i].length : tokenPos;
-                    for (uint j = start; j < end; j++) {
-                        assert(i < _props.length);
-                        if (j - 1 < _props[i].length)
-                            _props[i][j - 1] = category;
-                    }
+            //if (category) {
+            // fill with category
+            for (uint i = tokenLine; i <= newLine; i++) {
+                uint start = i > tokenLine ? 0 : tokenPos;
+                uint end = i < newLine ? lines[i].length : tokenPos;
+                for (uint j = start; j < end; j++) {
+                    assert(i < _props.length);
+                    if (j - 1 < _props[i].length)
+                        _props[i][j - 1] = category;
                 }
             }
+            //}
 
             TokenType t = token.type;
-            // handle token
+            // handle token - convert to category
             if (t == TokenType.COMMENT) {
                 category = TokenCategory.Comment;
             } else if (t == TokenType.KEYWORD) {
