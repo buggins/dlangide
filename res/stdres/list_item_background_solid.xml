@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android" >
   <item
-    android:drawable="btn_disabled"
+    android:drawable="#C0000000,1px"
     android:state_enabled="false"
     android:state_focused="true" />
   <item
-    android:drawable="btn_pressed"
+    android:drawable="#80000000,1px,#E04040FF"
     android:state_focused="true" />
   <item
-    android:drawable="btn_normal"
+    android:drawable="#A00000FF"
     android:state_selected="true" />
   <item
     android:drawable="#E04040FF"
