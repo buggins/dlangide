@@ -20,7 +20,8 @@ enum TokenType : ubyte {
 	INTEGER,
 	FLOAT,
 	KEYWORD,
-	OP
+	OP,
+    INVALID
 }
 
 // table for fast checking of UniversalAlpha (as per ISO/IEC 9899:1999 Annex E) OR a..z OR A..Z OR _
@@ -245,16 +246,18 @@ const uint[1728] UNIVERSAL_ALPHA_FLAGS = [
     0xffffffff,0xffffffff,0xffffffff,0xffffffff,0xffffffff,0x0000000f,0x00000000,0x00000000// d700-d7ff
 ];
 
-// returns true if character is A..Z, a..z, _ or universal alpha
-public bool isUniversalAlpha(dchar ch) pure nothrow {
+/// returns true if character is A..Z, a..z, _ or universal alpha
+bool isUniversalAlpha(dchar ch) pure nothrow {
 	return (ch <= 0xd7ff && (UNIVERSAL_ALPHA_FLAGS[ch >> 5] & (1 << (ch & 31))));
 }
 
-public bool isIdentStartChar(dchar ch) pure nothrow {
+/// character can present at the beginning of identifier
+bool isIdentStartChar(dchar ch) pure nothrow {
 	return isUniversalAlpha(ch);
 }
 
-public bool isIdentMiddleChar(dchar ch) pure nothrow {
+/// character can present in middle of identifier
+bool isIdentMiddleChar(dchar ch) pure nothrow {
 	return (ch >= '0' && ch <='9') || isUniversalAlpha(ch);
 }
 	
@@ -1025,7 +1028,6 @@ class KeywordToken : Token {
 }
 
 // do we need comment text?
-
 class CommentToken : Token {
 	protected dchar[] _text;
     protected bool _isDocumentationComment;
@@ -1048,10 +1050,31 @@ class CommentToken : Token {
 		_text = text;
 	}
 	override public Token clone() {
-		return new CommentToken(_file, _line, _pos, _text);
+		return new CommentToken(_file, _line, _pos, _text.dup);
 	}
 	public override @property string toString() {
 		return "Comment:" ~ to!string(_text);
+	}
+}
+
+/// Invalid token holder - for error tolerant parsing
+class InvalidToken : Token {
+	protected dchar[] _text;
+
+	@property override dchar[] text() { return _text; }
+	@property void text(dchar[] text) { _text = text; }
+	this() {
+		super(TokenType.INVALID);
+	}
+	this(SourceFile file, uint line, uint pos, dchar[] text) {
+		super(TokenType.INVALID, file, line, pos);
+		_text = text;
+	}
+	override Token clone() {
+		return new InvalidToken(_file, _line, _pos, _text.dup);
+	}
+	override @property string toString() {
+		return "Invalid:" ~ to!string(_text);
 	}
 }
 
@@ -1291,6 +1314,7 @@ class Tokenizer
 	protected KeywordToken _sharedKeywordToken = new KeywordToken();
 	protected IntegerLiteralToken _sharedIntegerToken = new IntegerLiteralToken();
 	protected RealLiteralToken _sharedRealToken = new RealLiteralToken();
+    protected InvalidToken _sharedInvalidToken = new InvalidToken();
 	protected StringAppender _stringLiteralAppender;
 	protected StringAppender _commentAppender;
 	protected StringAppender _identAppender;
@@ -1321,14 +1345,16 @@ class Tokenizer
 
     void init(SourceLines lineStream) {
 		_lineStream = lineStream;
-		_sharedWhiteSpaceToken.setFile(_lineStream.file);
-		_sharedCommentToken.setFile(_lineStream.file);
-		_sharedStringLiteralToken.setFile(_lineStream.file);
-		_sharedIdentToken.setFile(_lineStream.file);
-		_sharedOpToken.setFile(_lineStream.file);
-		_sharedKeywordToken.setFile(_lineStream.file);
-		_sharedIntegerToken.setFile(_lineStream.file);
-		_sharedRealToken.setFile(_lineStream.file);
+        SourceFile file = _lineStream.file;
+		_sharedWhiteSpaceToken.setFile(file);
+		_sharedCommentToken.setFile(file);
+		_sharedStringLiteralToken.setFile(file);
+		_sharedIdentToken.setFile(file);
+		_sharedOpToken.setFile(file);
+		_sharedKeywordToken.setFile(file);
+		_sharedIntegerToken.setFile(file);
+		_sharedRealToken.setFile(file);
+        _sharedInvalidToken.setFile(file);
 		buildTime = Clock.currTime();
         _line = lineStream.line;
         _pos = 0;
@@ -1572,7 +1598,7 @@ class Tokenizer
 		_sharedIntegerToken.setFlags(unsignedFlag, longFlag);
 		ch = _pos < _len ? _lineText[_pos] : 0;
 		if (isIdentMiddleChar(ch))
-			parserError("Unexpected character after number");
+			return parserError("Unexpected character after number", _sharedIntegerToken);
 		return _sharedIntegerToken;
 	}
 	
@@ -1580,7 +1606,7 @@ class Tokenizer
 		_sharedIntegerToken.setPos(_line, _pos - 1);
 		_pos++;
 		if (_pos >= _len)
-			parserError("Unexpected end of line in binary number");
+			return parserError("Unexpected end of line in binary number", _sharedIntegerToken);
 		int digits = 0;
 		ulong number = 0;
 		int i = _pos;
@@ -1593,7 +1619,7 @@ class Tokenizer
 		}
 		_pos = i;
 		if (digits > 64)
-			parserError("number is too big");
+			return parserError("number is too big", _sharedIntegerToken);
 		_sharedIntegerToken.setValue(number);
 		return processIntegerSuffix();
 	}
@@ -1603,7 +1629,7 @@ class Tokenizer
 		_sharedRealToken.setPos(_line, _pos - 1);
 		_pos++;
 		if (_pos >= _len)
-			parserError("Unexpected end of line in hex number");
+			return parserError("Unexpected end of line in hex number", _sharedIntegerToken);
 		int digits = 0;
 		ulong number = 0;
 		int i = _pos;
@@ -1625,7 +1651,7 @@ class Tokenizer
 		}
 		_pos = i;
 		if (digits > 16)
-			parserError("number is too big to fit 64 bits");
+			return parserError("number is too big to fit 64 bits", _sharedIntegerToken);
 		_sharedIntegerToken.setValue(number);
 		return processIntegerSuffix();
 	}
@@ -1633,7 +1659,7 @@ class Tokenizer
 	protected Token processOctNumber() {
 		_sharedIntegerToken.setPos(_line, _pos - 1);
 		if (_pos >= _len)
-			parserError("Unexpected end of line in octal number");
+			return parserError("Unexpected end of line in octal number", _sharedIntegerToken);
 		int digits = 0;
 		ulong number = 0;
 		int i = _pos;
@@ -1659,7 +1685,7 @@ class Tokenizer
 		}
 		_pos = i;
 		if (overflow)
-			parserError("number is too big to fit 64 bits");
+			return parserError("number is too big to fit 64 bits", _sharedIntegerToken);
 		_sharedIntegerToken.setValue(number);
 		return processIntegerSuffix();
 	}
@@ -1682,7 +1708,7 @@ class Tokenizer
 			sign = -1;
 		}
 		if (_pos >= _len)
-			parserError("Invalid exponent");
+			return parserError("Invalid exponent", _sharedRealToken);
 		ulong digits = 0;
 		ulong number = 0;
 		int i = _pos;
@@ -1707,7 +1733,7 @@ class Tokenizer
 			digits++;
 		}
 		if (digits == 0)
-			parserError("Invalid exponent");
+			return parserError("Invalid exponent", _sharedRealToken);
 		_pos = i;
 		value *= pow(10., cast(long)number * sign);
 		return processDecFloatSuffix(value);
@@ -1757,7 +1783,7 @@ class Tokenizer
 		_sharedIntegerToken.setPos(_line, _pos);
 		_sharedRealToken.setPos(_line, _pos);
 		if (_pos >= _len)
-			parserError("Unexpected end of line in number");
+			return parserError("Unexpected end of line in number", _sharedIntegerToken);
 		int digits = 0;
 		ulong number = 0;
 		int i = _pos;
@@ -1783,7 +1809,7 @@ class Tokenizer
 		}
 		_pos = i;
 		if (overflow)
-			parserError("number is too big to fit 64 bits");
+			return parserError("number is too big to fit 64 bits", _sharedIntegerToken);
 		_sharedIntegerToken.setValue(number);
 		dchar next = _pos < _len ? _lineText[_pos] : 0;
 		if (next == 0)
@@ -1795,7 +1821,16 @@ class Tokenizer
 		return processIntegerSuffix();
 	}
 		
-	protected void parserError(string msg) {
+    /// Either return InvalidToken or throw parser exception depending on current errorTolerant flag
+	protected Token parserError(string msg, Token incompleteToken, dchar currentChar = 0) {
+        return parserError(msg, incompleteToken.line, incompleteToken.pos, currentChar);
+    }
+    /// Either return InvalidToken or throw parser exception depending on current errorTolerant flag
+    protected Token parserError(string msg, int startLine, int startPos, dchar currentChar = 0) {
+        if (_errorTolerant) {
+            _sharedInvalidToken.setPos(startLine, startPos);
+            return _sharedInvalidToken;
+        }
 		throw new ParserException(msg, _lineStream.file.filename, _line, _pos);
 	}
 
@@ -2264,11 +2299,11 @@ class Tokenizer
 			if (ch == 'c' || ch == 'w' || ch == 'd')
 				t = ch;
 			else if (isIdentMiddleChar(ch))
-				parserError("Unexpected character after string literal");
+				return parserError("Unexpected character after string literal", _sharedStringLiteralToken);
 		}
 		if (t != 0) {
 			if (type != 0 && t != type)
-				parserError("Cannot concatenate strings of different type");
+				return parserError("Cannot concatenate strings of different type", _sharedStringLiteralToken);
 			type = t;
 		}
 		if (!wysiwyg) {
@@ -2324,7 +2359,7 @@ class Tokenizer
 			case Keyword.VERSION_: //	Compiler version as an integer, such as 2001
 				return makeSpecialTokenString(VERSION, pos);
 			default:
-				parserError("Unexpected token");
+				parserError("Unknown special token", _line, pos);
 		}
 		return null;
 	}

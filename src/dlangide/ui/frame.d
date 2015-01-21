@@ -34,6 +34,7 @@ class SimpleDSyntaxHighlighter : SyntaxHighlighter {
         _file = new SourceFile(filename);
         _lines = new ArraySourceLines();
         _tokenizer = new Tokenizer(_lines);
+        _tokenizer.errorTolerant = true;
     }
 
     TokenPropString[] _props;
@@ -88,6 +89,18 @@ class SimpleDSyntaxHighlighter : SyntaxHighlighter {
                     case TokenType.STRING:
                         category = TokenCategory.String;
                         break;
+                    case TokenType.CHARACTER:
+                        category = TokenCategory.Character;
+                        break;
+                    case TokenType.INTEGER:
+                        category = TokenCategory.Integer;
+                        break;
+                    case TokenType.FLOAT:
+                        category = TokenCategory.FLoat;
+                        break;
+                    case TokenType.INVALID:
+                        category = TokenCategory.Error;
+                        break;
                     default:
                         category = 0;
                         break;
@@ -97,7 +110,7 @@ class SimpleDSyntaxHighlighter : SyntaxHighlighter {
             
             }
         } catch (Exception e) {
-            log.e("exception while trying to parse D source", e);
+            Log.e("exception while trying to parse D source", e);
         }
         _lines.close();
         _props = null;
@@ -113,7 +126,8 @@ class DSourceEdit : SourceEdit {
 		backgroundColor = 0xFFFFFF;
         setTokenHightlightColor(TokenCategory.Comment, 0x008000); // green
         setTokenHightlightColor(TokenCategory.Keyword, 0x0000FF); // blue
-        setTokenHightlightColor(TokenCategory.String, 0xA31515);  // red
+        setTokenHightlightColor(TokenCategory.String, 0xA31515);  // brown
+        setTokenHightlightColor(TokenCategory.Error, 0xFF0000);  // red
         setTokenHightlightColor(TokenCategory.Comment_Documentation, 0x206000);
         //setTokenHightlightColor(TokenCategory.Identifier, 0x206000);  // no colors
 	}
