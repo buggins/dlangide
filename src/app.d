@@ -38,7 +38,7 @@ extern (C) int UIAppMain(string[] args) {
     // you can override default hinting mode here
     FontManager.instance.hintingMode = HintingMode.Normal;
     // you can override antialiasing setting here
-    FontManager.instance.minAnitialiasedFontSize = 25;
+    FontManager.instance.minAnitialiasedFontSize = 0;
 
     // create window
     Window window = Platform.instance.createWindow("Dlang IDE", null);

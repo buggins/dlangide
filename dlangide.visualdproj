@@ -194,7 +194,6 @@
     <File path="src\ddc\lexer\exceptions.d" />
     <File path="src\ddc\lexer\Lexer.d" />
     <File path="src\ddc\lexer\LexerException.d" />
-    <File path="src\ddc\lexer\SourceEncodingException.d" />
     <File path="src\ddc\lexer\textsource.d" />
     <File path="src\ddc\lexer\tokenizer.d" />
    </Folder>
