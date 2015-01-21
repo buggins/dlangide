@@ -3,10 +3,6 @@ module dlangide.ui.commands;
 import dlangui.core.events;
 import dlangui.widgets.editors;
 
-enum : int {
-    ACTION_HELP_ABOUT = 5500,
-}
-
 enum IDEActions : int {
     None = 0,
     ProjectOpen = 1010000,
@@ -15,6 +11,7 @@ enum IDEActions : int {
     FileSave,
     FileClose,
     FileExit,
+    HelpAbout,
 }
 
 __gshared Action ACTION_FILE_NEW = new Action(IDEActions.FileOpen, "MENU_FILE_NEW"c, "document-new", KeyCode.KEY_N, KeyFlag.Control);
@@ -26,3 +23,4 @@ __gshared Action ACTION_EDIT_PASTE = new Action(EditorActions.Paste, "Paste"d, "
 __gshared Action ACTION_EDIT_CUT = new Action(EditorActions.Cut, "Cut"d, "edit-cut"c, KeyCode.KEY_X, KeyFlag.Control);
 __gshared Action ACTION_EDIT_UNDO = new Action(EditorActions.Undo, "Undo"d, "edit-undo"c, KeyCode.KEY_Z, KeyFlag.Control);
 __gshared Action ACTION_EDIT_REDO = new Action(EditorActions.Redo, "Redo"d, "edit-redo"c, KeyCode.KEY_Z, KeyFlag.Control|KeyFlag.Shift);
+__gshared Action ACTION_HELP_ABOUT = new Action(IDEActions.HelpAbout, "MENU_HELP_ABOUT"c);

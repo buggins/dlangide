@@ -1,5 +1,19 @@
 module dlangide.ui.dsourceedit;
 
+import dlangui.core.logger;
+import dlangui.widgets.editors;
+import dlangui.widgets.srcedit;
+
+import ddc.lexer.textsource;
+import ddc.lexer.exceptions;
+import ddc.lexer.tokenizer;
+
+import dlangide.workspace.workspace;
+import dlangide.workspace.project;
+
+import std.algorithm;
+
+
 /// DIDE source file editor
 class DSourceEdit : SourceEdit {
 	this(string ID) {

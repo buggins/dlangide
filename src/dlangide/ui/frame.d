@@ -15,12 +15,9 @@ import dlangui.dialogs.filedlg;
 import dlangide.ui.commands;
 import dlangide.ui.wspanel;
 import dlangide.ui.outputpanel;
+import dlangide.ui.dsourceedit;
 import dlangide.workspace.workspace;
 import dlangide.workspace.project;
-
-import ddc.lexer.textsource;
-import ddc.lexer.exceptions;
-import ddc.lexer.tokenizer;
 
 import std.conv;
 import std.utf;
@@ -141,14 +138,7 @@ class IDEFrame : AppFrame {
         windowItem.add(new Action(30, "MENU_WINDOW_PREFERENCES"));
         MenuItem helpItem = new MenuItem(new Action(4, "MENU_HELP"c));
         helpItem.add(new Action(40, "MENU_HELP_VIEW_HELP"));
-		MenuItem aboutItem = new MenuItem(new Action(ACTION_HELP_ABOUT, "MENU_HELP_ABOUT"));
-        helpItem.add(aboutItem);
-		aboutItem.onMenuItemClick = delegate(MenuItem item) {
-			Window wnd = Platform.instance.createWindow("About...", window, WindowFlag.Modal);
-			wnd.mainWidget = createAboutWidget();
-			wnd.show();
-			return true;
-		};
+        helpItem.add(ACTION_HELP_ABOUT);
         mainMenuItems.add(fileItem);
         mainMenuItems.add(editItem);
 		//mainMenuItems.add(viewItem);
@@ -165,8 +155,10 @@ class IDEFrame : AppFrame {
         ToolBarHost res = new ToolBarHost();
         ToolBar tb;
         tb = res.getOrAddToolbar("Standard");
-        tb.addButtons(ACTION_FILE_OPEN, ACTION_FILE_SAVE, ACTION_SEPARATOR, 
-                      ACTION_EDIT_COPY, ACTION_EDIT_PASTE, ACTION_EDIT_CUT);
+        tb.addButtons(ACTION_FILE_OPEN, ACTION_FILE_SAVE);
+        tb = res.getOrAddToolbar("Edit");
+        tb.addButtons(ACTION_EDIT_COPY, ACTION_EDIT_PASTE, ACTION_EDIT_CUT, ACTION_SEPARATOR,
+                      ACTION_EDIT_UNDO, ACTION_EDIT_REDO);
         return res;
     }
 
@@ -175,8 +167,9 @@ class IDEFrame : AppFrame {
         if (a) {
             switch (a.id) {
                 case IDEActions.FileExit:
+                    window.close();
                     return true;
-                case ACTION_HELP_ABOUT:
+                case IDEActions.HelpAbout:
                     Window wnd = Platform.instance.createWindow("About...", window, WindowFlag.Modal);
                     wnd.mainWidget = createAboutWidget();
                     wnd.show();
