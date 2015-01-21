@@ -8,10 +8,13 @@ private import std.array;
 * Even if contains only file name, it's better to use it instead of string - object reference size is twice less than array ref.
 */
 class SourceFile {
-	protected string _file;
-	public @property string filename() { return _file; }
+	protected string _filename;
+	@property string filename() { return _filename; }
     public this(string filename) {
-        _file = filename;
+        _filename = filename;
+    }
+    override @property string toString() {
+        return _filename;
     }
 }
 

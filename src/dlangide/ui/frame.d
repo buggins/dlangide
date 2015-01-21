@@ -96,10 +96,27 @@ class SimpleDSyntaxHighlighter : SyntaxHighlighter {
                         category = TokenCategory.Integer;
                         break;
                     case TokenType.FLOAT:
-                        category = TokenCategory.FLoat;
+                        category = TokenCategory.Float;
                         break;
                     case TokenType.INVALID:
-                        category = TokenCategory.Error;
+                        switch (token.invalidTokenType) {
+                            case TokenType.IDENTIFIER:
+                                category = TokenCategory.Error_InvalidIdentifier;
+                                break;
+                            case TokenType.STRING:
+                                category = TokenCategory.Error_InvalidString;
+                                break;
+                            case TokenType.COMMENT:
+                                category = TokenCategory.Error_InvalidComment;
+                                break;
+                            case TokenType.FLOAT:
+                            case TokenType.INTEGER:
+                                category = TokenCategory.Error_InvalidNumber;
+                                break;
+                            default:
+                                category = TokenCategory.Error;
+                                break;
+                        }
                         break;
                     default:
                         category = 0;

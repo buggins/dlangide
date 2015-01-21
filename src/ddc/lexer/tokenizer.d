@@ -900,11 +900,18 @@ class Token {
 	protected int _line;
 	protected int _pos;
 	protected TokenType _type;
+    /// returns token type
 	@property TokenType type() { return _type; }
-	@property string filename() { return _file.filename; }
+    /// returns file info for source
+	@property SourceFile filename() { return _file; }
+    /// returns 1-based source line number of token start
 	@property int line() { return _line; }
+    /// returns 1-based source line position of token start
 	@property int pos() { return _pos; }
+    /// returns token text
 	@property dchar[] text() { return null; }
+
+    // number token properties
 	@property dchar literalType() { return 0; }
 	@property ulong intValue() { return 0; }
 	@property bool isUnsigned() { return false; }
@@ -914,9 +921,24 @@ class Token {
 	@property float floatValue() { return 0; }
 	@property byte precision() { return 0; }
 	@property bool isImaginary() { return false; }
+
+    /// returns opcode ID - for opcode tokens
 	@property OpCode opCode() { return OpCode.NONE; }
+    /// returns keyword ID - for keyword tokens
 	@property Keyword keyword() { return Keyword.NONE; }
+    /// returns true if this is documentation comment token
     @property bool isDocumentationComment() { return false; }
+
+    // error handling
+
+    /// returns true if it's invalid token (can be returned in error tolerant mode of tokenizer)
+    @property bool isError() { return type == TokenType.INVALID; }
+    /// returns error message if it's invalid token (can be returned in error tolerant mode of tokenizer)
+    @property string errorMessage() { return null; }
+    /// returns error code if it's invalid token (can be returned in error tolerant mode of tokenizer)
+    @property int errorCode() { return 0; }
+    /// returns type of token parsing of which has been failed - if it's invalid token (can be returned in error tolerant mode of tokenizer)
+    @property TokenType invalidTokenType() { return TokenType.INVALID; }
 
 
 	this(TokenType type) {
@@ -929,17 +951,17 @@ class Token {
 		_line = line;
 		_pos = pos;
 	}
-
+    /// set start position for token (line is 1-based, pos is 0-based)
 	void setPos(SourceFile file, int line, int pos) {
 		_file = file;
 		_line = line;
 		_pos = pos + 1;
 	}
-
+    /// set source file information for token
 	void setFile(SourceFile file) {
 		_file = file;
 	}
-
+    /// set start position for token (line is 1-based, pos is 0-based)
 	void setPos(int line, int pos) {
 		_line = line;
 		_pos = pos + 1;
@@ -974,6 +996,7 @@ class EofToken : Token {
 //	}
 //}
 
+/// white space token
 class WhiteSpaceToken : Token {
 	this() {
 		super(TokenType.WHITESPACE);
@@ -1027,7 +1050,7 @@ class KeywordToken : Token {
 	}
 }
 
-// do we need comment text?
+/// comment token
 class CommentToken : Token {
 	protected dchar[] _text;
     protected bool _isDocumentationComment;
@@ -1060,9 +1083,28 @@ class CommentToken : Token {
 /// Invalid token holder - for error tolerant parsing
 class InvalidToken : Token {
 	protected dchar[] _text;
+    protected TokenType _invalidTokenType;
+    protected int _errorCode;
+    protected string _errorMessage;
 
+    /// returns error message if it's invalid token (can be returned in error tolerant mode of tokenizer)
+    override @property string errorMessage() { return _errorMessage; }
+    /// sets error message
+    @property void errorMessage(string s) { _errorMessage = s; }
+    /// returns error code if it's invalid token (can be returned in error tolerant mode of tokenizer)
+    override @property int errorCode() { return _errorCode; }
+    /// sets error code
+    @property void errorCode(int c) { _errorCode = c; }
+    /// returns type of token parsing of which has been failed - if it's invalid token (can be returned in error tolerant mode of tokenizer)
+    override @property TokenType invalidTokenType() { return _invalidTokenType; }
+    /// sets type of token parsing of which has been failed
+    @property void invalidTokenType(TokenType t) { _invalidTokenType = t; }
+
+    /// text of invalid token
 	@property override dchar[] text() { return _text; }
+    /// text of invalid token
 	@property void text(dchar[] text) { _text = text; }
+
 	this() {
 		super(TokenType.INVALID);
 	}
@@ -1071,7 +1113,11 @@ class InvalidToken : Token {
 		_text = text;
 	}
 	override Token clone() {
-		return new InvalidToken(_file, _line, _pos, _text.dup);
+		InvalidToken res = new InvalidToken(_file, _line, _pos, _text.dup);
+        res._errorMessage = _errorMessage.dup;
+        res._errorCode = _errorCode;
+        res._invalidTokenType = _invalidTokenType;
+        return res;
 	}
 	override @property string toString() {
 		return "Invalid:" ~ to!string(_text);
@@ -1372,7 +1418,7 @@ class Tokenizer
 		_lineText = _lineStream.readLine();
 		if (!_lineText) {
 			if (_lineStream.errorCode != 0)
-				throw new SourceEncodingException(_lineStream.errorMessage, _lineStream.file.filename, _lineStream.errorLine, _lineStream.errorPos);
+				throw new SourceEncodingException(_lineStream.errorMessage, _lineStream.file, _lineStream.errorLine, _lineStream.errorPos);
             if (_lineStream.eof) {
                 // end of file
                 _pos = 0;
@@ -1822,16 +1868,38 @@ class Tokenizer
 	}
 		
     /// Either return InvalidToken or throw parser exception depending on current errorTolerant flag
-	protected Token parserError(string msg, Token incompleteToken, dchar currentChar = 0) {
-        return parserError(msg, incompleteToken.line, incompleteToken.pos, currentChar);
+	protected Token parserError(string msg, Token incompleteToken) {
+        return parserError(msg, incompleteToken.line, incompleteToken.pos, incompleteToken.type);
     }
     /// Either return InvalidToken or throw parser exception depending on current errorTolerant flag
-    protected Token parserError(string msg, int startLine, int startPos, dchar currentChar = 0) {
+    protected Token parserError(string msg, int startLine, int startPos, TokenType failedTokenType = TokenType.INVALID) {
         if (_errorTolerant) {
+            startPos--;
             _sharedInvalidToken.setPos(startLine, startPos);
+            _sharedInvalidToken.errorMessage = msg;
+            _sharedInvalidToken.errorCode = 1; // for future extension
+            _sharedInvalidToken.invalidTokenType = failedTokenType; // for future extension
+            // make invalid source text
+            dchar[] invalidText;
+            int p = startLine == _line ? startPos : 0;
+            for (int i = p; i < _pos && i < _lineText.length; i++)
+                invalidText ~= _lineText[i];
+
+            // recover after error
+            for (; _pos < _lineText.length; _pos++) {
+                dchar ch = _lineText[_pos];
+                if (ch == ' ' || ch == '\t' || ch == '(' || ch == ')' || ch == '[' || ch == ']' || ch == '{' || ch == '}')
+                    break;
+                if (failedTokenType == TokenType.INTEGER || failedTokenType == TokenType.FLOAT) {
+                    if (ch == '*' || ch == '/')
+                        break;
+                }
+                invalidText ~= ch;
+            }
+            _sharedInvalidToken.text = invalidText;
             return _sharedInvalidToken;
         }
-		throw new ParserException(msg, _lineStream.file.filename, _line, _pos);
+		throw new ParserException(msg, _lineStream.file, _line, _pos);
 	}
 
 	protected Keyword detectKeyword(dchar ch) {

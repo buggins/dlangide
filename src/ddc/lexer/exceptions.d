@@ -2,31 +2,36 @@ module ddc.lexer.exceptions;
 
 import std.conv;
 
+import ddc.lexer.textsource;
+
 class ParserException : Exception {
-    string _msg;
-    string _filename;
-    size_t _line;
-    size_t _pos;
+    protected string _msg;
+    protected SourceFile _file;
+    protected int _line;
+    protected int _pos;
 
-    public @property size_t line() { return _line; }
+    @property SourceFile file() { return _file; }
+    @property string msg() { return _msg; }
+    @property int line() { return _line; }
+    @property int pos() { return _pos; }
 
-    this(string msg, string filename, size_t line, size_t pos) {
-        super(msg ~ " at " ~ filename ~ " line " ~ to!string(line) ~ " column " ~ to!string(pos));
+    this(string msg, SourceFile file, int line, int pos) {
+        super(msg ~ " at " ~ file.toString ~ " line " ~ to!string(line) ~ " column " ~ to!string(pos));
         _msg = msg;
-        _filename = filename;
+        _file = file;
         _line = line;
         _pos = pos;
     }
 }
 
 class LexerException : ParserException {
-    this(string msg, string filename, size_t line, size_t pos) {
-        super(msg, filename, line, pos);
+    this(string msg, SourceFile file, int line, int pos) {
+        super(msg, file, line, pos);
     }
 }
 
 class SourceEncodingException : LexerException {
-    this(string msg, string filename, size_t line, size_t pos) {
-        super(msg, filename, line, pos);
+    this(string msg, SourceFile file, int line, int pos) {
+        super(msg, file, line, pos);
     }
 }
