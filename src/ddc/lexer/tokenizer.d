@@ -1209,6 +1209,29 @@ class StringLiteralToken : Token {
 	}
 }
 
+class CharacterLiteralToken : Token {
+	dchar _character;
+	dchar _literalType;
+	@property override dchar literalType() { return _literalType; }
+    @property dchar character() { return _character; }
+	@property override dchar[] text() { return [_character]; }
+	void setCharacter(dchar ch, dchar type) { _character = ch; _literalType = type; }
+	this() {
+		super(TokenType.CHARACTER);
+	}
+	this(SourceFile file, uint line, uint pos, dchar character, dchar type) {
+		super(TokenType.CHARACTER, file, line, pos);
+		_character = character;
+		_literalType = type;
+	}
+	override public Token clone() {
+		return new CharacterLiteralToken(_file, _line, _pos, _character, _literalType);
+	}
+	public override @property string toString() {
+		return "Char:" ~ toUTF8([_character]);
+	}
+}
+
 class IntegerLiteralToken : Token {
 	ulong _value;
 	bool _unsigned;
@@ -1361,6 +1384,7 @@ class Tokenizer
 	protected IntegerLiteralToken _sharedIntegerToken = new IntegerLiteralToken();
 	protected RealLiteralToken _sharedRealToken = new RealLiteralToken();
     protected InvalidToken _sharedInvalidToken = new InvalidToken();
+    protected CharacterLiteralToken _sharedCharacterLiteralToken = new CharacterLiteralToken();
 	protected StringAppender _stringLiteralAppender;
 	protected StringAppender _commentAppender;
 	protected StringAppender _identAppender;
@@ -1401,6 +1425,7 @@ class Tokenizer
 		_sharedIntegerToken.setFile(file);
 		_sharedRealToken.setFile(file);
         _sharedInvalidToken.setFile(file);
+        _sharedCharacterLiteralToken.setFile(file);
 		buildTime = Clock.currTime();
         _line = lineStream.line;
         _pos = 0;
@@ -2328,6 +2353,53 @@ class Tokenizer
 		}
 	}
 	
+    protected Token processCharacterLiteral() {
+		_sharedCharacterLiteralToken.setPos(_line, _pos - 1);
+        if (_pos + 2 > _len)
+            return parserError("Invalid character literal", _sharedCharacterLiteralToken);
+        dchar ch = _lineText[_pos++];
+        dchar ch2 = _lineText[_pos++];
+        dchar type = 0;
+        if (ch == '\\') {
+            // process escaped character - store it in ch
+            // TODO: support all escape sequences
+            switch(ch2) {
+                case 'r':
+                    ch = '\r';
+                    break;
+                case 'n':
+                    ch = '\n';
+                    break;
+                case 't':
+                    ch = '\t';
+                    break;
+                case '\\':
+                    ch = '\\';
+                    break;
+                default:
+                    ch = ch2;
+                    break;
+            }
+            // here must be closing '
+            if (_pos + 1 > _len)
+                return parserError("Invalid character literal", _sharedCharacterLiteralToken);
+            ch2 = _lineText[_pos++];
+        }
+        if (ch2 != '\'')
+            return parserError("Invalid character literal", _sharedCharacterLiteralToken);
+        if (_pos < _len) {
+            dchar t = _lineText[_pos];
+            if (t == 'd' || t == 'w' || t == 'c') {
+                type = t;
+                _pos++;
+            } else if (isIdentMiddleChar(ch)) {
+                return parserError("Unexpected character after character literal", _sharedCharacterLiteralToken);
+            }
+        }
+        _sharedCharacterLiteralToken.setCharacter(ch, type);
+        return _sharedCharacterLiteralToken;
+    }
+
 	protected Token processDoubleQuotedOrWysiwygString(dchar delimiter) {
 		bool wysiwyg = (delimiter == 'r' || delimiter == '`');
 		//writeln("processDoubleQuotedString()");
@@ -2455,6 +2527,8 @@ class Tokenizer
             return processOneLineSharpComment();
 		if (ch == '\"')
 			return processDoubleQuotedOrWysiwygString(ch);
+		if (ch == '\'')
+			return processCharacterLiteral();
 		if (ch == 'x' && next == '\"')
 			return processHexString();
 		if (ch == 'q' && next == '\"')

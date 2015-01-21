@@ -14,6 +14,7 @@ import dlangui.dialogs.filedlg;
 
 import dlangide.ui.commands;
 import dlangide.ui.wspanel;
+import dlangide.ui.outputpanel;
 import dlangide.workspace.workspace;
 import dlangide.workspace.project;
 
@@ -144,6 +145,7 @@ class DSourceEdit : SourceEdit {
         setTokenHightlightColor(TokenCategory.Comment, 0x008000); // green
         setTokenHightlightColor(TokenCategory.Keyword, 0x0000FF); // blue
         setTokenHightlightColor(TokenCategory.String, 0xA31515);  // brown
+        setTokenHightlightColor(TokenCategory.Character, 0xA31515);  // brown
         setTokenHightlightColor(TokenCategory.Error, 0xFF0000);  // red
         setTokenHightlightColor(TokenCategory.Comment_Documentation, 0x206000);
         //setTokenHightlightColor(TokenCategory.Identifier, 0x206000);  // no colors
@@ -186,6 +188,7 @@ class IDEFrame : AppFrame {
 
     MenuItem mainMenuItems;
     WorkspacePanel _wsPanel;
+    OutputPanel _logPanel;
     DockHost _dockHost;
     TabWidget _tabs;
 
@@ -269,6 +272,13 @@ class IDEFrame : AppFrame {
         _wsPanel = new WorkspacePanel("workspace");
         _wsPanel.sourceFileSelectionListener = &onSourceFileSelected;
         _dockHost.addDockedWindow(_wsPanel);
+
+        _logPanel = new OutputPanel("output");
+        _logPanel.addLogLines(null, "Line 1"d);
+        _logPanel.addLogLines(null, "Line 2"d);
+        _logPanel.addLogLines(null, "Line 3"d, "Line 4"d);
+
+        _dockHost.addDockedWindow(_logPanel);
 
         return _dockHost;
     }

@@ -202,6 +202,7 @@
    <Folder name="ui">
     <File path="src\dlangide\ui\commands.d" />
     <File path="src\dlangide\ui\frame.d" />
+    <File path="outputpanel.d" />
     <File path="src\dlangide\ui\wspanel.d" />
    </Folder>
    <Folder name="workspace">

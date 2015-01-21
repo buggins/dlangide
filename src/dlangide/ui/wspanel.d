@@ -57,6 +57,7 @@ class WorkspacePanel : DockWindow {
         _tree = new TreeWidget("wstree");
         _tree.layoutHeight(FILL_PARENT).layoutHeight(FILL_PARENT);
         _tree.selectionListener = &onTreeItemSelected;
+		_tree.fontSize = 12;
         return _tree;
     }
 
