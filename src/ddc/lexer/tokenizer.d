@@ -1439,7 +1439,7 @@ class Tokenizer
 	
 	// fetch next line from source stream
 	protected bool nextLine() {
-        _prevLineLength = _lineText.length;
+        _prevLineLength = cast(int)_lineText.length;
 		_lineText = _lineStream.readLine();
 		if (!_lineText) {
 			if (_lineStream.errorCode != 0)

@@ -103,7 +103,7 @@ class SimpleDSyntaxHighlighter : SyntaxHighlighter {
         long ms0 = currentTimeMillis();
         _props = props;
         changeStartLine = 0;
-        changeEndLine = lines.length;
+        changeEndLine = cast(int)lines.length;
         _lines.init(lines[changeStartLine..$], _file, changeStartLine);
         _tokenizer.init(_lines);
         int tokenPos = 0;
@@ -128,7 +128,7 @@ class SimpleDSyntaxHighlighter : SyntaxHighlighter {
                 // fill with category
                 for (int i = tokenLine; i <= newLine; i++) {
                     int start = i > tokenLine ? 0 : tokenPos;
-                    int end = i < newLine ? lines[i].length : newPos;
+                    int end = i < newLine ? cast(int)lines[i].length : newPos;
                     for (int j = start; j < end; j++)
                         _props[i][j] = category;
                 }
