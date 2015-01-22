@@ -9,25 +9,9 @@
     "targetPath": "bin",
     "targetType": "executable",
 
-    "sourcePaths": ["src"],
-
-    "sourceFiles": [
-         "src/app.d"
-    ],
-
-    "copyFiles-windows": [
-        "lib/FreeImage.dll"
-    ],
-
     "copyFiles": [
         "res"
     ],
-
-    "versions-posix": [
-        "USE_SDL", "USE_OPENGL"
-    ],
-
-    "mainSourceFile": "src/app.d",
 
     "dependencies": {
         "dlangui:dlanguilib": "~master"

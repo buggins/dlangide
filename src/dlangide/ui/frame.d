@@ -9,6 +9,7 @@ import dlangui.widgets.controls;
 import dlangui.widgets.appframe;
 import dlangui.widgets.docks;
 import dlangui.widgets.toolbars;
+import dlangui.widgets.combobox;
 import dlangui.dialogs.dialog;
 import dlangui.dialogs.filedlg;
 
@@ -155,7 +156,12 @@ class IDEFrame : AppFrame {
         ToolBarHost res = new ToolBarHost();
         ToolBar tb;
         tb = res.getOrAddToolbar("Standard");
-        tb.addButtons(ACTION_FILE_OPEN, ACTION_FILE_SAVE);
+        tb.addButtons(ACTION_FILE_OPEN, ACTION_FILE_SAVE, ACTION_SEPARATOR);
+
+        tb.addButtons(ACTION_DEBUG_START);
+        ToolBarComboBox cbBuildConfiguration = new ToolBarComboBox("buildConfig", ["Debug"d, "Release"d, "Unittest"d]);
+        tb.addControl(cbBuildConfiguration);
+
         tb = res.getOrAddToolbar("Edit");
         tb.addButtons(ACTION_EDIT_COPY, ACTION_EDIT_PASTE, ACTION_EDIT_CUT, ACTION_SEPARATOR,
                       ACTION_EDIT_UNDO, ACTION_EDIT_REDO);

@@ -10,6 +10,7 @@ import ddc.lexer.tokenizer;
 
 import dlangide.workspace.workspace;
 import dlangide.workspace.project;
+import dlangide.ui.commands;
 
 import std.algorithm;
 
@@ -58,6 +59,25 @@ class DSourceEdit : SourceEdit {
         _projectSourceFile = f;
         setHighlighter();
         return true;
+    }
+
+    /// save to the same file
+    bool save() {
+        return _content.save();
+    }
+
+    /// override to handle specific actions
+	override bool handleAction(const Action a) {
+        if (a) {
+            switch (a.id) {
+                case IDEActions.FileSave:
+                    save();
+                    return true;
+                default:
+                    break;
+            }
+        }
+        return super.handleAction(a);
     }
 }
 

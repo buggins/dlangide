@@ -211,6 +211,6 @@
     <File path="src\dlangide\workspace\workspace.d" />
    </Folder>
   </Folder>
-  <File path="src\app.d" />
+  <File path="src\dlangide.d" />
  </Folder>
 </DProject>

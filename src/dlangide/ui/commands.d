@@ -1,6 +1,6 @@
 module dlangide.ui.commands;
 
-import dlangui.core.events;
+public import dlangui.core.events;
 import dlangui.widgets.editors;
 
 enum IDEActions : int {
@@ -11,6 +11,8 @@ enum IDEActions : int {
     FileSave,
     FileClose,
     FileExit,
+    DebugStart,
+    DebugStartNoDebug,
     HelpAbout,
 }
 
@@ -18,6 +20,7 @@ __gshared Action ACTION_FILE_NEW = new Action(IDEActions.FileOpen, "MENU_FILE_NE
 __gshared Action ACTION_FILE_OPEN = new Action(IDEActions.FileOpen, "MENU_FILE_OPEN"c, "document-open", KeyCode.KEY_O, KeyFlag.Control);
 __gshared Action ACTION_FILE_SAVE = new Action(IDEActions.FileSave, "MENU_FILE_SAVE"c, "document-save", KeyCode.KEY_S, KeyFlag.Control);
 __gshared Action ACTION_FILE_EXIT = new Action(IDEActions.FileExit, "MENU_FILE_EXIT"c, "document-close"c, KeyCode.KEY_X, KeyFlag.Alt);
+__gshared Action ACTION_DEBUG_START = new Action(IDEActions.DebugStart, "Start Debugging"d, "debug-run"c, KeyCode.F5, 0);
 __gshared Action ACTION_EDIT_COPY = new Action(EditorActions.Copy, "Copy"d, "edit-copy"c, KeyCode.KEY_C, KeyFlag.Control);
 __gshared Action ACTION_EDIT_PASTE = new Action(EditorActions.Paste, "Paste"d, "edit-paste"c, KeyCode.KEY_V, KeyFlag.Control);
 __gshared Action ACTION_EDIT_CUT = new Action(EditorActions.Cut, "Cut"d, "edit-cut"c, KeyCode.KEY_X, KeyFlag.Control);
