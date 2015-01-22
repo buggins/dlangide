@@ -1431,6 +1431,7 @@ class Tokenizer
         _pos = 0;
         _prevLineLength = 0;
         _lineText = null;
+        nextLine();
     }
 	
 	this(string code, string filename = "") {
@@ -1459,11 +1460,7 @@ class Tokenizer
 	}
 	
 	protected dchar nextChar() {
-		if (_lineText is null) {
-			if (!nextLine()) {
-				return EOF_CHAR;
-			}
-		} else if (_pos >= _len) {
+	    if (_pos >= _len) {
 			if (!nextLine()) {
 				return EOF_CHAR;
 			}
