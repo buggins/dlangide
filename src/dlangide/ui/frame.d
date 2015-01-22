@@ -190,10 +190,7 @@ class IDEFrame : AppFrame {
                     dlg.show();
                     return true;
                 default:
-                    if (window.focusedWidget)
-                        return window.focusedWidget.handleAction(a);
-                    else
-                        return handleAction(a);
+                    return super.handleAction(a);
             }
         }
 		return false;
