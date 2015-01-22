@@ -9,9 +9,7 @@
     "targetPath": "bin",
     "targetType": "executable",
 
-    "copyFiles": [
-        "res"
-    ],
+    "stringImportPaths": ["views", "views/res", "views/res/i18n", "views/res/mdpi"],
 
     "dependencies": {
         "dlangui:dlanguilib": "~master"

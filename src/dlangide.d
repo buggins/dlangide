@@ -12,28 +12,9 @@ mixin APP_ENTRY_POINT;
 
 /// entry point for dlangui based application
 extern (C) int UIAppMain(string[] args) {
-    // resource directory search paths
-    string[] resourceDirs = [
-		appendPath(exePath, "res/"), // when res dir is located at the same directory as executable
-		appendPath(exePath, "../res/"), // when res dir is located at project directory
-		appendPath(exePath, "../../res/"), // when res dir is located at the same directory as executable
-		appendPath(exePath, "res/mdpi/"), // when res dir is located at the same directory as executable
-		appendPath(exePath, "../res/mdpi/"), // when res dir is located at project directory
-		appendPath(exePath, "../../res/mdpi/"), // when res dir is located at the same directory as executable
-        appendPath(exePath, "res/stdres/"), // when res dir is located at the same directory as executable
-		appendPath(exePath, "../res/stdres/"), // when res dir is located at project directory
-		appendPath(exePath, "../../res/stdres/"), // when res dir is located at the same directory as executable
-		appendPath(exePath, "res/stdres/mdpi/"), // when res dir is located at the same directory as executable
-		appendPath(exePath, "../res/stdres/mdpi/"), // when res dir is located at project directory
-		appendPath(exePath, "../../res/stdres/mdpi/") // when res dir is located at the same directory as executable
-	];
 
-    // setup resource directories - will use only existing directories
-	Platform.instance.resourceDirs = resourceDirs;
-    // select translation file - for english language
-	Platform.instance.uiLanguage = "en";
-	// load theme from file "theme_default.xml"
-	Platform.instance.uiTheme = "theme_default";
+    // embed non-standard resources listed in views/resources.list into executable
+    embeddedResourceList.addResources(embedResourcesFromList!("resources.list")());
 
     // you can override default hinting mode here
     FontManager.instance.hintingMode = HintingMode.Normal;
