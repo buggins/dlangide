@@ -17,9 +17,11 @@ extern (C) int UIAppMain(string[] args) {
     embeddedResourceList.addResources(embedResourcesFromList!("resources.list")());
 
     // you can override default hinting mode here
-    FontManager.instance.hintingMode = HintingMode.Normal;
+    FontManager.hintingMode = HintingMode.Normal;
     // you can override antialiasing setting here
-    FontManager.instance.minAnitialiasedFontSize = 0;
+    FontManager.minAnitialiasedFontSize = 0;
+    // you can turn on subpixel font rendering (ClearType) here
+    FontManager.subpixelRenderingMode = SubpixelRenderingMode.None; //SubpixelRenderingMode.BGR;
 
     // create window
     Window window = Platform.instance.createWindow("Dlang IDE", null);
@@ -29,6 +31,7 @@ extern (C) int UIAppMain(string[] args) {
     // create some widget to show in window
     window.windowIcon = drawableCache.getImage("dlangui-logo1");
 
+    // for testing: load workspace at startup
     frame.loadWorkspace(appendPath(exePath, "../workspaces/sample1/sample1.dlangidews"));
 
     // show window
