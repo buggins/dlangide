@@ -20,8 +20,13 @@ extern (C) int UIAppMain(string[] args) {
     FontManager.hintingMode = HintingMode.Normal;
     // you can override antialiasing setting here
     FontManager.minAnitialiasedFontSize = 0;
-    // you can turn on subpixel font rendering (ClearType) here
-    FontManager.subpixelRenderingMode = SubpixelRenderingMode.None; //SubpixelRenderingMode.BGR; //SubpixelRenderingMode.None; //
+	version (USE_OPENGL) {
+		// you can turn on subpixel font rendering (ClearType) here
+		FontManager.subpixelRenderingMode = SubpixelRenderingMode.None; //
+	} else {
+		// you can turn on subpixel font rendering (ClearType) here
+		FontManager.subpixelRenderingMode = SubpixelRenderingMode.BGR; //SubpixelRenderingMode.None; //
+	}
 
     // create window
     Window window = Platform.instance.createWindow("Dlang IDE", null);
