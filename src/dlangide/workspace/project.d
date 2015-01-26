@@ -7,6 +7,7 @@ import std.path;
 import std.file;
 import std.json;
 import std.utf;
+import std.algorithm;
 
 /// project item
 class ProjectItem {
@@ -216,6 +217,27 @@ class Project : WorkspaceItem {
         folder.loadDir(relativeToAbsolutePath("src"));
         folder.loadDir(relativeToAbsolutePath("source"));
         return folder;
+    }
+
+    /// tries to find source file in project, returns found project source file item, or null if not found
+    ProjectSourceFile findSourceFileItem(ProjectItem dir, string filename) {
+        for (int i = 0; i < dir.childCount; i++) {
+            ProjectItem item = dir.child(i);
+            if (item.isFolder) {
+                ProjectSourceFile res = findSourceFileItem(item, filename);
+                if (res)
+                    return res;
+            } else {
+                ProjectSourceFile res = cast(ProjectSourceFile)item;
+                if (res && res.filename.equal(filename))
+                    return res;
+            }
+        }
+        return null;
+    }
+
+    ProjectSourceFile findSourceFileItem(string filename) {
+        return findSourceFileItem(_items, filename);
     }
 
     override bool load(string fname = null) {

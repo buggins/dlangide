@@ -65,6 +65,12 @@ class WorkspacePanel : DockWindow {
         return _workspace;
     }
 
+    ProjectSourceFile findSourceFileItem(string filename) {
+        if (_workspace)
+            return _workspace.findSourceFileItem(filename);
+        return null;
+    }
+
     void addProjectItems(TreeItem root, ProjectItem items) {
         for (int i = 0; i < items.childCount; i++) {
             ProjectItem child = items.child(i);

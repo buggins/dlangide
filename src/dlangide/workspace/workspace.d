@@ -31,6 +31,16 @@ class Workspace : WorkspaceItem {
         return _projects;
     }
 
+    /// tries to find source file in one of projects, returns found project source file item, or null if not found
+    ProjectSourceFile findSourceFileItem(string filename) {
+        foreach (Project p; _projects) {
+            ProjectSourceFile res = p.findSourceFileItem(filename);
+            if (res)
+                return res;
+        }
+        return null;
+    }
+
     override bool load(string fname = null) {
         if (fname.length > 0)
             filename = fname;

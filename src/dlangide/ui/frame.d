@@ -12,6 +12,7 @@ import dlangui.widgets.toolbars;
 import dlangui.widgets.combobox;
 import dlangui.dialogs.dialog;
 import dlangui.dialogs.filedlg;
+import dlangui.core.stdaction;
 
 import dlangide.ui.commands;
 import dlangide.ui.wspanel;
@@ -23,6 +24,13 @@ import dlangide.workspace.project;
 import std.conv;
 import std.utf;
 import std.algorithm;
+import std.path;
+
+bool isSupportedSourceTextFileFormat(string filename) {
+    return (filename.endsWith(".d") || filename.endsWith(".txt") || filename.endsWith(".cpp") || filename.endsWith(".h") || filename.endsWith(".c")
+        || filename.endsWith(".json") || filename.endsWith(".dd") || filename.endsWith(".ddoc") || filename.endsWith(".xml") || filename.endsWith(".html")
+        || filename.endsWith(".html") || filename.endsWith(".css") || filename.endsWith(".log") || filename.endsWith(".hpp"));
+}
 
 /// DIDE app frame
 class IDEFrame : AppFrame {
@@ -54,17 +62,24 @@ class IDEFrame : AppFrame {
     /// source file selected in workspace tree
     bool onSourceFileSelected(ProjectSourceFile file, bool activate) {
         Log.d("onSourceFileSelected ", file.filename);
-        int index = _tabs.tabIndex(file.filename);
+        return openSourceFile(file.filename, file, activate);
+    }
+
+    bool openSourceFile(string filename, ProjectSourceFile file = null, bool activate = true) {
+        if (!file)
+            file = _wsPanel.findSourceFileItem(filename);
+        Log.d("openSourceFile ", filename);
+        int index = _tabs.tabIndex(filename);
         if (index >= 0) {
             // file is already opened in tab
             _tabs.selectTab(index, true);
         } else {
             // open new file
-            DSourceEdit editor = new DSourceEdit(file.filename);
-            if (editor.load(file)) {
-                _tabs.addTab(editor, toUTF32(file.name));
-                index = _tabs.tabIndex(file.filename);
-                TabItem tab = _tabs.tab(file.filename);
+            DSourceEdit editor = new DSourceEdit(filename);
+            if (file ? editor.load(file) : editor.load(filename)) {
+                _tabs.addTab(editor, toUTF32(baseName(filename)));
+                index = _tabs.tabIndex(filename);
+                TabItem tab = _tabs.tab(filename);
                 tab.objectParam = file;
                 _tabs.selectTab(index, true);
             } else {
@@ -75,7 +90,7 @@ class IDEFrame : AppFrame {
             }
         }
         if (activate) {
-            focusEditor(file.filename);
+            focusEditor(filename);
         }
         requestLayout();
         return true;
@@ -185,7 +200,12 @@ class IDEFrame : AppFrame {
                     caption = "Open Text File"d;
                     FileDialog dlg = new FileDialog(caption, window, null);
                     dlg.onDialogResult = delegate(Dialog dlg, const Action result) {
-                        //
+						if (result.id == ACTION_OPEN.id) {
+                            string filename = result.stringParam;
+                            if (isSupportedSourceTextFileFormat(filename)) {
+                                openSourceFile(filename);
+                            }
+                        }
                     };
                     dlg.show();
                     return true;
