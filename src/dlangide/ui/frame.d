@@ -123,6 +123,39 @@ class IDEFrame : AppFrame {
         }
     }
 
+    /// close tab w/o confirmation
+    void closeTab(string tabId) {
+        _wsPanel.selectItem(null);
+        _tabs.removeTab(tabId);
+    }
+
+    protected void onTabClose(string tabId) {
+        Log.d("onTabClose ", tabId);
+        int index = _tabs.tabIndex(tabId);
+        if (index >= 0) {
+            DSourceEdit d = cast(DSourceEdit)_tabs.tabBody(tabId);
+            if (d && d.content.modified) {
+                // tab content is modified - ask for confirmation
+                window.showMessageBox(UIString("Close tab"d), UIString("Content of "d ~ toUTF32(baseName(id)) ~ " file has been changed."d), 
+                                      [ACTION_SAVE, ACTION_DISCARD_CHANGES, ACTION_CANCEL], 
+                                      0, delegate(const Action result) {
+                                          if (result == StandardAction.Save) {
+                                              // save and close
+                                              d.save();
+                                              closeTab(tabId);
+                                          } else if (result == StandardAction.DiscardChanges) {
+                                              // close, don't save
+                                              closeTab(tabId);
+                                          }
+                                          // else ignore
+                                          return true;
+                                      });
+            } else {
+                closeTab(tabId);
+            }
+        }
+    }
+
     /// create app body widget
     override protected Widget createBody() {
         _dockHost = new DockHost();
@@ -134,7 +167,8 @@ class IDEFrame : AppFrame {
         _tabs = new TabWidget("TABS");
         _tabs.setStyles(STYLE_DOCK_HOST_BODY, STYLE_TAB_UP_DARK, STYLE_TAB_UP_BUTTON_DARK, STYLE_TAB_UP_BUTTON_DARK_TEXT);
         _tabs.onTabChangedListener = &onTabChanged;
-        
+        _tabs.onTabCloseListener = &onTabClose;
+
         _dockHost.bodyWidget = _tabs;
 
         //=============================================================

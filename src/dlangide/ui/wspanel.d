@@ -31,15 +31,22 @@ class WorkspacePanel : DockWindow {
     }
 
     bool selectItem(ProjectItem projectItem) {
-        TreeItem item = _tree.findItemById(projectItem.filename);
-        if (item) {
-            _tree.selectItem(item);
+        if (projectItem) {
+            TreeItem item = _tree.findItemById(projectItem.filename);
+            if (item) {
+                _tree.selectItem(item);
+                return true;
+            }
+        } else {
+            _tree.clearSelection();
             return true;
         }
         return false;
     }
 
     void onTreeItemSelected(TreeItems source, TreeItem selectedItem, bool activated) {
+        if (!selectedItem)
+            return;
         if (selectedItem.intParam == ProjectItemType.SourceFile) {
             // file selected
             if (sourceFileSelectionListener.assigned) {
