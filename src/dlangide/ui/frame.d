@@ -41,6 +41,8 @@ class IDEFrame : AppFrame {
     DockHost _dockHost;
     TabWidget _tabs;
 
+    dstring frameWindowCaptionSuffix = "DLangIDE"d;
+
     this(Window window) {
         super();
         window.mainWidget = this;
@@ -117,6 +119,7 @@ class IDEFrame : AppFrame {
                 _wsPanel.selectItem(file);
                 focusEditor(file.filename);
             }
+            window.windowCaption(tab.text.value ~ " - "d ~ frameWindowCaptionSuffix);
         }
     }
 
