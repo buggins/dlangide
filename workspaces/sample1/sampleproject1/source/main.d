@@ -1,7 +1,6 @@
 void main() {
 
 
-
 }
 
 // Computes average line length for standard input.

@@ -198,6 +198,18 @@ class IDEFrame : AppFrame {
 		editItem.add(ACTION_EDIT_COPY, ACTION_EDIT_PASTE, ACTION_EDIT_CUT, ACTION_EDIT_UNDO, ACTION_EDIT_REDO);
 
 		editItem.add(new Action(20, "MENU_EDIT_PREFERENCES"));
+
+        MenuItem projectItem = new MenuItem(new Action(21, "MENU_PROJECT"));
+        projectItem.add(ACTION_PROJECT_SET_STARTUP, ACTION_PROJECT_SETTINGS);
+
+        MenuItem buildItem = new MenuItem(new Action(22, "MENU_BUILD"));
+        buildItem.add(ACTION_WORKSPACE_BUILD, ACTION_WORKSPACE_REBUILD, ACTION_WORKSPACE_CLEAN,
+                     ACTION_PROJECT_BUILD, ACTION_PROJECT_REBUILD, ACTION_PROJECT_CLEAN);
+
+        MenuItem debugItem = new MenuItem(new Action(23, "MENU_DEBUG"));
+        debugItem.add(ACTION_DEBUG_START, ACTION_DEBUG_START_NO_DEBUG, ACTION_DEBUG_CONTINUE, ACTION_DEBUG_STOP, ACTION_DEBUG_PAUSE);
+
+
 		MenuItem windowItem = new MenuItem(new Action(3, "MENU_WINDOW"c));
         windowItem.add(new Action(30, "MENU_WINDOW_PREFERENCES"));
         MenuItem helpItem = new MenuItem(new Action(4, "MENU_HELP"c));
@@ -205,6 +217,9 @@ class IDEFrame : AppFrame {
         helpItem.add(ACTION_HELP_ABOUT);
         mainMenuItems.add(fileItem);
         mainMenuItems.add(editItem);
+        mainMenuItems.add(projectItem);
+        mainMenuItems.add(buildItem);
+        mainMenuItems.add(debugItem);
 		//mainMenuItems.add(viewItem);
 		mainMenuItems.add(windowItem);
         mainMenuItems.add(helpItem);
