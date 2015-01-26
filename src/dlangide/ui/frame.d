@@ -65,6 +65,16 @@ class IDEFrame : AppFrame {
         return openSourceFile(file.filename, file, activate);
     }
 
+    void onModifiedStateChange(Widget source, bool modified) {
+        //
+        Log.d("onModifiedStateChange ", source.id, " modified=", modified);
+        int index = _tabs.tabIndex(source.id);
+        if (index >= 0) {
+            dstring name = toUTF32((modified ? "* " : "") ~ baseName(source.id));
+            _tabs.renameTab(index, name);
+        }
+    }
+
     bool openSourceFile(string filename, ProjectSourceFile file = null, bool activate = true) {
         if (!file)
             file = _wsPanel.findSourceFileItem(filename);
@@ -81,6 +91,7 @@ class IDEFrame : AppFrame {
                 index = _tabs.tabIndex(filename);
                 TabItem tab = _tabs.tab(filename);
                 tab.objectParam = file;
+                editor.onModifiedStateChangeListener = &onModifiedStateChange;
                 _tabs.selectTab(index, true);
             } else {
                 destroy(editor);
