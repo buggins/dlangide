@@ -192,10 +192,12 @@ class IDEFrame : AppFrame {
 
         mainMenuItems = new MenuItem();
         MenuItem fileItem = new MenuItem(new Action(1, "MENU_FILE"));
-        fileItem.add(ACTION_FILE_NEW, ACTION_FILE_OPEN, ACTION_FILE_SAVE, ACTION_FILE_EXIT);
+        fileItem.add(ACTION_FILE_NEW, ACTION_FILE_OPEN_WORKSPACE, ACTION_FILE_OPEN, 
+                     ACTION_FILE_SAVE, ACTION_FILE_SAVE_AS, ACTION_FILE_SAVE_ALL, ACTION_FILE_EXIT);
 
         MenuItem editItem = new MenuItem(new Action(2, "MENU_EDIT"));
-		editItem.add(ACTION_EDIT_COPY, ACTION_EDIT_PASTE, ACTION_EDIT_CUT, ACTION_EDIT_UNDO, ACTION_EDIT_REDO);
+		editItem.add(ACTION_EDIT_COPY, ACTION_EDIT_PASTE, 
+                     ACTION_EDIT_CUT, ACTION_EDIT_UNDO, ACTION_EDIT_REDO);
 
 		editItem.add(new Action(20, "MENU_EDIT_PREFERENCES"));
 
@@ -207,7 +209,8 @@ class IDEFrame : AppFrame {
                      ACTION_PROJECT_BUILD, ACTION_PROJECT_REBUILD, ACTION_PROJECT_CLEAN);
 
         MenuItem debugItem = new MenuItem(new Action(23, "MENU_DEBUG"));
-        debugItem.add(ACTION_DEBUG_START, ACTION_DEBUG_START_NO_DEBUG, ACTION_DEBUG_CONTINUE, ACTION_DEBUG_STOP, ACTION_DEBUG_PAUSE);
+        debugItem.add(ACTION_DEBUG_START, ACTION_DEBUG_START_NO_DEBUG, 
+                      ACTION_DEBUG_CONTINUE, ACTION_DEBUG_STOP, ACTION_DEBUG_PAUSE);
 
 
 		MenuItem windowItem = new MenuItem(new Action(3, "MENU_WINDOW"c));
@@ -262,12 +265,25 @@ class IDEFrame : AppFrame {
                     UIString caption;
                     caption = "Open Text File"d;
                     FileDialog dlg = new FileDialog(caption, window, null);
+                    dlg.addFilter(FileFilterEntry(UIString("Source files"d), "*.d;*.dd;*.ddoc;*.dh;*.json;*.xml;*.ini"));
                     dlg.onDialogResult = delegate(Dialog dlg, const Action result) {
 						if (result.id == ACTION_OPEN.id) {
                             string filename = result.stringParam;
                             if (isSupportedSourceTextFileFormat(filename)) {
                                 openSourceFile(filename);
                             }
+                        }
+                    };
+                    dlg.show();
+                    return true;
+                case IDEActions.FileOpenWorkspace:
+                    UIString caption;
+                    caption = "Open Workspace or Project"d;
+                    FileDialog dlg = new FileDialog(caption, window, null);
+                    dlg.addFilter(FileFilterEntry(UIString("Workspace and project files"d), "*.dlangidews;dub.json"));
+                    dlg.onDialogResult = delegate(Dialog dlg, const Action result) {
+						if (result.id == ACTION_OPEN.id) {
+                            string filename = result.stringParam;
                         }
                     };
                     dlg.show();

@@ -5,10 +5,13 @@ import dlangui.widgets.editors;
 
 enum IDEActions : int {
     None = 0,
-    ProjectOpen = 1010000,
-    FileNew,
+    //ProjectOpen = 1010000,
+    FileNew = 1010000,
     FileOpen,
+    FileOpenWorkspace,
     FileSave,
+    FileSaveAs,
+    FileSaveAll,
     FileClose,
     FileExit,
     BuildWorkspace,
@@ -29,7 +32,10 @@ enum IDEActions : int {
 
 const Action ACTION_FILE_NEW = new Action(IDEActions.FileOpen, "MENU_FILE_NEW"c, "document-new", KeyCode.KEY_N, KeyFlag.Control);
 const Action ACTION_FILE_OPEN = new Action(IDEActions.FileOpen, "MENU_FILE_OPEN"c, "document-open", KeyCode.KEY_O, KeyFlag.Control);
+const Action ACTION_FILE_OPEN_WORKSPACE = new Action(IDEActions.FileOpenWorkspace, "MENU_FILE_OPEN_WORKSPACE"c, null, KeyCode.KEY_O, KeyFlag.Control | KeyFlag.Shift);
 const Action ACTION_FILE_SAVE = new Action(IDEActions.FileSave, "MENU_FILE_SAVE"c, "document-save", KeyCode.KEY_S, KeyFlag.Control);
+const Action ACTION_FILE_SAVE_AS = new Action(IDEActions.FileSaveAs, "MENU_FILE_SAVE_AS"c);
+const Action ACTION_FILE_SAVE_ALL = new Action(IDEActions.FileSaveAll, "MENU_FILE_SAVE_ALL"c, null, KeyCode.KEY_S, KeyFlag.Control | KeyFlag.Shift);
 const Action ACTION_FILE_EXIT = new Action(IDEActions.FileExit, "MENU_FILE_EXIT"c, "document-close"c, KeyCode.KEY_X, KeyFlag.Alt);
 const Action ACTION_WORKSPACE_BUILD = new Action(IDEActions.BuildWorkspace, "MENU_BUILD_WORKSPACE_BUILD"c);
 const Action ACTION_WORKSPACE_REBUILD = new Action(IDEActions.RebuildWorkspace, "MENU_BUILD_WORKSPACE_REBUILD"c);
