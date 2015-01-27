@@ -367,7 +367,7 @@ class IDEFrame : AppFrame {
                     UIString caption;
                     caption = "Open Workspace or Project"d;
                     FileDialog dlg = new FileDialog(caption, window, null);
-                    dlg.addFilter(FileFilterEntry(UIString("Workspace and project files"d), "*.dlangidews;dub.json"));
+                    dlg.addFilter(FileFilterEntry(UIString("Workspace and project files"d), "*.dlangidews;dub.json;package.json"));
                     dlg.onDialogResult = delegate(Dialog dlg, const Action result) {
 						if (result.id == ACTION_OPEN.id) {
                             string filename = result.stringParam;
