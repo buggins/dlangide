@@ -415,6 +415,7 @@ class IDEFrame : AppFrame {
                                               Workspace ws = new Workspace();
                                               ws.name = project.name;
                                               ws.description = project.description;
+                                              ws.addProject(project);
                                               ws.save(defWsFile);
                                               setWorkspace(ws);
                                           } else if (result.id == IDEActions.AddToCurrentWorkspace) {
@@ -433,14 +434,14 @@ class IDEFrame : AppFrame {
         }
     }
 
-    bool loadWorkspace(string path) {
-        // testing workspace loader
-        Workspace ws = new Workspace();
-        ws.load(path);
-        setWorkspace(ws);
-        ws.save(ws.filename ~ ".bak");
-        return true;
-    }
+    //bool loadWorkspace(string path) {
+    //    // testing workspace loader
+    //    Workspace ws = new Workspace();
+    //    ws.load(path);
+    //    setWorkspace(ws);
+    //    //ws.save(ws.filename ~ ".bak");
+    //    return true;
+    //}
 
     void setWorkspace(Workspace ws) {
         closeAllDocuments();

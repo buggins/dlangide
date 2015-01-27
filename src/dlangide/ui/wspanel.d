@@ -95,8 +95,7 @@ class WorkspacePanel : DockWindow {
     }
 
     void reloadItems() {
-        _tree.requestLayout();
-        _tree.items.clear();
+        _tree.clearAllItems();
         if (_workspace) {
             TreeItem root = _tree.items.newChild(_workspace.filename, _workspace.name, "project-development");
             root.intParam = ProjectItemType.Workspace;
@@ -106,13 +105,13 @@ class WorkspacePanel : DockWindow {
                 addProjectItems(p, project.items);
             }
         } else {
-            _tree.items.newChild("none", "New workspace"d, "project-development");
+            _tree.items.newChild("none", "No workspace"d, "project-development");
         }
+        _tree.onTreeContentChange(null);
     }
 
     @property void workspace(Workspace w) {
         _workspace = w;
         reloadItems();
-        _tree.onTreeContentChange(null);
     }
 }

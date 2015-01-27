@@ -65,4 +65,4 @@ const Action ACTION_EDIT_REDO = new Action(EditorActions.Redo, "MENU_EDIT_REDO"c
 const Action ACTION_HELP_ABOUT = new Action(IDEActions.HelpAbout, "MENU_HELP_ABOUT"c);
 const Action ACTION_WINDOW_CLOSE_ALL_DOCUMENTS = new Action(IDEActions.WindowCloseAllDocuments, "MENU_WINDOW_CLOSE_ALL_DOCUMENTS"c);
 const Action ACTION_CREATE_NEW_WORKSPACE = new Action(IDEActions.CreateNewWorkspace, "Create new workspace"d);
-const Action ACTION_ADD_TO_CURRENT_WORKSPACE = new Action(IDEActions.CreateNewWorkspace, "Add to current workspace"d);
+const Action ACTION_ADD_TO_CURRENT_WORKSPACE = new Action(IDEActions.AddToCurrentWorkspace, "Add to current workspace"d);

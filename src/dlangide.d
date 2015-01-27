@@ -39,7 +39,7 @@ extern (C) int UIAppMain(string[] args) {
     // open home screen tab
     frame.showHomeScreen();
     // for testing: load workspace at startup
-    frame.loadWorkspace(appendPath(exePath, "../workspaces/sample1/sample1.dlangidews"));
+    //frame.loadWorkspace(appendPath(exePath, "../workspaces/sample1/sample1.dlangidews"));
 
     // show window
     window.show();
