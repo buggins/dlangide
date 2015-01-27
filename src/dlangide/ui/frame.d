@@ -18,6 +18,7 @@ import dlangide.ui.commands;
 import dlangide.ui.wspanel;
 import dlangide.ui.outputpanel;
 import dlangide.ui.dsourceedit;
+import dlangide.ui.homescreen;
 import dlangide.workspace.workspace;
 import dlangide.workspace.project;
 
@@ -109,6 +110,18 @@ class IDEFrame : AppFrame {
         return true;
     }
 
+    static immutable HOME_SCREEN_ID = "HOME_SCREEN";
+    void showHomeScreen() {
+        int index = _tabs.tabIndex(HOME_SCREEN_ID);
+        if (index >= 0) {
+            _tabs.selectTab(index, true);
+        } else {
+            HomeScreen home = new HomeScreen(HOME_SCREEN_ID, this);
+            _tabs.addTab(home, "Home"d);
+            _tabs.selectTab(HOME_SCREEN_ID, true);
+        }
+    }
+
     void onTabChanged(string newActiveTabId, string previousTabId) {
         int index = _tabs.tabIndex(newActiveTabId);
         if (index >= 0) {
@@ -192,7 +205,10 @@ class IDEFrame : AppFrame {
 
         mainMenuItems = new MenuItem();
         MenuItem fileItem = new MenuItem(new Action(1, "MENU_FILE"));
-        fileItem.add(ACTION_FILE_NEW, ACTION_FILE_OPEN_WORKSPACE, ACTION_FILE_OPEN, 
+        MenuItem fileNewItem = new MenuItem(new Action(1, "MENU_FILE_NEW"));
+        fileNewItem.add(ACTION_FILE_NEW_SOURCE_FILE, ACTION_FILE_NEW_WORKSPACE, ACTION_FILE_NEW_PROJECT);
+        fileItem.add(fileNewItem);
+        fileItem.add(ACTION_FILE_OPEN_WORKSPACE, ACTION_FILE_OPEN, 
                      ACTION_FILE_SAVE, ACTION_FILE_SAVE_AS, ACTION_FILE_SAVE_ALL, ACTION_FILE_EXIT);
 
         MenuItem editItem = new MenuItem(new Action(2, "MENU_EDIT"));

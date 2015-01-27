@@ -36,6 +36,8 @@ extern (C) int UIAppMain(string[] args) {
     // create some widget to show in window
     window.windowIcon = drawableCache.getImage("dlangui-logo1");
 
+    // open home screen tab
+    frame.showHomeScreen();
     // for testing: load workspace at startup
     frame.loadWorkspace(appendPath(exePath, "../workspaces/sample1/sample1.dlangidews"));
 
