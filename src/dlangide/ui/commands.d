@@ -30,6 +30,7 @@ enum IDEActions : int {
     DebugStop,
     DebugPause,
     HelpAbout,
+    WindowCloseAllDocuments,
 }
 
 const Action ACTION_FILE_NEW_SOURCE_FILE = new Action(IDEActions.FileNew, "MENU_FILE_NEW_SOURCE_FILE"c, "document-new", KeyCode.KEY_N, KeyFlag.Control);
@@ -60,3 +61,4 @@ const Action ACTION_EDIT_CUT = new Action(EditorActions.Cut, "MENU_EDIT_CUT"c, "
 const Action ACTION_EDIT_UNDO = new Action(EditorActions.Undo, "MENU_EDIT_UNDO"c, "edit-undo"c, KeyCode.KEY_Z, KeyFlag.Control);
 const Action ACTION_EDIT_REDO = new Action(EditorActions.Redo, "MENU_EDIT_REDO"c, "edit-redo"c, KeyCode.KEY_Z, KeyFlag.Control|KeyFlag.Shift);
 const Action ACTION_HELP_ABOUT = new Action(IDEActions.HelpAbout, "MENU_HELP_ABOUT"c);
+const Action ACTION_WINDOW_CLOSE_ALL_DOCUMENTS = new Action(IDEActions.WindowCloseAllDocuments, "MENU_WINDOW_CLOSE_ALL_DOCUMENTS"c);

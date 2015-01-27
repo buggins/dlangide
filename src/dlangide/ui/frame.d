@@ -142,6 +142,68 @@ class IDEFrame : AppFrame {
         _tabs.removeTab(tabId);
     }
 
+    /// close all editor tabs
+    void closeAllDocuments() {
+        for (int i = _tabs.tabCount - 1; i >= 0; i--) {
+            DSourceEdit ed = cast(DSourceEdit)_tabs.tabBody(i);
+            if (ed) {
+                closeTab(ed.id);
+            }
+        }
+    }
+
+    /// returns first unsaved document
+    protected DSourceEdit hasUnsavedEdits() {
+        for (int i = _tabs.tabCount - 1; i >= 0; i--) {
+            DSourceEdit ed = cast(DSourceEdit)_tabs.tabBody(i);
+            if (ed && ed.content.modified) {
+                return ed;
+            }
+        }
+        return null;
+    }
+
+    protected void askForUnsavedEdits(void delegate() onConfirm) {
+        DSourceEdit ed = hasUnsavedEdits();
+        if (!ed) {
+            // no unsaved edits
+            onConfirm();
+            return;
+        }
+        string tabId = ed.id;
+        // tab content is modified - ask for confirmation
+        window.showMessageBox(UIString("Close file "d ~ toUTF32(baseName(tabId))), UIString("Content of this file has been changed."d), 
+                              [ACTION_SAVE, ACTION_SAVE_ALL, ACTION_DISCARD_CHANGES, ACTION_DISCARD_ALL, ACTION_CANCEL], 
+                              0, delegate(const Action result) {
+                                  if (result == StandardAction.Save) {
+                                      // save and close
+                                      ed.save();
+                                      askForUnsavedEdits(onConfirm);
+                                  } else if (result == StandardAction.DiscardChanges) {
+                                      // close, don't save
+                                      closeTab(tabId);
+                                      closeAllDocuments();
+                                      onConfirm();
+                                  } else if (result == StandardAction.SaveAll) {
+                                      ed.save();
+                                      for(;;) {
+                                          DSourceEdit editor = hasUnsavedEdits();
+                                          if (!editor)
+                                              break;
+                                          editor.save();
+                                      }
+                                      closeAllDocuments();
+                                      onConfirm();
+                                  } else if (result == StandardAction.DiscardAll) {
+                                      // close, don't save
+                                      closeAllDocuments();
+                                      onConfirm();
+                                  }
+                                  // else ignore
+                                  return true;
+                              });
+    }
+
     protected void onTabClose(string tabId) {
         Log.d("onTabClose ", tabId);
         int index = _tabs.tabIndex(tabId);
@@ -149,7 +211,7 @@ class IDEFrame : AppFrame {
             DSourceEdit d = cast(DSourceEdit)_tabs.tabBody(tabId);
             if (d && d.content.modified) {
                 // tab content is modified - ask for confirmation
-                window.showMessageBox(UIString("Close tab"d), UIString("Content of "d ~ toUTF32(baseName(id)) ~ " file has been changed."d), 
+                window.showMessageBox(UIString("Close tab"d), UIString("Content of "d ~ toUTF32(baseName(tabId)) ~ " file has been changed."d), 
                                       [ACTION_SAVE, ACTION_DISCARD_CHANGES, ACTION_CANCEL], 
                                       0, delegate(const Action result) {
                                           if (result == StandardAction.Save) {
@@ -231,6 +293,7 @@ class IDEFrame : AppFrame {
 
 		MenuItem windowItem = new MenuItem(new Action(3, "MENU_WINDOW"c));
         windowItem.add(new Action(30, "MENU_WINDOW_PREFERENCES"));
+        windowItem.add(ACTION_WINDOW_CLOSE_ALL_DOCUMENTS);
         MenuItem helpItem = new MenuItem(new Action(4, "MENU_HELP"c));
         helpItem.add(new Action(40, "MENU_HELP_VIEW_HELP"));
         helpItem.add(ACTION_HELP_ABOUT);
@@ -294,6 +357,11 @@ class IDEFrame : AppFrame {
                         }
                     };
                     dlg.show();
+                    return true;
+                case IDEActions.WindowCloseAllDocuments:
+                    askForUnsavedEdits(delegate() {
+                        closeAllDocuments();
+                    });
                     return true;
                 case IDEActions.FileOpenWorkspace:
                     UIString caption;
