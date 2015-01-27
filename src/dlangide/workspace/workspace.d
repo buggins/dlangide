@@ -6,6 +6,7 @@ import std.path;
 import std.file;
 import std.json;
 import std.utf;
+import std.algorithm;
 
 /**
     Exception thrown on Workspace errors
@@ -18,6 +19,12 @@ class WorkspaceException : Exception
     }
 }
 
+immutable string WORKSPACE_EXTENSION = ".dlangidews";
+
+/// return true if filename matches rules for workspace file names
+bool isWorkspaceFile(string filename) {
+    return filename.endsWith(WORKSPACE_EXTENSION);
+}
 
 /// DlangIDE workspace
 class Workspace : WorkspaceItem {
@@ -41,6 +48,53 @@ class Workspace : WorkspaceItem {
         return null;
     }
 
+    /// find project in workspace by filename
+    Project findProject(string filename) {
+        foreach (Project p; _projects) {
+            if (p.filename.equal(filename))
+                return p;
+        }
+        return null;
+    }
+
+    void addProject(Project p) {
+        _projects ~= p;
+        p.workspace = this;
+    }
+
+    string absoluteToRelativePath(string path) {
+        return toForwardSlashSeparator(relativePath(path, _dir));
+    }
+
+
+    override bool save(string fname = null) {
+        if (fname.length > 0)
+            filename = fname;
+        try {
+            JSONValue content;
+            JSONValue[string] json;
+            json["name"] = JSONValue(toUTF8(_name));
+            json["description"] = JSONValue(toUTF8(_description));
+            JSONValue[string] projects;
+            foreach (Project p; _projects) {
+                string pname = toUTF8(p.name);
+                string ppath = absoluteToRelativePath(p.filename);
+                projects[pname] = JSONValue(ppath);
+            }
+            json["projects"] = projects;
+            content = json;
+            string js = content.toPrettyString;
+            write(_filename, js);
+        } catch (JSONException e) {
+            Log.e("Cannot parse json", e);
+            return false;
+        } catch (Exception e) {
+            Log.e("Cannot read workspace file", e);
+            return false;
+        }
+        return true;
+    }
+
     override bool load(string fname = null) {
         if (fname.length > 0)
             filename = fname;
@@ -61,12 +115,14 @@ class Workspace : WorkspaceItem {
                 string path = value.str;
                 Log.d("project: ", key, " path:", path);
                 if (!isAbsolute(path))
-                    path = buildNormalizedPath(_dir, path, "dub.json");
+                    path = buildNormalizedPath(_dir, path); //, "dub.json"
                 Project project = new Project(path);
                 _projects ~= project;
                 project.load();
 
             }
+            string js = json.toPrettyString;
+            write(_filename, js);
         } catch (JSONException e) {
             Log.e("Cannot parse json", e);
             return false;

@@ -371,6 +371,8 @@ class IDEFrame : AppFrame {
                     dlg.onDialogResult = delegate(Dialog dlg, const Action result) {
 						if (result.id == ACTION_OPEN.id) {
                             string filename = result.stringParam;
+                            if (filename.length)
+                                openFileOrWorkspace(filename);
                         }
                     };
                     dlg.show();
@@ -382,13 +384,68 @@ class IDEFrame : AppFrame {
 		return false;
 	}
 
+    void openFileOrWorkspace(string filename) {
+        if (filename.isWorkspaceFile) {
+            Workspace ws = new Workspace();
+            if (ws.load(filename)) {
+                askForUnsavedEdits(delegate() {
+                    setWorkspace(ws);
+                });
+            } else {
+                window.showMessageBox(UIString("Cannot open workspace"d), UIString("Error occured while opening workspace"d));
+                return;
+            }
+        } else if (filename.isProjectFile) {
+            Project project = new Project();
+            if (!project.load(filename)) {
+                window.showMessageBox(UIString("Cannot open project"d), UIString("Error occured while opening project"d));
+                return;
+            }
+            string defWsFile = project.defWorkspaceFile;
+            if (currentWorkspace) {
+                Project existing = currentWorkspace.findProject(project.filename);
+                if (existing) {
+                    window.showMessageBox(UIString("Open project"d), UIString("Project is already in workspace"d));
+                    return;
+                }
+                window.showMessageBox(UIString("Open project"d), UIString("Do you want to create new workspace or use current one?"d),
+                                      [ACTION_ADD_TO_CURRENT_WORKSPACE, ACTION_CREATE_NEW_WORKSPACE, ACTION_CANCEL], 0, delegate(const Action result) {
+                                          if (result.id == IDEActions.CreateNewWorkspace) {
+                                              // new ws
+                                              Workspace ws = new Workspace();
+                                              ws.name = project.name;
+                                              ws.description = project.description;
+                                              ws.save(defWsFile);
+                                              setWorkspace(ws);
+                                          } else if (result.id == IDEActions.AddToCurrentWorkspace) {
+                                              // add to current
+                                              currentWorkspace.addProject(project);
+                                              currentWorkspace.save();
+                                              _wsPanel.reloadItems();
+                                          }
+                                          return true;
+                                      });
+            } else {
+                // new workspace file
+            }
+        } else {
+            window.showMessageBox(UIString("Invalid workspace file"d), UIString("This file is not a valid workspace or project file"d));
+        }
+    }
+
     bool loadWorkspace(string path) {
         // testing workspace loader
         Workspace ws = new Workspace();
         ws.load(path);
+        setWorkspace(ws);
+        ws.save(ws.filename ~ ".bak");
+        return true;
+    }
+
+    void setWorkspace(Workspace ws) {
+        closeAllDocuments();
         currentWorkspace = ws;
         _wsPanel.workspace = ws;
-        return true;
     }
 }
 

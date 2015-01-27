@@ -31,6 +31,8 @@ enum IDEActions : int {
     DebugPause,
     HelpAbout,
     WindowCloseAllDocuments,
+    CreateNewWorkspace,
+    AddToCurrentWorkspace,
 }
 
 const Action ACTION_FILE_NEW_SOURCE_FILE = new Action(IDEActions.FileNew, "MENU_FILE_NEW_SOURCE_FILE"c, "document-new", KeyCode.KEY_N, KeyFlag.Control);
@@ -62,3 +64,5 @@ const Action ACTION_EDIT_UNDO = new Action(EditorActions.Undo, "MENU_EDIT_UNDO"c
 const Action ACTION_EDIT_REDO = new Action(EditorActions.Redo, "MENU_EDIT_REDO"c, "edit-redo"c, KeyCode.KEY_Z, KeyFlag.Control|KeyFlag.Shift);
 const Action ACTION_HELP_ABOUT = new Action(IDEActions.HelpAbout, "MENU_HELP_ABOUT"c);
 const Action ACTION_WINDOW_CLOSE_ALL_DOCUMENTS = new Action(IDEActions.WindowCloseAllDocuments, "MENU_WINDOW_CLOSE_ALL_DOCUMENTS"c);
+const Action ACTION_CREATE_NEW_WORKSPACE = new Action(IDEActions.CreateNewWorkspace, "Create new workspace"d);
+const Action ACTION_ADD_TO_CURRENT_WORKSPACE = new Action(IDEActions.CreateNewWorkspace, "Add to current workspace"d);

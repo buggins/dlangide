@@ -9,6 +9,22 @@ import std.json;
 import std.utf;
 import std.algorithm;
 
+/// return true if filename matches rules for workspace file names
+bool isProjectFile(string filename) {
+    return filename.baseName.equal("dub.json") || filename.baseName.equal("package.json");
+}
+
+string toForwardSlashSeparator(string filename) {
+    char[] res;
+    foreach(ch; filename) {
+        if (ch == '\\')
+            res ~= '/';
+        else
+            res ~= ch;
+    }
+    return cast(string)res;
+}
+
 /// project item
 class ProjectItem {
     protected Project _project;
@@ -178,7 +194,7 @@ class WorkspaceItem {
         return false;
     }
 
-    bool save() {
+    bool save(string fname = null) {
         return false;
     }
 }
@@ -209,6 +225,10 @@ class Project : WorkspaceItem {
 
     @property void workspace(Workspace p) {
         _workspace = p;
+    }
+
+    @property string defWorkspaceFile() {
+        return buildNormalizedPath(_filename.dirName, toUTF8(name) ~ WORKSPACE_EXTENSION);
     }
 
     ProjectFolder findItems() {
