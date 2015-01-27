@@ -277,6 +277,9 @@ class IDEFrame : AppFrame {
                     wnd.mainWidget = createAboutWidget();
                     wnd.show();
                     return true;
+                case StandardAction.OpenUrl:
+                    platform.openURL(a.stringParam);
+                    return true;
                 case IDEActions.FileOpen:
                     UIString caption;
                     caption = "Open Text File"d;
