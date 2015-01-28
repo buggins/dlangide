@@ -204,7 +204,7 @@ class ExternalProcess {
         }
         // check for process finishing
         try {
-            auto pstate = tryWait(_pipes.pid);
+            auto pstate = std.process.tryWait(_pipes.pid);
             if (pstate.terminated) {
                 pollStreams();
                 _state = ExternalProcessState.Stopped;
@@ -222,7 +222,7 @@ class ExternalProcess {
         if (_state == ExternalProcessState.Error || _state == ExternalProcessState.None || _state == ExternalProcessState.Stopped)
             return _state;
         try {
-            _result = wait(_pipes.pid);
+            _result = std.process.wait(_pipes.pid);
             _state = ExternalProcessState.Stopped;
         } catch (Exception e) {
             Log.e("Exception while waiting for process ", _program);
@@ -236,7 +236,7 @@ class ExternalProcess {
         if (_state == ExternalProcessState.Error || _state == ExternalProcessState.None || _state == ExternalProcessState.Stopped)
             return _state;
         if (_state == ExternalProcessState.Stopping) {
-            kill(_pipes.pid);
+            std.process.kill(_pipes.pid);
         }
         return _state;
     }
