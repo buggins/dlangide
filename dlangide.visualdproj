@@ -199,6 +199,9 @@
    </Folder>
   </Folder>
   <Folder name="dlangide">
+   <Folder name="builders">
+    <File path="src\dlangide\builders\extprocess.d" />
+   </Folder>
    <Folder name="ui">
     <File path="src\dlangide\ui\commands.d" />
     <File path="src\dlangide\ui\dsourceedit.d" />
