@@ -200,6 +200,7 @@
   </Folder>
   <Folder name="dlangide">
    <Folder name="builders">
+    <File path="src\dlangide\builders\builder.d" />
     <File path="src\dlangide\builders\extprocess.d" />
    </Folder>
    <Folder name="ui">
