@@ -235,8 +235,9 @@ class ExternalProcess {
     ExternalProcessState kill() {
         if (_state == ExternalProcessState.Error || _state == ExternalProcessState.None || _state == ExternalProcessState.Stopped)
             return _state;
-        if (_state == ExternalProcessState.Stopping) {
+        if (_state == ExternalProcessState.Running) {
             std.process.kill(_pipes.pid);
+            _state = ExternalProcessState.Stopping;
         }
         return _state;
     }

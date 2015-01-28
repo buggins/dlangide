@@ -21,6 +21,7 @@ import dlangide.ui.dsourceedit;
 import dlangide.ui.homescreen;
 import dlangide.workspace.workspace;
 import dlangide.workspace.project;
+import dlangide.builders.builder;
 
 import std.conv;
 import std.utf;
@@ -146,6 +147,7 @@ class IDEFrame : AppFrame {
             TabItem tab = _tabs.tab(index);
             ProjectSourceFile file = cast(ProjectSourceFile)tab.objectParam;
             if (file) {
+                setCurrentProject(file.project);
                 // tab is source file editor
                 _wsPanel.selectItem(file);
                 focusEditor(file.filename);
@@ -378,7 +380,8 @@ class IDEFrame : AppFrame {
                     return true;
                 case IDEActions.BuildProject:
                 case IDEActions.BuildWorkspace:
-                    setBackgroundOperation(new BackgroundOperationWatcherTest(this));
+                    buildProject();
+                    //setBackgroundOperation(new BackgroundOperationWatcherTest(this));
                     return true;
                 case IDEActions.WindowCloseAllDocuments:
                     askForUnsavedEdits(delegate() {
@@ -469,6 +472,18 @@ class IDEFrame : AppFrame {
         closeAllDocuments();
         currentWorkspace = ws;
         _wsPanel.workspace = ws;
+    }
+
+    Project currentProject;
+    void setCurrentProject(Project project) {
+        currentProject = project;
+    }
+
+    void buildProject() {
+        if (!currentProject)
+            return;
+        Builder op = new Builder(this, currentProject, _logPanel);
+        setBackgroundOperation(op);
     }
 }
 

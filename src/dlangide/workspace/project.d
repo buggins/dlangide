@@ -157,6 +157,11 @@ class WorkspaceItem {
         return _filename;
     }
 
+    /// workspace item directory
+    @property string dir() {
+        return _dir;
+    }
+
     /// file name of workspace item
     @property void filename(string fname) {
         if (fname.length > 0) {
