@@ -23,4 +23,8 @@ class OutputPanel : DockWindow {
     void addLogLines(string category, dstring[] msg...) {
         _logWidget.appendLines(msg);
     }
+
+	void clear(string category = null) {
+		_logWidget.text = ""d;
+	}
 }

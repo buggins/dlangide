@@ -1,10 +1,12 @@
 module dlangide.builders.builder;
 
+import dlangui.core.logger;
 import dlangide.workspace.project;
 import dlangide.ui.outputpanel;
 import dlangide.builders.extprocess;
 import dlangui.widgets.appframe;
 import std.algorithm;
+import core.thread;
 import std.string;
 import std.conv;
 
@@ -21,6 +23,7 @@ class Builder : BackgroundOperationWatcher, ProcessOutputTarget {
         _project = project;
         _log = log;
         _extprocess = new ExternalProcess();
+		Log.d("Builder.this");
     }
     /// log lines
     override void onText(dstring text) {
@@ -32,18 +35,20 @@ class Builder : BackgroundOperationWatcher, ProcessOutputTarget {
     override @property string icon() { return "folder"; }
     /// update background operation status
     override void update() {
-        if (_extprocess.state == ExternalProcessState.None) {
+		ExternalProcessState state = _extprocess.state;
+        if (state == ExternalProcessState.None) {
+			_log.clear();
             onText("Running dub\n"d);
-            _extprocess.run(cast(char[])"dub", cast(char[][])["build"], cast(char[])_project.dir, this, null);
-            if (_extprocess.state != ExternalProcessState.Running) {
-                onText("Failed to run builder tool");
+            state = _extprocess.run(cast(char[])"dub", cast(char[][])["build"], cast(char[])_project.dir, this, null);
+            if (state != ExternalProcessState.Running) {
+                onText("Failed to run builder tool\n");
                 _finished = true;
                 destroy(_extprocess);
                 _extprocess = null;
                 return;
             }
         }
-        ExternalProcessState state = _extprocess.poll();
+        state = _extprocess.poll();
         if (state == ExternalProcessState.Stopped) {
             onText("Builder finished with result "d ~ to!dstring(_extprocess.result) ~ "\n"d);
             _finished = true;

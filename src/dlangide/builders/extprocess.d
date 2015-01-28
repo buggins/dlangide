@@ -3,7 +3,7 @@ module dlangide.builders.extprocess;
 import dlangui.core.logger;
 
 import std.process;
-import std.file;
+import std.stdio;
 import std.utf;
 
 /// interface to forward process output to
@@ -52,8 +52,9 @@ class ExternalProcess {
         _args = args;
         _workDir = dir;
         _stdout = stdoutTarget;
-        _stdoutBuffer.clear();
-        _stderrBuffer.clear();
+        _stdoutBuffer = new Buffer();
+		if (stderrTarget)
+			_stderrBuffer = new Buffer();
         _result = 0;
         assert(_stdout);
         _stderr = stderrTarget;
@@ -62,12 +63,12 @@ class ExternalProcess {
         params ~= _program;
         params ~= _args;
         if (!_stderr)
-            redirect = Redirect.stdin | Redirect.stderrToStdout;
+            redirect = Redirect.stdout | Redirect.stdin | Redirect.stderrToStdout;
         else
             redirect = Redirect.all;
         Log.i("Trying to run program ", _program, " with args ", _args);
         try {
-            _pipes = pipeProcess(params, redirect, _env, Config.none, _workDir);
+            _pipes = pipeProcess(params, redirect, _env, Config.suppressConsole, _workDir);
             _state = ExternalProcessState.Running;
             _stdoutBuffer.init();
             if (_stderr)
@@ -100,7 +101,7 @@ class ExternalProcess {
             for(size_t i = 0; i < data.length; i++)
                 bytes[len++] = data[i];
         }
-        size_t read(std.file.File file) {
+        size_t read(std.stdio.File file) {
             size_t bytesRead = 0;
             for (;;) {
                 ubyte[] readData = file.rawRead(buffer);
@@ -169,7 +170,7 @@ class ExternalProcess {
     protected Buffer _stdoutBuffer;
     protected Buffer _stderrBuffer;
 
-    protected bool poll(ProcessOutputTarget dst, std.file.File src, ref Buffer buffer) {
+    protected bool poll(ProcessOutputTarget dst, std.stdio.File src, ref Buffer buffer) {
         if (src.isOpen) {
             buffer.read(src);
             dstring s = buffer.text;
@@ -188,11 +189,18 @@ class ExternalProcess {
             if (_stderr)
                 res = poll(_stderr, _pipes.stderr, _stderrBuffer) && res;
         } catch (Error e) {
-            Log.e("error occued while trying to poll streams for process ", _program);
+            Log.e("error occued while trying to poll streams for process ", _program, " : ", e);
             res = false;
         }
         return res;
     }
+
+	void closeFiles() {
+		_pipes.stdout.close();
+		_pipes.stdin.close();
+		if (_stderr)
+			_pipes.stderr.close();
+	}
 
     /// polls all available output from process streams
     ExternalProcessState poll() {
@@ -208,6 +216,7 @@ class ExternalProcess {
             if (pstate.terminated) {
                 pollStreams();
                 _state = ExternalProcessState.Stopped;
+				closeFiles();
                 _result = pstate.status;
             }
         } catch (Exception e) {
@@ -224,6 +233,8 @@ class ExternalProcess {
         try {
             _result = std.process.wait(_pipes.pid);
             _state = ExternalProcessState.Stopped;
+			pollStreams();
+			closeFiles();
         } catch (Exception e) {
             Log.e("Exception while waiting for process ", _program);
             _state = ExternalProcessState.Error;
