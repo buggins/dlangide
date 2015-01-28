@@ -33,6 +33,24 @@ bool isSupportedSourceTextFileFormat(string filename) {
         || filename.endsWith(".html") || filename.endsWith(".css") || filename.endsWith(".log") || filename.endsWith(".hpp"));
 }
 
+class BackgroundOperationWatcherTest : BackgroundOperationWatcher {
+    this(AppFrame frame) {
+        super(frame);
+    }
+    int _counter;
+    /// returns description of background operation to show in status line
+    override @property dstring description() { return "Test progress: "d ~ to!dstring(_counter); }
+    /// returns icon of background operation to show in status line
+    override @property string icon() { return "folder"; }
+    /// update background operation status
+    override void update() {
+        _counter++;
+        if (_counter >= 100)
+            _finished = true;
+        super.update();
+    }
+}
+
 /// DIDE app frame
 class IDEFrame : AppFrame {
 
@@ -357,6 +375,10 @@ class IDEFrame : AppFrame {
                         }
                     };
                     dlg.show();
+                    return true;
+                case IDEActions.BuildProject:
+                case IDEActions.BuildWorkspace:
+                    setBackgroundOperation(new BackgroundOperationWatcherTest(this));
                     return true;
                 case IDEActions.WindowCloseAllDocuments:
                     askForUnsavedEdits(delegate() {
