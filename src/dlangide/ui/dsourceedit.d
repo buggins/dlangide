@@ -99,7 +99,7 @@ class SimpleDSyntaxHighlighter : SyntaxHighlighter {
 
     /// categorize characters in content by token types
     void updateHighlight(dstring[] lines, TokenPropString[] props, int changeStartLine, int changeEndLine) {
-        Log.d("updateHighlight");
+        //Log.d("updateHighlight");
         long ms0 = currentTimeMillis();
         _props = props;
         changeStartLine = 0;
@@ -189,7 +189,9 @@ class SimpleDSyntaxHighlighter : SyntaxHighlighter {
         }
         _lines.close();
         _props = null;
-        Log.d("updateHighlight took ", currentTimeMillis() - ms0, "ms");
+		long elapsed = currentTimeMillis() - ms0;
+		if (elapsed > 20)
+			Log.d("updateHighlight took ", elapsed, "ms");
     }
 }
 

@@ -17,16 +17,19 @@ extern (C) int UIAppMain(string[] args) {
     embeddedResourceList.addResources(embedResourcesFromList!("resources.list")());
 
     // you can override default hinting mode here
+    //FontManager.hintingMode = HintingMode.Light;
+    //FontManager.hintingMode = HintingMode.AutoHint;
     FontManager.hintingMode = HintingMode.Normal;
+    //FontManager.hintingMode = HintingMode.Disabled;
     // you can override antialiasing setting here
     FontManager.minAnitialiasedFontSize = 0;
-	//version (USE_OPENGL) {
+	version (USE_OPENGL) {
 		// you can turn on subpixel font rendering (ClearType) here
 		FontManager.subpixelRenderingMode = SubpixelRenderingMode.None; //
-	//} else {
+	} else {
 		// you can turn on subpixel font rendering (ClearType) here
 		//FontManager.subpixelRenderingMode = SubpixelRenderingMode.BGR; //SubpixelRenderingMode.None; //
-	//}
+	}
 
     // create window
     Window window = Platform.instance.createWindow("Dlang IDE", null);
