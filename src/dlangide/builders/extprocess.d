@@ -3,7 +3,7 @@ module dlangide.builders.extprocess;
 import dlangui.core.logger;
 
 import std.process;
-import std.file;
+import std.stdio;
 import std.utf;
 import std.stdio;
 import core.thread;
@@ -249,12 +249,12 @@ class ExternalProcess {
         params ~= _program;
         params ~= _args;
         if (!_stderr)
-            redirect = Redirect.stdin | Redirect.stderrToStdout;
+            redirect = Redirect.stdout | Redirect.stdin | Redirect.stderrToStdout;
         else
             redirect = Redirect.all;
         Log.i("Trying to run program ", _program, " with args ", _args);
         try {
-            _pipes = pipeProcess(params, redirect, _env, Config.none, _workDir);
+            _pipes = pipeProcess(params, redirect, _env, Config.suppressConsole, _workDir);
             _state = ExternalProcessState.Running;
             // start readers
             _stdoutReader = new BackgroundReader(_pipes.stdout, _stdout);
@@ -272,12 +272,25 @@ class ExternalProcess {
     }
 
     protected void waitForReadingCompletion() {
-        if (_stdoutReader && !_stdoutReader.finished)
-            _stdoutReader.join(false);
-        if (_stderrReader && !_stderrReader.finished)
-            _stderrReader.join(false);
-        _stdoutReader = null;
-        _stderrReader = null;
+        try {
+		    _pipes.stdin.close();
+        } catch (Exception e) {
+            Log.e("Cannot close stdin for ", _program, " ", e);
+        }
+        try {
+            if (_stdoutReader && !_stdoutReader.finished)
+                _stdoutReader.join(false);
+            _stdoutReader = null;
+        } catch (Exception e) {
+            Log.e("Exception while waiting for stdout reading completion for ", _program, " ", e);
+        }
+        try {
+            if (_stderrReader && !_stderrReader.finished)
+                _stderrReader.join(false);
+            _stderrReader = null;
+        } catch (Exception e) {
+            Log.e("Exception while waiting for stderr reading completion for ", _program, " ", e);
+        }
     }
 
     /// polls all available output from process streams
