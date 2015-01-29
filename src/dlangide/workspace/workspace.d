@@ -38,6 +38,16 @@ class Workspace : WorkspaceItem {
         return _projects;
     }
 
+    protected Project _startupProject;
+
+    @property Project startupProject() { return _startupProject; }
+    @property void startupProject(Project project) { _startupProject = project; }
+
+    protected void fillStartupProject() {
+        if (!_startupProject && _projects.length)
+            _startupProject = _projects[0];
+    }
+
     /// tries to find source file in one of projects, returns found project source file item, or null if not found
     ProjectSourceFile findSourceFileItem(string filename) {
         foreach (Project p; _projects) {
@@ -60,6 +70,7 @@ class Workspace : WorkspaceItem {
     void addProject(Project p) {
         _projects ~= p;
         p.workspace = this;
+        fillStartupProject();
     }
 
     string absoluteToRelativePath(string path) {
@@ -130,6 +141,7 @@ class Workspace : WorkspaceItem {
             Log.e("Cannot read workspace file", e);
             return false;
         }
+        fillStartupProject();
         return true;
     }
     void close() {

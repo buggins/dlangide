@@ -147,7 +147,7 @@ class IDEFrame : AppFrame {
             TabItem tab = _tabs.tab(index);
             ProjectSourceFile file = cast(ProjectSourceFile)tab.objectParam;
             if (file) {
-                setCurrentProject(file.project);
+                //setCurrentProject(file.project);
                 // tab is source file editor
                 _wsPanel.selectItem(file);
                 focusEditor(file.filename);
@@ -341,6 +341,7 @@ class IDEFrame : AppFrame {
         tb.addButtons(ACTION_DEBUG_START);
         ToolBarComboBox cbBuildConfiguration = new ToolBarComboBox("buildConfig", ["Debug"d, "Release"d, "Unittest"d]);
         tb.addControl(cbBuildConfiguration);
+        tb.addButtons(ACTION_PROJECT_BUILD);
 
         tb = res.getOrAddToolbar("Edit");
         tb.addButtons(ACTION_EDIT_COPY, ACTION_EDIT_PASTE, ACTION_EDIT_CUT, ACTION_SEPARATOR,
@@ -474,15 +475,10 @@ class IDEFrame : AppFrame {
         _wsPanel.workspace = ws;
     }
 
-    Project currentProject;
-    void setCurrentProject(Project project) {
-        currentProject = project;
-    }
-
     void buildProject() {
-        if (!currentProject)
+        if (!currentWorkspace || !currentWorkspace.startupProject)
             return;
-        Builder op = new Builder(this, currentProject, _logPanel);
+        Builder op = new Builder(this, currentWorkspace.startupProject, _logPanel);
         setBackgroundOperation(op);
     }
 }

@@ -236,6 +236,7 @@ class ExternalProcess {
     }
 
     ExternalProcessState run(char[] program, char[][]args, char[] dir, TextWriter stdoutTarget, TextWriter stderrTarget = null) {
+        Log.d("ExternalProcess.run ", program, " ", args);
         _state = ExternalProcessState.None;
         _program = program;
         _args = args;
@@ -272,29 +273,39 @@ class ExternalProcess {
     }
 
     protected void waitForReadingCompletion() {
+        Log.d("waitForReadingCompletion - closing stdin");
         try {
 		    _pipes.stdin.close();
         } catch (Exception e) {
             Log.e("Cannot close stdin for ", _program, " ", e);
         }
+        Log.d("waitForReadingCompletion - closed stdin");
         try {
-            if (_stdoutReader && !_stdoutReader.finished)
+            if (_stdoutReader && !_stdoutReader.finished) {
+                Log.d("waitForReadingCompletion - waiting for stdout");
                 _stdoutReader.join(false);
+                Log.d("waitForReadingCompletion - joined stdout");
+            }
             _stdoutReader = null;
         } catch (Exception e) {
             Log.e("Exception while waiting for stdout reading completion for ", _program, " ", e);
         }
         try {
-            if (_stderrReader && !_stderrReader.finished)
+            if (_stderrReader && !_stderrReader.finished) {
+                Log.d("waitForReadingCompletion - waiting for stderr");
                 _stderrReader.join(false);
-            _stderrReader = null;
+                _stderrReader = null;
+                Log.d("waitForReadingCompletion - joined stderr");
+            }
         } catch (Exception e) {
             Log.e("Exception while waiting for stderr reading completion for ", _program, " ", e);
         }
+        Log.d("waitForReadingCompletion - done");
     }
 
     /// polls all available output from process streams
     ExternalProcessState poll() {
+        Log.d("ExternalProcess.poll");
         bool res = true;
         if (_state == ExternalProcessState.Error || _state == ExternalProcessState.None || _state == ExternalProcessState.Stopped)
             return _state;
@@ -315,6 +326,7 @@ class ExternalProcess {
 
     /// waits until termination
     ExternalProcessState wait() {
+        Log.d("ExternalProcess.wait");
         if (_state == ExternalProcessState.Error || _state == ExternalProcessState.None || _state == ExternalProcessState.Stopped)
             return _state;
         try {
@@ -330,6 +342,7 @@ class ExternalProcess {
 
     /// request process stop
     ExternalProcessState kill() {
+        Log.d("ExternalProcess.kill");
         if (_state == ExternalProcessState.Error || _state == ExternalProcessState.None || _state == ExternalProcessState.Stopped)
             return _state;
         if (_state == ExternalProcessState.Running) {
