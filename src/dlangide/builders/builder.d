@@ -63,9 +63,12 @@ class Builder : BackgroundOperationWatcher {
                 params ~= "clean".dup;
             } else if (_buildOp == BuildOperation.Run) {
                 params ~= "run".dup;
+            } else if (_buildOp == BuildOperation.Upgrade) {
+                params ~= "upgrade".dup;
+                params ~= "--force-remove".dup;
             }
 
-            if (_buildOp != BuildOperation.Clean) {
+            if (_buildOp != BuildOperation.Clean && _buildOp != BuildOperation.Upgrade) {
                 switch (_buildConfig) {
                     default:
                     case BuildConfiguration.Debug:

@@ -298,7 +298,7 @@ class IDEFrame : AppFrame {
 		editItem.add(new Action(20, "MENU_EDIT_PREFERENCES"));
 
         MenuItem projectItem = new MenuItem(new Action(21, "MENU_PROJECT"));
-        projectItem.add(ACTION_PROJECT_SET_STARTUP, ACTION_PROJECT_SETTINGS);
+        projectItem.add(ACTION_PROJECT_SET_STARTUP, ACTION_PROJECT_REFRESH, ACTION_PROJECT_UPDATE_DEPENDENCIES, ACTION_PROJECT_SETTINGS);
 
         MenuItem buildItem = new MenuItem(new Action(22, "MENU_BUILD"));
         buildItem.add(ACTION_WORKSPACE_BUILD, ACTION_WORKSPACE_REBUILD, ACTION_WORKSPACE_CLEAN,
@@ -416,6 +416,14 @@ class IDEFrame : AppFrame {
                     buildProject(BuildOperation.Run);
                     //setBackgroundOperation(new BackgroundOperationWatcherTest(this));
                     return true;
+                case IDEActions.UpdateProjectDependencies:
+                    buildProject(BuildOperation.Upgrade);
+                    //setBackgroundOperation(new BackgroundOperationWatcherTest(this));
+                    return true;
+                case IDEActions.RefreshProject:
+                    refreshWorkspace();
+                    //setBackgroundOperation(new BackgroundOperationWatcherTest(this));
+                    return true;
                 case IDEActions.WindowCloseAllDocuments:
                     askForUnsavedEdits(delegate() {
                         closeAllDocuments();
@@ -454,15 +462,20 @@ class IDEFrame : AppFrame {
                 return;
             }
         } else if (filename.isProjectFile) {
+            _logPanel.clear();
+            _logPanel.logLine("Trying to open project from " ~ filename);
             Project project = new Project();
             if (!project.load(filename)) {
+                _logPanel.logLine("Cannot read project file " ~ filename);
                 window.showMessageBox(UIString("Cannot open project"d), UIString("Error occured while opening project"d));
                 return;
             }
+            _logPanel.logLine("Project file is opened ok");
             string defWsFile = project.defWorkspaceFile;
             if (currentWorkspace) {
                 Project existing = currentWorkspace.findProject(project.filename);
                 if (existing) {
+                    _logPanel.logLine("This project already exists in current workspace");
                     window.showMessageBox(UIString("Open project"d), UIString("Project is already in workspace"d));
                     return;
                 }
@@ -470,26 +483,41 @@ class IDEFrame : AppFrame {
                                       [ACTION_ADD_TO_CURRENT_WORKSPACE, ACTION_CREATE_NEW_WORKSPACE, ACTION_CANCEL], 0, delegate(const Action result) {
                                           if (result.id == IDEActions.CreateNewWorkspace) {
                                               // new ws
-                                              Workspace ws = new Workspace();
-                                              ws.name = project.name;
-                                              ws.description = project.description;
-                                              ws.addProject(project);
-                                              ws.save(defWsFile);
-                                              setWorkspace(ws);
+                                              createNewWorkspaceForExistingProject(project);
                                           } else if (result.id == IDEActions.AddToCurrentWorkspace) {
                                               // add to current
                                               currentWorkspace.addProject(project);
                                               currentWorkspace.save();
-                                              _wsPanel.reloadItems();
+                                              refreshWorkspace();
                                           }
                                           return true;
                                       });
             } else {
                 // new workspace file
+                createNewWorkspaceForExistingProject(project);
             }
         } else {
+            _logPanel.logLine("File is not recognized as DlangIDE project or workspace file");
             window.showMessageBox(UIString("Invalid workspace file"d), UIString("This file is not a valid workspace or project file"d));
         }
+    }
+
+    void refreshWorkspace() {
+        _logPanel.logLine("Refreshing workspace");
+        _wsPanel.reloadItems();
+    }
+
+    void createNewWorkspaceForExistingProject(Project project) {
+        string defWsFile = project.defWorkspaceFile;
+        _logPanel.logLine("Creating new workspace " ~ defWsFile);
+        // new ws
+        Workspace ws = new Workspace();
+        ws.name = project.name;
+        ws.description = project.description;
+        ws.addProject(project);
+        ws.save(defWsFile);
+        setWorkspace(ws);
+        _logPanel.logLine("Done");
     }
 
     //bool loadWorkspace(string path) {
@@ -505,11 +533,17 @@ class IDEFrame : AppFrame {
         closeAllDocuments();
         currentWorkspace = ws;
         _wsPanel.workspace = ws;
+        if (ws.startupProject && ws.startupProject.mainSourceFile) {
+            openSourceFile(ws.startupProject.mainSourceFile.filename);
+            _tabs.setFocus();
+        }
     }
 
     void buildProject(BuildOperation buildOp) {
-        if (!currentWorkspace || !currentWorkspace.startupProject)
+        if (!currentWorkspace || !currentWorkspace.startupProject) {
+            _logPanel.logLine("No project is opened");
             return;
+        }
         Builder op = new Builder(this, currentWorkspace.startupProject, _logPanel, currentWorkspace.buildConfiguration, buildOp, false);
         setBackgroundOperation(op);
     }

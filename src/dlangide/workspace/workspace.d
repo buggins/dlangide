@@ -12,7 +12,8 @@ enum BuildOperation {
     Build,
     Clean,
     Rebuild,
-    Run
+    Run,
+    Upgrade
 }
 
 enum BuildConfiguration {

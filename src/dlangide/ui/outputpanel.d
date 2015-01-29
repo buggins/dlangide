@@ -4,6 +4,8 @@ import dlangui.all;
 import dlangide.workspace.workspace;
 import dlangide.workspace.project;
 
+import std.utf;
+
 class OutputPanel : DockWindow {
     protected LogWidget _logWidget;
 
@@ -22,6 +24,22 @@ class OutputPanel : DockWindow {
 
     void appendText(string category, dstring msg) {
         _logWidget.appendText(msg);
+    }
+
+    void logLine(string category, dstring msg) {
+        appendText(category, msg ~ "\n");
+    }
+
+    void logLine(dstring msg) {
+        logLine(null, msg);
+    }
+
+    void logLine(string category, string msg) {
+        appendText(category, toUTF32(msg ~ "\n"));
+    }
+
+    void logLine(string msg) {
+        logLine(null, msg);
     }
 
 	void clear(string category = null) {

@@ -209,6 +209,7 @@ class Project : WorkspaceItem {
     protected Workspace _workspace;
     protected bool _opened;
     protected ProjectFolder _items;
+    protected ProjectSourceFile _mainSourceFile;
     this(string fname = null) {
         super(fname);
         _items = new ProjectFolder(fname);
@@ -220,6 +221,7 @@ class Project : WorkspaceItem {
         return buildNormalizedPath(_dir, path);
     }
 
+    @property ProjectSourceFile mainSourceFile() { return _mainSourceFile; }
     @property ProjectFolder items() {
         return _items;
     }
@@ -244,6 +246,19 @@ class Project : WorkspaceItem {
         return folder;
     }
 
+    void findMainSourceFile() {
+        string n = toUTF8(name);
+        string[] mainnames = ["app.d", "main.d", n ~ ".d"];
+        foreach(sname; mainnames) {
+            _mainSourceFile = findSourceFileItem(buildNormalizedPath(_dir, "src", sname));
+            if (_mainSourceFile)
+                break;
+            _mainSourceFile = findSourceFileItem(buildNormalizedPath(_dir, "source", sname));
+            if (_mainSourceFile)
+                break;
+        }
+    }
+
     /// tries to find source file in project, returns found project source file item, or null if not found
     ProjectSourceFile findSourceFileItem(ProjectItem dir, string filename) {
         for (int i = 0; i < dir.childCount; i++) {
@@ -266,6 +281,7 @@ class Project : WorkspaceItem {
     }
 
     override bool load(string fname = null) {
+        _mainSourceFile = null;
         if (fname.length > 0)
             filename = fname;
         if (!exists(filename) || !isFile(filename))  {
@@ -282,6 +298,7 @@ class Project : WorkspaceItem {
             Log.d("  project description: ", _description);
 
             _items = findItems();
+            findMainSourceFile();
         } catch (JSONException e) {
             Log.e("Cannot parse json", e);
             return false;

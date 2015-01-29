@@ -22,6 +22,8 @@ enum IDEActions : int {
     BuildProject,
     RebuildProject,
     CleanProject,
+    RefreshProject,
+    UpdateProjectDependencies,
     SetStartupProject,
     ProjectSettings,
     DebugStart,
@@ -52,6 +54,8 @@ const Action ACTION_PROJECT_REBUILD = new Action(IDEActions.RebuildProject, "MEN
 const Action ACTION_PROJECT_CLEAN = new Action(IDEActions.CleanProject, "MENU_BUILD_PROJECT_CLEAN"c, null);
 const Action ACTION_PROJECT_SET_STARTUP = new Action(IDEActions.SetStartupProject, "MENU_PROJECT_SET_AS_STARTUP"c, null);
 const Action ACTION_PROJECT_SETTINGS = new Action(IDEActions.ProjectSettings, "MENU_PROJECT_SETTINGS"c, null);
+const Action ACTION_PROJECT_REFRESH = new Action(IDEActions.RefreshProject, "MENU_PROJECT_REFRESH"c);
+const Action ACTION_PROJECT_UPDATE_DEPENDENCIES = new Action(IDEActions.UpdateProjectDependencies, "MENU_PROJECT_UPDATE_DEPENDENCIES"c);
 const Action ACTION_DEBUG_START = new Action(IDEActions.DebugStart, "MENU_DEBUG_START_DEBUGGING"c, "debug-run"c, KeyCode.F5, 0);
 const Action ACTION_DEBUG_START_NO_DEBUG = new Action(IDEActions.DebugStartNoDebug, "MENU_DEBUG_START_NO_DEBUGGING"c, null, KeyCode.F5, KeyFlag.Control);
 const Action ACTION_DEBUG_CONTINUE = new Action(IDEActions.DebugContinue, "MENU_DEBUG_CONTINUE"c);
