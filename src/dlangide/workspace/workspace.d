@@ -8,6 +8,20 @@ import std.json;
 import std.utf;
 import std.algorithm;
 
+enum BuildOperation {
+    Build,
+    Clean,
+    Rebuild,
+    Run
+}
+
+enum BuildConfiguration {
+    Debug,
+    Release,
+    Unittest
+}
+
+
 /**
     Exception thrown on Workspace errors
 */
@@ -30,6 +44,8 @@ bool isWorkspaceFile(string filename) {
 class Workspace : WorkspaceItem {
     protected Project[] _projects;
 
+    protected BuildConfiguration _buildConfiguration;
+
     this(string fname = null) {
         super(fname);
     }
@@ -37,6 +53,9 @@ class Workspace : WorkspaceItem {
     @property Project[] projects() {
         return _projects;
     }
+
+    @property BuildConfiguration buildConfiguration() { return _buildConfiguration; }
+    @property void buildConfiguration(BuildConfiguration config) { _buildConfiguration = config; }
 
     protected Project _startupProject;
 

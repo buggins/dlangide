@@ -2,6 +2,7 @@ module dlangide.builders.builder;
 
 import dlangui.core.logger;
 import dlangide.workspace.project;
+import dlangide.workspace.workspace;
 import dlangide.ui.outputpanel;
 import dlangide.builders.extprocess;
 import dlangui.widgets.appframe;
@@ -15,12 +16,18 @@ class Builder : BackgroundOperationWatcher {
     protected ExternalProcess _extprocess;
     protected OutputPanel _log;
     protected ProtectedTextStorage _box;
+    protected BuildConfiguration _buildConfig;
+    protected BuildOperation _buildOp;
+    protected bool _verbose;
 
     @property Project project() { return _project; }
     @property void project(Project p) { _project = p; }
 
-    this(AppFrame frame, Project project, OutputPanel log) {
+    this(AppFrame frame, Project project, OutputPanel log, BuildConfiguration buildConfig, BuildOperation buildOp, bool verbose) {
         super(frame);
+        _buildConfig = buildConfig;
+        _buildOp = buildOp;
+        _verbose = verbose;
         _project = project;
         _log = log;
         _extprocess = new ExternalProcess();
@@ -46,9 +53,36 @@ class Builder : BackgroundOperationWatcher {
             char[] program = "dub".dup;
             char[][] params;
             char[] dir = _project.dir.dup;
-            params ~= "build".dup;
-            params ~= "-v".dup;
-            params ~= "--force".dup;
+
+            if (_buildOp == BuildOperation.Build || _buildOp == BuildOperation.Rebuild) {
+                params ~= "build".dup;
+                if (_buildOp == BuildOperation.Rebuild) {
+                    params ~= "--force".dup;
+                }
+            } else if (_buildOp == BuildOperation.Clean) {
+                params ~= "clean".dup;
+            } else if (_buildOp == BuildOperation.Run) {
+                params ~= "run".dup;
+            }
+
+            if (_buildOp != BuildOperation.Clean) {
+                switch (_buildConfig) {
+                    default:
+                    case BuildConfiguration.Debug:
+                        params ~= "--build=debug".dup;
+                        break;
+                    case BuildConfiguration.Release:
+                        params ~= "--build=release".dup;
+                        break;
+                    case BuildConfiguration.Unittest:
+                        params ~= "--build=unittest".dup;
+                        break;
+                }
+            }
+
+            if (_verbose)
+                params ~= "-v".dup;
+
             state = _extprocess.run(program, params, dir, _box, null);
             if (state != ExternalProcessState.Running) {
                 _box.writeText("Failed to run builder tool\n"d);

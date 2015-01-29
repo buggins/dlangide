@@ -338,6 +338,24 @@ class IDEFrame : AppFrame {
 
         tb.addButtons(ACTION_DEBUG_START);
         ToolBarComboBox cbBuildConfiguration = new ToolBarComboBox("buildConfig", ["Debug"d, "Release"d, "Unittest"d]);
+        cbBuildConfiguration.onItemClickListener = delegate(Widget source, int index) {
+            if (currentWorkspace) {
+                switch(index) {
+                    case 0:
+                        currentWorkspace.buildConfiguration = BuildConfiguration.Debug;
+                        break;
+                    case 1:
+                        currentWorkspace.buildConfiguration = BuildConfiguration.Release;
+                        break;
+                    case 2:
+                        currentWorkspace.buildConfiguration = BuildConfiguration.Unittest;
+                        break;
+                    default:
+                        break;
+                }
+            }
+            return true;
+        };
         tb.addControl(cbBuildConfiguration);
         tb.addButtons(ACTION_PROJECT_BUILD);
 
@@ -379,7 +397,23 @@ class IDEFrame : AppFrame {
                     return true;
                 case IDEActions.BuildProject:
                 case IDEActions.BuildWorkspace:
-                    buildProject();
+                    buildProject(BuildOperation.Build);
+                    //setBackgroundOperation(new BackgroundOperationWatcherTest(this));
+                    return true;
+                case IDEActions.RebuildProject:
+                case IDEActions.RebuildWorkspace:
+                    buildProject(BuildOperation.Rebuild);
+                    //setBackgroundOperation(new BackgroundOperationWatcherTest(this));
+                    return true;
+                case IDEActions.CleanProject:
+                case IDEActions.CleanWorkspace:
+                    buildProject(BuildOperation.Clean);
+                    //setBackgroundOperation(new BackgroundOperationWatcherTest(this));
+                    return true;
+                case IDEActions.DebugStart:
+                case IDEActions.DebugStartNoDebug:
+                case IDEActions.DebugContinue:
+                    buildProject(BuildOperation.Run);
                     //setBackgroundOperation(new BackgroundOperationWatcherTest(this));
                     return true;
                 case IDEActions.WindowCloseAllDocuments:
@@ -473,10 +507,10 @@ class IDEFrame : AppFrame {
         _wsPanel.workspace = ws;
     }
 
-    void buildProject() {
+    void buildProject(BuildOperation buildOp) {
         if (!currentWorkspace || !currentWorkspace.startupProject)
             return;
-        Builder op = new Builder(this, currentWorkspace.startupProject, _logPanel);
+        Builder op = new Builder(this, currentWorkspace.startupProject, _logPanel, currentWorkspace.buildConfiguration, buildOp, false);
         setBackgroundOperation(op);
     }
 }
