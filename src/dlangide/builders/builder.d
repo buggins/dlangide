@@ -29,8 +29,9 @@ class Builder : BackgroundOperationWatcher {
     /// log lines
     void pollText() {
         dstring text = _box.readText();
-        dstring[] lines = text.split('\n');
-        _log.addLogLines(null, lines);
+        if (text.length) {
+            _log.appendText(null, text);
+        }
     }
 
     /// returns icon of background operation to show in status line
@@ -40,6 +41,7 @@ class Builder : BackgroundOperationWatcher {
         scope(exit)pollText();
         ExternalProcessState state = _extprocess.state;
         if (state == ExternalProcessState.None) {
+            _log.clear();
             _box.writeText("Running dub\n"d);
             char[] program = "dub".dup;
             char[][] params;

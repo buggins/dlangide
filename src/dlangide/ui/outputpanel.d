@@ -20,8 +20,8 @@ class OutputPanel : DockWindow {
         return _logWidget;
     }
 
-    void addLogLines(string category, dstring[] msg...) {
-        _logWidget.appendLines(msg);
+    void appendText(string category, dstring msg) {
+        _logWidget.appendText(msg);
     }
 
 	void clear(string category = null) {

@@ -273,9 +273,7 @@ class IDEFrame : AppFrame {
         _dockHost.addDockedWindow(_wsPanel);
 
         _logPanel = new OutputPanel("output");
-        _logPanel.addLogLines(null, "Line 1"d);
-        _logPanel.addLogLines(null, "Line 2"d);
-        _logPanel.addLogLines(null, "Line 3"d, "Line 4"d);
+        _logPanel.appendText(null, "DlangIDE is started\nHINT: Try to open some DUB project\n"d);
 
         _dockHost.addDockedWindow(_logPanel);
 

@@ -105,17 +105,20 @@ class BackgroundReaderBase : Thread {
         return _finished;
     }
 
+    ubyte prevchar;
     void addByte(ubyte data) {
         if (_bytes.length < _len + 1)
             _bytes.length = _bytes.length ? _bytes.length * 2 : 1024;
-        ubyte prevchar = _len > 0 ? _bytes[_len - 1] : 0;
-        _bytes[_len++] = data;
         bool eolchar = (data == '\r' || data == '\n');
         bool preveol = (prevchar == '\r' || prevchar == '\n');
-        if (eolchar || (!eolchar && preveol))
-            flush(_len);
+        if ((eolchar && !preveol) || (!eolchar && preveol)) {
+            //Log.d("Flushing for prevChar=", prevchar, " newChar=", data);
+            flush();
+        }
+        _bytes[_len++] = data;
+        prevchar = data;
     }
-    void flush(int pos) {
+    void flush() {
         if (!_len)
             return;
         if (_textbuffer.length < _len)
@@ -154,12 +157,13 @@ class BackgroundReaderBase : Thread {
         size_t dst = 0;
         for(;src < text.length;) {
             dchar ch = text[src++];
+            dchar nextch = src < text.length ? text[src] : 0;
             if (ch == '\n') {
-                if (src < text.length && text[src] == '\r')
+                if (nextch == '\r')
                     src++;
-                text[dst++] = ch;
+                text[dst++] = '\n';
             } else if (ch == '\r') {
-                if (src < text.length && text[src] == '\n')
+                if (nextch == '\n')
                     src++;
                 text[dst++] = '\n';
             } else {
@@ -177,21 +181,64 @@ class BackgroundReaderBase : Thread {
     }
 
     private void run() {
+        //Log.d("BackgroundReaderBase run() enter");
         // read file by bytes
         try {
-            for (;;) {
-                ubyte[] r = _file.rawRead(_byteBuffer);
-                if (!r.length)
-                    break;
-                addByte(r[0]);
+            version (Windows) {
+                import win32.windows;
+                // separate version for windows as workaround for hanging rawRead
+                HANDLE h = _file.windowsHandle;
+                DWORD bytesRead = 0;
+                DWORD err;
+                for (;;) {
+                    BOOL res = ReadFile(h, _byteBuffer.ptr, 1, &bytesRead, null);
+                    if (res) {
+                        if (bytesRead == 1)
+                            addByte(_byteBuffer[0]);
+                    } else {
+                        err = GetLastError();
+                        if (err == ERROR_MORE_DATA) {
+                            if (bytesRead == 1)
+                                addByte(_byteBuffer[0]);
+                            continue;
+                        }
+                        //if (err == ERROR_BROKEN_PIPE || err = ERROR_INVALID_HANDLE)
+                        break;
+                    }
+                }
+            } else {
+                for (;;) {
+                    //Log.d("BackgroundReaderBase run() reading file");
+                    if (_file.eof)
+                        break;
+                    ubyte[] r = _file.rawRead(_byteBuffer);
+                    if (!r.length)
+                        break;
+                    //Log.d("BackgroundReaderBase run() read byte: ", r[0]);
+                    addByte(r[0]);
+                }
             }
             _file.close();
+            flush();
+            //Log.d("BackgroundReaderBase run() closing file");
+            //Log.d("BackgroundReaderBase run() file closed");
         } catch (Exception e) {
-            Log.e("Exception occured while reading stream: ", e);
+            //Log.e("Exception occured while reading stream: ", e);
         }
         handleFinish();
         _finished = true;
+        //Log.d("BackgroundReaderBase run() exit");
     }
+
+    void waitForFinish() {
+        static if (false) {
+            while (isRunning && !_finished)
+                Thread.sleep( dur!("msecs")( 10 ) );
+        } else {
+            join(false);
+        }
+    }
+
 }
 
 /// reader which sends output text to TextWriter (warning: call will be made from background thread)
@@ -250,7 +297,7 @@ class ExternalProcess {
         params ~= _program;
         params ~= _args;
         if (!_stderr)
-            redirect = Redirect.stdout | Redirect.stdin | Redirect.stderrToStdout;
+            redirect = Redirect.stdout | Redirect.stderrToStdout; //Redirect.stdin | 
         else
             redirect = Redirect.all;
         Log.i("Trying to run program ", _program, " with args ", _args);
@@ -273,18 +320,12 @@ class ExternalProcess {
     }
 
     protected void waitForReadingCompletion() {
-        Log.d("waitForReadingCompletion - closing stdin");
-        try {
-		    _pipes.stdin.close();
-        } catch (Exception e) {
-            Log.e("Cannot close stdin for ", _program, " ", e);
-        }
-        Log.d("waitForReadingCompletion - closed stdin");
         try {
             if (_stdoutReader && !_stdoutReader.finished) {
-                Log.d("waitForReadingCompletion - waiting for stdout");
-                _stdoutReader.join(false);
-                Log.d("waitForReadingCompletion - joined stdout");
+                _pipes.stdout.detach();
+                //Log.d("waitForReadingCompletion - waiting for stdout");
+                _stdoutReader.waitForFinish();
+                //Log.d("waitForReadingCompletion - joined stdout");
             }
             _stdoutReader = null;
         } catch (Exception e) {
@@ -292,20 +333,21 @@ class ExternalProcess {
         }
         try {
             if (_stderrReader && !_stderrReader.finished) {
-                Log.d("waitForReadingCompletion - waiting for stderr");
-                _stderrReader.join(false);
+                _pipes.stderr.detach();
+                //Log.d("waitForReadingCompletion - waiting for stderr");
+                _stderrReader.waitForFinish();
                 _stderrReader = null;
-                Log.d("waitForReadingCompletion - joined stderr");
+                //Log.d("waitForReadingCompletion - joined stderr");
             }
         } catch (Exception e) {
             Log.e("Exception while waiting for stderr reading completion for ", _program, " ", e);
         }
-        Log.d("waitForReadingCompletion - done");
+        //Log.d("waitForReadingCompletion - done");
     }
 
     /// polls all available output from process streams
     ExternalProcessState poll() {
-        Log.d("ExternalProcess.poll");
+        //Log.d("ExternalProcess.poll state = ", _state);
         bool res = true;
         if (_state == ExternalProcessState.Error || _state == ExternalProcessState.None || _state == ExternalProcessState.Stopped)
             return _state;
