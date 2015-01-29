@@ -8,10 +8,11 @@ import std.algorithm;
 import std.string;
 import std.conv;
 
-class Builder : BackgroundOperationWatcher, ProcessOutputTarget {
+class Builder : BackgroundOperationWatcher {
     protected Project _project;
     protected ExternalProcess _extprocess;
     protected OutputPanel _log;
+    protected ProtectedTextStorage _box;
 
     @property Project project() { return _project; }
     @property void project(Project p) { _project = p; }
@@ -21,9 +22,11 @@ class Builder : BackgroundOperationWatcher, ProcessOutputTarget {
         _project = project;
         _log = log;
         _extprocess = new ExternalProcess();
+        _box = new ProtectedTextStorage();
     }
     /// log lines
-    override void onText(dstring text) {
+    void pollText() {
+        dstring text = _box.readText();
         dstring[] lines = text.split('\n');
         _log.addLogLines(null, lines);
     }
@@ -32,11 +35,18 @@ class Builder : BackgroundOperationWatcher, ProcessOutputTarget {
     override @property string icon() { return "folder"; }
     /// update background operation status
     override void update() {
+        scope(exit)pollText();
         if (_extprocess.state == ExternalProcessState.None) {
-            onText("Running dub\n"d);
-            _extprocess.run(cast(char[])"dub", cast(char[][])["build"], cast(char[])_project.dir, this, null);
+            _box.writeText("Running dub\n"d);
+            char[] program = "dub".dup;
+            char[][] params;
+            char[] dir = _project.dir.dup;
+            params ~= "build".dup;
+            params ~= "-v".dup;
+            params ~= "--force".dup;
+            _extprocess.run(program, params, dir, _box, null);
             if (_extprocess.state != ExternalProcessState.Running) {
-                onText("Failed to run builder tool");
+                _box.writeText("Failed to run builder tool\n"d);
                 _finished = true;
                 destroy(_extprocess);
                 _extprocess = null;
@@ -45,7 +55,7 @@ class Builder : BackgroundOperationWatcher, ProcessOutputTarget {
         }
         ExternalProcessState state = _extprocess.poll();
         if (state == ExternalProcessState.Stopped) {
-            onText("Builder finished with result "d ~ to!dstring(_extprocess.result) ~ "\n"d);
+            _box.writeText("Builder finished with result "d ~ to!dstring(_extprocess.result) ~ "\n"d);
             _finished = true;
             return;
         }
