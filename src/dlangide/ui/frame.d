@@ -156,6 +156,11 @@ class IDEFrame : AppFrame {
         }
     }
 
+    // returns DSourceEdit from currently active tab (if it's editor), null if current tab is not editor or no tabs open
+    DSourceEdit currentEditor() {
+        return cast(DSourceEdit)_tabs.selectedTabBody();
+    }
+
     /// close tab w/o confirmation
     void closeTab(string tabId) {
         _wsPanel.selectItem(null);
@@ -340,23 +345,12 @@ class IDEFrame : AppFrame {
         tb.addButtons(ACTION_DEBUG_START);
         ToolBarComboBox cbBuildConfiguration = new ToolBarComboBox("buildConfig", ["Debug"d, "Release"d, "Unittest"d]);
         cbBuildConfiguration.onItemClickListener = delegate(Widget source, int index) {
-            if (currentWorkspace) {
-                switch(index) {
-                    case 0:
-                        currentWorkspace.buildConfiguration = BuildConfiguration.Debug;
-                        break;
-                    case 1:
-                        currentWorkspace.buildConfiguration = BuildConfiguration.Release;
-                        break;
-                    case 2:
-                        currentWorkspace.buildConfiguration = BuildConfiguration.Unittest;
-                        break;
-                    default:
-                        break;
-                }
+            if (currentWorkspace && index < 3) {
+                currentWorkspace.buildConfiguration = [BuildConfiguration.Debug, BuildConfiguration.Release, BuildConfiguration.Unittest][index];
             }
             return true;
         };
+        cbBuildConfiguration.action = ACTION_PROJECT_BUILD;
         tb.addControl(cbBuildConfiguration);
         tb.addButtons(ACTION_PROJECT_BUILD);
 
@@ -365,6 +359,46 @@ class IDEFrame : AppFrame {
                       ACTION_EDIT_UNDO, ACTION_EDIT_REDO);
         return res;
     }
+
+	/// override to handle specific actions state (e.g. change enabled state for supported actions)
+	override bool handleActionStateRequest(const Action a) {
+        switch (a.id) {
+            case IDEActions.FileExit:
+            case IDEActions.FileOpen:
+            case IDEActions.WindowCloseAllDocuments:
+            case IDEActions.FileOpenWorkspace:
+                // disable when background operation in progress
+                if (!_currentBackgroundOperation)
+                    a.state = ACTION_STATE_ENABLED;
+                else
+                    a.state = ACTION_STATE_DISABLE;
+                return true;
+            case IDEActions.HelpAbout:
+            case StandardAction.OpenUrl:
+                // always enabled
+                a.state = ACTION_STATE_ENABLED;
+                return true;
+            case IDEActions.BuildProject:
+            case IDEActions.BuildWorkspace:
+            case IDEActions.RebuildProject:
+            case IDEActions.RebuildWorkspace:
+            case IDEActions.CleanProject:
+            case IDEActions.CleanWorkspace:
+            case IDEActions.DebugStart:
+            case IDEActions.DebugStartNoDebug:
+            case IDEActions.DebugContinue:
+            case IDEActions.UpdateProjectDependencies:
+            case IDEActions.RefreshProject:
+                // enable when project exists
+                if (currentWorkspace && currentWorkspace.startupProject && !_currentBackgroundOperation)
+                    a.state = ACTION_STATE_ENABLED;
+                else
+                    a.state = ACTION_STATE_DISABLE;
+                return true;
+            default:
+                return super.handleActionStateRequest(a);
+        }
+	}
 
     /// override to handle specific actions
 	override bool handleAction(const Action a) {
@@ -399,31 +433,25 @@ class IDEFrame : AppFrame {
                 case IDEActions.BuildProject:
                 case IDEActions.BuildWorkspace:
                     buildProject(BuildOperation.Build);
-                    //setBackgroundOperation(new BackgroundOperationWatcherTest(this));
                     return true;
                 case IDEActions.RebuildProject:
                 case IDEActions.RebuildWorkspace:
                     buildProject(BuildOperation.Rebuild);
-                    //setBackgroundOperation(new BackgroundOperationWatcherTest(this));
                     return true;
                 case IDEActions.CleanProject:
                 case IDEActions.CleanWorkspace:
                     buildProject(BuildOperation.Clean);
-                    //setBackgroundOperation(new BackgroundOperationWatcherTest(this));
                     return true;
                 case IDEActions.DebugStart:
                 case IDEActions.DebugStartNoDebug:
                 case IDEActions.DebugContinue:
                     buildProject(BuildOperation.Run);
-                    //setBackgroundOperation(new BackgroundOperationWatcherTest(this));
                     return true;
                 case IDEActions.UpdateProjectDependencies:
                     buildProject(BuildOperation.Upgrade);
-                    //setBackgroundOperation(new BackgroundOperationWatcherTest(this));
                     return true;
                 case IDEActions.RefreshProject:
                     refreshWorkspace();
-                    //setBackgroundOperation(new BackgroundOperationWatcherTest(this));
                     return true;
                 case IDEActions.WindowCloseAllDocuments:
                     askForUnsavedEdits(delegate() {
@@ -534,7 +562,8 @@ class IDEFrame : AppFrame {
         closeAllDocuments();
         currentWorkspace = ws;
         _wsPanel.workspace = ws;
-        if (ws.startupProject && ws.startupProject.mainSourceFile) {
+        requestActionsUpdate();
+        if (ws && ws.startupProject && ws.startupProject.mainSourceFile) {
             openSourceFile(ws.startupProject.mainSourceFile.filename);
             _tabs.setFocus();
         }
