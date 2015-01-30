@@ -260,6 +260,7 @@ class IDEFrame : AppFrame {
 
         // editor tabs
         _tabs = new TabWidget("TABS");
+        _tabs.hiddenTabsVisibility = Visibility.Gone;
         _tabs.setStyles(STYLE_DOCK_HOST_BODY, STYLE_TAB_UP_DARK, STYLE_TAB_UP_BUTTON_DARK, STYLE_TAB_UP_BUTTON_DARK_TEXT);
         _tabs.onTabChangedListener = &onTabChanged;
         _tabs.onTabCloseListener = &onTabClose;

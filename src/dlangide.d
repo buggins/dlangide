@@ -23,12 +23,18 @@ extern (C) int UIAppMain(string[] args) {
     //FontManager.hintingMode = HintingMode.Disabled;
     // you can override antialiasing setting here
     FontManager.minAnitialiasedFontSize = 0;
+    /// set font gamma (1.0 is neutral, < 1.0 makes glyphs lighter, >1.0 makes glyphs bolder)
+    FontManager.fontGamma = 0.8;
 	version (USE_OPENGL) {
 		// you can turn on subpixel font rendering (ClearType) here
 		FontManager.subpixelRenderingMode = SubpixelRenderingMode.None; //
 	} else {
-		// you can turn on subpixel font rendering (ClearType) here
-		//FontManager.subpixelRenderingMode = SubpixelRenderingMode.BGR; //SubpixelRenderingMode.None; //
+        version (USE_FREETYPE) {
+            // you can turn on subpixel font rendering (ClearType) here
+            FontManager.fontGamma = 0.8;
+		    //FontManager.subpixelRenderingMode = SubpixelRenderingMode.BGR; //SubpixelRenderingMode.None; //
+            FontManager.hintingMode = HintingMode.AutoHint;
+        }
 	}
 
     // create window
