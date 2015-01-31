@@ -28,6 +28,8 @@ extern (C) int UIAppMain(string[] args) {
 	version (USE_OPENGL) {
 		// you can turn on subpixel font rendering (ClearType) here
 		FontManager.subpixelRenderingMode = SubpixelRenderingMode.None; //
+		FontManager.fontGamma = 0.8;
+		FontManager.hintingMode = HintingMode.AutoHint;
 	} else {
         version (USE_FREETYPE) {
             // you can turn on subpixel font rendering (ClearType) here
