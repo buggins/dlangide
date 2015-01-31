@@ -389,6 +389,8 @@ class IDEFrame : AppFrame {
             case IDEActions.DebugContinue:
             case IDEActions.UpdateProjectDependencies:
             case IDEActions.RefreshProject:
+			case IDEActions.SetStartupProject:
+			case IDEActions.ProjectSettings:
                 // enable when project exists
                 if (currentWorkspace && currentWorkspace.startupProject && !_currentBackgroundOperation)
                     a.state = ACTION_STATE_ENABLED;
