@@ -23,6 +23,8 @@ Build and run with DUB:
 	git clone https://github.com/buggins/dlangide.git
 	cd dlangide
 	dub run
+	
+Needs DMD 2.066.1 to build.
 
 HINT: Try to open sample project Tetris, from workspaces/tetris with DlangIDE.
 
