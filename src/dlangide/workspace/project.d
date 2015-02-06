@@ -260,24 +260,29 @@ class Project : WorkspaceItem {
     }
 
     /// tries to find source file in project, returns found project source file item, or null if not found
-    ProjectSourceFile findSourceFileItem(ProjectItem dir, string filename) {
+	ProjectSourceFile findSourceFileItem(ProjectItem dir, string filename, bool fullFileName=true) {
         for (int i = 0; i < dir.childCount; i++) {
             ProjectItem item = dir.child(i);
             if (item.isFolder) {
-                ProjectSourceFile res = findSourceFileItem(item, filename);
+                ProjectSourceFile res = findSourceFileItem(item, filename, fullFileName);
                 if (res)
                     return res;
             } else {
                 ProjectSourceFile res = cast(ProjectSourceFile)item;
-                if (res && res.filename.equal(filename))
-                    return res;
+				if(res)
+				{
+					if(fullFileName && res.filename.equal(filename))
+						return res;
+					else if (!fullFileName && res.filename.endsWith(filename))
+                    	return res;
+				}
             }
         }
         return null;
     }
 
-    ProjectSourceFile findSourceFileItem(string filename) {
-        return findSourceFileItem(_items, filename);
+	ProjectSourceFile findSourceFileItem(string filename, bool fullFileName=true) {
+		return findSourceFileItem(_items, filename, fullFileName);
     }
 
     override bool load(string fname = null) {
