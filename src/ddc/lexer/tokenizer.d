@@ -2826,11 +2826,13 @@ TEST"
 		]);
 }
 
+
 unittest {
+    version(DisableLexerTest) {
     import std.stdio;
     import std.conv;
     import std.utf;
-    import ddx.lexer.LineStream;
+    import dlangui.core.linestream;
     string fname = "/home/lve/src/d/ddc/ddclexer/tests/tokenizer_test.d";
 	writeln("opening file");
     try {
@@ -2856,5 +2858,6 @@ unittest {
         }
     } catch (Exception e) {
         writeln("Exception " ~ e.toString);
+    }
     }
 }
