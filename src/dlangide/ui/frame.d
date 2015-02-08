@@ -109,7 +109,7 @@ class IDEFrame : AppFrame {
             // open new file
             DSourceEdit editor = new DSourceEdit(filename);
             if (file ? editor.load(file) : editor.load(filename)) {
-                _tabs.addTab(editor, toUTF32(baseName(filename)));
+                _tabs.addTab(editor, toUTF32(baseName(filename)), null, true);
                 index = _tabs.tabIndex(filename);
                 TabItem tab = _tabs.tab(filename);
                 tab.objectParam = file;
@@ -136,7 +136,7 @@ class IDEFrame : AppFrame {
             _tabs.selectTab(index, true);
         } else {
             HomeScreen home = new HomeScreen(HOME_SCREEN_ID, this);
-            _tabs.addTab(home, "Home"d);
+            _tabs.addTab(home, "Home"d, null, true);
             _tabs.selectTab(HOME_SCREEN_ID, true);
         }
     }
