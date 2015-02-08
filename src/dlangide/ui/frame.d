@@ -300,8 +300,11 @@ class IDEFrame : AppFrame {
         MenuItem editItem = new MenuItem(new Action(2, "MENU_EDIT"));
 		editItem.add(ACTION_EDIT_COPY, ACTION_EDIT_PASTE, 
                      ACTION_EDIT_CUT, ACTION_EDIT_UNDO, ACTION_EDIT_REDO);
+        MenuItem editItemAdvanced = new MenuItem(new Action(221, "MENU_EDIT_ADVANCED"));
+		editItemAdvanced.add(ACTION_EDIT_INDENT, ACTION_EDIT_UNINDENT, ACTION_EDIT_TOGGLE_LINE_COMMENT, ACTION_EDIT_TOGGLE_BLOCK_COMMENT);
+		editItem.add(editItemAdvanced);
 
-		editItem.add(new Action(20, "MENU_EDIT_PREFERENCES"));
+		editItem.add(ACTION_EDIT_PREFERENCES);
 
         MenuItem projectItem = new MenuItem(new Action(21, "MENU_PROJECT"));
         projectItem.add(ACTION_PROJECT_SET_STARTUP, ACTION_PROJECT_REFRESH, ACTION_PROJECT_UPDATE_DEPENDENCIES, ACTION_PROJECT_SETTINGS);
@@ -356,7 +359,7 @@ class IDEFrame : AppFrame {
 
         tb = res.getOrAddToolbar("Edit");
         tb.addButtons(ACTION_EDIT_COPY, ACTION_EDIT_PASTE, ACTION_EDIT_CUT, ACTION_SEPARATOR,
-                      ACTION_EDIT_UNDO, ACTION_EDIT_REDO);
+                      ACTION_EDIT_UNDO, ACTION_EDIT_REDO, ACTION_EDIT_INDENT, ACTION_EDIT_UNINDENT);
         return res;
     }
 

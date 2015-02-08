@@ -16,6 +16,7 @@ enum IDEActions : int {
     FileSaveAll,
     FileClose,
     FileExit,
+    EditPreferences,
     BuildWorkspace,
     RebuildWorkspace,
     CleanWorkspace,
@@ -66,6 +67,11 @@ const Action ACTION_EDIT_PASTE = (new Action(EditorActions.Paste, "MENU_EDIT_PAS
 const Action ACTION_EDIT_CUT = (new Action(EditorActions.Cut, "MENU_EDIT_CUT"c, "edit-cut"c, KeyCode.KEY_X, KeyFlag.Control)).disableByDefault();
 const Action ACTION_EDIT_UNDO = (new Action(EditorActions.Undo, "MENU_EDIT_UNDO"c, "edit-undo"c, KeyCode.KEY_Z, KeyFlag.Control)).disableByDefault();
 const Action ACTION_EDIT_REDO = (new Action(EditorActions.Redo, "MENU_EDIT_REDO"c, "edit-redo"c, KeyCode.KEY_Z, KeyFlag.Control|KeyFlag.Shift)).disableByDefault();
+const Action ACTION_EDIT_INDENT = (new Action(EditorActions.Tab, "MENU_EDIT_INDENT"c, "edit-indent"c, KeyCode.TAB, 0)).disableByDefault();
+const Action ACTION_EDIT_UNINDENT = (new Action(EditorActions.BackTab, "MENU_EDIT_UNINDENT"c, "edit-unindent", KeyCode.TAB, KeyFlag.Shift)).disableByDefault();
+const Action ACTION_EDIT_TOGGLE_LINE_COMMENT = (new Action(EditorActions.Redo, "MENU_EDIT_TOGGLE_LINE_COMMENT"c, null, KeyCode.KEY_DIVIDE, KeyFlag.Control)).disableByDefault();
+const Action ACTION_EDIT_TOGGLE_BLOCK_COMMENT = (new Action(EditorActions.Redo, "MENU_EDIT_TOGGLE_BLOCK_COMMENT"c, null, KeyCode.KEY_DIVIDE, KeyFlag.Control|KeyFlag.Shift)).disableByDefault();
+const Action ACTION_EDIT_PREFERENCES = (new Action(EditorActions.Redo, "MENU_EDIT_PREFERENCES"c, null));
 const Action ACTION_HELP_ABOUT = new Action(IDEActions.HelpAbout, "MENU_HELP_ABOUT"c);
 const Action ACTION_WINDOW_CLOSE_ALL_DOCUMENTS = new Action(IDEActions.WindowCloseAllDocuments, "MENU_WINDOW_CLOSE_ALL_DOCUMENTS"c);
 const Action ACTION_CREATE_NEW_WORKSPACE = new Action(IDEActions.CreateNewWorkspace, "Create new workspace"d);
