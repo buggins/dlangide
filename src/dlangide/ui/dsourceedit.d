@@ -89,6 +89,7 @@ class DSourceEdit : SourceEdit {
 
 class SimpleDSyntaxHighlighter : SyntaxHighlighter {
 
+    EditableContent _content;
     SourceFile _file;
     ArraySourceLines _lines;
     Tokenizer _tokenizer;
@@ -100,6 +101,141 @@ class SimpleDSyntaxHighlighter : SyntaxHighlighter {
     }
 
     TokenPropString[] _props;
+
+    /// returns editable content
+    @property EditableContent content() { return _content; }
+    /// set editable content
+    @property SyntaxHighlighter content(EditableContent content) {
+        _content = content;
+        return this;
+    }
+
+    /// return true if toggle line comment is supported for file type
+    override @property bool supportsToggleLineComment() {
+        return true;
+    }
+
+    
+
+    /// return true if can toggle line comments for specified text range
+    override bool canToggleLineComment(TextRange range) {
+        return true;
+    }
+
+    protected bool isLineComment(dstring s) {
+        for (int i = 0; i < s.length - 2; i++) {
+            if (s[i] == '/' && s[i + 1] == '/')
+                return true;
+            else if (s[i] != ' ' && s[i] != '\t')
+                return false;
+        }
+        return false;
+    }
+
+    protected dstring commentLine(dstring s, int commentX) {
+        dchar[] res;
+        int x = 0;
+        bool commented = false;
+        for (int i = 0; i < s.length; i++) {
+            dchar ch = s[i];
+            if (ch == '\t') {
+                int newX = (x + _content.tabSize) / _content.tabSize * _content.tabSize;
+                if (!commented && newX >= commentX) {
+                    commented = true;
+                    if (newX != commentX) {
+                        // replace tab with space
+                        for (; x <= commentX; x++)
+                            res ~= ' ';
+                    } else {
+                        res ~= ch;
+                        x = newX;
+                    }
+                    res ~= "//";
+                    x += 2;
+                } else {
+                    res ~= ch;
+                    x = newX;
+                }
+            } else {
+                if (!commented && x == commentX) {
+                    commented = true;
+                    res ~= "//";
+                    res ~= ch;
+                    x += 3;
+                } else {
+                    res ~= ch;
+                    x++;
+                }
+            }
+        }
+        if (!commented) {
+            for (; x < commentX; x++)
+                res ~= ' ';
+            res ~= "//";
+        }
+        return cast(dstring)res;
+    }
+
+    /// toggle line comments for specified text range
+    override void toggleLineComment(TextRange range, Object source) {
+        TextRange r = content.fullLinesRange(range);
+        int lineCount = r.end.line - r.start.line;
+        bool noEolAtEndOfRange = false;
+        if (lineCount == 0 || r.end.pos > 0) {
+            noEolAtEndOfRange = true;
+            lineCount++;
+        }
+        int minLeftX = -1;
+        bool hasComments = false;
+        bool hasNoComments = false;
+        bool hasNonEmpty = false;
+        dstring[] srctext;
+        dstring[] dsttext;
+        for (int i = 0; i < lineCount; i++) {
+            int lineIndex = r.start.line + i;
+            dstring s = content.line(lineIndex);
+            srctext ~= s;
+            TextLineMeasure m = content.measureLine(lineIndex);
+            if (!m.empty) {
+                if (minLeftX < 0 || minLeftX > m.firstNonSpaceX)
+                    minLeftX = m.firstNonSpaceX;
+                hasNonEmpty = true;
+                if (isLineComment(s))
+                    hasComments = true;
+                else
+                    hasNoComments = true;
+            }
+        }
+        if (minLeftX < 0)
+            minLeftX = 0;
+        if (hasNoComments || !hasComments) {
+            // comment
+            for (int i = 0; i < lineCount; i++) {
+                dsttext ~= commentLine(srctext[i], minLeftX);
+            }
+            if (!noEolAtEndOfRange)
+                dsttext ~= ""d;
+            EditOperation op = new EditOperation(EditAction.Replace, r, dsttext);
+            _content.performOperation(op, source);
+        } else {
+            // uncomment
+        }
+    }
+
+    /// return true if toggle block comment is supported for file type
+    override @property bool supportsToggleBlockComment() {
+        // TODO
+        return false;
+    }
+    /// return true if can toggle block comments for specified text range
+    override bool canToggleBlockComment(TextRange range) {
+        // TODO
+        return false;
+    }
+    /// toggle block comments for specified text range
+    override void toggleBlockComment(TextRange range, Object source) {
+        // TODO
+    }
 
     /// categorize characters in content by token types
     void updateHighlight(dstring[] lines, TokenPropString[] props, int changeStartLine, int changeEndLine) {
