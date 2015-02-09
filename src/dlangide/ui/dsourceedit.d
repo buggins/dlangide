@@ -3,6 +3,7 @@ module dlangide.ui.dsourceedit;
 import dlangui.core.logger;
 import dlangui.widgets.editors;
 import dlangui.widgets.srcedit;
+import dlangui.widgets.menu;
 
 import ddc.lexer.textsource;
 import ddc.lexer.exceptions;
@@ -28,6 +29,9 @@ class DSourceEdit : SourceEdit {
         setTokenHightlightColor(TokenCategory.Error, 0xFF0000);  // red
         setTokenHightlightColor(TokenCategory.Comment_Documentation, 0x206000);
         //setTokenHightlightColor(TokenCategory.Identifier, 0x206000);  // no colors
+		MenuItem editPopupItem = new MenuItem(null);
+		editPopupItem.add(ACTION_EDIT_COPY, ACTION_EDIT_PASTE, ACTION_EDIT_CUT, ACTION_EDIT_UNDO, ACTION_EDIT_REDO, ACTION_EDIT_INDENT, ACTION_EDIT_UNINDENT, ACTION_EDIT_TOGGLE_LINE_COMMENT);
+        popupMenu = editPopupItem;
 	}
 	this() {
 		this("SRCEDIT");
