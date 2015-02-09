@@ -115,8 +115,6 @@ class SimpleDSyntaxHighlighter : SyntaxHighlighter {
         return true;
     }
 
-    
-
     /// return true if can toggle line comments for specified text range
     override bool canToggleLineComment(TextRange range) {
         TextRange r = content.fullLinesRange(range);
@@ -233,19 +231,19 @@ class SimpleDSyntaxHighlighter : SyntaxHighlighter {
     }
 
     protected TokenWithRange getPositionToken(TextPosition pos) {
-        Log.d("getPositionToken for ", pos);
+        //Log.d("getPositionToken for ", pos);
         TextPosition start = tokenStart(pos);
-        Log.d("token start found: ", start);
+        //Log.d("token start found: ", start);
         initTokenizer(start);
         for (;;) {
             TokenWithRange tokenRange = nextToken();
-            Log.d("read token: ", tokenRange);
+            //Log.d("read token: ", tokenRange);
             if (!tokenRange.token) {
-                Log.d("end of file");
+                //Log.d("end of file");
                 return tokenRange;
             }
             if (pos >= tokenRange.range.start && pos < tokenRange.range.end) {
-                Log.d("found: ", pos, " in ", tokenRange);
+                //Log.d("found: ", pos, " in ", tokenRange);
                 return tokenRange;
             }
         }
@@ -308,17 +306,66 @@ class SimpleDSyntaxHighlighter : SyntaxHighlighter {
 
     /// return true if toggle block comment is supported for file type
     override @property bool supportsToggleBlockComment() {
-        // TODO
-        return false;
+        return true;
     }
     /// return true if can toggle block comments for specified text range
     override bool canToggleBlockComment(TextRange range) {
-        // TODO
+        TokenWithRange startToken = getPositionToken(range.start);
+        TokenWithRange endToken = getPositionToken(range.end);
+        Log.d("canToggleBlockComment: startToken=", startToken, " endToken=", endToken);
+        if (startToken.token && endToken.token && startToken.range == endToken.range && startToken.token.isMultilineComment) {
+            Log.d("canToggleBlockComment: can uncomment");
+            return true;
+        }
         return false;
     }
     /// toggle block comments for specified text range
-    override void toggleBlockComment(TextRange range, Object source) {
-        // TODO
+    override void toggleBlockComment(TextRange srcrange, Object source) {
+        TokenWithRange startToken = getPositionToken(srcrange.start);
+        TokenWithRange endToken = getPositionToken(srcrange.end);
+        if (startToken.token && endToken.token && startToken.range == endToken.range && startToken.token.isMultilineComment) {
+            TextRange range = startToken.range;
+            dstring[] dsttext;
+            for (int i = range.start.line; i <= range.end.line; i++) {
+                dstring s = content.line(i);
+                int charsRemoved = 0;
+                int minp = 0;
+                if (i == range.start.line) {
+                    int maxp = content.lineLength(range.start.line);
+                    if (i == range.end.line)
+                        maxp = range.end.pos - 2;
+                    charsRemoved = 2;
+                    for (int j = range.start.pos + charsRemoved; j < maxp; j++) {
+                        if (s[j] != s[j - 1])
+                            break;
+                        charsRemoved++;
+                    }
+                    Log.d("line before removing start of comment:", s);
+                    s = s[range.start.pos + charsRemoved .. $];
+                    Log.d("line after removing start of comment:", s);
+                    charsRemoved += range.start.pos;
+                }
+                if (i == range.end.line) {
+                    int endp = range.end.pos;
+                    if (charsRemoved > 0)
+                        endp -= charsRemoved;
+                    int endRemoved = 2;
+                    for (int j = endp - endRemoved; j >= 0; j--) {
+                        if (s[j] != s[j + 1])
+                            break;
+                        endRemoved++;
+                    }
+                    Log.d("line before removing end of comment:", s);
+                    s = s[0 .. endp - endRemoved];
+                    Log.d("line after removing end of comment:", s);
+                }
+                dsttext ~= s;
+            }
+            EditOperation op = new EditOperation(EditAction.Replace, range, dsttext);
+            _content.performOperation(op, source);
+            return;
+        }
+
     }
 
     /// categorize characters in content by token types

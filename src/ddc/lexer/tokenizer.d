@@ -1533,6 +1533,7 @@ class Tokenizer
 	protected Token processOneLineComment() {
 		_sharedCommentToken.setPos(_line, _pos - 1);
         _sharedCommentToken.isDocumentationComment = _pos + 1 < _lineText.length && _lineText[_pos + 1] == '/';
+        _sharedCommentToken.isMultilineComment = false;
 		if (_enableCommentText) {
 			_sharedCommentToken.text = _lineText[_pos + 1 .. $];
 		}
