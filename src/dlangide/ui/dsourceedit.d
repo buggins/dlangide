@@ -269,6 +269,26 @@ class SimpleDSyntaxHighlighter : SyntaxHighlighter {
         }
     }
 
+    protected TokenWithRange[] getRangeTokens(TextRange range) {
+        TokenWithRange[] res;
+        //Log.d("getPositionToken for ", pos);
+        TextPosition start = tokenStart(range.start);
+        //Log.d("token start found: ", start);
+        initTokenizer(start);
+        for (;;) {
+            TokenWithRange tokenRange = nextToken();
+            //Log.d("read token: ", tokenRange);
+            if (!tokenRange.token) {
+                //Log.d("end of file");
+                return res;
+            }
+            if (tokenRange.range.intersects(range)) {
+                //Log.d("found: ", pos, " in ", tokenRange);
+                res ~= tokenRange;
+            }
+        }
+    }
+
     protected bool isInsideBlockComment(TextPosition pos) {
         TokenWithRange tokenRange = getPositionToken(pos);
         if (tokenRange.token && tokenRange.token.type == TokenType.COMMENT && tokenRange.token.isMultilineComment)
@@ -339,12 +359,27 @@ class SimpleDSyntaxHighlighter : SyntaxHighlighter {
     override bool canToggleBlockComment(TextRange range) {
         TokenWithRange startToken = getPositionToken(range.start);
         TokenWithRange endToken = getPositionToken(range.end);
-        Log.d("canToggleBlockComment: startToken=", startToken, " endToken=", endToken);
+        //Log.d("canToggleBlockComment: startToken=", startToken, " endToken=", endToken);
         if (startToken.token && endToken.token && startToken.range == endToken.range && startToken.token.isMultilineComment) {
-            Log.d("canToggleBlockComment: can uncomment");
+            //Log.d("canToggleBlockComment: can uncomment");
             return true;
         }
-        return false;
+        if (range.empty)
+            return false;
+        TokenWithRange[] tokens = getRangeTokens(range);
+        foreach(ref t; tokens) {
+            if (t.token.type == TokenType.COMMENT) {
+                if (t.token.isMultilineComment) {
+                    // disable until nested comments support is implemented
+                    return false;
+                } else {
+                    // single line comment
+                    if (t.range.isInside(range.start) || t.range.isInside(range.end))
+                        return false;
+                }
+            }
+        }
+        return true;
     }
     /// toggle block comments for specified text range
     override void toggleBlockComment(TextRange srcrange, Object source) {
@@ -367,9 +402,9 @@ class SimpleDSyntaxHighlighter : SyntaxHighlighter {
                             break;
                         charsRemoved++;
                     }
-                    Log.d("line before removing start of comment:", s);
+                    //Log.d("line before removing start of comment:", s);
                     s = s[range.start.pos + charsRemoved .. $];
-                    Log.d("line after removing start of comment:", s);
+                    //Log.d("line after removing start of comment:", s);
                     charsRemoved += range.start.pos;
                 }
                 if (i == range.end.line) {
@@ -382,13 +417,55 @@ class SimpleDSyntaxHighlighter : SyntaxHighlighter {
                             break;
                         endRemoved++;
                     }
-                    Log.d("line before removing end of comment:", s);
+                    //Log.d("line before removing end of comment:", s);
                     s = s[0 .. endp - endRemoved];
-                    Log.d("line after removing end of comment:", s);
+                    //Log.d("line after removing end of comment:", s);
                 }
                 dsttext ~= s;
             }
             EditOperation op = new EditOperation(EditAction.Replace, range, dsttext);
+            _content.performOperation(op, source);
+            return;
+        } else {
+            if (srcrange.empty)
+                return;
+            TokenWithRange[] tokens = getRangeTokens(srcrange);
+            foreach(ref t; tokens) {
+                if (t.token.type == TokenType.COMMENT) {
+                    if (t.token.isMultilineComment) {
+                        // disable until nested comments support is implemented
+                        return;
+                    } else {
+                        // single line comment
+                        if (t.range.isInside(srcrange.start) || t.range.isInside(srcrange.end))
+                            return;
+                    }
+                }
+            }
+            dstring[] dsttext;
+            for (int i = srcrange.start.line; i <= srcrange.end.line; i++) {
+                dstring s = content.line(i);
+                int charsAdded = 0;
+                if (i == srcrange.start.line) {
+                    int p = srcrange.start.pos;
+                    if (p < s.length) {
+                        s = s[p .. $];
+                        charsAdded = -p;
+                    } else {
+                        charsAdded = -(cast(int)s.length);
+                        s = null;
+                    }
+                    s = "/*" ~ s;
+                    charsAdded += 2;
+                }
+                if (i == srcrange.end.line) {
+                    int p = srcrange.end.pos + charsAdded;
+                    s = p > 0 ? s[0..p] : null;
+                    s ~= "*/";
+                }
+                dsttext ~= s;
+            }
+            EditOperation op = new EditOperation(EditAction.Replace, srcrange, dsttext);
             _content.performOperation(op, source);
             return;
         }
