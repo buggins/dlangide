@@ -119,6 +119,9 @@ class SimpleDSyntaxHighlighter : SyntaxHighlighter {
 
     /// return true if can toggle line comments for specified text range
     override bool canToggleLineComment(TextRange range) {
+        TextRange r = content.fullLinesRange(range);
+        if (isInsideBlockComment(r.start) || isInsideBlockComment(r.end))
+            return false;
         return true;
     }
 
@@ -176,9 +179,90 @@ class SimpleDSyntaxHighlighter : SyntaxHighlighter {
         return cast(dstring)res;
     }
 
+    /// searches for neares token start before or equal to position
+    protected TextPosition tokenStart(TextPosition pos) {
+        TextPosition p = pos;
+        for (;;) {
+            TextPosition prevPos = content.prevCharPos(p);
+            if (p == prevPos)
+                return p; // begin of file
+            TokenProp prop = content.tokenProp(p);
+            TokenProp prevProp = content.tokenProp(prevPos);
+            if (prop && prop != prevProp)
+                return p;
+            p = prevPos;
+        }
+    }
+
+    static struct TokenWithRange {
+        Token token;
+        TextRange range;
+        @property string toString() {
+            return token.toString ~ range.toString;
+        }
+    }
+    protected TextPosition _lastTokenStart;
+    protected Token _lastToken;
+    protected bool initTokenizer(TextPosition startPos) {
+        const dstring[] lines = content.lines;
+        _lines.init(cast(dstring[])(lines[startPos.line .. $]), _file, startPos.line);
+        _tokenizer.init(_lines, startPos.pos);
+        _lastTokenStart = startPos;
+        _lastToken = null;
+        nextToken();
+        return true;
+    }
+
+    protected TokenWithRange nextToken() {
+        TokenWithRange res;
+        if (_lastToken && _lastToken.type == TokenType.EOF) {
+            // end of file
+            res.range.start = _lastTokenStart;
+            res.range.end = content.endOfFile();
+            res.token = null;
+            return res;
+        }
+        res.range.start = _lastTokenStart;
+        res.token = _lastToken;
+        _lastToken = _tokenizer.nextToken();
+        if (_lastToken)
+            _lastToken = _lastToken.clone();
+        _lastTokenStart = _lastToken ? TextPosition(_lastToken.line - 1, _lastToken.pos - 1) : content.endOfFile();
+        res.range.end = _lastTokenStart;
+        return res;
+    }
+
+    protected TokenWithRange getPositionToken(TextPosition pos) {
+        Log.d("getPositionToken for ", pos);
+        TextPosition start = tokenStart(pos);
+        Log.d("token start found: ", start);
+        initTokenizer(start);
+        for (;;) {
+            TokenWithRange tokenRange = nextToken();
+            Log.d("read token: ", tokenRange);
+            if (!tokenRange.token) {
+                Log.d("end of file");
+                return tokenRange;
+            }
+            if (pos >= tokenRange.range.start && pos < tokenRange.range.end) {
+                Log.d("found: ", pos, " in ", tokenRange);
+                return tokenRange;
+            }
+        }
+    }
+
+    protected bool isInsideBlockComment(TextPosition pos) {
+        TokenWithRange tokenRange = getPositionToken(pos);
+        if (tokenRange.token && tokenRange.token.type == TokenType.COMMENT && tokenRange.token.isMultilineComment)
+            return pos > tokenRange.range.start && pos < tokenRange.range.end;
+        return false;
+    }
+
     /// toggle line comments for specified text range
     override void toggleLineComment(TextRange range, Object source) {
         TextRange r = content.fullLinesRange(range);
+        if (isInsideBlockComment(r.start) || isInsideBlockComment(r.end))
+            return;
         int lineCount = r.end.line - r.start.line;
         bool noEolAtEndOfRange = false;
         if (lineCount == 0 || r.end.pos > 0) {

@@ -89,7 +89,7 @@ class ArraySourceLines : SourceLines {
     /// source file
     override @property SourceFile file() { return _file; }
     /// last read line
-	override @property uint line() { return _line; }
+	override @property uint line() { return _line + _firstLine; }
     /// source encoding
 	//@property EncodingType encoding() { return _encoding; }
     /// error code

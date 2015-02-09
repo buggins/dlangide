@@ -928,6 +928,8 @@ class Token {
 	@property Keyword keyword() { return Keyword.NONE; }
     /// returns true if this is documentation comment token
     @property bool isDocumentationComment() { return false; }
+    /// returns true if this is multiline
+    @property bool isMultilineComment() { return false; }
 
     // error handling
 
@@ -1024,7 +1026,9 @@ class OpToken : Token {
 		super(TokenType.OP, file, line, pos);
 	}
 	override public Token clone() {
-		return new OpToken(_file, _line, _pos);
+		OpToken res = new OpToken(_file, _line, _pos);
+        res._op = _op;
+        return res;
 	}
 	public override @property string toString() {
 		return "Op:" ~ to!string(_op);
@@ -1043,7 +1047,9 @@ class KeywordToken : Token {
 		super(TokenType.KEYWORD, file, line, pos);
 	}
 	override public Token clone() {
-		return new KeywordToken(_file, _line, _pos);
+		KeywordToken res = new KeywordToken(_file, _line, _pos);
+        res._keyword = _keyword;
+        return res;
 	}
 	public override @property string toString() {
 		return "Keyword:" ~ to!string(_keyword);
@@ -1054,6 +1060,8 @@ class KeywordToken : Token {
 class CommentToken : Token {
 	protected dchar[] _text;
     protected bool _isDocumentationComment;
+    protected bool _isMultilineComment;
+
 
     override @property bool isDocumentationComment() {
         return _isDocumentationComment;
@@ -1061,6 +1069,15 @@ class CommentToken : Token {
 
     @property void isDocumentationComment(bool f) {
         _isDocumentationComment = f;
+    }
+
+    /// returns true if this is multiline
+    override @property bool isMultilineComment() {
+        return _isMultilineComment;
+    }
+
+    @property void isMultilineComment(bool f) {
+        _isMultilineComment = f;
     }
 
 	@property override dchar[] text() { return _text; }
@@ -1073,7 +1090,10 @@ class CommentToken : Token {
 		_text = text;
 	}
 	override public Token clone() {
-		return new CommentToken(_file, _line, _pos, _text.dup);
+		CommentToken res = new CommentToken(_file, _line, _pos, _text.dup);
+        res._isDocumentationComment = _isDocumentationComment;
+        res._isMultilineComment = _isMultilineComment;
+        return res;
 	}
 	public override @property string toString() {
 		return "Comment:" ~ to!string(_text);
@@ -1413,7 +1433,7 @@ class Tokenizer
         init(lineStream);
 	}
 
-    void init(SourceLines lineStream) {
+    void init(SourceLines lineStream, int pos = 0) {
 		_lineStream = lineStream;
         SourceFile file = _lineStream.file;
 		_sharedWhiteSpaceToken.setFile(file);
@@ -1432,6 +1452,7 @@ class Tokenizer
         _prevLineLength = 0;
         _lineText = null;
         nextLine();
+        _pos = pos;
     }
 	
 	this(string code, string filename = "") {
@@ -1532,6 +1553,7 @@ class Tokenizer
 	protected Token processMultilineComment() {
 		_sharedCommentToken.setPos(_line, _pos - 1);
         _sharedCommentToken.isDocumentationComment = _pos + 1 < _lineText.length && _lineText[_pos + 1] == '*';
+        _sharedCommentToken.isMultilineComment = true;
 		_commentAppender.reset();
 		int textStart = _pos + 1;
 		for (;;) {
@@ -1566,6 +1588,7 @@ class Tokenizer
 	protected Token processNestedComment() {
 		_sharedCommentToken.setPos(_line, _pos - 1);
         _sharedCommentToken.isDocumentationComment = _pos + 1 < _lineText.length && _lineText[_pos + 1] == '+';
+        _sharedCommentToken.isMultilineComment = true;
 		_commentAppender.reset();
 		dchar[] text;
 		int textStart = _pos + 1;
