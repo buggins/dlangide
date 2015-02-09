@@ -124,7 +124,7 @@ class SimpleDSyntaxHighlighter : SyntaxHighlighter {
     }
 
     protected bool isLineComment(dstring s) {
-        for (int i = 0; i < s.length - 2; i++) {
+        for (int i = 0; i < cast(int)s.length - 1; i++) {
             if (s[i] == '/' && s[i + 1] == '/')
                 return true;
             else if (s[i] != ' ' && s[i] != '\t')
@@ -175,6 +175,26 @@ class SimpleDSyntaxHighlighter : SyntaxHighlighter {
             res ~= "//";
         }
         return cast(dstring)res;
+    }
+
+    /// remove single line comment from beginning of line
+    protected dstring uncommentLine(dstring s) {
+        int p = -1;
+        for (int i = 0; i < cast(int)s.length - 1; i++) {
+            if (s[i] == '/' && s[i + 1] == '/') {
+                p = i;
+                break;
+            }
+        }
+        if (p < 0)
+            return s;
+        s = s[0..p] ~ s[p + 2 .. $];
+        for (int i = 0; i < s.length; i++) {
+            if (s[i] != ' ' && s[i] != '\t') {
+                return s;
+            }
+        }
+        return null;
     }
 
     /// searches for neares token start before or equal to position
@@ -301,6 +321,13 @@ class SimpleDSyntaxHighlighter : SyntaxHighlighter {
             _content.performOperation(op, source);
         } else {
             // uncomment
+            for (int i = 0; i < lineCount; i++) {
+                dsttext ~= uncommentLine(srctext[i]);
+            }
+            if (!noEolAtEndOfRange)
+                dsttext ~= ""d;
+            EditOperation op = new EditOperation(EditAction.Replace, r, dsttext);
+            _content.performOperation(op, source);
         }
     }
 
