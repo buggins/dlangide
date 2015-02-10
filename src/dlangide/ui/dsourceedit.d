@@ -83,6 +83,14 @@ class DSourceEdit : SourceEdit {
         }
         return super.handleAction(a);
     }
+
+	/// change caret position and ensure it is visible
+	void setCaretPos(int line, int column)
+	{
+		_caretPos = TextPosition(line,column);
+		invalidate();
+		ensureCaretVisible();
+	}
 }
 
 

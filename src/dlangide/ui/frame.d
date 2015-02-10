@@ -87,6 +87,19 @@ class IDEFrame : AppFrame {
         return openSourceFile(file.filename, file, activate);
     }
 
+	///
+	bool onCompilerLogIssueClick(dstring filename, int line, int column)
+	{
+		Log.d("onCompilerLogIssueClick ", filename);
+
+		import std.conv:to;
+		openSourceFile(to!string(filename));
+
+		currentEditor().setCaretPos(line-1,column);
+
+		return true;
+	}
+
     void onModifiedStateChange(Widget source, bool modified) {
         //
         Log.d("onModifiedStateChange ", source.id, " modified=", modified);
@@ -99,9 +112,15 @@ class IDEFrame : AppFrame {
 
     bool openSourceFile(string filename, ProjectSourceFile file = null, bool activate = true) {
         if (!file)
-            file = _wsPanel.findSourceFileItem(filename);
-        Log.d("openSourceFile ", filename);
-        int index = _tabs.tabIndex(filename);
+            file = _wsPanel.findSourceFileItem(filename, false);
+
+		if(!file)
+			return false;
+
+		filename = file.filename;
+
+		Log.d("openSourceFile ", filename);
+		int index = _tabs.tabIndex(filename);
         if (index >= 0) {
             // file is already opened in tab
             _tabs.selectTab(index, true);
@@ -279,6 +298,7 @@ class IDEFrame : AppFrame {
         _dockHost.addDockedWindow(_wsPanel);
 
         _logPanel = new OutputPanel("output");
+		_logPanel.compilerLogIssueClickHandler = &onCompilerLogIssueClick;
         _logPanel.appendText(null, "DlangIDE is started\nHINT: Try to open some DUB project\n"d);
 
         _dockHost.addDockedWindow(_logPanel);

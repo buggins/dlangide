@@ -72,9 +72,9 @@ class WorkspacePanel : DockWindow {
         return _workspace;
     }
 
-    ProjectSourceFile findSourceFileItem(string filename) {
+    ProjectSourceFile findSourceFileItem(string filename, bool fullFileName=true) {
         if (_workspace)
-            return _workspace.findSourceFileItem(filename);
+			return _workspace.findSourceFileItem(filename, fullFileName);
         return null;
     }
 
