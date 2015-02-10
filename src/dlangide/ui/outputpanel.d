@@ -6,23 +6,77 @@ import dlangide.workspace.project;
 
 import std.utf;
 import std.regex;
+import std.algorithm : startsWith;
 
-///
+/// event listener to navigate by error/warning position
 interface CompilerLogIssueClickHandler {
 	bool onCompilerLogIssueClick(dstring filename, int line, int column);
 }
 
-///
+/// Log widget with parsing of compiler output
 class CompilerLogWidget : LogWidget {
 
 	Signal!CompilerLogIssueClickHandler compilerLogIssueClickHandler;
 
-	auto ctr = ctRegex!(r"(.+)\((\d+)\): (Error|Warning): (.+)"d);
+	auto ctr = ctRegex!(r"(.+)\((\d+)\): (Error|Warning|Deprecation): (.+)"d);
 
 	/// forward to super c'tor
 	this(string ID) {
 		super(ID);
 	}
+
+    /** 
+    Custom text color and style highlight (using text highlight) support.
+
+    Return null if no syntax highlight required for line.
+    */
+    override protected CustomCharProps[] handleCustomLineHighlight(int line, dstring txt) {
+        auto match = matchFirst(txt, ctr);
+        uint defColor = textColor;
+        const uint filenameColor = 0x0000C0;
+        const uint errorColor = 0xFF0000;
+        const uint warningColor = 0x606000;
+        const uint deprecationColor = 0x802040;
+        uint flags = 0;
+        if(!match.empty) {
+            CustomCharProps[] colors = new CustomCharProps[txt.length];
+            uint cl = filenameColor;
+            flags = TextFlag.Underline;
+            for (int i = 0; i < txt.length; i++) {
+                dstring rest = txt[i..$];
+                if (rest.startsWith(" Error"d)) {
+                    cl = errorColor;
+                    flags = 0;
+                } else if (rest.startsWith(" Warning"d)) {
+                    cl = warningColor;
+                    flags = 0;
+                } else if (rest.startsWith(" Deprecation"d)) {
+                    cl = deprecationColor;
+                    flags = 0;
+                }
+                colors[i].color = cl;
+                colors[i].textFlags = flags;
+            }
+            return colors;
+        } else if (txt.startsWith("Building ")) {
+            CustomCharProps[] colors = new CustomCharProps[txt.length];
+            uint cl = defColor;
+            for (int i = 0; i < txt.length; i++) {
+                dstring rest = txt[i..$];
+                if (i == 9) {
+                    cl = filenameColor;
+                    flags = TextFlag.Underline;
+                } else if (rest.startsWith(" configuration"d)) {
+                    cl = defColor;
+                    flags = 0;
+                }
+                colors[i].color = cl;
+                colors[i].textFlags = flags;
+            }
+            return colors;
+        }
+        return null;
+    }
 
 	///
 	override bool onMouseEvent(MouseEvent event) {
@@ -36,8 +90,7 @@ class CompilerLogWidget : LogWidget {
 
 			auto match = matchFirst(logLine, ctr);
 
-			if(!match.empty)
-			{
+			if(!match.empty) {
 				if (compilerLogIssueClickHandler.assigned) {
 					import std.conv:to;
 					compilerLogIssueClickHandler(match[1], to!int(match[2]), 0);
