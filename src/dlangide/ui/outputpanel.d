@@ -30,7 +30,7 @@ class CompilerLogWidget : LogWidget {
 
     Return null if no syntax highlight required for line.
     */
-    override protected CustomCharProps[] handleCustomLineHighlight(int line, dstring txt) {
+    override protected CustomCharProps[] handleCustomLineHighlight(int line, dstring txt, ref CustomCharProps[] buf) {
         auto match = matchFirst(txt, ctr);
         uint defColor = textColor;
         const uint filenameColor = 0x0000C0;
@@ -39,7 +39,9 @@ class CompilerLogWidget : LogWidget {
         const uint deprecationColor = 0x802040;
         uint flags = 0;
         if(!match.empty) {
-            CustomCharProps[] colors = new CustomCharProps[txt.length];
+            if (buf.length < txt.length)
+                buf.length = txt.length;
+            CustomCharProps[] colors = buf[0..txt.length];
             uint cl = filenameColor;
             flags = TextFlag.Underline;
             for (int i = 0; i < txt.length; i++) {
