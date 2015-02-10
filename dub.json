@@ -1,6 +1,6 @@
 {
     "name": "dlangide",
-    "description": "trying to make D language IDE based on dlangui library",
+    "description": "Cross platform D language IDE based on dlangui library",
     "homepage": "https://github.com/buggins/dlangide",
     "license": "Boost",
     "authors": ["Vadim Lopatin"],
