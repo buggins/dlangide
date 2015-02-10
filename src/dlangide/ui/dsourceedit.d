@@ -118,6 +118,59 @@ class SimpleDSyntaxHighlighter : SyntaxHighlighter {
         return this;
     }
 
+    static dchar pairedBracket(dchar ch) {
+        switch (ch) {
+            case '(':
+                return ')';
+            case ')':
+                return '(';
+            case '{':
+                return '}';
+            case '}':
+                return '{';
+            case '[':
+                return ']';
+            case ']':
+                return '[';
+            default:
+                return 0; // not a bracket
+        }
+    }
+    static bool isOpenBracket(dchar ch) {
+        switch (ch) {
+            case '(':
+            case '{':
+            case '[':
+                return true;
+            default:
+                return false;
+        }
+    }
+    static bool isCloseBracket(dchar ch) {
+        switch (ch) {
+            case ')':
+            case '}':
+            case ']':
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    /// returns paired bracket {} () [] for char at position p, returns paired char position or p if not found or not bracket
+    override TextPosition findPairedBracket(TextPosition p) {
+        if (p.line < 0 || p.line >= content.length)
+            return p;
+        dstring s = content.line(p.line);
+        if (p.pos < 0 || p.pos >= s.length)
+            return p;
+        dchar ch = s[p.pos];
+        dchar paired = pairedBracket(ch);
+        int dir = isOpenBracket(ch) ? 1 : -1;
+        return p;
+    }
+
+
     /// return true if toggle line comment is supported for file type
     override @property bool supportsToggleLineComment() {
         return true;
