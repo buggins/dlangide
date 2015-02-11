@@ -4,6 +4,7 @@ import dlangui.core.logger;
 import dlangui.widgets.editors;
 import dlangui.widgets.srcedit;
 import dlangui.widgets.menu;
+import dlangui.widgets.popup;
 
 import ddc.lexer.textsource;
 import ddc.lexer.exceptions;
@@ -86,10 +87,26 @@ class DSourceEdit : SourceEdit {
         return super.handleAction(a);
     }
 
+
+
+    void showCompletionPopup(dstring[] suggestions) {
+        MenuItem completionPopupItem = new MenuItem(null);
+        //Create popup menu
+        foreach(int i, dstring suggestion ; suggestions) {
+            auto action = new Action(i+1, suggestion);
+            completionPopupItem.add(action);
+        }
+        completionPopupItem.updateActionState(this);
+        PopupMenu popupMenu = new PopupMenu(completionPopupItem);
+        popupMenu.onMenuItemActionListener = this;
+        PopupWidget popup = window.showPopup(popupMenu, this, PopupAlign.Point | PopupAlign.Right, textPosToClient(_caretPos).left + left + _leftPaneWidth, textPosToClient(_caretPos).top + top + margins.top);
+        popup.flags = PopupFlags.CloseOnClickOutside;
+        Log.d("Showing popup at ", textPosToClient(_caretPos).left, " ", textPosToClient(_caretPos).top);
+    }
+
     TextPosition getCaretPosition() {
         return _caretPos;
     }
-
 
 	/// change caret position and ensure it is visible
 	void setCaretPos(int line, int column)

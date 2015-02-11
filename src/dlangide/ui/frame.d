@@ -10,6 +10,7 @@ import dlangui.widgets.appframe;
 import dlangui.widgets.docks;
 import dlangui.widgets.toolbars;
 import dlangui.widgets.combobox;
+import dlangui.widgets.popup;
 import dlangui.dialogs.dialog;
 import dlangui.dialogs.filedlg;
 import dlangui.core.stdaction;
@@ -520,6 +521,7 @@ class IDEFrame : AppFrame {
                 case IDEActions.GetCompletionSuggestions:
                     Log.d("Getting auto completion suggestions.");
                     auto results = _editorTool.getCompletions(currentEditor, currentEditor.getCaretPosition);
+                    currentEditor.showCompletionPopup(results);
                     return true;
                 default:
                     return super.handleAction(a);
