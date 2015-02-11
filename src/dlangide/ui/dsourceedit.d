@@ -32,6 +32,8 @@ class DSourceEdit : SourceEdit {
 		MenuItem editPopupItem = new MenuItem(null);
 		editPopupItem.add(ACTION_EDIT_COPY, ACTION_EDIT_PASTE, ACTION_EDIT_CUT, ACTION_EDIT_UNDO, ACTION_EDIT_REDO, ACTION_EDIT_INDENT, ACTION_EDIT_UNINDENT, ACTION_EDIT_TOGGLE_LINE_COMMENT);
         popupMenu = editPopupItem;
+        showIcons = true;
+        showFolding = true;
 	}
 	this() {
 		this("SRCEDIT");

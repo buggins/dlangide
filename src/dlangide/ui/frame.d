@@ -295,6 +295,7 @@ class IDEFrame : AppFrame {
         // Create workspace docked panel
         _wsPanel = new WorkspacePanel("workspace");
         _wsPanel.sourceFileSelectionListener = &onSourceFileSelected;
+        _wsPanel.dockAlignment = DockAlignment.Left;
         _dockHost.addDockedWindow(_wsPanel);
 
         _logPanel = new OutputPanel("output");
@@ -425,6 +426,15 @@ class IDEFrame : AppFrame {
         }
 	}
 
+    FileDialog createFileDialog(UIString caption) {
+        FileDialog dlg = new FileDialog(caption, window, null);
+        dlg.filetypeIcons[".d"] = "text-d";
+        dlg.filetypeIcons["dub.json"] = "project-d";
+        dlg.filetypeIcons["package.json"] = "project-d";
+        dlg.filetypeIcons[".dlangidews"] = "project-development";
+        return dlg;
+    }
+
     /// override to handle specific actions
 	override bool handleAction(const Action a) {
         if (a) {
@@ -443,7 +453,7 @@ class IDEFrame : AppFrame {
                 case IDEActions.FileOpen:
                     UIString caption;
                     caption = "Open Text File"d;
-                    FileDialog dlg = new FileDialog(caption, window, null);
+                    FileDialog dlg = createFileDialog(caption);
                     dlg.addFilter(FileFilterEntry(UIString("Source files"d), "*.d;*.dd;*.ddoc;*.dh;*.json;*.xml;*.ini"));
                     dlg.onDialogResult = delegate(Dialog dlg, const Action result) {
 						if (result.id == ACTION_OPEN.id) {
@@ -486,7 +496,7 @@ class IDEFrame : AppFrame {
                 case IDEActions.FileOpenWorkspace:
                     UIString caption;
                     caption = "Open Workspace or Project"d;
-                    FileDialog dlg = new FileDialog(caption, window, null);
+                    FileDialog dlg = createFileDialog(caption);
                     dlg.addFilter(FileFilterEntry(UIString("Workspace and project files"d), "*.dlangidews;dub.json;package.json"));
                     dlg.onDialogResult = delegate(Dialog dlg, const Action result) {
 						if (result.id == ACTION_OPEN.id) {

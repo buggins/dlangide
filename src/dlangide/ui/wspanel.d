@@ -65,6 +65,7 @@ class WorkspacePanel : DockWindow {
         _tree.layoutHeight(FILL_PARENT).layoutHeight(FILL_PARENT);
         _tree.selectionListener = &onTreeItemSelected;
 		_tree.fontSize = 16;
+        _tree.noCollapseForSingleTopLevelItem = true;
         return _tree;
     }
 
@@ -87,7 +88,7 @@ class WorkspacePanel : DockWindow {
                 p.objectParam = child;
                 addProjectItems(p, child);
             } else {
-                TreeItem p = root.newChild(child.filename, child.name, "text-plain");
+                TreeItem p = root.newChild(child.filename, child.name, "text-d");
                 p.intParam = ProjectItemType.SourceFile;
                 p.objectParam = child;
             }
@@ -100,7 +101,7 @@ class WorkspacePanel : DockWindow {
             TreeItem root = _tree.items.newChild(_workspace.filename, _workspace.name, "project-development");
             root.intParam = ProjectItemType.Workspace;
             foreach(project; _workspace.projects) {
-                TreeItem p = root.newChild(project.filename, project.name, "project-open");
+                TreeItem p = root.newChild(project.filename, project.name, "project-d");
                 p.intParam = ProjectItemType.Project;
                 addProjectItems(p, project.items);
             }
