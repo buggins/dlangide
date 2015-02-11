@@ -1,7 +1,7 @@
 Dlang IDE
 =========
 
-D language IDE written using DlangUI library.
+Cross platform D language IDE written using DlangUI library.
 
 Currently supported features:
 
@@ -15,7 +15,7 @@ Currently supported features:
 Source editor features:
 
 * D language source code syntax highlight (basic)
-* Indent / unindent text with Tab and Shift+Tab
+* Indent / unindent text with Tab and Shift+Tab or Ctrl+\[ and Ctrl+\]
 * Toggle line or block comments by Ctrl+/ and Ctrl+Shift+/
 * Select word by mouse double click
 
