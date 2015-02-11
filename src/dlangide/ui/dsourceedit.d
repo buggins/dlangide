@@ -120,6 +120,59 @@ class SimpleDSyntaxHighlighter : SyntaxHighlighter {
         return this;
     }
 
+    private enum BracketMatch {
+        CONTINUE,
+        FOUND,
+        ERROR
+    }
+    private static struct BracketStack {
+        dchar[] buf;
+        int pos;
+        bool reverse;
+        void init(bool reverse) {
+            this.reverse = reverse;
+            pos = 0;
+        }
+        void push(dchar ch) {
+            if (buf.length <= pos)
+                buf.length = pos + 16;
+            buf[pos++] = ch;
+        }
+        dchar pop() {
+            if (pos <= 0)
+                return 0;
+            return buf[--pos];
+        }
+        BracketMatch process(dchar ch) {
+            if (reverse) {
+                if (isCloseBracket(ch)) {
+                    push(ch);
+                    return BracketMatch.CONTINUE;
+                } else {
+                    if (pop() != pairedBracket(ch))
+                        return BracketMatch.ERROR;
+                    if (pos == 0)
+                        return BracketMatch.FOUND;
+                    return BracketMatch.CONTINUE;
+                }
+            } else {
+                if (isOpenBracket(ch)) {
+                    push(ch);
+                    return BracketMatch.CONTINUE;
+                } else {
+                    if (pop() != pairedBracket(ch))
+                        return BracketMatch.ERROR;
+                    if (pos == 0)
+                        return BracketMatch.FOUND;
+                    return BracketMatch.CONTINUE;
+                }
+            }
+        }
+    }
+    BracketStack _bracketStack;
+    static bool isBracket(dchar ch) {
+        return pairedBracket(ch) != 0;
+    }
     static dchar pairedBracket(dchar ch) {
         switch (ch) {
             case '(':
@@ -159,6 +212,21 @@ class SimpleDSyntaxHighlighter : SyntaxHighlighter {
         }
     }
 
+    protected dchar nextBracket(int dir, ref TextPosition p) {
+        for (;;) {
+            TextPosition oldpos = p;
+            p = dir < 0 ? _content.prevCharPos(p) : _content.nextCharPos(p);
+            if (p == oldpos)
+                return 0;
+            auto prop = _content.tokenProp(p);
+            if (tokenCategory(prop) == TokenCategory.Op) {
+                dchar ch = _content[p];
+                if (isBracket(ch))
+                    return ch;
+            }
+        }
+    }
+
     /// returns paired bracket {} () [] for char at position p, returns paired char position or p if not found or not bracket
     override TextPosition findPairedBracket(TextPosition p) {
         if (p.line < 0 || p.line >= content.length)
@@ -166,9 +234,25 @@ class SimpleDSyntaxHighlighter : SyntaxHighlighter {
         dstring s = content.line(p.line);
         if (p.pos < 0 || p.pos >= s.length)
             return p;
-        dchar ch = s[p.pos];
+        dchar ch = content[p];
         dchar paired = pairedBracket(ch);
+        if (!paired)
+            return p;
+        TextPosition startPos = p;
         int dir = isOpenBracket(ch) ? 1 : -1;
+        _bracketStack.init(dir < 0);
+        _bracketStack.process(ch);
+        for (;;) {
+            ch = nextBracket(dir, p);
+            if (!ch) // no more brackets
+                return startPos;
+            auto match = _bracketStack.process(ch);
+            if (match == BracketMatch.FOUND)
+                return p;
+            if (match == BracketMatch.ERROR)
+                return startPos;
+            // continue
+        }
         return p;
     }
 
