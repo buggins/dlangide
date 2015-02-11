@@ -36,7 +36,16 @@ enum IDEActions : int {
     WindowCloseAllDocuments,
     CreateNewWorkspace,
     AddToCurrentWorkspace,
+    ProjectFolderAddItem,
+    ProjectFolderRemoveItem,
+    ProjectFolderOpenItem,
+    ProjectFolderRenameItem,
 }
+
+const Action ACTION_PROJECT_FOLDER_ADD_ITEM = new Action(IDEActions.ProjectFolderAddItem, "MENU_PROJECT_FOLDER_ADD_ITEM"c);
+const Action ACTION_PROJECT_FOLDER_OPEN_ITEM = new Action(IDEActions.ProjectFolderOpenItem, "MENU_PROJECT_FOLDER_OPEN_ITEM"c);
+const Action ACTION_PROJECT_FOLDER_REMOVE_ITEM = new Action(IDEActions.ProjectFolderRemoveItem, "MENU_PROJECT_FOLDER_REMOVE_ITEM"c);
+const Action ACTION_PROJECT_FOLDER_RENAME_ITEM = new Action(IDEActions.ProjectFolderRenameItem, "MENU_PROJECT_FOLDER_RENAME_ITEM"c);
 
 const Action ACTION_FILE_NEW_SOURCE_FILE = new Action(IDEActions.FileNew, "MENU_FILE_NEW_SOURCE_FILE"c, "document-new", KeyCode.KEY_N, KeyFlag.Control);
 const Action ACTION_FILE_NEW_PROJECT = new Action(IDEActions.FileNewProject, "MENU_FILE_NEW_PROJECT"c);

@@ -3,6 +3,7 @@ module dlangide.ui.wspanel;
 import dlangui.all;
 import dlangide.workspace.workspace;
 import dlangide.workspace.project;
+import dlangide.ui.commands;
 
 enum ProjectItemType : int {
     None,
@@ -66,7 +67,52 @@ class WorkspacePanel : DockWindow {
         _tree.selectionListener = &onTreeItemSelected;
 		_tree.fontSize = 16;
         _tree.noCollapseForSingleTopLevelItem = true;
+        _tree.popupMenuListener = &onTreeItemPopupMenu;
+
+        _workspacePopupMenu = new MenuItem();
+        _workspacePopupMenu.add(ACTION_PROJECT_FOLDER_ADD_ITEM);
+
+        _projectPopupMenu = new MenuItem();
+        _projectPopupMenu.add(ACTION_PROJECT_FOLDER_ADD_ITEM, ACTION_PROJECT_FOLDER_OPEN_ITEM,
+                           ACTION_PROJECT_FOLDER_REMOVE_ITEM);
+
+        _folderPopupMenu = new MenuItem();
+        _folderPopupMenu.add(ACTION_PROJECT_FOLDER_ADD_ITEM, ACTION_PROJECT_FOLDER_OPEN_ITEM, 
+                             ACTION_PROJECT_FOLDER_REMOVE_ITEM, ACTION_PROJECT_FOLDER_RENAME_ITEM);
+        _filePopupMenu = new MenuItem();
+        _filePopupMenu.add(ACTION_PROJECT_FOLDER_ADD_ITEM, ACTION_PROJECT_FOLDER_OPEN_ITEM, 
+                             ACTION_PROJECT_FOLDER_REMOVE_ITEM, ACTION_PROJECT_FOLDER_RENAME_ITEM);
         return _tree;
+    }
+
+    protected MenuItem _workspacePopupMenu;
+    protected MenuItem _projectPopupMenu;
+    protected MenuItem _folderPopupMenu;
+    protected MenuItem _filePopupMenu;
+    protected string _popupMenuSelectedItemId;
+    protected void onPopupMenuItem(MenuItem item) {
+        if (item.action)
+            handleAction(item.action);
+    }
+
+    protected MenuItem onTreeItemPopupMenu(TreeItems source, TreeItem selectedItem) {
+        MenuItem menu = null;
+        _popupMenuSelectedItemId = selectedItem.id;
+        if (selectedItem.intParam == ProjectItemType.SourceFolder) {
+            menu = _folderPopupMenu;
+        } else if (selectedItem.intParam == ProjectItemType.SourceFile) {
+            menu = _filePopupMenu;
+        } else if (selectedItem.intParam == ProjectItemType.Project) {
+            menu = _projectPopupMenu;
+        } else if (selectedItem.intParam == ProjectItemType.Workspace) {
+            menu = _workspacePopupMenu;
+        }
+        if (menu && menu.subitemCount) {
+            menu.onMenuItem = &onPopupMenuItem;
+            menu.updateActionState(this);
+            return menu;
+        }
+        return null;
     }
 
     @property Workspace workspace() {
