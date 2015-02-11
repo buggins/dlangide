@@ -331,6 +331,9 @@ class IDEFrame : AppFrame {
 
 		editItem.add(ACTION_EDIT_PREFERENCES);
 
+        MenuItem navItem = new MenuItem(new Action(21, "MENU_NAVIGATE"));
+        navItem.add(ACTION_GO_TO_DEFINITION, ACTION_GET_COMPLETIONS);
+
         MenuItem projectItem = new MenuItem(new Action(21, "MENU_PROJECT"));
         projectItem.add(ACTION_PROJECT_SET_STARTUP, ACTION_PROJECT_REFRESH, ACTION_PROJECT_UPDATE_DEPENDENCIES, ACTION_PROJECT_SETTINGS);
 
@@ -352,6 +355,7 @@ class IDEFrame : AppFrame {
         mainMenuItems.add(fileItem);
         mainMenuItems.add(editItem);
         mainMenuItems.add(projectItem);
+        mainMenuItems.add(navItem);
         mainMenuItems.add(buildItem);
         mainMenuItems.add(debugItem);
 		//mainMenuItems.add(viewItem);
@@ -381,9 +385,6 @@ class IDEFrame : AppFrame {
         cbBuildConfiguration.action = ACTION_PROJECT_BUILD;
         tb.addControl(cbBuildConfiguration);
         tb.addButtons(ACTION_PROJECT_BUILD);
-
-        tb.addButtons(ACTION_GO_TO_DEFINITION);
-        tb.addButtons(ACTION_GET_COMPLETIONS);
 
         tb = res.getOrAddToolbar("Edit");
         tb.addButtons(ACTION_EDIT_COPY, ACTION_EDIT_PASTE, ACTION_EDIT_CUT, ACTION_SEPARATOR,

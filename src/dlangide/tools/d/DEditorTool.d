@@ -52,13 +52,11 @@ class DEditorTool : EditorTool
                 else {
                 	auto filename = outputLine[0 .. split];
                 	if(_frame !is null) {
-                		writeln("Well I'm trying");
                 		_frame.openSourceFile(filename);
                 		auto target = to!int(outputLine[split+1 .. $]);
         				auto destPos = byteOffsetToCaret(_frame.currentEditor.text(), target);
 
         				_frame.currentEditor.setCaretPos(destPos.line,destPos.pos);
-                		writeln("Well I tried");
                 	}
                 }
             }

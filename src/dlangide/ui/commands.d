@@ -87,5 +87,5 @@ const Action ACTION_HELP_ABOUT = new Action(IDEActions.HelpAbout, "MENU_HELP_ABO
 const Action ACTION_WINDOW_CLOSE_ALL_DOCUMENTS = new Action(IDEActions.WindowCloseAllDocuments, "MENU_WINDOW_CLOSE_ALL_DOCUMENTS"c);
 const Action ACTION_CREATE_NEW_WORKSPACE = new Action(IDEActions.CreateNewWorkspace, "Create new workspace"d);
 const Action ACTION_ADD_TO_CURRENT_WORKSPACE = new Action(IDEActions.AddToCurrentWorkspace, "Add to current workspace"d);
-const Action ACTION_GO_TO_DEFINITION = new Action(IDEActions.GoToDefinition,  "GO_TO_DEFINITION"c, "edit-cut"c, KeyCode.KEY_G, KeyFlag.Control);
-const Action ACTION_GET_COMPLETIONS = new Action(IDEActions.GetCompletionSuggestions,  "GO_TO_DEFINITION"c, "edit-cut"c, KeyCode.KEY_G, KeyFlag.Shift);
+const Action ACTION_GO_TO_DEFINITION = new Action(IDEActions.GoToDefinition,  "GO_TO_DEFINITION"c, ""c, KeyCode.KEY_G, KeyFlag.Control);
+const Action ACTION_GET_COMPLETIONS = new Action(IDEActions.GetCompletionSuggestions,  "GO_TO_DEFINITION"c, ""c, KeyCode.KEY_G, KeyFlag.Control|KeyFlag.Shift);
