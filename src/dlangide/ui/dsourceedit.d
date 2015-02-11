@@ -253,7 +253,6 @@ class SimpleDSyntaxHighlighter : SyntaxHighlighter {
                 return startPos;
             // continue
         }
-        return p;
     }
 
 
