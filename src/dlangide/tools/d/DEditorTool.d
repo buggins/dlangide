@@ -66,6 +66,40 @@ class DEditorTool : EditorTool
         return true;
     }
 
+    override dstring[] getCompletions(DSourceEdit editor, TextPosition caretPosition) {
+		auto content = editor.text();
+		auto byteOffset = caretPositionToByteOffset(content, caretPosition);
+
+		char[][] arguments = ["-c".dup];
+		arguments ~= [to!(char[])(byteOffset)];
+		arguments ~= [to!(char[])(editor.projectSourceFile.filename())];
+
+		dstring output;
+		_dcd.execute(arguments, output);
+
+		char[] state = "".dup;
+		dstring[] suggestions;
+		foreach(dstring outputLine ; output.splitLines()) {
+			if(outputLine == "identifiers") {
+				state = "identifiers".dup;
+			}
+			else if(outputLine == "calltips") {
+				state = "calltips".dup;
+			}
+			else {
+				auto split = outputLine.indexOf("\t");
+				if(split < 0) {
+					break;
+				}
+				if(state == "identifiers") {
+					suggestions ~= outputLine[0 .. split];
+				}
+			}
+		}
+		return suggestions;
+    }
+
+
 private:
 	DCDInterface _dcd;
 

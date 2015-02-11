@@ -15,7 +15,8 @@ class EditorTool
 		_frame = frame;
 	}
 	//Since files might be unsaved, we must send all the text content.
-	abstract bool goToDefinition(DSourceEdit content, TextPosition caretPosition);
+	abstract bool goToDefinition(DSourceEdit editor, TextPosition caretPosition);
+	abstract dstring[] getCompletions(DSourceEdit editor, TextPosition caretPosition);
 
 	protected IDEFrame _frame;
 	

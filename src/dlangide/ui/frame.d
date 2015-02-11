@@ -382,6 +382,7 @@ class IDEFrame : AppFrame {
         tb.addButtons(ACTION_PROJECT_BUILD);
 
         tb.addButtons(ACTION_GO_TO_DEFINITION);
+        tb.addButtons(ACTION_GET_COMPLETIONS);
 
         tb = res.getOrAddToolbar("Edit");
         tb.addButtons(ACTION_EDIT_COPY, ACTION_EDIT_PASTE, ACTION_EDIT_CUT, ACTION_SEPARATOR,
@@ -513,8 +514,12 @@ class IDEFrame : AppFrame {
                     dlg.show();
                     return true;
                 case IDEActions.GoToDefinition:
-                    Log.i("Trying to go to definition");
+                    Log.d("Trying to go to definition.");
                     _editorTool.goToDefinition(currentEditor(), currentEditor.getCaretPosition());
+                    return true;
+                case IDEActions.GetCompletionSuggestions:
+                    Log.d("Getting auto completion suggestions.");
+                    auto results = _editorTool.getCompletions(currentEditor, currentEditor.getCaretPosition);
                     return true;
                 default:
                     return super.handleAction(a);
