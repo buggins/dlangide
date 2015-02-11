@@ -22,6 +22,7 @@ import dlangide.ui.homescreen;
 import dlangide.workspace.workspace;
 import dlangide.workspace.project;
 import dlangide.builders.builder;
+import dlangide.tools.editorTool;
 
 import std.conv;
 import std.utf;
@@ -60,6 +61,7 @@ class IDEFrame : AppFrame {
     OutputPanel _logPanel;
     DockHost _dockHost;
     TabWidget _tabs;
+    EditorTool _editorTool;
 
     dstring frameWindowCaptionSuffix = "DLangIDE"d;
 
@@ -69,6 +71,7 @@ class IDEFrame : AppFrame {
     }
 
     override protected void init() {
+        _editorTool = new DEditorTool(this);
         super.init();
     }
 
@@ -378,6 +381,8 @@ class IDEFrame : AppFrame {
         tb.addControl(cbBuildConfiguration);
         tb.addButtons(ACTION_PROJECT_BUILD);
 
+        tb.addButtons(ACTION_GO_TO_DEFINITION);
+
         tb = res.getOrAddToolbar("Edit");
         tb.addButtons(ACTION_EDIT_COPY, ACTION_EDIT_PASTE, ACTION_EDIT_CUT, ACTION_SEPARATOR,
                       ACTION_EDIT_UNDO, ACTION_EDIT_REDO, ACTION_EDIT_INDENT, ACTION_EDIT_UNINDENT);
@@ -506,6 +511,10 @@ class IDEFrame : AppFrame {
                         }
                     };
                     dlg.show();
+                    return true;
+                case IDEActions.GoToDefinition:
+                    Log.i("Trying to go to definition");
+                    _editorTool.goToDefinition(currentEditor(), currentEditor.getCaretPosition());
                     return true;
                 default:
                     return super.handleAction(a);

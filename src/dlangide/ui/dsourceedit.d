@@ -86,6 +86,11 @@ class DSourceEdit : SourceEdit {
         return super.handleAction(a);
     }
 
+    TextPosition getCaretPosition() {
+        return _caretPos;
+    }
+
+
 	/// change caret position and ensure it is visible
 	void setCaretPos(int line, int column)
 	{
@@ -245,7 +250,7 @@ class SimpleDSyntaxHighlighter : SyntaxHighlighter {
         for (;;) {
             ch = nextBracket(dir, p);
             if (!ch) // no more brackets
-                return startPos;
+                break;
             auto match = _bracketStack.process(ch);
             if (match == BracketMatch.FOUND)
                 return p;
