@@ -678,6 +678,9 @@ class SimpleDSyntaxHighlighter : SyntaxHighlighter {
                     case TokenType.FLOAT:
                         category = TokenCategory.Float;
                         break;
+                    case TokenType.OP:
+                        category = TokenCategory.Op;
+                        break;
                     case TokenType.INVALID:
                         switch (token.invalidTokenType) {
                             case TokenType.IDENTIFIER:
