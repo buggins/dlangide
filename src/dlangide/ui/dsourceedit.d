@@ -637,14 +637,13 @@ class SimpleDSyntaxHighlighter : SyntaxHighlighter {
                     //Log.d("Null token returned");
                     break;
                 }
-                if (token.type == TokenType.EOF) {
-                    //Log.d("EOF token");
-                    break;
-                }
                 uint newPos = token.pos - 1;
                 uint newLine = token.line - 1;
 
-                //Log.d("", token.line, ":", token.pos, "\t", tokenLine + 1, ":", tokenPos + 1, "\t", token.toString);
+                //Log.d("", tokenLine + 1, ":", tokenPos + 1, "  \t", token.line, ":", token.pos, "\t", token.toString);
+                if (token.type == TokenType.EOF) {
+                    //Log.d("EOF token");
+                }
 
                 // fill with category
                 for (int i = tokenLine; i <= newLine; i++) {
@@ -691,6 +690,9 @@ class SimpleDSyntaxHighlighter : SyntaxHighlighter {
                             case TokenType.COMMENT:
                                 category = TokenCategory.Error_InvalidComment;
                                 break;
+                            case TokenType.OP:
+                                category = TokenCategory.Error_InvalidOp;
+                                break;
                             case TokenType.FLOAT:
                             case TokenType.INTEGER:
                                 category = TokenCategory.Error_InvalidNumber;
@@ -707,6 +709,10 @@ class SimpleDSyntaxHighlighter : SyntaxHighlighter {
                 tokenPos = newPos;
                 tokenLine= newLine;
 
+                if (token.type == TokenType.EOF) {
+                    //Log.d("EOF token");
+                    break;
+                }
             }
         } catch (Exception e) {
             Log.e("exception while trying to parse D source", e);
@@ -718,4 +724,3 @@ class SimpleDSyntaxHighlighter : SyntaxHighlighter {
 			Log.d("updateHighlight took ", elapsed, "ms");
     }
 }
-
