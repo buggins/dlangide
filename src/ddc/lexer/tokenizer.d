@@ -1652,9 +1652,9 @@ class Tokenizer
 	protected Token processIdent() {
 		_sharedIdentToken.setPos(_startLine, _startPos);
 		_identAppender.reset();
-		int startPos = _pos - 1;
+		int startPos = _startPos;
 		int endPos = _len;
-		for (int i = _pos; i < _len; i++) {
+		for (int i = startPos + 1; i < _len; i++) {
 			dchar ch = _lineText[i];
 			if (!isIdentMiddleChar(ch)) {
 				endPos = i;
@@ -2606,9 +2606,7 @@ class Tokenizer
 			_sharedOpToken.opCode = op;
 			return _sharedOpToken;
 		}
-
-        // TODO: for tolerant parsing, return error token
-		return null;
+        return parserError("Invalid token", _line, _pos);
 	}
 
 	
