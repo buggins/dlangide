@@ -216,6 +216,11 @@
     <File path="src\dlangide\workspace\workspace.d" />
    </Folder>
   </Folder>
+  <Folder name="ddebug">
+   <Folder name="windows">
+    <File path="src\ddebug\windows\windebug.d" />
+   </Folder>
+  </Folder>
   <File path="src\dlangide.d" />
  </Folder>
 </DProject>

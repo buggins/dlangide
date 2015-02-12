@@ -1483,11 +1483,15 @@ class Tokenizer
 	protected dchar nextChar() {
 	    if (_pos >= _len) {
 			if (!nextLine()) {
+                _pos = _prevLineLength + 1;
 				return EOF_CHAR;
 			}
 			return EOL_CHAR;
 		}
-		return _lineText[_pos++];
+		dchar res = _lineText[_pos++];
+        if (_pos >= _len)
+            nextLine();
+        return res;
 	}
 	
 	protected dchar peekChar() {
@@ -1503,16 +1507,12 @@ class Tokenizer
 	
 	protected Token emitEof() {
 		// TODO: check for current state
-		return new EofToken(_lineStream.file, _line, _pos);
+		return new EofToken(_lineStream.file, _startLine, _startPos + 2);
 	}
 	
 	protected Token processWhiteSpace(dchar firstChar) {
 		// reuse the same token instance, to avoid extra heap spamming
-        if (_pos == 0) {
-            _sharedWhiteSpaceToken.setPos(_line - 1, _prevLineLength);
-        } else {
-            _sharedWhiteSpaceToken.setPos(_line, _pos - 1);
-        }
+        _sharedWhiteSpaceToken.setPos(_startLine, _startPos);
 		for (;;) {
 			int i = _pos;
 			for (; i < _len; i++) {
@@ -1531,18 +1531,19 @@ class Tokenizer
 	}
 	
 	protected Token processOneLineComment() {
-		_sharedCommentToken.setPos(_line, _pos - 1);
+		_sharedCommentToken.setPos(_startLine, _startPos);
         _sharedCommentToken.isDocumentationComment = _pos + 1 < _lineText.length && _lineText[_pos + 1] == '/';
         _sharedCommentToken.isMultilineComment = false;
 		if (_enableCommentText) {
 			_sharedCommentToken.text = _lineText[_pos + 1 .. $];
 		}
 		_pos = _len;
+        nextChar();
 		return _sharedCommentToken;
 	}
 
 	protected Token processOneLineSharpComment() {
-		_sharedCommentToken.setPos(_line, _pos - 1);
+		_sharedCommentToken.setPos(_startLine, _startPos);
 		if (_enableCommentText) {
 			_sharedCommentToken.text = _lineText[_pos .. $];
 		}
@@ -1552,7 +1553,7 @@ class Tokenizer
 
 	// Comment /*   */	
 	protected Token processMultilineComment() {
-		_sharedCommentToken.setPos(_line, _pos - 1);
+		_sharedCommentToken.setPos(_startLine, _startPos);
         _sharedCommentToken.isDocumentationComment = _pos + 1 < _lineText.length && _lineText[_pos + 1] == '*';
         _sharedCommentToken.isMultilineComment = true;
 		_commentAppender.reset();
@@ -1587,7 +1588,7 @@ class Tokenizer
 	
 	// Comment /+   +/	
 	protected Token processNestedComment() {
-		_sharedCommentToken.setPos(_line, _pos - 1);
+		_sharedCommentToken.setPos(_startLine, _startPos);
         _sharedCommentToken.isDocumentationComment = _pos + 1 < _lineText.length && _lineText[_pos + 1] == '+';
         _sharedCommentToken.isMultilineComment = true;
 		_commentAppender.reset();
@@ -1649,7 +1650,7 @@ class Tokenizer
 	}
 	
 	protected Token processIdent() {
-		_sharedIdentToken.setPos(_line, _pos - 1);
+		_sharedIdentToken.setPos(_startLine, _startPos);
 		_identAppender.reset();
 		int startPos = _pos - 1;
 		int endPos = _len;
@@ -1695,7 +1696,7 @@ class Tokenizer
 	}
 	
 	protected Token processBinaryNumber() {
-		_sharedIntegerToken.setPos(_line, _pos - 1);
+		_sharedIntegerToken.setPos(_startLine, _startPos);
 		_pos++;
 		if (_pos >= _len)
 			return parserError("Unexpected end of line in binary number", _sharedIntegerToken);
@@ -1717,8 +1718,8 @@ class Tokenizer
 	}
 
 	protected Token processHexNumber() {
-		_sharedIntegerToken.setPos(_line, _pos - 1);
-		_sharedRealToken.setPos(_line, _pos - 1);
+		_sharedIntegerToken.setPos(_startLine, _startPos);
+		_sharedRealToken.setPos(_startLine, _startPos);
 		_pos++;
 		if (_pos >= _len)
 			return parserError("Unexpected end of line in hex number", _sharedIntegerToken);
@@ -1749,7 +1750,7 @@ class Tokenizer
 	}
 	
 	protected Token processOctNumber() {
-		_sharedIntegerToken.setPos(_line, _pos - 1);
+		_sharedIntegerToken.setPos(_startLine, _startPos);
 		if (_pos >= _len)
 			return parserError("Unexpected end of line in octal number", _sharedIntegerToken);
 		int digits = 0;
@@ -1872,8 +1873,8 @@ class Tokenizer
 		
 	protected Token processDecNumber(dchar c) {
 		_pos--;
-		_sharedIntegerToken.setPos(_line, _pos);
-		_sharedRealToken.setPos(_line, _pos);
+		_sharedIntegerToken.setPos(_startLine, _startPos);
+		_sharedRealToken.setPos(_startLine, _startPos);
 		if (_pos >= _len)
 			return parserError("Unexpected end of line in number", _sharedIntegerToken);
 		int digits = 0;
@@ -2375,7 +2376,7 @@ class Tokenizer
 	}
 	
     protected Token processCharacterLiteral() {
-		_sharedCharacterLiteralToken.setPos(_line, _pos - 1);
+		_sharedCharacterLiteralToken.setPos(_startLine, _startPos);
         if (_pos + 2 > _len)
             return parserError("Invalid character literal", _sharedCharacterLiteralToken);
         dchar ch = _lineText[_pos++];
@@ -2424,7 +2425,7 @@ class Tokenizer
 	protected Token processDoubleQuotedOrWysiwygString(dchar delimiter) {
 		bool wysiwyg = (delimiter == 'r' || delimiter == '`');
 		//writeln("processDoubleQuotedString()");
-		_sharedStringLiteralToken.setPos(_line, _pos - 1);
+		_sharedStringLiteralToken.setPos(_startLine, _startPos);
 		_stringLiteralAppender.reset();
 		if (delimiter == 'r') {
 			_pos++;
@@ -2501,7 +2502,7 @@ class Tokenizer
 	static immutable dstring VENDOR = "coolreader.org";
 	
 	protected Token makeSpecialTokenString(dstring str, int pos) {
-		_sharedStringLiteralToken.setPos(_line, pos);
+		_sharedStringLiteralToken.setPos(_startLine, _startPos);
 		_sharedStringLiteralToken.setText(cast(dchar[])str, 0);
 		return _sharedStringLiteralToken;
 	}
@@ -2525,8 +2526,13 @@ class Tokenizer
 		return null;
 	}
 	
+    protected int _startLine;
+    protected int _startPos;
+
 	// returns next token (clone it if you want to store for future usage, otherwise it may be overwritten by further nextToken() calls).
 	Token nextToken() {
+        _startLine = _line;
+        _startPos = _pos;
 		dchar ch = nextChar();
 		if (ch == EOF_CHAR) {
 			return emitEof();
@@ -2587,7 +2593,7 @@ class Tokenizer
 					case Keyword.VERSION_: //	Compiler version as an integer, such as 2001
 						return processSpecialToken(keyword, oldPos);
 					default:
-						_sharedKeywordToken.setPos(_line, oldPos);
+						_sharedKeywordToken.setPos(_startLine, _startPos);
 						_sharedKeywordToken.keyword = keyword;
 						return _sharedKeywordToken;
 				}
@@ -2596,10 +2602,12 @@ class Tokenizer
 		}
 		OpCode op = detectOp(ch);
 		if (op != OpCode.NONE) {
-			_sharedOpToken.setPos(_line, oldPos);
+			_sharedOpToken.setPos(_startLine, _startPos);
 			_sharedOpToken.opCode = op;
 			return _sharedOpToken;
 		}
+
+        // TODO: for tolerant parsing, return error token
 		return null;
 	}
 
