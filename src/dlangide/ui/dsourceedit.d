@@ -649,8 +649,11 @@ class SimpleDSyntaxHighlighter : SyntaxHighlighter {
                 for (int i = tokenLine; i <= newLine; i++) {
                     int start = i > tokenLine ? 0 : tokenPos;
                     int end = i < newLine ? cast(int)lines[i].length : newPos;
-                    for (int j = start; j < end; j++)
-                        _props[i][j] = category;
+                    for (int j = start; j < end; j++) {
+						if (j < _props[i].length) {
+							_props[i][j] = category;
+						}
+					}
                 }
 
                 // handle token - convert to category

@@ -1375,6 +1375,15 @@ struct StringAppender {
 		buf[len .. len + s.length] = s;
 		len += s.length;
 	}
+	void append(dchar ch) {
+		if (len + 1 > buf.length) {
+			uint newsize = cast(uint)(buf.length * 2);
+			if (newsize < 128)
+				newsize = 128;
+			buf.length = newsize;
+		}
+		buf[len++] = ch;
+	}
 	void reset() {
 		len = 0;
 	}
@@ -1781,20 +1790,19 @@ class Tokenizer
 		return null;
 	}
 	
-	protected Token processIdent() {
+	protected Token processIdent(dchar firstChar) {
 		_sharedIdentToken.setPos(_startLine, _startPos);
 		_identAppender.reset();
-		int startPos = _startPos;
-		int endPos = _len;
-		for (int i = startPos + 1; i < _len; i++) {
-			dchar ch = _lineText[i];
+		_identAppender.append(firstChar);
+		for (; _pos < _len; ) {
+			dchar ch = _lineText[_pos];
 			if (!isIdentMiddleChar(ch)) {
-				endPos = i;
 				break;
 			}
+			_identAppender.append(ch);
+			_pos++;
 		}
-		_pos = endPos;
-		_sharedIdentToken.setText(_lineText[startPos .. endPos]);
+		_sharedIdentToken.setText(_identAppender.get);
 		return _sharedIdentToken;
 	}
 
@@ -2756,7 +2764,7 @@ class Tokenizer
 						return _sharedKeywordToken;
 				}
 			}
-			return processIdent();
+			return processIdent(ch);
 		}
 		OpCode op = detectOp(ch);
 		if (op != OpCode.NONE) {
