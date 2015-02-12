@@ -1378,6 +1378,114 @@ struct StringAppender {
 	void reset() {
 		len = 0;
 	}
+    static int parseHexDigit(dchar ch) {
+        if (ch >= '0' && ch <='9')
+            return ch - '0';
+        if (ch >= 'a' && ch <='f')
+            return ch - 'a' + 10;
+        if (ch >= 'A' && ch <='F')
+            return ch - 'A' + 10;
+        return -1;
+    }
+    bool errorFlag = false;
+    dchar decodeHex(ref int pos, int count) {
+        dchar res = 0;
+        for (int i = 0; i < count; i++) {
+            if (pos >= len - 1) {
+                errorFlag = true;
+                return res;
+            }
+            dchar ch = buf[++pos];
+            int digit = parseHexDigit(ch);
+            if (digit < 0) {
+                errorFlag = true;
+                digit = 0;
+            }
+            res = (res << 4) | digit;
+        }
+        return res;
+    }
+    dchar decodeOct(dchar firstChar, ref int pos) {
+        dchar res = 0;
+        res = firstChar - '0';
+        if (pos < len - 1 && buf[pos + 1] >= '0' && buf[pos + 1] <= '7') {
+            res = (res << 3) | (buf[++pos] - '0');
+        }
+        if (pos < len - 1 && buf[pos + 1] >= '0' && buf[pos + 1] <= '7') {
+            res = (res << 3) | (buf[++pos] - '0');
+        }
+        return res;
+    }
+    bool processEscapeSequences() {
+        errorFlag = false;
+        int dst = 0;
+        for (int src = 0; src < len; src++) {
+            dchar ch = buf[src];
+            if (ch == '\\') {
+                if (src == len - 1)
+                    break; // INVALID
+                ch = buf[++src];
+                switch (ch) {
+                    case '\'':
+                    case '\"':
+                    case '?':
+                    case '\\':
+                        buf[dst++] = ch;
+                        break;
+                    case '0':
+                        buf[dst++] = '\0';
+                        break;
+                    case 'a':
+                        buf[dst++] = '\a';
+                        break;
+                    case 'b':
+                        buf[dst++] = '\b';
+                        break;
+                    case 'f':
+                        buf[dst++] = '\f';
+                        break;
+                    case 'n':
+                        buf[dst++] = '\n';
+                        break;
+                    case 'r':
+                        buf[dst++] = '\r';
+                        break;
+                    case 't':
+                        buf[dst++] = '\t';
+                        break;
+                    case 'v':
+                        buf[dst++] = '\v';
+                        break;
+                    case 'x':
+                        buf[dst++] = decodeHex(src, 2);
+                        break;
+                    case 'u':
+                        buf[dst++] = decodeHex(src, 4);
+                        break;
+                    case 'U':
+                        buf[dst++] = decodeHex(src, 8);
+                        break;
+                    default:
+                        if (ch >= '0' && ch <= '7') {
+                            // octal X XX or XXX
+                            buf[dst++] = decodeOct(ch, src); // something wrong
+                        } else if (ch == '&') {
+                            // named character entity
+                            buf[dst++] = ch;
+                            // just show it as is
+                        } else {
+                            buf[dst++] = ch; // something wrong
+                            errorFlag = true;
+                        }
+                        break;
+                }
+            } else {
+                buf[dst++] = ch;
+            }
+        }
+        len = dst;
+        return errorFlag;
+    }
 }
 
 class Tokenizer
@@ -2473,7 +2581,7 @@ class Tokenizer
 			_sharedStringLiteralToken.setText(_stringLiteralAppender.get(), type);
 			return _sharedStringLiteralToken;
 		}
-		// TODO: process escape sequences
+        _stringLiteralAppender.processEscapeSequences();
 		_sharedStringLiteralToken.setText(_stringLiteralAppender.get(), type);
 		return _sharedStringLiteralToken;
 	}
