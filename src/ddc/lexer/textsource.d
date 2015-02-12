@@ -49,7 +49,7 @@ class ArraySourceLines : SourceLines {
     protected uint _line;
     protected uint _firstLine;
     protected dstring[] _lines;
-    static protected dchar[] _emptyLine = ""d.dup;
+    static __gshared protected dchar[] _emptyLine = ""d.dup;
 
     this() {
     }
