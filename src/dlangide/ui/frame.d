@@ -374,7 +374,7 @@ class IDEFrame : AppFrame {
             }
             return true;
         };
-        cbBuildConfiguration.action = ACTION_PROJECT_BUILD;
+        cbBuildConfiguration.action = ACTION_BUILD_CONFIGURATIONS;
         tb.addControl(cbBuildConfiguration);
         tb.addButtons(ACTION_PROJECT_BUILD);
 
