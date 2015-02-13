@@ -111,13 +111,16 @@ class IDEFrame : AppFrame {
     }
 
     bool openSourceFile(string filename, ProjectSourceFile file = null, bool activate = true) {
+        if (!file && !filename)
+            return false;
         if (!file)
             file = _wsPanel.findSourceFileItem(filename, false);
 
-		if(!file)
-			return false;
+		//if(!file)
+		//	return false;
 
-		filename = file.filename;
+        if (file)
+		    filename = file.filename;
 
 		Log.d("openSourceFile ", filename);
 		int index = _tabs.tabIndex(filename);
