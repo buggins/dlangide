@@ -66,6 +66,7 @@ class IDEFrame : AppFrame {
     this(Window window) {
         super();
         window.mainWidget = this;
+        window.onFilesDropped = &onFilesDropped;
     }
 
     override protected void init() {
@@ -614,6 +615,13 @@ class IDEFrame : AppFrame {
         }
         Builder op = new Builder(this, currentWorkspace.startupProject, _logPanel, currentWorkspace.buildConfiguration, buildOp, false);
         setBackgroundOperation(op);
+    }
+
+    void onFilesDropped(string[] filenames) {
+        //Log.d("onFilesDropped(", filenames, ")");
+        for (int i = 0; i < filenames.length; i++) {
+            openSourceFile(filenames[i], null, i == 0);
+        }
     }
 }
 
