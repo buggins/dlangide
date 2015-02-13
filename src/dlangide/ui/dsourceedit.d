@@ -80,6 +80,10 @@ class DSourceEdit : SourceEdit {
                 case IDEActions.FileSave:
                     save();
                     return true;
+                case IDEActions.InsertCompletion:
+                    EditOperation edit = new EditOperation(EditAction.Replace, getCaretPosition, a.label);
+                    _content.performOperation(edit, this);
+                    return true;
                 default:
                     break;
             }
@@ -93,7 +97,7 @@ class DSourceEdit : SourceEdit {
         MenuItem completionPopupItem = new MenuItem(null);
         //Create popup menu
         foreach(int i, dstring suggestion ; suggestions) {
-            auto action = new Action(i+1, suggestion);
+            auto action = new Action(IDEActions.InsertCompletion, suggestion);
             completionPopupItem.add(action);
         }
         completionPopupItem.updateActionState(this);

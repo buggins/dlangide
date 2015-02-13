@@ -42,6 +42,7 @@ enum IDEActions : int {
     ProjectFolderRenameItem,
     GoToDefinition,
     GetCompletionSuggestions,
+    InsertCompletion,
 }
 
 const Action ACTION_PROJECT_FOLDER_ADD_ITEM = new Action(IDEActions.ProjectFolderAddItem, "MENU_PROJECT_FOLDER_ADD_ITEM"c);

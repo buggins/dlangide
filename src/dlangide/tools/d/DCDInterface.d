@@ -13,8 +13,11 @@ class DCDInterface {
 		ProtectedTextStorage stdoutTarget = new ProtectedTextStorage();
 		ExternalProcess dcdProcess = new ExternalProcess();
 		//TODO: Working Directory, where is that?
+		//TODO: Inform user when dcd-client is not available.
 		dcdProcess.run("dcd-client".dup, arguments, "/usr/bin".dup, stdoutTarget);
+		
 		while(dcdProcess.poll() == ExternalProcessState.Running){ }
+
 		output = stdoutTarget.readText();
 		return true;
 	}
