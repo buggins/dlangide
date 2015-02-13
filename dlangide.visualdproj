@@ -198,6 +198,11 @@
     <File path="src\ddc\lexer\tokenizer.d" />
    </Folder>
   </Folder>
+  <Folder name="ddebug">
+   <Folder name="windows">
+    <File path="src\ddebug\windows\windebug.d" />
+   </Folder>
+  </Folder>
   <Folder name="dlangide">
    <Folder name="builders">
     <File path="src\dlangide\builders\builder.d" />

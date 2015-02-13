@@ -69,6 +69,8 @@ class IDEFrame : AppFrame {
     this(Window window) {
         super();
         window.mainWidget = this;
+        window.onFilesDropped = &onFilesDropped;
+        window.onCanClose = &onCanClose;
     }
 
     override protected void init() {
@@ -115,13 +117,16 @@ class IDEFrame : AppFrame {
     }
 
     bool openSourceFile(string filename, ProjectSourceFile file = null, bool activate = true) {
+        if (!file && !filename)
+            return false;
         if (!file)
             file = _wsPanel.findSourceFileItem(filename, false);
 
-		if(!file)
-			return false;
+		//if(!file)
+		//	return false;
 
-		filename = file.filename;
+        if (file)
+		    filename = file.filename;
 
 		Log.d("openSourceFile ", filename);
 		int index = _tabs.tabIndex(filename);
@@ -382,7 +387,7 @@ class IDEFrame : AppFrame {
             }
             return true;
         };
-        cbBuildConfiguration.action = ACTION_PROJECT_BUILD;
+        cbBuildConfiguration.action = ACTION_BUILD_CONFIGURATIONS;
         tb.addControl(cbBuildConfiguration);
         tb.addButtons(ACTION_PROJECT_BUILD);
 
@@ -448,7 +453,8 @@ class IDEFrame : AppFrame {
         if (a) {
             switch (a.id) {
                 case IDEActions.FileExit:
-                    window.close();
+                    if (onCanClose())
+                        window.close();
                     return true;
                 case IDEActions.HelpAbout:
                     Window wnd = Platform.instance.createWindow("About...", window, WindowFlag.Modal);
@@ -628,6 +634,26 @@ class IDEFrame : AppFrame {
         }
         Builder op = new Builder(this, currentWorkspace.startupProject, _logPanel, currentWorkspace.buildConfiguration, buildOp, false);
         setBackgroundOperation(op);
+    }
+
+    /// handle files dropped to application window
+    void onFilesDropped(string[] filenames) {
+        //Log.d("onFilesDropped(", filenames, ")");
+        bool first = true;
+        for (int i = 0; i < filenames.length; i++) {
+            if (isSupportedSourceTextFileFormat(filenames[i])) {
+                openSourceFile(filenames[i], null, first);
+                first = false;
+            }
+        }
+    }
+
+    /// return false to prevent closing
+    bool onCanClose() {
+        askForUnsavedEdits(delegate() {
+            window.close();
+        });
+        return false;
     }
 }
 

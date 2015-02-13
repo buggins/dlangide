@@ -1225,7 +1225,7 @@ class StringLiteralToken : Token {
 		return new StringLiteralToken(_file, _line, _pos, _text.dup, _literalType);
 	}
 	public override @property string toString() {
-		return "String:" ~ to!string(_text);
+        return toUTF8("String:\"" ~ _text ~ "\"" ~ (_literalType ? _literalType : ' '));
 	}
 }
 
@@ -1319,7 +1319,7 @@ class RealLiteralToken : Token {
 		return new RealLiteralToken(_file, _line, _pos, _value, _precision, _imaginary);
 	}
 	public override @property string toString() {
-		return "Integer:" ~ to!string(_value) ~ (_precision == 0 ? "f" : (_precision == 2 ? "L" : "")) ~ (_imaginary ? "i" : "");
+		return "Real:" ~ to!string(_value) ~ (_precision == 0 ? "f" : (_precision == 2 ? "L" : "")) ~ (_imaginary ? "i" : "");
 	}
 }
 
@@ -1375,9 +1375,150 @@ struct StringAppender {
 		buf[len .. len + s.length] = s;
 		len += s.length;
 	}
+	void append(dchar ch) {
+		if (len + 1 > buf.length) {
+			uint newsize = cast(uint)(buf.length * 2);
+			if (newsize < 128)
+				newsize = 128;
+			buf.length = newsize;
+		}
+		buf[len++] = ch;
+	}
 	void reset() {
 		len = 0;
 	}
+    static int parseHexDigit(dchar ch) {
+        if (ch >= '0' && ch <='9')
+            return ch - '0';
+        if (ch >= 'a' && ch <='f')
+            return ch - 'a' + 10;
+        if (ch >= 'A' && ch <='F')
+            return ch - 'A' + 10;
+        return -1;
+    }
+    bool errorFlag = false;
+    dchar decodeHex(ref int pos, int count) {
+        dchar res = 0;
+        for (int i = 0; i < count; i++) {
+            if (pos >= len - 1) {
+                errorFlag = true;
+                return res;
+            }
+            dchar ch = buf[++pos];
+            int digit = parseHexDigit(ch);
+            if (digit < 0) {
+                errorFlag = true;
+                digit = 0;
+            }
+            res = (res << 4) | digit;
+        }
+        return res;
+    }
+    dchar decodeOct(dchar firstChar, ref int pos) {
+        dchar res = 0;
+        res = firstChar - '0';
+        if (pos < len - 1 && buf[pos + 1] >= '0' && buf[pos + 1] <= '7') {
+            res = (res << 3) | (buf[++pos] - '0');
+        }
+        if (pos < len - 1 && buf[pos + 1] >= '0' && buf[pos + 1] <= '7') {
+            res = (res << 3) | (buf[++pos] - '0');
+        }
+        return res;
+    }
+
+    char[] entityNameBuf;
+    int entityNameLen;
+
+    dchar decodeCharacterEntity(ref int pos) {
+        entityNameLen = 0;
+        pos++;
+        for(; pos < len && buf[pos] != ';'; pos++) {
+            dchar ch = buf[pos];
+            if (ch >= 0x80)
+                errorFlag = true;
+            if (entityNameBuf.length < entityNameLen + 4)
+                entityNameBuf.length += 32;
+            entityNameBuf[entityNameLen++] = cast(char)ch;
+        }
+        if (pos < len && buf[pos] == ';') {
+            dchar ch = entityToChar(cast(string)entityNameBuf[0 .. entityNameLen]);
+            if (ch)
+                return ch;
+        }
+        errorFlag = true;
+        return '?';
+    }
+
+    bool processEscapeSequences() {
+        errorFlag = false;
+        int dst = 0;
+        for (int src = 0; src < len; src++) {
+            dchar ch = buf[src];
+            if (ch == '\\') {
+                if (src == len - 1)
+                    break; // INVALID
+                ch = buf[++src];
+                switch (ch) {
+                    case '\'':
+                    case '\"':
+                    case '?':
+                    case '\\':
+                        buf[dst++] = ch;
+                        break;
+                    case '0':
+                        buf[dst++] = '\0';
+                        break;
+                    case 'a':
+                        buf[dst++] = '\a';
+                        break;
+                    case 'b':
+                        buf[dst++] = '\b';
+                        break;
+                    case 'f':
+                        buf[dst++] = '\f';
+                        break;
+                    case 'n':
+                        buf[dst++] = '\n';
+                        break;
+                    case 'r':
+                        buf[dst++] = '\r';
+                        break;
+                    case 't':
+                        buf[dst++] = '\t';
+                        break;
+                    case 'v':
+                        buf[dst++] = '\v';
+                        break;
+                    case 'x':
+                        buf[dst++] = decodeHex(src, 2);
+                        break;
+                    case 'u':
+                        buf[dst++] = decodeHex(src, 4);
+                        break;
+                    case 'U':
+                        buf[dst++] = decodeHex(src, 8);
+                        break;
+                    default:
+                        if (ch >= '0' && ch <= '7') {
+                            // octal X XX or XXX
+                            buf[dst++] = decodeOct(ch, src); // something wrong
+                        } else if (ch == '&') {
+                            // named character entity
+                            buf[dst++] = decodeCharacterEntity(src);
+                            // just show it as is
+                        } else {
+                            buf[dst++] = ch; // something wrong
+                            errorFlag = true;
+                        }
+                        break;
+                }
+            } else {
+                buf[dst++] = ch;
+            }
+        }
+        len = dst;
+        return errorFlag;
+    }
 }
 
 class Tokenizer
@@ -1483,11 +1624,15 @@ class Tokenizer
 	protected dchar nextChar() {
 	    if (_pos >= _len) {
 			if (!nextLine()) {
+                _pos = _prevLineLength + 1;
 				return EOF_CHAR;
 			}
 			return EOL_CHAR;
 		}
-		return _lineText[_pos++];
+		dchar res = _lineText[_pos++];
+        if (_pos >= _len)
+            nextLine();
+        return res;
 	}
 	
 	protected dchar peekChar() {
@@ -1503,16 +1648,12 @@ class Tokenizer
 	
 	protected Token emitEof() {
 		// TODO: check for current state
-		return new EofToken(_lineStream.file, _line, _pos);
+		return new EofToken(_lineStream.file, _startLine, _startPos + 2);
 	}
 	
 	protected Token processWhiteSpace(dchar firstChar) {
 		// reuse the same token instance, to avoid extra heap spamming
-        if (_pos == 0) {
-            _sharedWhiteSpaceToken.setPos(_line - 1, _prevLineLength);
-        } else {
-            _sharedWhiteSpaceToken.setPos(_line, _pos - 1);
-        }
+        _sharedWhiteSpaceToken.setPos(_startLine, _startPos);
 		for (;;) {
 			int i = _pos;
 			for (; i < _len; i++) {
@@ -1531,18 +1672,19 @@ class Tokenizer
 	}
 	
 	protected Token processOneLineComment() {
-		_sharedCommentToken.setPos(_line, _pos - 1);
+		_sharedCommentToken.setPos(_startLine, _startPos);
         _sharedCommentToken.isDocumentationComment = _pos + 1 < _lineText.length && _lineText[_pos + 1] == '/';
         _sharedCommentToken.isMultilineComment = false;
 		if (_enableCommentText) {
 			_sharedCommentToken.text = _lineText[_pos + 1 .. $];
 		}
 		_pos = _len;
+        nextChar();
 		return _sharedCommentToken;
 	}
 
 	protected Token processOneLineSharpComment() {
-		_sharedCommentToken.setPos(_line, _pos - 1);
+		_sharedCommentToken.setPos(_startLine, _startPos);
 		if (_enableCommentText) {
 			_sharedCommentToken.text = _lineText[_pos .. $];
 		}
@@ -1552,7 +1694,7 @@ class Tokenizer
 
 	// Comment /*   */	
 	protected Token processMultilineComment() {
-		_sharedCommentToken.setPos(_line, _pos - 1);
+		_sharedCommentToken.setPos(_startLine, _startPos);
         _sharedCommentToken.isDocumentationComment = _pos + 1 < _lineText.length && _lineText[_pos + 1] == '*';
         _sharedCommentToken.isMultilineComment = true;
 		_commentAppender.reset();
@@ -1587,7 +1729,7 @@ class Tokenizer
 	
 	// Comment /+   +/	
 	protected Token processNestedComment() {
-		_sharedCommentToken.setPos(_line, _pos - 1);
+		_sharedCommentToken.setPos(_startLine, _startPos);
         _sharedCommentToken.isDocumentationComment = _pos + 1 < _lineText.length && _lineText[_pos + 1] == '+';
         _sharedCommentToken.isMultilineComment = true;
 		_commentAppender.reset();
@@ -1648,20 +1790,19 @@ class Tokenizer
 		return null;
 	}
 	
-	protected Token processIdent() {
-		_sharedIdentToken.setPos(_line, _pos - 1);
+	protected Token processIdent(dchar firstChar) {
+		_sharedIdentToken.setPos(_startLine, _startPos);
 		_identAppender.reset();
-		int startPos = _pos - 1;
-		int endPos = _len;
-		for (int i = _pos; i < _len; i++) {
-			dchar ch = _lineText[i];
+		_identAppender.append(firstChar);
+		for (; _pos < _len; ) {
+			dchar ch = _lineText[_pos];
 			if (!isIdentMiddleChar(ch)) {
-				endPos = i;
 				break;
 			}
+			_identAppender.append(ch);
+			_pos++;
 		}
-		_pos = endPos;
-		_sharedIdentToken.setText(_lineText[startPos .. endPos]);
+		_sharedIdentToken.setText(_identAppender.get);
 		return _sharedIdentToken;
 	}
 
@@ -1695,7 +1836,7 @@ class Tokenizer
 	}
 	
 	protected Token processBinaryNumber() {
-		_sharedIntegerToken.setPos(_line, _pos - 1);
+		_sharedIntegerToken.setPos(_startLine, _startPos);
 		_pos++;
 		if (_pos >= _len)
 			return parserError("Unexpected end of line in binary number", _sharedIntegerToken);
@@ -1717,8 +1858,8 @@ class Tokenizer
 	}
 
 	protected Token processHexNumber() {
-		_sharedIntegerToken.setPos(_line, _pos - 1);
-		_sharedRealToken.setPos(_line, _pos - 1);
+		_sharedIntegerToken.setPos(_startLine, _startPos);
+		_sharedRealToken.setPos(_startLine, _startPos);
 		_pos++;
 		if (_pos >= _len)
 			return parserError("Unexpected end of line in hex number", _sharedIntegerToken);
@@ -1749,7 +1890,7 @@ class Tokenizer
 	}
 	
 	protected Token processOctNumber() {
-		_sharedIntegerToken.setPos(_line, _pos - 1);
+		_sharedIntegerToken.setPos(_startLine, _startPos);
 		if (_pos >= _len)
 			return parserError("Unexpected end of line in octal number", _sharedIntegerToken);
 		int digits = 0;
@@ -1784,8 +1925,25 @@ class Tokenizer
 	
 	// 
 	protected Token processDecFloatSuffix(real value) {
-		_sharedRealToken.setValue(value);
-		// TODO
+        ubyte precision = 1;
+        bool imaginary = false;
+		dchar next = _pos < _len ? _lineText[_pos] : 0;
+        if (next == 'f') {
+            _pos++;
+            precision = 0;
+        } else if (next == 'L') {
+            _pos++;
+            precision = 2;
+        }
+		next = _pos < _len ? _lineText[_pos] : 0;
+        if (next == 'i') {
+            _pos++;
+            imaginary = true;
+        }
+		next = _pos < _len ? _lineText[_pos] : 0;
+        if (isIdentMiddleChar(next))
+			return parserError("invalid suffix for floating point literal", _sharedRealToken);
+		_sharedRealToken.setValue(value, precision, imaginary);
 		return _sharedRealToken;
 	}
 	
@@ -1872,8 +2030,8 @@ class Tokenizer
 		
 	protected Token processDecNumber(dchar c) {
 		_pos--;
-		_sharedIntegerToken.setPos(_line, _pos);
-		_sharedRealToken.setPos(_line, _pos);
+		_sharedIntegerToken.setPos(_startLine, _startPos);
+		_sharedRealToken.setPos(_startLine, _startPos);
 		if (_pos >= _len)
 			return parserError("Unexpected end of line in number", _sharedIntegerToken);
 		int digits = 0;
@@ -1906,7 +2064,10 @@ class Tokenizer
 		dchar next = _pos < _len ? _lineText[_pos] : 0;
 		if (next == 0)
 			return _sharedIntegerToken;
-		if (next == '.') {
+        if (next == 'e' || next == 'E') {
+			_pos++;
+            return processDecFloatExponent(number);
+        } else if (next == '.') {
 			_pos++;
 			return processDecFloatSecondPart(number);
 		}
@@ -2375,7 +2536,7 @@ class Tokenizer
 	}
 	
     protected Token processCharacterLiteral() {
-		_sharedCharacterLiteralToken.setPos(_line, _pos - 1);
+		_sharedCharacterLiteralToken.setPos(_startLine, _startPos);
         if (_pos + 2 > _len)
             return parserError("Invalid character literal", _sharedCharacterLiteralToken);
         dchar ch = _lineText[_pos++];
@@ -2424,7 +2585,7 @@ class Tokenizer
 	protected Token processDoubleQuotedOrWysiwygString(dchar delimiter) {
 		bool wysiwyg = (delimiter == 'r' || delimiter == '`');
 		//writeln("processDoubleQuotedString()");
-		_sharedStringLiteralToken.setPos(_line, _pos - 1);
+		_sharedStringLiteralToken.setPos(_startLine, _startPos);
 		_stringLiteralAppender.reset();
 		if (delimiter == 'r') {
 			_pos++;
@@ -2457,9 +2618,15 @@ class Tokenizer
 		dchar t = 0;
 		if (_pos < _len) {
 			dchar ch = _lineText[_pos];
-			if (ch == 'c' || ch == 'w' || ch == 'd')
+			if (ch == 'c' || ch == 'w' || ch == 'd') {
 				t = ch;
-			else if (isIdentMiddleChar(ch))
+                _pos++;
+                if (_pos < _len) {
+                    ch = _lineText[_pos];
+                    if (isIdentMiddleChar(ch))
+                        return parserError("Unexpected character after string literal", _sharedStringLiteralToken);
+                }
+            } else if (isIdentMiddleChar(ch))
 				return parserError("Unexpected character after string literal", _sharedStringLiteralToken);
 		}
 		if (t != 0) {
@@ -2467,12 +2634,12 @@ class Tokenizer
 				return parserError("Cannot concatenate strings of different type", _sharedStringLiteralToken);
 			type = t;
 		}
-		if (!wysiwyg) {
+		if (wysiwyg) {
 			// no escape processing
 			_sharedStringLiteralToken.setText(_stringLiteralAppender.get(), type);
 			return _sharedStringLiteralToken;
 		}
-		// TODO: process escape sequences
+        _stringLiteralAppender.processEscapeSequences();
 		_sharedStringLiteralToken.setText(_stringLiteralAppender.get(), type);
 		return _sharedStringLiteralToken;
 	}
@@ -2501,7 +2668,7 @@ class Tokenizer
 	static immutable dstring VENDOR = "coolreader.org";
 	
 	protected Token makeSpecialTokenString(dstring str, int pos) {
-		_sharedStringLiteralToken.setPos(_line, pos);
+		_sharedStringLiteralToken.setPos(_startLine, _startPos);
 		_sharedStringLiteralToken.setText(cast(dchar[])str, 0);
 		return _sharedStringLiteralToken;
 	}
@@ -2525,8 +2692,13 @@ class Tokenizer
 		return null;
 	}
 	
+    protected int _startLine;
+    protected int _startPos;
+
 	// returns next token (clone it if you want to store for future usage, otherwise it may be overwritten by further nextToken() calls).
 	Token nextToken() {
+        _startLine = _line;
+        _startPos = _pos;
 		dchar ch = nextChar();
 		if (ch == EOF_CHAR) {
 			return emitEof();
@@ -2587,26 +2759,342 @@ class Tokenizer
 					case Keyword.VERSION_: //	Compiler version as an integer, such as 2001
 						return processSpecialToken(keyword, oldPos);
 					default:
-						_sharedKeywordToken.setPos(_line, oldPos);
+						_sharedKeywordToken.setPos(_startLine, _startPos);
 						_sharedKeywordToken.keyword = keyword;
 						return _sharedKeywordToken;
 				}
 			}
-			return processIdent();
+			return processIdent(ch);
 		}
 		OpCode op = detectOp(ch);
 		if (op != OpCode.NONE) {
-			_sharedOpToken.setPos(_line, oldPos);
+			_sharedOpToken.setPos(_startLine, _startPos);
 			_sharedOpToken.opCode = op;
 			return _sharedOpToken;
 		}
-		return null;
+        return parserError("Invalid token", _line, _pos);
 	}
 
 	
 }
 
 unittest {
+    version(DisableLexerTest) {
+    import std.stdio;
+    import std.conv;
+    import std.utf;
+    import dlangui.core.linestream;
+    string fname = "/home/lve/src/d/ddc/ddclexer/tests/tokenizer_test.d";
+	writeln("opening file");
+    try {
+        std.stream.File f = new std.stream.File(fname);
+	    scope(exit) { f.close(); }
+        try {
+            LineStream lines = LineStream.create(f, fname);
+		    Tokenizer tokenizer = new Tokenizer(lines);
+	        for (;;) {
+			    Token token = tokenizer.nextToken();
+			    if (token is null) {
+				    writeln("Null token returned");
+				    break;
+			    }
+			    if (token.type == TokenType.EOF) {
+				    writeln("EOF token");
+				    break;
+			    }
+			    writeln("", token.line, ":", token.pos, "\t", token.toString);
+	        }
+        } catch (Exception e) {
+            writeln("Exception " ~ e.toString);
+        }
+    } catch (Exception e) {
+        writeln("Exception " ~ e.toString);
+    }
+    }
+}
+
+/// converts named entity to character, returns 0 if not found
+dchar entityToChar(string name) {
+    if (auto ch = name in entityToCharMap) {
+        return *ch;
+    }
+    return 0;
+}
+
+/// fings entity name for character, returns null if not found
+string charToEntity(dchar ch) {
+    if (auto name = ch in charToEntityMap) {
+        return *name;
+    }
+    return null;
+}
+
+private __gshared dchar[string]entityToCharMap;
+private __gshared string[dchar]charToEntityMap;
+private void addEntity(string name, dchar ch) {
+    entityToCharMap[name] = ch;
+    charToEntityMap[ch] = name;
+}
+__gshared static this() {
+    addEntity("quot", 34);
+    addEntity("amp",	38);
+    addEntity("lt",	60);
+    addEntity("gt",	62);
+    addEntity("OElig",	338);
+    addEntity("oelig",	339);
+    addEntity("Scaron",	352);
+    addEntity("scaron",	353);
+    addEntity("Yuml",	376);
+    addEntity("circ",	710);
+    addEntity("tilde",	732);
+    addEntity("ensp",	8194);
+    addEntity("emsp",	8195);
+    addEntity("thinsp",	8201);
+    addEntity("zwnj",	8204);
+    addEntity("zwj",	8205);
+    addEntity("lrm",	8206);
+    addEntity("rlm",	8207);
+    addEntity("ndash",	8211);
+    addEntity("mdash",	8212);
+    addEntity("lsquo",	8216);
+    addEntity("rsquo",	8217);
+    addEntity("sbquo",	8218);
+    addEntity("ldquo",	8220);
+    addEntity("rdquo",	8221);
+    addEntity("bdquo",	8222);
+    addEntity("dagger",	8224);
+    addEntity("Dagger",	8225);
+    addEntity("permil",	8240);
+    addEntity("lsaquo",	8249);
+    addEntity("rsaquo",	8250);
+    addEntity("euro",	8364);
+    addEntity("nbsp",	160);
+    addEntity("iexcl",	161);
+    addEntity("cent",	162);
+    addEntity("pound",	163);
+    addEntity("curren",	164);
+    addEntity("yen",	165);
+    addEntity("brvbar",	166);
+    addEntity("sect",	167);
+    addEntity("uml",	168);
+    addEntity("copy",	169);
+    addEntity("ordf",	170);
+    addEntity("laquo",	171);
+    addEntity("not",	172);
+    addEntity("shy",	173);
+    addEntity("reg",	174);
+    addEntity("macr",	175);
+    addEntity("deg",	176);
+    addEntity("plusmn",	177);
+    addEntity("sup2",	178);
+    addEntity("sup3",	179);
+    addEntity("acute",	180);
+    addEntity("micro",	181);
+    addEntity("para",	182);
+    addEntity("middot",	183);
+    addEntity("cedil",	184);
+    addEntity("sup1",	185);
+    addEntity("ordm",	186);
+    addEntity("raquo",	187);
+    addEntity("frac14",	188);
+    addEntity("frac12",	189);
+    addEntity("frac34",	190);
+    addEntity("iquest",	191);
+    addEntity("Agrave",	192);
+    addEntity("Aacute",	193);
+    addEntity("Acirc",	194);
+    addEntity("Atilde",	195);
+    addEntity("Auml",	196);
+    addEntity("Aring",	197);
+    addEntity("AElig",	198);
+    addEntity("Ccedil",	199);
+    addEntity("Egrave",	200);
+    addEntity("Eacute",	201);
+    addEntity("Ecirc",	202);
+    addEntity("Euml",	203);
+    addEntity("Igrave",	204);
+    addEntity("Iacute",	205);
+    addEntity("Icirc",	206);
+    addEntity("Iuml",	207);
+    addEntity("ETH",	208);
+    addEntity("Ntilde",	209);
+    addEntity("Ograve",	210);
+    addEntity("Oacute",	211);
+    addEntity("Ocirc",	212);
+    addEntity("Otilde",	213);
+    addEntity("Ouml",	214);
+    addEntity("times",	215);
+    addEntity("Oslash",	216);
+    addEntity("Ugrave",	217);
+    addEntity("Uacute",	218);
+    addEntity("Ucirc",	219);
+    addEntity("Uuml",	220);
+    addEntity("Yacute",	221);
+    addEntity("THORN",	222);
+    addEntity("szlig",	223);
+    addEntity("agrave",	224);
+    addEntity("aacute",	225);
+    addEntity("acirc",	226);
+    addEntity("atilde",	227);
+    addEntity("auml",	228);
+    addEntity("aring",	229);
+    addEntity("aelig",	230);
+    addEntity("ccedil",	231);
+    addEntity("egrave",	232);
+    addEntity("eacute",	233);
+    addEntity("ecirc",	234);
+    addEntity("euml",	235);
+    addEntity("igrave",	236);
+    addEntity("iacute",	237);
+    addEntity("icirc",	238);
+    addEntity("iuml",	239);
+    addEntity("eth",	240);
+    addEntity("ntilde",	241);
+    addEntity("ograve",	242);
+    addEntity("oacute",	243);
+    addEntity("ocirc",	244);
+    addEntity("otilde",	245);
+    addEntity("ouml",	246);
+    addEntity("divide",	247);
+    addEntity("oslash",	248);
+    addEntity("ugrave",	249);
+    addEntity("uacute",	250);
+    addEntity("ucirc",	251);
+    addEntity("uuml",	252);
+    addEntity("yacute",	253);
+    addEntity("thorn",	254);
+    addEntity("yuml",	255);
+    addEntity("fnof",	402);
+    addEntity("Alpha",	913);
+    addEntity("Beta",	914);
+    addEntity("Gamma",	915);
+    addEntity("Delta",	916);
+    addEntity("Epsilon",	917);
+    addEntity("Zeta",	918);
+    addEntity("Eta",	919);
+    addEntity("Theta",	920);
+    addEntity("Iota",	921);
+    addEntity("Kappa",	922);
+    addEntity("Lambda",	923);
+    addEntity("Mu",	924);
+    addEntity("Nu",	925);
+    addEntity("Xi",	926);
+    addEntity("Omicron",	927);
+    addEntity("Pi",	928);
+    addEntity("Rho",	929);
+    addEntity("Sigma",	931);
+    addEntity("Tau",	932);
+    addEntity("Upsilon",	933);
+    addEntity("Phi",	934);
+    addEntity("Chi",	935);
+    addEntity("Psi",	936);
+    addEntity("Omega",	937);
+    addEntity("alpha",	945);
+    addEntity("beta",	946);
+    addEntity("gamma",	947);
+    addEntity("delta",	948);
+    addEntity("epsilon",	949);
+    addEntity("zeta",	950);
+    addEntity("eta",	951);
+    addEntity("theta",	952);
+    addEntity("iota",	953);
+    addEntity("kappa",	954);
+    addEntity("lambda",	955);
+    addEntity("mu",	956);
+    addEntity("nu",	957);
+    addEntity("xi",	958);
+    addEntity("omicron",	959);
+    addEntity("pi",	960);
+    addEntity("rho",	961);
+    addEntity("sigmaf",	962);
+    addEntity("sigma",	963);
+    addEntity("tau",	964);
+    addEntity("upsilon",	965);
+    addEntity("phi",	966);
+    addEntity("chi",	967);
+    addEntity("psi",	968);
+    addEntity("omega",	969);
+    addEntity("thetasym",	977);
+    addEntity("upsih",	978);
+    addEntity("piv",	982);
+    addEntity("bull",	8226);
+    addEntity("hellip",	8230);
+    addEntity("prime",	8242);
+    addEntity("Prime",	8243);
+    addEntity("oline",	8254);
+    addEntity("frasl",	8260);
+    addEntity("weierp",	8472);
+    addEntity("image",	8465);
+    addEntity("real",	8476);
+    addEntity("trade",	8482);
+    addEntity("alefsym",	8501);
+    addEntity("larr",	8592);
+    addEntity("uarr",	8593);
+    addEntity("rarr",	8594);
+    addEntity("darr",	8595);
+    addEntity("harr",	8596);
+    addEntity("crarr",	8629);
+    addEntity("lArr",	8656);
+    addEntity("uArr",	8657);
+    addEntity("rArr",	8658);
+    addEntity("dArr",	8659);
+    addEntity("hArr",	8660);
+    addEntity("forall",	8704);
+    addEntity("part",	8706);
+    addEntity("exist",	8707);
+    addEntity("empty",	8709);
+    addEntity("nabla",	8711);
+    addEntity("isin",	8712);
+    addEntity("notin",	8713);
+    addEntity("ni",	8715);
+    addEntity("prod",	8719);
+    addEntity("sum",	8721);
+    addEntity("minus",	8722);
+    addEntity("lowast",	8727);
+    addEntity("radic",	8730);
+    addEntity("prop",	8733);
+    addEntity("infin",	8734);
+    addEntity("ang",	8736);
+    addEntity("and",	8743);
+    addEntity("or",	8744);
+    addEntity("cap",	8745);
+    addEntity("cup",	8746);
+    addEntity("int",	8747);
+    addEntity("there4",	8756);
+    addEntity("sim",	8764);
+    addEntity("cong",	8773);
+    addEntity("asymp",	8776);
+    addEntity("ne",	8800);
+    addEntity("equiv",	8801);
+    addEntity("le",	8804);
+    addEntity("ge",	8805);
+    addEntity("sub",	8834);
+    addEntity("sup",	8835);
+    addEntity("nsub",	8836);
+    addEntity("sube",	8838);
+    addEntity("supe",	8839);
+    addEntity("oplus",	8853);
+    addEntity("otimes",	8855);
+    addEntity("perp",	8869);
+    addEntity("sdot",	8901);
+    addEntity("lceil",	8968);
+    addEntity("rceil",	8969);
+    addEntity("lfloor",	8970);
+    addEntity("rfloor",	8971);
+    addEntity("loz",	9674);
+    addEntity("spades",	9824);
+    addEntity("clubs",	9827);
+    addEntity("hearts",	9829);
+    addEntity("diams",	9830);
+    addEntity("lang",	10216);
+    addEntity("rang",	10217);
+}
+
+
+
+//void runTokenizerTest()
+unittest 
+{
 	import std.algorithm;
 	class TokenTest {
 		int _line;
@@ -2669,20 +3157,24 @@ unittest {
 		}
 	}
 	class StringTest : TokenTest {
-		string _value;
-		this(string value, string file = __FILE__, uint line = __LINE__) {
+		dstring _value;
+        dchar _literalType;
+		this(dstring value, dchar literalType = 0, string file = __FILE__, uint line = __LINE__) {
 			super(file, line);
 			_value = value;
+            _literalType = literalType;
 		}
 		override bool doTest(Token token) {
 			if (token.type != TokenType.STRING)
 				return false;
-			if (to!string(token.text).equal(_value))
+			if (!token.text.equal(_value))
+				return false;
+			if (token.literalType != _literalType)
 				return false;
 			return true;
 		}		
 		public override @property string toString() {
-			return "String:" ~ _value;
+			return toUTF8("String:\"" ~ _value ~ "\"" ~ (_literalType ? _literalType : ' '));
 		}
 	}
 	class IntegerTest : TokenTest {
@@ -2723,7 +3215,11 @@ unittest {
 		override bool doTest(Token token) {
 			if (token.type != TokenType.FLOAT)
 				return false;
-			if (token.realValue != _value)
+            real diff = token.realValue - _value;
+            real maxerr = _value / 1000000;
+            if (diff < 0) diff = -diff;
+            if (maxerr < 0) maxerr = -maxerr;
+			if (diff > maxerr)
 				return false;
 			if (token.precision != _precision)
 				return false;
@@ -2732,7 +3228,7 @@ unittest {
 			return true;
 		}		
 		public override @property string toString() {
-			return "Real:" ~ to!string(_value);
+			return "Real:" ~ to!string(_value) ~ (_precision == 0 ? "f" : (_precision == 2 ? "L" : "")) ~ (_imaginary ? "i" : "");
 		}
 	}
 	class IdentTest : TokenTest {
@@ -2791,13 +3287,13 @@ unittest {
 			return "whiteSpace";
 		}
 	}
-	TokenTest checkString(string value, string file = __FILE__, uint line = __LINE__) { 
-		return new StringTest(value, file, line);
+	TokenTest checkString(dstring value, dchar literalType = 0, string file = __FILE__, uint line = __LINE__) { 
+		return new StringTest(value, literalType, file, line);
 	}
 	TokenTest checkInteger(ulong value, bool unsignedFlag = false, bool longFlag = false, string file = __FILE__, uint line = __LINE__) { 
 		return new IntegerTest(value, unsignedFlag, longFlag, file, line);
 	}
-	TokenTest checkReal(real value, byte precision = 0, bool imaginary = false, string file = __FILE__, uint line = __LINE__) { 
+	TokenTest checkReal(real value, byte precision = 1, bool imaginary = false, string file = __FILE__, uint line = __LINE__) { 
 		return new RealTest(value, precision, imaginary, file, line);
 	}
 	TokenTest checkIdent(string value, string file = __FILE__, uint line = __LINE__) { 
@@ -2818,70 +3314,78 @@ unittest {
 	TokenTest checkEOF(string file = __FILE__, uint line = __LINE__) { 
 		return new EOFTest(file, line);
 	}
-	
+
+    // test strings
+	testTokenizer("r\"simple\\nstring\"", [checkString( r"simple\nstring" )]);
+
+    // test strings
+	testTokenizer(q"TEST
+"simple string"
+"simple\nstring"
+`simple string`
+"simple string"d
+"simple string"c
+"simple string"w
+"simple\&quot;string"
+"\r\n\f\t\\\"\'&"
+TEST"
+                  , [
+                      checkString("simple string"),
+                      checkSpace(),
+                      checkString("simple\nstring"),
+                      checkSpace(),
+                      checkString("simple string"),
+                      checkSpace(),
+                      checkString("simple string", 'd'),
+                      checkSpace(),
+                      checkString("simple string", 'c'),
+                      checkSpace(),
+                      checkString("simple string", 'w'),
+                      checkSpace(),
+                      checkString("simple\&quot;string"),
+                      checkSpace(),
+                      checkString("\r\n\f\t\\\"\'&"),
+    ]);
+    // basic test
 	testTokenizer(q"TEST
 int i;
 TEST"
-			, [
-			checkKeyword(Keyword.INT),
-			checkSpace(),
-			checkIdent("i"),
-			checkOp(OpCode.SEMICOLON),
-			checkEOF()
-		]);
-	testTokenizer("0b1101 0x123abcdU 0xABCL 0743 192837465 0 192_837_465 5.25"
-			, [
-			checkInteger(13),
-			checkSpace(),
-			checkInteger(0x123abcd, true, false),
-			checkSpace(),
-			checkInteger(0xabc, false, true),
-			checkSpace(),
-			checkInteger(std.conv.octal!743),
-			checkSpace(),
-			checkInteger(192_837_465),
-			checkSpace(),
-			checkInteger(0),
-			checkSpace(),
-			checkInteger(192837465),
-			checkSpace(),
-			checkReal(5.25),
-			checkEOF()
-		]);
+                  , [
+                      checkKeyword(Keyword.INT),
+                      checkSpace(),
+                      checkIdent("i"),
+                      checkOp(OpCode.SEMICOLON),
+                      checkEOF()
+                  ]);
+    // test numbers
+	testTokenizer("0b1101 0x123abcdU 0xABCL 0743 192837465 0 192_837_465 5.25 12.3f 54.1L 67.1i 3e3 25.67e-5f"
+                  , [
+                      checkInteger(13),
+                      checkSpace(),
+                      checkInteger(0x123abcd, true, false),
+                      checkSpace(),
+                      checkInteger(0xabc, false, true),
+                      checkSpace(),
+                      checkInteger(std.conv.octal!743),
+                      checkSpace(),
+                      checkInteger(192_837_465),
+                      checkSpace(),
+                      checkInteger(0),
+                      checkSpace(),
+                      checkInteger(192837465),
+                      checkSpace(),
+                      checkReal(5.25),
+                      checkSpace(),
+                      checkReal(12.3f, 0),
+                      checkSpace(),
+                      checkReal(54.1L, 2),
+                      checkSpace(),
+                      checkReal(67.1, 1, true),
+                      checkSpace(),
+                      checkReal(3e3),
+                      checkSpace(),
+                      checkReal(25.67e-5f, 0),
+                      checkEOF()
+                  ]);
 }
 
-
-unittest {
-    version(DisableLexerTest) {
-    import std.stdio;
-    import std.conv;
-    import std.utf;
-    import dlangui.core.linestream;
-    string fname = "/home/lve/src/d/ddc/ddclexer/tests/tokenizer_test.d";
-	writeln("opening file");
-    try {
-        std.stream.File f = new std.stream.File(fname);
-	    scope(exit) { f.close(); }
-        try {
-            LineStream lines = LineStream.create(f, fname);
-		    Tokenizer tokenizer = new Tokenizer(lines);
-	        for (;;) {
-			    Token token = tokenizer.nextToken();
-			    if (token is null) {
-				    writeln("Null token returned");
-				    break;
-			    }
-			    if (token.type == TokenType.EOF) {
-				    writeln("EOF token");
-				    break;
-			    }
-			    writeln("", token.line, ":", token.pos, "\t", token.toString);
-	        }
-        } catch (Exception e) {
-            writeln("Exception " ~ e.toString);
-        }
-    } catch (Exception e) {
-        writeln("Exception " ~ e.toString);
-    }
-    }
-}

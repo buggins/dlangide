@@ -4,7 +4,6 @@ public import dlangui.core.events;
 import dlangui.widgets.editors;
 
 enum IDEActions : int {
-    None = 0,
     //ProjectOpen = 1010000,
     FileNew = 1010000,
     FileNewWorkspace,
@@ -17,6 +16,7 @@ enum IDEActions : int {
     FileClose,
     FileExit,
     EditPreferences,
+    BuildConfigurations,
     BuildWorkspace,
     RebuildWorkspace,
     CleanWorkspace,
@@ -45,6 +45,12 @@ enum IDEActions : int {
     InsertCompletion,
 }
 
+__gshared static this() {
+    // register editor action names and ids
+    registerActionEnum!IDEActions();
+}
+
+
 const Action ACTION_PROJECT_FOLDER_ADD_ITEM = new Action(IDEActions.ProjectFolderAddItem, "MENU_PROJECT_FOLDER_ADD_ITEM"c);
 const Action ACTION_PROJECT_FOLDER_OPEN_ITEM = new Action(IDEActions.ProjectFolderOpenItem, "MENU_PROJECT_FOLDER_OPEN_ITEM"c);
 const Action ACTION_PROJECT_FOLDER_REMOVE_ITEM = new Action(IDEActions.ProjectFolderRemoveItem, "MENU_PROJECT_FOLDER_REMOVE_ITEM"c);
@@ -62,6 +68,7 @@ const Action ACTION_FILE_EXIT = new Action(IDEActions.FileExit, "MENU_FILE_EXIT"
 const Action ACTION_WORKSPACE_BUILD = new Action(IDEActions.BuildWorkspace, "MENU_BUILD_WORKSPACE_BUILD"c);
 const Action ACTION_WORKSPACE_REBUILD = new Action(IDEActions.RebuildWorkspace, "MENU_BUILD_WORKSPACE_REBUILD"c);
 const Action ACTION_WORKSPACE_CLEAN = new Action(IDEActions.CleanWorkspace, "MENU_BUILD_WORKSPACE_CLEAN"c);
+const Action ACTION_BUILD_CONFIGURATIONS = new Action(IDEActions.BuildConfigurations, "MENU_BUILD_CONFIGURATIONS"c);
 const Action ACTION_PROJECT_BUILD = new Action(IDEActions.BuildProject, "MENU_BUILD_PROJECT_BUILD"c, "run-build", KeyCode.F7, 0);
 const Action ACTION_PROJECT_REBUILD = new Action(IDEActions.RebuildProject, "MENU_BUILD_PROJECT_REBUILD"c, "run-build-clean", KeyCode.F7, KeyFlag.Control);
 const Action ACTION_PROJECT_CLEAN = new Action(IDEActions.CleanProject, "MENU_BUILD_PROJECT_CLEAN"c, null);
@@ -78,12 +85,12 @@ const Action ACTION_EDIT_COPY = (new Action(EditorActions.Copy, "MENU_EDIT_COPY"
 const Action ACTION_EDIT_PASTE = (new Action(EditorActions.Paste, "MENU_EDIT_PASTE"c, "edit-paste"c, KeyCode.KEY_V, KeyFlag.Control)).disableByDefault();
 const Action ACTION_EDIT_CUT = (new Action(EditorActions.Cut, "MENU_EDIT_CUT"c, "edit-cut"c, KeyCode.KEY_X, KeyFlag.Control)).disableByDefault();
 const Action ACTION_EDIT_UNDO = (new Action(EditorActions.Undo, "MENU_EDIT_UNDO"c, "edit-undo"c, KeyCode.KEY_Z, KeyFlag.Control)).disableByDefault();
-const Action ACTION_EDIT_REDO = (new Action(EditorActions.Redo, "MENU_EDIT_REDO"c, "edit-redo"c, KeyCode.KEY_Z, KeyFlag.Control|KeyFlag.Shift)).disableByDefault();
+const Action ACTION_EDIT_REDO = (new Action(EditorActions.Redo, "MENU_EDIT_REDO"c, "edit-redo"c, KeyCode.KEY_Y, KeyFlag.Control)).addAccelerator(KeyCode.KEY_Z, KeyFlag.Control|KeyFlag.Shift).disableByDefault();
 const Action ACTION_EDIT_INDENT = (new Action(EditorActions.Indent, "MENU_EDIT_INDENT"c, "edit-indent"c, KeyCode.TAB, 0)).addAccelerator(KeyCode.KEY_BRACKETCLOSE, KeyFlag.Control).disableByDefault();
 const Action ACTION_EDIT_UNINDENT = (new Action(EditorActions.Unindent, "MENU_EDIT_UNINDENT"c, "edit-unindent", KeyCode.TAB, KeyFlag.Shift)).addAccelerator(KeyCode.KEY_BRACKETOPEN, KeyFlag.Control).disableByDefault();
 const Action ACTION_EDIT_TOGGLE_LINE_COMMENT = (new Action(EditorActions.ToggleLineComment, "MENU_EDIT_TOGGLE_LINE_COMMENT"c, null, KeyCode.KEY_DIVIDE, KeyFlag.Control)).disableByDefault();
 const Action ACTION_EDIT_TOGGLE_BLOCK_COMMENT = (new Action(EditorActions.ToggleBlockComment, "MENU_EDIT_TOGGLE_BLOCK_COMMENT"c, null, KeyCode.KEY_DIVIDE, KeyFlag.Control|KeyFlag.Shift)).disableByDefault();
-const Action ACTION_EDIT_PREFERENCES = (new Action(EditorActions.Redo, "MENU_EDIT_PREFERENCES"c, null)).disableByDefault();
+const Action ACTION_EDIT_PREFERENCES = (new Action(IDEActions.EditPreferences, "MENU_EDIT_PREFERENCES"c, null)).disableByDefault();
 const Action ACTION_HELP_ABOUT = new Action(IDEActions.HelpAbout, "MENU_HELP_ABOUT"c);
 const Action ACTION_WINDOW_CLOSE_ALL_DOCUMENTS = new Action(IDEActions.WindowCloseAllDocuments, "MENU_WINDOW_CLOSE_ALL_DOCUMENTS"c);
 const Action ACTION_CREATE_NEW_WORKSPACE = new Action(IDEActions.CreateNewWorkspace, "Create new workspace"d);
