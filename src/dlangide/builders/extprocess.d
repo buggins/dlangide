@@ -297,7 +297,7 @@ class ExternalProcess {
         params ~= _program;
         params ~= _args;
         if (!_stderr)
-            redirect = Redirect.stdout | Redirect.stderrToStdout; //Redirect.stdin | 
+            redirect = Redirect.stdout | Redirect.stderrToStdout | Redirect.stdin;
         else
             redirect = Redirect.all;
         Log.i("Trying to run program ", _program, " with args ", _args);
@@ -392,5 +392,15 @@ class ExternalProcess {
             _state = ExternalProcessState.Stopping;
         }
         return _state;
+    }
+
+    void write(dstring data) {
+        if(_state == ExternalProcessState.Error || _state == ExternalProcessState.None || _state == ExternalProcessState.Stopped) {
+            return;
+        }
+        else {
+            _pipes.stdin.write(data);
+            _pipes.stdin.close();
+        }
     }
 }

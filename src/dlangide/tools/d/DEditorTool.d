@@ -28,10 +28,10 @@ class DEditorTool : EditorTool
 
 		char[][] arguments = ["-l".dup, "-c".dup];
 		arguments ~= [to!(char[])(byteOffset)];
-		arguments ~= [to!(char[])(editor.projectSourceFile.filename())];
+		//arguments ~= [to!(char[])(editor.projectSourceFile.filename())];
 
 		dstring output;
-		_dcd.execute(arguments, output);
+		_dcd.execute(arguments, output, content);
 
 		string[] outputLines = to!string(output).splitLines();
 		Log.d("DCD:", outputLines);
@@ -70,10 +70,10 @@ class DEditorTool : EditorTool
 
 		char[][] arguments = ["-c".dup];
 		arguments ~= [to!(char[])(byteOffset)];
-		arguments ~= [to!(char[])(editor.projectSourceFile.filename())];
+		//arguments ~= [to!(char[])(editor.projectSourceFile.filename())];
 
 		dstring output;
-		_dcd.execute(arguments, output);
+		_dcd.execute(arguments, output, content);
 
 		char[] state = "".dup;
 		dstring[] suggestions;
