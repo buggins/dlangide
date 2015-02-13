@@ -617,10 +617,15 @@ class IDEFrame : AppFrame {
         setBackgroundOperation(op);
     }
 
+    /// handle files dropped to application window
     void onFilesDropped(string[] filenames) {
         //Log.d("onFilesDropped(", filenames, ")");
+        bool first = true;
         for (int i = 0; i < filenames.length; i++) {
-            openSourceFile(filenames[i], null, i == 0);
+            if (isSupportedSourceTextFileFormat(filenames[i])) {
+                openSourceFile(filenames[i], null, first);
+                first = false;
+            }
         }
     }
 }
