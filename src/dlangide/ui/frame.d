@@ -67,6 +67,7 @@ class IDEFrame : AppFrame {
         super();
         window.mainWidget = this;
         window.onFilesDropped = &onFilesDropped;
+        window.onCanClose = &onCanClose;
     }
 
     override protected void init() {
@@ -444,7 +445,8 @@ class IDEFrame : AppFrame {
         if (a) {
             switch (a.id) {
                 case IDEActions.FileExit:
-                    window.close();
+                    if (onCanClose())
+                        window.close();
                     return true;
                 case IDEActions.HelpAbout:
                     Window wnd = Platform.instance.createWindow("About...", window, WindowFlag.Modal);
@@ -627,6 +629,14 @@ class IDEFrame : AppFrame {
                 first = false;
             }
         }
+    }
+
+    /// return false to prevent closing
+    bool onCanClose() {
+        askForUnsavedEdits(delegate() {
+            window.close();
+        });
+        return false;
     }
 }
 
