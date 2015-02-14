@@ -31,7 +31,7 @@ class DSourceEdit : SourceEdit {
         setTokenHightlightColor(TokenCategory.Comment_Documentation, 0x206000);
         //setTokenHightlightColor(TokenCategory.Identifier, 0x206000);  // no colors
 		MenuItem editPopupItem = new MenuItem(null);
-		editPopupItem.add(ACTION_EDIT_COPY, ACTION_EDIT_PASTE, ACTION_EDIT_CUT, ACTION_EDIT_UNDO, ACTION_EDIT_REDO, ACTION_EDIT_INDENT, ACTION_EDIT_UNINDENT, ACTION_EDIT_TOGGLE_LINE_COMMENT);
+		editPopupItem.add(ACTION_EDIT_COPY, ACTION_EDIT_PASTE, ACTION_EDIT_CUT, ACTION_EDIT_UNDO, ACTION_EDIT_REDO, ACTION_EDIT_INDENT, ACTION_EDIT_UNINDENT, ACTION_EDIT_TOGGLE_LINE_COMMENT, ACTION_GET_COMPLETIONS);
         popupMenu = editPopupItem;
         showIcons = true;
         showFolding = true;
@@ -95,20 +95,28 @@ class DSourceEdit : SourceEdit {
 
 
     void showCompletionPopup(dstring[] suggestions) {
-        MenuItem completionPopupItem = new MenuItem(null);
-        //Create popup menu
+
+        if(suggestions.length == 0) {
+            return;
+        }
+
+        MenuItem completionPopupItems = new MenuItem(null);
+        //Add all the suggestions.
         foreach(int i, dstring suggestion ; suggestions) {
             auto action = new Action(IDEActions.InsertCompletion, suggestion);
-            completionPopupItem.add(action);
+            completionPopupItems.add(action);
         }
-        completionPopupItem.updateActionState(this);
-        PopupMenu popupMenu = new PopupMenu(completionPopupItem);
+        completionPopupItems.updateActionState(this);
+
+        PopupMenu popupMenu = new PopupMenu(completionPopupItems);
         popupMenu.onMenuItemActionListener = this;
         popupMenu.maxHeight(400);
         popupMenu.selectItem(0);
+
         PopupWidget popup = window.showPopup(popupMenu, this, PopupAlign.Point | PopupAlign.Right, textPosToClient(_caretPos).left + left + _leftPaneWidth, textPosToClient(_caretPos).top + top + margins.top);
         popup.setFocus();
         popup.flags = PopupFlags.CloseOnClickOutside;
+
         Log.d("Showing popup at ", textPosToClient(_caretPos).left, " ", textPosToClient(_caretPos).top);
     }
 
