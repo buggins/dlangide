@@ -103,6 +103,7 @@ class DSourceEdit : SourceEdit {
         completionPopupItem.updateActionState(this);
         PopupMenu popupMenu = new PopupMenu(completionPopupItem);
         popupMenu.onMenuItemActionListener = this;
+        popupMenu.maxHeight(400);
         PopupWidget popup = window.showPopup(popupMenu, this, PopupAlign.Point | PopupAlign.Right, textPosToClient(_caretPos).left + left + _leftPaneWidth, textPosToClient(_caretPos).top + top + margins.top);
         popup.flags = PopupFlags.CloseOnClickOutside;
         Log.d("Showing popup at ", textPosToClient(_caretPos).left, " ", textPosToClient(_caretPos).top);
@@ -271,7 +272,7 @@ class SimpleDSyntaxHighlighter : SyntaxHighlighter {
         for (;;) {
             ch = nextBracket(dir, p);
             if (!ch) // no more brackets
-                break;
+                return p;
             auto match = _bracketStack.process(ch);
             if (match == BracketMatch.FOUND)
                 return p;
