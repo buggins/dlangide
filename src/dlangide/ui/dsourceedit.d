@@ -83,6 +83,7 @@ class DSourceEdit : SourceEdit {
                 case IDEActions.InsertCompletion:
                     EditOperation edit = new EditOperation(EditAction.Replace, getCaretPosition, a.label);
                     _content.performOperation(edit, this);
+                    setFocus();
                     return true;
                 default:
                     break;
@@ -104,7 +105,9 @@ class DSourceEdit : SourceEdit {
         PopupMenu popupMenu = new PopupMenu(completionPopupItem);
         popupMenu.onMenuItemActionListener = this;
         popupMenu.maxHeight(400);
+        popupMenu.selectItem(0);
         PopupWidget popup = window.showPopup(popupMenu, this, PopupAlign.Point | PopupAlign.Right, textPosToClient(_caretPos).left + left + _leftPaneWidth, textPosToClient(_caretPos).top + top + margins.top);
+        popup.setFocus();
         popup.flags = PopupFlags.CloseOnClickOutside;
         Log.d("Showing popup at ", textPosToClient(_caretPos).left, " ", textPosToClient(_caretPos).top);
     }
