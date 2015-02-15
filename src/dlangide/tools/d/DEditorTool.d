@@ -52,38 +52,19 @@ class DEditorTool : EditorTool
     }
 
     override dstring[] getCompletions(DSourceEdit editor, TextPosition caretPosition) {
-		auto content = editor.text();
-		auto byteOffset = caretPositionToByteOffset(content, caretPosition);
 
-		char[][] arguments = ["-c".dup];
-		arguments ~= [to!(char[])(byteOffset)];
-		//arguments ~= [to!(char[])(editor.projectSourceFile.filename())];
-
-		dstring output;
-		_dcd.execute(arguments, output, content);
-
-		char[] state = "".dup;
-		dstring[] suggestions;
-		foreach(dstring outputLine ; output.splitLines()) {
-			if(outputLine == "identifiers") {
-				state = "identifiers".dup;
-			}
-			else if(outputLine == "calltips") {
-				state = "calltips".dup;
-			}
-			else {
-				auto split = outputLine.indexOf("\t");
-				if(split < 0) {
-					break;
-				}
-				if(state == "identifiers") {
-					suggestions ~= outputLine[0 .. split];
-				}
-			}
+		auto byteOffset = caretPositionToByteOffset(editor.text, caretPosition);
+		ResultSet output = _dcd.getCompletions(editor.text, byteOffset);
+		switch(output.result) {
+			//TODO: Show dialog
+			case DCDResult.FAIL:
+			case DCDResult.DCD_NOT_RUNNING:
+			case DCDResult.NO_RESULT:
+			case DCDResult.SUCCESS:
+        	default:
+        		return output.output;
 		}
-		return suggestions;
     }
-
 
 private:
 	DCDInterface _dcd;

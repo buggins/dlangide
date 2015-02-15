@@ -72,6 +72,60 @@ class DCDInterface {
 		return result;
 	}
 
+	ResultSet getCompletions(in dstring content, int index) {
+		ExternalProcess dcdProcess = new ExternalProcess();
+
+		ResultSet result;
+		if(dcdProcess.state != ExternalProcessState.None) {
+			result.result = DCDResult.FAIL;
+			return result;
+		}
+
+		char[][] arguments = ["-c".dup];
+		arguments ~= [to!(char[])(index)];
+		ProtectedTextStorage stdoutTarget = new ProtectedTextStorage();
+
+		dcdProcess.run("dcd-client".dup, arguments, "/usr/bin".dup, stdoutTarget);
+		dcdProcess.write(content);
+		dcdProcess.wait();
+
+		dstring[] output =  stdoutTarget.readText.splitLines();
+
+		if(dcdProcess.poll() == ExternalProcessState.Stopped) {
+			result.result = DCDResult.SUCCESS;
+		}
+		else {
+			result.result = DCDResult.FAIL;
+			return result;
+		}
+
+		if(output.length == 0) {
+			result.result = DCDResult.NO_RESULT;
+			return result;
+		}
+
+		enum State : int {None = 0, Identifiers, Calltips}
+		State state = State.None;
+		foreach(dstring outputLine ; output) {
+			if(outputLine == "identifiers") {
+				state = State.Identifiers;
+			}
+			else if(outputLine == "calltips") {
+				state = State.Calltips;
+			}
+			else {
+				auto split = outputLine.indexOf("\t");
+				if(split < 0) {
+					break;
+				}
+				if(state == State.Identifiers) {
+					result.output ~= outputLine[0 .. split];
+				}
+			}
+		}
+		return result;
+	}
+
 	bool execute(char[][] arguments ,ref dstring output, dstring input) {
 		//TODO: Working Directory, where is that?
 		//TODO: Inform user when dcd-client is not available.
