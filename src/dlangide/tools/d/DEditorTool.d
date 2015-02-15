@@ -22,46 +22,33 @@ class DEditorTool : EditorTool
 
 	override bool goToDefinition(DSourceEdit editor, TextPosition caretPosition) {
 
-		
-		auto content = editor.text();
-		auto byteOffset = caretPositionToByteOffset(content, caretPosition);
+		auto byteOffset = caretPositionToByteOffset(editor.text, caretPosition);
+		ResultSet output = _dcd.goToDefinition(editor.text, byteOffset);
 
-		char[][] arguments = ["-l".dup, "-c".dup];
-		arguments ~= [to!(char[])(byteOffset)];
-		//arguments ~= [to!(char[])(editor.projectSourceFile.filename())];
 
-		dstring output;
-		_dcd.execute(arguments, output, content);
-
-		string[] outputLines = to!string(output).splitLines();
-		Log.d("DCD:", outputLines);
-
-        foreach(string outputLine ; outputLines) {
-        	if(outputLine.indexOf("Not Found".dup) == -1) {
-        		auto split = outputLine.indexOf("\t");
-        		if(split == -1) {
-        			Log.d("DCD output format error.");
-        			break;
+		switch(output.result) {
+			//TODO: Show dialog
+			case DCDResult.FAIL:
+			case DCDResult.DCD_NOT_RUNNING:
+			case DCDResult.NO_RESULT:
+				return false;
+			case DCDResult.SUCCESS:
+				auto target = to!int(output.output[1]);
+				if(output.output[0].indexOf("stdin".dup) != -1) {
+					Log.d("Declaration is in current file. Jumping to it.");
+					auto destPos = byteOffsetToCaret(editor.text, target);
+					editor.setCaretPos(destPos.line,destPos.pos);
+				}
+				else {
+					//Must open file first to get the content for finding the correct caret position.
+    				_frame.openSourceFile(to!string(output.output[0]));
+					auto destPos = byteOffsetToCaret(_frame.currentEditor.text(), target);
+					_frame.currentEditor.setCaretPos(destPos.line,destPos.pos);
         		}
-        		if(indexOf(outputLine[0 .. split],"stdin".dup) != -1) {
-        			Log.d("Declaration is in current file. Can jump to it.");
-        			auto target = to!int(outputLine[split+1 .. $]);
-        			auto destPos = byteOffsetToCaret(content, target);
-        			editor.setCaretPos(destPos.line,destPos.pos);
-                }
-                else {
-                	auto filename = outputLine[0 .. split];
-                	if(_frame !is null) {
-                		_frame.openSourceFile(filename);
-                		auto target = to!int(outputLine[split+1 .. $]);
-        				auto destPos = byteOffsetToCaret(_frame.currentEditor.text(), target);
-
-        				_frame.currentEditor.setCaretPos(destPos.line,destPos.pos);
-                	}
-                }
-            }
-        }
-        return true;
+        		return true;
+        	default:
+        		return false;
+		}
     }
 
     override dstring[] getCompletions(DSourceEdit editor, TextPosition caretPosition) {
