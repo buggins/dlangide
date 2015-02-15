@@ -1,4 +1,4 @@
-module dlangide.tools.d.DCDInterface;
+module dlangide.tools.d.dcdinterface;
 
 import dlangui.core.logger;
 

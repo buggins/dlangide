@@ -1,7 +1,7 @@
-module dlangide.tools.d.editorTool;
+module dlangide.tools.d.deditorTool;
 
 import dlangide.tools.editorTool;
-import dlangide.tools.d.DCDInterface;
+import dlangide.tools.d.dcdinterface;
 import dlangide.ui.dsourceedit;
 import dlangui.widgets.editors;
 import dlangide.ui.frame;

@@ -1,4 +1,4 @@
-module dlangide.tools.d.syntaxHighlighter;
+module dlangide.tools.d.simpledsyntaxhighlighter;
 
 import dlangui.core.logger;
 import dlangui.widgets.editors;

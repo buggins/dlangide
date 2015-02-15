@@ -7,7 +7,7 @@ import dlangui.core.types;
 import dlangide.ui.frame;
 import dlangide.ui.dsourceedit;
 
-public import dlangide.tools.d.editorTool;
+public import dlangide.tools.d.deditorTool;
 
 class EditorTool
 {
