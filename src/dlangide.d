@@ -43,9 +43,11 @@ extern (C) int UIAppMain(string[] args) {
     //import ddc.lexer.tokenizer;
     //runTokenizerTest();
     debug(DebugInfo) {
-        import ddebug.windows.debuginfo;
-        import std.file;
-        debugInfoTest(thisExePath);
+        version(Windows) {
+            import ddebug.windows.debuginfo;
+            import std.file;
+            debugInfoTest(thisExePath);
+        }
     }
 
     // create window
