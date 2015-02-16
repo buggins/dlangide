@@ -42,6 +42,11 @@ extern (C) int UIAppMain(string[] args) {
 
     //import ddc.lexer.tokenizer;
     //runTokenizerTest();
+    debug(DebugInfo) {
+        import ddebug.windows.debuginfo;
+        import std.file;
+        debugInfoTest(thisExePath);
+    }
 
     // create window
     Window window = Platform.instance.createWindow("Dlang IDE", null, WindowFlag.Resizable, 900, 700);

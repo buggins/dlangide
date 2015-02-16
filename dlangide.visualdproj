@@ -200,6 +200,7 @@
   </Folder>
   <Folder name="ddebug">
    <Folder name="windows">
+    <File path="src\ddebug\windows\debuginfo.d" />
     <File path="src\ddebug\windows\windebug.d" />
    </Folder>
   </Folder>
