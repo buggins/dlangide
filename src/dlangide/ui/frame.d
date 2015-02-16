@@ -71,6 +71,7 @@ class IDEFrame : AppFrame {
     }
 
     override protected void init() {
+        _appName = "dlangide";
         super.init();
     }
 
@@ -363,7 +364,31 @@ class IDEFrame : AppFrame {
         mainMenu.backgroundColor = 0xd6dbe9;
         return mainMenu;
     }
-	
+
+    /// override it
+    override protected void updateShortcuts() {
+        if (applyShortcutsSettings()) {
+            Log.d("Shortcut actions loaded");
+        } else {
+            Log.d("Saving default shortcuts");
+            const(Action)[] actions;
+            actions ~= [
+                ACTION_EDIT_COPY, ACTION_EDIT_PASTE, ACTION_EDIT_CUT, 
+                ACTION_EDIT_UNDO, ACTION_EDIT_REDO, ACTION_EDIT_INDENT, 
+                ACTION_EDIT_UNINDENT, ACTION_EDIT_TOGGLE_LINE_COMMENT, ACTION_EDIT_TOGGLE_BLOCK_COMMENT, 
+                ACTION_EDIT_PREFERENCES, 
+                ACTION_FILE_NEW_SOURCE_FILE, ACTION_FILE_NEW_WORKSPACE, ACTION_FILE_NEW_PROJECT, ACTION_FILE_OPEN_WORKSPACE, ACTION_FILE_OPEN, 
+                ACTION_FILE_SAVE, ACTION_FILE_SAVE_AS, ACTION_FILE_SAVE_ALL, ACTION_FILE_EXIT, 
+                ACTION_PROJECT_SET_STARTUP, ACTION_PROJECT_REFRESH, ACTION_PROJECT_UPDATE_DEPENDENCIES, 
+                ACTION_PROJECT_SETTINGS, ACTION_WORKSPACE_BUILD, ACTION_WORKSPACE_REBUILD, ACTION_WORKSPACE_CLEAN,
+                ACTION_PROJECT_BUILD, ACTION_PROJECT_REBUILD, ACTION_PROJECT_CLEAN, ACTION_DEBUG_START, 
+                ACTION_DEBUG_START_NO_DEBUG, ACTION_DEBUG_CONTINUE, ACTION_DEBUG_STOP, ACTION_DEBUG_PAUSE, 
+                ACTION_WINDOW_CLOSE_ALL_DOCUMENTS, ACTION_HELP_ABOUT];
+            actions ~= STD_EDITOR_ACTIONS;
+            saveShortcutsSettings(actions);
+        }
+    }
+
     /// create app toolbars
     override protected ToolBarHost createToolbars() {
         ToolBarHost res = new ToolBarHost();
