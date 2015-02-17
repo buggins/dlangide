@@ -13,6 +13,7 @@ import ddc.lexer.tokenizer;
 import dlangide.workspace.workspace;
 import dlangide.workspace.project;
 import dlangide.ui.commands;
+import dlangide.ui.settings;
 import dlangide.tools.d.dsyntaxhighlighter;
 
 import std.algorithm;
@@ -41,6 +42,20 @@ class DSourceEdit : SourceEdit {
 	this() {
 		this("SRCEDIT");
 	}
+    protected IDESettings _settings;
+    @property DSourceEdit settings(IDESettings s) {
+        _settings = s;
+        return this;
+    }
+    @property IDESettings settings() {
+        return _settings;
+    }
+    void applySettings() {
+        if (!_settings)
+            return;
+        tabSize = _settings.tabSize;
+        useSpacesForTabs = _settings.useSpacesForTabs;
+    }
     protected ProjectSourceFile _projectSourceFile;
     @property ProjectSourceFile projectSourceFile() { return _projectSourceFile; }
     /// load by filename

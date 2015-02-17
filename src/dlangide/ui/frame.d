@@ -21,6 +21,7 @@ import dlangide.ui.wspanel;
 import dlangide.ui.outputpanel;
 import dlangide.ui.dsourceedit;
 import dlangide.ui.homescreen;
+import dlangide.ui.settings;
 import dlangide.tools.d.dcdserver;
 import dlangide.workspace.workspace;
 import dlangide.workspace.project;
@@ -66,6 +67,7 @@ class IDEFrame : AppFrame {
     TabWidget _tabs;
     EditorTool _editorTool;
     DCDServer _dcdServer;
+    IDESettings _settings;
 
     dstring frameWindowCaptionSuffix = "DLangIDE"d;
 
@@ -81,7 +83,10 @@ class IDEFrame : AppFrame {
         _appName = "dlangide";
         _editorTool = new DEditorTool(this);
         _dcdServer = new DCDServer();
-
+        _settings = new IDESettings(buildNormalizedPath(settingsDir, "settings.json"));
+        _settings.load();
+        _settings.updateDefaults();
+        _settings.save();
         super.init();
     }
 
@@ -99,6 +104,9 @@ class IDEFrame : AppFrame {
         Log.d("onSourceFileSelected ", file.filename);
         return openSourceFile(file.filename, file, activate);
     }
+
+    /// returns global IDE settings
+    @property IDESettings settings() { return _settings; }
 
 	///
 	bool onCompilerLogIssueClick(dstring filename, int line, int column)
@@ -149,6 +157,7 @@ class IDEFrame : AppFrame {
                 TabItem tab = _tabs.tab(filename);
                 tab.objectParam = file;
                 editor.onModifiedStateChangeListener = &onModifiedStateChange;
+                editor.settings(settings).applySettings();
                 _tabs.selectTab(index, true);
             } else {
                 destroy(editor);
