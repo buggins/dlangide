@@ -21,6 +21,7 @@ import dlangide.ui.wspanel;
 import dlangide.ui.outputpanel;
 import dlangide.ui.dsourceedit;
 import dlangide.ui.homescreen;
+import dlangide.tools.d.dcdserver;
 import dlangide.workspace.workspace;
 import dlangide.workspace.project;
 import dlangide.builders.builder;
@@ -64,6 +65,7 @@ class IDEFrame : AppFrame {
     DockHost _dockHost;
     TabWidget _tabs;
     EditorTool _editorTool;
+    DCDServer _dcdServer;
 
     dstring frameWindowCaptionSuffix = "DLangIDE"d;
 
@@ -72,11 +74,14 @@ class IDEFrame : AppFrame {
         window.mainWidget = this;
         window.onFilesDropped = &onFilesDropped;
         window.onCanClose = &onCanClose;
+        window.onClose = &onWindowClose;
     }
 
     override protected void init() {
         _appName = "dlangide";
         _editorTool = new DEditorTool(this);
+        _dcdServer = new DCDServer();
+
         super.init();
     }
 
@@ -320,6 +325,12 @@ class IDEFrame : AppFrame {
         _logPanel.appendText(null, dmdPath ? ("dmd path: "d ~ toUTF32(dmdPath) ~ "\n"d) : ("dmd compiler is not found!\n"d));
         _logPanel.appendText(null, ldcPath ? ("ldc path: "d ~ toUTF32(ldcPath) ~ "\n"d) : ("ldc compiler is not found!\n"d));
         _logPanel.appendText(null, gdcPath ? ("gdc path: "d ~ toUTF32(gdcPath) ~ "\n"d) : ("gdc compiler is not found!\n"d));
+
+        if (_dcdServer.start()) {
+            _logPanel.appendText(null, "dcd-server is started on port "d ~ to!dstring(_dcdServer.port) ~ "\n"d);
+        } else {
+            _logPanel.appendText(null, "cannot start dcd-server: code completion for D code will not work"d);
+        }
 
         _dockHost.addDockedWindow(_logPanel);
 
@@ -689,6 +700,16 @@ class IDEFrame : AppFrame {
         });
         return false;
     }
+    /// called when main window is closing
+    void onWindowClose() {
+        Log.i("onWindowClose()");
+        if (_dcdServer) {
+            if (_dcdServer.isRunning)
+                _dcdServer.stop();
+            destroy(_dcdServer);
+            _dcdServer = null;
+        }
+    }
 }
 
 Widget createAboutWidget() 
@@ -698,8 +719,8 @@ Widget createAboutWidget()
 	res.addChild(new TextWidget(null, "DLangIDE"d));
 	res.addChild(new TextWidget(null, "(C) Vadim Lopatin, 2014"d));
 	res.addChild(new TextWidget(null, "http://github.com/buggins/dlangide"d));
-	res.addChild(new TextWidget(null, "So far, it's just a test for DLangUI library."d));
-	res.addChild(new TextWidget(null, "Later I hope to make working IDE :)"d));
+	res.addChild(new TextWidget(null, "IDE for D programming language written in D"d));
+	res.addChild(new TextWidget(null, "Uses DlangUI library for GUI"d));
 	Button closeButton = new Button("close", "Close"d);
 	closeButton.onClickListener = delegate(Widget src) {
 		Log.i("Closing window");

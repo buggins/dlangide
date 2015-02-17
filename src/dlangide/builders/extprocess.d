@@ -282,6 +282,12 @@ class ExternalProcess {
     this() {
     }
 
+    ExternalProcessState run(string program, string[]args, string dir, TextWriter stdoutTarget, TextWriter stderrTarget = null) {
+        char[][] arguments;
+        foreach(a; args)
+            arguments ~= a.dup;
+        return run(program.dup, arguments, dir.dup, stdoutTarget, stderrTarget);
+    }
     ExternalProcessState run(char[] program, char[][]args, char[] dir, TextWriter stdoutTarget, TextWriter stderrTarget = null) {
         Log.d("ExternalProcess.run ", program, " ", args);
         _state = ExternalProcessState.None;
