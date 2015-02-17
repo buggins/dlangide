@@ -1,6 +1,7 @@
 module dlangide.tools.d.dcdinterface;
 
 import dlangui.core.logger;
+import dlangui.core.files;
 
 import dlangide.builders.extprocess;
 
@@ -26,32 +27,48 @@ class DCDInterface {
 		stdoutTarget = new ProtectedTextStorage();
 	}
 
-	ResultSet goToDefinition(in dstring content, int index) {
+    protected dstring[] invokeDcd(char[][] arguments, dstring content, out bool success) {
+        success = false;
 		ExternalProcess dcdProcess = new ExternalProcess();
 
-		ResultSet result;
-		if(dcdProcess.state != ExternalProcessState.None) {
-			result.result = DCDResult.FAIL;
-			return result;
-		}
-
-		char[][] arguments = ["-l".dup, "-c".dup];
-		arguments ~= [to!(char[])(index)];
 		ProtectedTextStorage stdoutTarget = new ProtectedTextStorage();
 
-		dcdProcess.run("dcd-client".dup, arguments, "/usr/bin".dup, stdoutTarget);
+		version(Windows) {
+			string dcd_client_name = "dcd-client.exe";
+			string dcd_client_dir = null;
+		} else {
+			string dcd_client_name = "dcd-client";
+			string dcd_client_dir = "/usr/bin";
+		}
+		dcdProcess.run(dcd_client_name.dup, arguments, dcd_client_dir ? dcd_client_dir.dup : null, stdoutTarget);
 		dcdProcess.write(content);
 		dcdProcess.wait();
 
 		dstring[] output =  stdoutTarget.readText.splitLines();
 
 		if(dcdProcess.poll() == ExternalProcessState.Stopped) {
-			result.result = DCDResult.SUCCESS;
+			success = true;
 		}
-		else {
+        return output;
+    }
+
+	ResultSet goToDefinition(in dstring content, int index) {
+		ResultSet result;
+
+		char[][] arguments = ["-l".dup, "-c".dup];
+		arguments ~= [to!(char[])(index)];
+
+        bool success = false;
+		dstring[] output =  invokeDcd(arguments, content, success);
+
+		if (success) {
+			result.result = DCDResult.SUCCESS;
+		} else {
 			result.result = DCDResult.FAIL;
 			return result;
 		}
+
+        debug(DCD) Log.d("DCD output:\n", output);
 
 		if(output.length > 0) {
 			if(output[0].indexOf("Not Found".dup) == 0) {
@@ -73,33 +90,24 @@ class DCDInterface {
 	}
 
 	ResultSet getCompletions(in dstring content, int index) {
-		ExternalProcess dcdProcess = new ExternalProcess();
 
 		ResultSet result;
-		if(dcdProcess.state != ExternalProcessState.None) {
-			result.result = DCDResult.FAIL;
-			return result;
-		}
 
 		char[][] arguments = ["-c".dup];
 		arguments ~= [to!(char[])(index)];
-		ProtectedTextStorage stdoutTarget = new ProtectedTextStorage();
 
-		dcdProcess.run("dcd-client".dup, arguments, "/usr/bin".dup, stdoutTarget);
-		dcdProcess.write(content);
-		dcdProcess.wait();
+        bool success = false;
+		dstring[] output =  invokeDcd(arguments, content, success);
 
-		dstring[] output =  stdoutTarget.readText.splitLines();
-
-		if(dcdProcess.poll() == ExternalProcessState.Stopped) {
+		if (success) {
 			result.result = DCDResult.SUCCESS;
-		}
-		else {
+		} else {
 			result.result = DCDResult.FAIL;
 			return result;
 		}
+        debug(DCD) Log.d("DCD output:\n", output);
 
-		if(output.length == 0) {
+		if (output.length == 0) {
 			result.result = DCDResult.NO_RESULT;
 			return result;
 		}
