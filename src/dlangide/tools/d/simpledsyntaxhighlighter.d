@@ -33,8 +33,8 @@ class SimpleDSyntaxHighlighter : SyntaxHighlighter {
 
     private enum BracketMatch {
         CONTINUE,
-        FOUND,
-        ERROR
+            FOUND,
+            ERROR
     }
     private static struct BracketStack {
         dchar[] buf;
@@ -268,4 +268,374 @@ class SimpleDSyntaxHighlighter : SyntaxHighlighter {
             p = prevPos;
         }
     }
+
+    static struct TokenWithRange {
+        Token token;
+        TextRange range;
+        @property string toString() {
+            return token.toString ~ range.toString;
+        }
+    }
+    protected TextPosition _lastTokenStart;
+    protected Token _lastToken;
+    protected bool initTokenizer(TextPosition startPos) {
+        const dstring[] lines = content.lines;
+        _lines.init(cast(dstring[])(lines[startPos.line .. $]), _file, startPos.line);
+        _tokenizer.init(_lines, startPos.pos);
+        _lastTokenStart = startPos;
+        _lastToken = null;
+        nextToken();
+        return true;
+    }
+
+    protected TokenWithRange nextToken() {
+        TokenWithRange res;
+        if (_lastToken && _lastToken.type == TokenType.EOF) {
+            // end of file
+            res.range.start = _lastTokenStart;
+            res.range.end = content.endOfFile();
+            res.token = null;
+            return res;
+        }
+        res.range.start = _lastTokenStart;
+        res.token = _lastToken;
+        _lastToken = _tokenizer.nextToken();
+        if (_lastToken)
+            _lastToken = _lastToken.clone();
+        _lastTokenStart = _lastToken ? TextPosition(_lastToken.line - 1, _lastToken.pos - 1) : content.endOfFile();
+        res.range.end = _lastTokenStart;
+        return res;
+    }
+
+    protected TokenWithRange getPositionToken(TextPosition pos) {
+        //Log.d("getPositionToken for ", pos);
+        TextPosition start = tokenStart(pos);
+        //Log.d("token start found: ", start);
+        initTokenizer(start);
+        for (;;) {
+            TokenWithRange tokenRange = nextToken();
+            //Log.d("read token: ", tokenRange);
+            if (!tokenRange.token) {
+                //Log.d("end of file");
+                return tokenRange;
+            }
+            if (pos >= tokenRange.range.start && pos < tokenRange.range.end) {
+                //Log.d("found: ", pos, " in ", tokenRange);
+                return tokenRange;
+            }
+        }
+    }
+
+    protected TokenWithRange[] getRangeTokens(TextRange range) {
+        TokenWithRange[] res;
+        //Log.d("getPositionToken for ", pos);
+        TextPosition start = tokenStart(range.start);
+        //Log.d("token start found: ", start);
+        initTokenizer(start);
+        for (;;) {
+            TokenWithRange tokenRange = nextToken();
+            //Log.d("read token: ", tokenRange);
+            if (!tokenRange.token) {
+                //Log.d("end of file");
+                return res;
+            }
+            if (tokenRange.range.intersects(range)) {
+                //Log.d("found: ", pos, " in ", tokenRange);
+                res ~= tokenRange;
+            }
+        }
+    }
+
+    protected bool isInsideBlockComment(TextPosition pos) {
+        TokenWithRange tokenRange = getPositionToken(pos);
+        if (tokenRange.token && tokenRange.token.type == TokenType.COMMENT && tokenRange.token.isMultilineComment)
+            return pos > tokenRange.range.start && pos < tokenRange.range.end;
+        return false;
+    }
+
+    /// toggle line comments for specified text range
+    override void toggleLineComment(TextRange range, Object source) {
+        TextRange r = content.fullLinesRange(range);
+        if (isInsideBlockComment(r.start) || isInsideBlockComment(r.end))
+            return;
+        int lineCount = r.end.line - r.start.line;
+        bool noEolAtEndOfRange = false;
+        if (lineCount == 0 || r.end.pos > 0) {
+            noEolAtEndOfRange = true;
+            lineCount++;
+        }
+        int minLeftX = -1;
+        bool hasComments = false;
+        bool hasNoComments = false;
+        bool hasNonEmpty = false;
+        dstring[] srctext;
+        dstring[] dsttext;
+        for (int i = 0; i < lineCount; i++) {
+            int lineIndex = r.start.line + i;
+            dstring s = content.line(lineIndex);
+            srctext ~= s;
+            TextLineMeasure m = content.measureLine(lineIndex);
+            if (!m.empty) {
+                if (minLeftX < 0 || minLeftX > m.firstNonSpaceX)
+                    minLeftX = m.firstNonSpaceX;
+                hasNonEmpty = true;
+                if (isLineComment(s))
+                    hasComments = true;
+                else
+                    hasNoComments = true;
+            }
+        }
+        if (minLeftX < 0)
+            minLeftX = 0;
+        if (hasNoComments || !hasComments) {
+            // comment
+            for (int i = 0; i < lineCount; i++) {
+                dsttext ~= commentLine(srctext[i], minLeftX);
+            }
+            if (!noEolAtEndOfRange)
+                dsttext ~= ""d;
+            EditOperation op = new EditOperation(EditAction.Replace, r, dsttext);
+            _content.performOperation(op, source);
+        } else {
+            // uncomment
+            for (int i = 0; i < lineCount; i++) {
+                dsttext ~= uncommentLine(srctext[i]);
+            }
+            if (!noEolAtEndOfRange)
+                dsttext ~= ""d;
+            EditOperation op = new EditOperation(EditAction.Replace, r, dsttext);
+            _content.performOperation(op, source);
+        }
+    }
+
+    /// return true if toggle block comment is supported for file type
+    override @property bool supportsToggleBlockComment() {
+        return true;
+    }
+    /// return true if can toggle block comments for specified text range
+    override bool canToggleBlockComment(TextRange range) {
+        TokenWithRange startToken = getPositionToken(range.start);
+        TokenWithRange endToken = getPositionToken(range.end);
+        //Log.d("canToggleBlockComment: startToken=", startToken, " endToken=", endToken);
+        if (startToken.token && endToken.token && startToken.range == endToken.range && startToken.token.isMultilineComment) {
+            //Log.d("canToggleBlockComment: can uncomment");
+            return true;
+        }
+        if (range.empty)
+            return false;
+        TokenWithRange[] tokens = getRangeTokens(range);
+        foreach(ref t; tokens) {
+            if (t.token.type == TokenType.COMMENT) {
+                if (t.token.isMultilineComment) {
+                    // disable until nested comments support is implemented
+                    return false;
+                } else {
+                    // single line comment
+                    if (t.range.isInside(range.start) || t.range.isInside(range.end))
+                        return false;
+                }
+            }
+        }
+        return true;
+    }
+    /// toggle block comments for specified text range
+    override void toggleBlockComment(TextRange srcrange, Object source) {
+        TokenWithRange startToken = getPositionToken(srcrange.start);
+        TokenWithRange endToken = getPositionToken(srcrange.end);
+        if (startToken.token && endToken.token && startToken.range == endToken.range && startToken.token.isMultilineComment) {
+            TextRange range = startToken.range;
+            dstring[] dsttext;
+            for (int i = range.start.line; i <= range.end.line; i++) {
+                dstring s = content.line(i);
+                int charsRemoved = 0;
+                int minp = 0;
+                if (i == range.start.line) {
+                    int maxp = content.lineLength(range.start.line);
+                    if (i == range.end.line)
+                        maxp = range.end.pos - 2;
+                    charsRemoved = 2;
+                    for (int j = range.start.pos + charsRemoved; j < maxp; j++) {
+                        if (s[j] != s[j - 1])
+                            break;
+                        charsRemoved++;
+                    }
+                    //Log.d("line before removing start of comment:", s);
+                    s = s[range.start.pos + charsRemoved .. $];
+                    //Log.d("line after removing start of comment:", s);
+                    charsRemoved += range.start.pos;
+                }
+                if (i == range.end.line) {
+                    int endp = range.end.pos;
+                    if (charsRemoved > 0)
+                        endp -= charsRemoved;
+                    int endRemoved = 2;
+                    for (int j = endp - endRemoved; j >= 0; j--) {
+                        if (s[j] != s[j + 1])
+                            break;
+                        endRemoved++;
+                    }
+                    //Log.d("line before removing end of comment:", s);
+                    s = s[0 .. endp - endRemoved];
+                    //Log.d("line after removing end of comment:", s);
+                }
+                dsttext ~= s;
+            }
+            EditOperation op = new EditOperation(EditAction.Replace, range, dsttext);
+            _content.performOperation(op, source);
+            return;
+        } else {
+            if (srcrange.empty)
+                return;
+            TokenWithRange[] tokens = getRangeTokens(srcrange);
+            foreach(ref t; tokens) {
+                if (t.token.type == TokenType.COMMENT) {
+                    if (t.token.isMultilineComment) {
+                        // disable until nested comments support is implemented
+                        return;
+                    } else {
+                        // single line comment
+                        if (t.range.isInside(srcrange.start) || t.range.isInside(srcrange.end))
+                            return;
+                    }
+                }
+            }
+            dstring[] dsttext;
+            for (int i = srcrange.start.line; i <= srcrange.end.line; i++) {
+                dstring s = content.line(i);
+                int charsAdded = 0;
+                if (i == srcrange.start.line) {
+                    int p = srcrange.start.pos;
+                    if (p < s.length) {
+                        s = s[p .. $];
+                        charsAdded = -p;
+                    } else {
+                        charsAdded = -(cast(int)s.length);
+                        s = null;
+                    }
+                    s = "/*" ~ s;
+                    charsAdded += 2;
+                }
+                if (i == srcrange.end.line) {
+                    int p = srcrange.end.pos + charsAdded;
+                    s = p > 0 ? s[0..p] : null;
+                    s ~= "*/";
+                }
+                dsttext ~= s;
+            }
+            EditOperation op = new EditOperation(EditAction.Replace, srcrange, dsttext);
+            _content.performOperation(op, source);
+            return;
+        }
+
+    }
+
+    /// categorize characters in content by token types
+    void updateHighlight(dstring[] lines, TokenPropString[] props, int changeStartLine, int changeEndLine) {
+        //Log.d("updateHighlight");
+        long ms0 = currentTimeMillis();
+        _props = props;
+        changeStartLine = 0;
+        changeEndLine = cast(int)lines.length;
+        _lines.init(lines[changeStartLine..$], _file, changeStartLine);
+        _tokenizer.init(_lines);
+        int tokenPos = 0;
+        int tokenLine = 0;
+        ubyte category = 0;
+        try {
+            for (;;) {
+                Token token = _tokenizer.nextToken();
+                if (token is null) {
+                    //Log.d("Null token returned");
+                    break;
+                }
+                uint newPos = token.pos - 1;
+                uint newLine = token.line - 1;
+
+                //Log.d("", tokenLine + 1, ":", tokenPos + 1, "  \t", token.line, ":", token.pos, "\t", token.toString);
+                if (token.type == TokenType.EOF) {
+                    //Log.d("EOF token");
+                }
+
+                // fill with category
+                for (int i = tokenLine; i <= newLine; i++) {
+                    int start = i > tokenLine ? 0 : tokenPos;
+                    int end = i < newLine ? cast(int)lines[i].length : newPos;
+                    for (int j = start; j < end; j++) {
+						if (j < _props[i].length) {
+							_props[i][j] = category;
+						}
+					}
+                }
+
+                // handle token - convert to category
+                switch(token.type) {
+                    case TokenType.COMMENT:
+                        category = token.isDocumentationComment ? TokenCategory.Comment_Documentation : TokenCategory.Comment;
+                        break;
+                    case TokenType.KEYWORD:
+                        category = TokenCategory.Keyword;
+                        break;
+                    case TokenType.IDENTIFIER:
+                        category = TokenCategory.Identifier;
+                        break;
+                    case TokenType.STRING:
+                        category = TokenCategory.String;
+                        break;
+                    case TokenType.CHARACTER:
+                        category = TokenCategory.Character;
+                        break;
+                    case TokenType.INTEGER:
+                        category = TokenCategory.Integer;
+                        break;
+                    case TokenType.FLOAT:
+                        category = TokenCategory.Float;
+                        break;
+                    case TokenType.OP:
+                        category = TokenCategory.Op;
+                        break;
+                    case TokenType.INVALID:
+                        switch (token.invalidTokenType) {
+                            case TokenType.IDENTIFIER:
+                                category = TokenCategory.Error_InvalidIdentifier;
+                                break;
+                            case TokenType.STRING:
+                                category = TokenCategory.Error_InvalidString;
+                                break;
+                            case TokenType.COMMENT:
+                                category = TokenCategory.Error_InvalidComment;
+                                break;
+                            case TokenType.OP:
+                                category = TokenCategory.Error_InvalidOp;
+                                break;
+                            case TokenType.FLOAT:
+                            case TokenType.INTEGER:
+                                category = TokenCategory.Error_InvalidNumber;
+                                break;
+                            default:
+                                category = TokenCategory.Error;
+                                break;
+                        }
+                        break;
+                    default:
+                        category = 0;
+                        break;
+                }
+                tokenPos = newPos;
+                tokenLine= newLine;
+
+                if (token.type == TokenType.EOF) {
+                    //Log.d("EOF token");
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            Log.e("exception while trying to parse D source", e);
+        }
+        _lines.close();
+        _props = null;
+		long elapsed = currentTimeMillis() - ms0;
+		if (elapsed > 20)
+			Log.d("updateHighlight took ", elapsed, "ms");
+    }
 }
+
