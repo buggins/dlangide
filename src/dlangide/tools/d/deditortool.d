@@ -7,6 +7,7 @@ import dlangui.widgets.editors;
 import dlangide.ui.frame;
 import std.stdio;
 import std.string;
+import std.utf;
 import dlangui.core.logger;
 
 import std.conv;
@@ -25,8 +26,9 @@ class DEditorTool : EditorTool
 
 	override bool goToDefinition(DSourceEdit editor, TextPosition caretPosition) {
         string[] importPaths = editor.importPaths();
-		auto byteOffset = caretPositionToByteOffset(editor.text, caretPosition);
-		ResultSet output = _dcd.goToDefinition(importPaths, editor.text, byteOffset);
+        string content = toUTF8(editor.text);
+		auto byteOffset = caretPositionToByteOffset(content, caretPosition);
+		ResultSet output = _dcd.goToDefinition(importPaths, content, byteOffset);
 
 
 		switch(output.result) {
@@ -39,13 +41,15 @@ class DEditorTool : EditorTool
 				auto target = to!int(output.output[1]);
 				if(output.output[0].indexOf("stdin".dup) != -1) {
 					Log.d("Declaration is in current file. Jumping to it.");
-					auto destPos = byteOffsetToCaret(editor.text, target);
+					auto destPos = byteOffsetToCaret(content, target);
 					editor.setCaretPos(destPos.line,destPos.pos);
 				}
 				else {
 					//Must open file first to get the content for finding the correct caret position.
     				_frame.openSourceFile(to!string(output.output[0]));
-					auto destPos = byteOffsetToCaret(_frame.currentEditor.text(), target);
+                    string txt;
+                    txt = toUTF8(_frame.currentEditor.text);
+					auto destPos = byteOffsetToCaret(txt, target);
 					_frame.currentEditor.setCaretPos(destPos.line,destPos.pos);
         		}
         		return true;
@@ -57,8 +61,9 @@ class DEditorTool : EditorTool
     override dstring[] getCompletions(DSourceEdit editor, TextPosition caretPosition) {
         string[] importPaths = editor.importPaths();
 
-		auto byteOffset = caretPositionToByteOffset(editor.text, caretPosition);
-		ResultSet output = _dcd.getCompletions(importPaths, editor.text, byteOffset);
+        string content = toUTF8(editor.text);
+		auto byteOffset = caretPositionToByteOffset(content, caretPosition);
+		ResultSet output = _dcd.getCompletions(importPaths, content, byteOffset);
 		switch(output.result) {
 			//TODO: Show dialog
 			case DCDResult.FAIL:
@@ -73,8 +78,7 @@ class DEditorTool : EditorTool
 private:
 	DCDInterface _dcd;
 
-    // TODO: non-ascii characters support
-	int caretPositionToByteOffset(dstring content, TextPosition caretPosition) {
+	int caretPositionToByteOffset(string content, TextPosition caretPosition) {
 		auto line = 0;
 		auto pos = 0;
 		auto bytes = 0;
@@ -92,7 +96,7 @@ private:
 		return bytes;
 	}
 
-	TextPosition byteOffsetToCaret(dstring content, int byteOffset) {
+	TextPosition byteOffsetToCaret(string content, int byteOffset) {
 		int bytes = 0;
 		int line = 0;
 		int pos = 0;

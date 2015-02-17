@@ -48,11 +48,8 @@ class DCDServer {
 
         string[] srcPaths = dmdSourcePaths();
 		string[] arguments;
-        arguments ~= ("-p" ~ to!string(_port));
-        foreach(p; srcPaths) {
-            arguments ~= "-I";
-            arguments ~= p;
-        }
+        foreach(p; srcPaths)
+            arguments ~= "-I" ~ p;
         if (_port != DCD_DEFAULT_PORT)
             arguments ~= "-p" ~ to!string(_port);
         Log.i("starting dcd-server: executable path is ", dcdServerExecutable, " args: ", arguments);
@@ -73,17 +70,18 @@ class DCDServer {
         _running = true;
         return true;
     }
+
     /// stop DCD server
     bool stop() {
         if (!dcdProcess) {
-            Log.e("Cannot stop DCD - it's not started");
+            Log.e("Cannot stop DCD server - it's not started");
             return false;
         }
-        Log.i("Current DCD state: ", dcdProcess.poll());
-        Log.i("Killing DCD server");
+        debug(DCD) Log.i("Current DCD server state: ", dcdProcess.poll());
+        Log.i("Stopping DCD server");
         ExternalProcessState state = dcdProcess.kill();
         state = dcdProcess.wait();
-        Log.i("DCD state: ", state);
+        debug(DCD) Log.i("DCD server state: ", state);
         destroy(dcdProcess);
         dcdProcess = null;
         stdoutTarget = null;

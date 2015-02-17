@@ -34,7 +34,20 @@ class DCDInterface {
         //stdoutTarget = new ProtectedTextStorage();
 	}
 
-    protected dstring[] invokeDcd(string[] arguments, dstring content, out bool success) {
+    protected string dumpContext(string content, int pos) {
+        if (pos >= 0 && pos <= content.length) {
+            int start = pos;
+            int end = pos;
+            for (int i = 0; start > 0 && content[start - 1] != '\n' && i < 10; i++)
+                start--;
+            for (int i = 0; end < content.length - 1 && content[end] != '\n' && i < 10; i++)
+                end++;
+            return content[start .. pos] ~ "|" ~ content[pos .. end];
+        }
+        return "";
+    }
+
+    protected dstring[] invokeDcd(string[] arguments, string content, out bool success) {
         success = false;
 		ExternalProcess dcdProcess = new ExternalProcess();
 
@@ -48,6 +61,7 @@ class DCDInterface {
 			string dcd_client_dir = "/usr/bin";
 		}
 		dcdProcess.run(dcd_client_name, arguments, dcd_client_dir, stdoutTarget);
+        
 		dcdProcess.write(content);
 		dcdProcess.wait();
 
@@ -59,14 +73,16 @@ class DCDInterface {
         return output;
     }
 
-	ResultSet goToDefinition(in string[] importPaths, in dstring content, int index) {
+	ResultSet goToDefinition(in string[] importPaths, in string content, int index) {
 		ResultSet result;
         
+        debug(DCD) Log.d("DCD Context: ", dumpContext(content, index));
+
 		string[] arguments = ["-l", "-c"];
 		arguments ~= [to!string(index)];
+
         foreach(p; importPaths) {
-            arguments ~= "-I";
-            arguments ~= p;
+            arguments ~= "-I" ~ p;
         }
         if (_port != DCD_DEFAULT_PORT)
             arguments ~= "-p" ~ to!string(_port);
@@ -84,25 +100,31 @@ class DCDInterface {
         debug(DCD) Log.d("DCD output:\n", output);
 
 		if(output.length > 0) {
-			if(output[0].indexOf("Not Found".dup) == 0) {
+            dstring firstLine = output[0];
+			if(firstLine.startsWith("Not Found") || firstLine.startsWith("Not found")) {
 				result.result = DCDResult.NO_RESULT;
 				return result;
 			}
-		}
+            auto split = firstLine.indexOf("\t");
+            if(split == -1) {
+                Log.d("DCD output format error.");
+                result.result = DCDResult.FAIL;
+                return result;
+            }
 
-		auto split = output[0].indexOf("\t");
-        if(split == -1) {
-        	Log.d("DCD output format error.");
-        	result.result = DCDResult.FAIL;
-        	return result;
+            result.output ~= output[0][0 .. split];
+            result.output ~= output[0][split+1 .. $];
+		} else {
+            result.result = DCDResult.NO_RESULT;
+            //result.result = DCDResult.FAIL;
         }
 
-        result.output ~= output[0][0 .. split];
-        result.output ~= output[0][split+1 .. $];
 		return result;
 	}
 
-	ResultSet getCompletions(in string[] importPaths, in dstring content, int index) {
+	ResultSet getCompletions(in string[] importPaths, in string content, int index) {
+
+        debug(DCD) Log.d("DCD Context: ", dumpContext(content, index));
 
 		ResultSet result;
 
@@ -110,8 +132,7 @@ class DCDInterface {
 		arguments ~= [to!string(index)];
 
         foreach(p; importPaths) {
-            arguments ~= "-I";
-            arguments ~= p;
+            arguments ~= "-I" ~ p;
         }
         if (_port != DCD_DEFAULT_PORT)
             arguments ~= "-p" ~ to!string(_port);

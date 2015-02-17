@@ -400,12 +400,13 @@ class ExternalProcess {
         return _state;
     }
 
-    void write(dstring data) {
+    void write(string data) {
         if(_state == ExternalProcessState.Error || _state == ExternalProcessState.None || _state == ExternalProcessState.Stopped) {
             return;
         }
         else {
-            _pipes.stdin.write(data);
+            Log.d("writing ", data.length, " characters to stdin");
+            _pipes.stdin.write("", data);
             _pipes.stdin.close();
         }
     }

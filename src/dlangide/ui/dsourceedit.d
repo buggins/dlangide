@@ -32,7 +32,8 @@ class DSourceEdit : SourceEdit {
         setTokenHightlightColor(TokenCategory.Comment_Documentation, 0x206000);
         //setTokenHightlightColor(TokenCategory.Identifier, 0x206000);  // no colors
 		MenuItem editPopupItem = new MenuItem(null);
-		editPopupItem.add(ACTION_EDIT_COPY, ACTION_EDIT_PASTE, ACTION_EDIT_CUT, ACTION_EDIT_UNDO, ACTION_EDIT_REDO, ACTION_EDIT_INDENT, ACTION_EDIT_UNINDENT, ACTION_EDIT_TOGGLE_LINE_COMMENT, ACTION_GET_COMPLETIONS);
+		editPopupItem.add(ACTION_EDIT_COPY, ACTION_EDIT_PASTE, ACTION_EDIT_CUT, ACTION_EDIT_UNDO, ACTION_EDIT_REDO, ACTION_EDIT_INDENT, ACTION_EDIT_UNINDENT, ACTION_EDIT_TOGGLE_LINE_COMMENT, ACTION_GET_COMPLETIONS, ACTION_GO_TO_DEFINITION);
+        //ACTION_GO_TO_DEFINITION, ACTION_GET_COMPLETIONS
         popupMenu = editPopupItem;
         showIcons = true;
         showFolding = true;
@@ -50,8 +51,12 @@ class DSourceEdit : SourceEdit {
         return res;
     }
 
+    @property bool isDSourceFile() {
+        return filename.endsWith(".d") || filename.endsWith(".dd") || filename.endsWith(".dh") || filename.endsWith(".ddoc");
+    }
+
     void setHighlighter() {
-        if (filename.endsWith(".d") || filename.endsWith(".dd") || filename.endsWith(".dh") || filename.endsWith(".ddoc")) {
+        if (isDSourceFile) {
             content.syntaxHighlighter = new SimpleDSyntaxHighlighter(filename);
         } else {
             content.syntaxHighlighter = null;
@@ -61,7 +66,7 @@ class DSourceEdit : SourceEdit {
     /// returns project import paths - if file from project is opened in current editor
     string[] importPaths() {
         if (_projectSourceFile)
-            return _projectSourceFile.project.sourcePaths;
+            return _projectSourceFile.project.sourcePaths  ~ _projectSourceFile.project.builderSourcePaths;
         return null;
     }
 
@@ -99,6 +104,21 @@ class DSourceEdit : SourceEdit {
         }
         return super.handleAction(a);
     }
+
+	/// override to handle specific actions state (e.g. change enabled state for supported actions)
+	override bool handleActionStateRequest(const Action a) {
+		switch (a.id) {
+			case IDEActions.GoToDefinition:
+			case IDEActions.GetCompletionSuggestions:
+                if (isDSourceFile)
+                    a.state = ACTION_STATE_ENABLED;
+                else
+                    a.state = ACTION_STATE_DISABLE;
+                return true;
+			default:
+				return super.handleActionStateRequest(a);
+		}
+	}
 
     void showCompletionPopup(dstring[] suggestions) {
 
