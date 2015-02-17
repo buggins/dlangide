@@ -13,7 +13,7 @@ import ddc.lexer.tokenizer;
 import dlangide.workspace.workspace;
 import dlangide.workspace.project;
 import dlangide.ui.commands;
-import dlangide.tools.d.simpledsyntaxhighlighter;
+import dlangide.tools.d.dsyntaxhighlighter;
 
 import std.algorithm;
 

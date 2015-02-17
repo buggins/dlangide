@@ -213,7 +213,7 @@
     <Folder name="d">
      <File path="src\dlangide\tools\d\dcdinterface.d" />
      <File path="src\dlangide\tools\d\deditortool.d" />
-     <File path="src\dlangide\tools\d\simpledsyntaxhighlighter.d" />
+     <File path="src\dlangide\tools\d\dsyntaxhighlighter.d" />
     </Folder>
     <File path="src\dlangide\tools\editortool.d" />
    </Folder>
