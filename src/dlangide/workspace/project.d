@@ -3,6 +3,7 @@ module dlangide.workspace.project;
 import dlangide.workspace.workspace;
 import dlangui.core.logger;
 import dlangui.core.collections;
+import dlangui.core.settings;
 import std.path;
 import std.file;
 import std.json;
@@ -204,15 +205,49 @@ class WorkspaceItem {
     }
 }
 
+/// detect DMD source paths
+string[] dmdSourcePaths() {
+    string[] res;
+    version(Windows) {
+        import dlangui.core.files;
+        string dmdPath = findExecutablePath("dmd");
+        if (dmdPath) {
+            string dmdDir = buildNormalizedPath(dirName(dmdPath), "..", "..", "src");
+            res ~= absolutePath(buildNormalizedPath(dmdDir, "druntime", "import"));
+            res ~= absolutePath(buildNormalizedPath(dmdDir, "phobos"));
+        }
+    } else {
+        res ~= "/usr/include/dmd/druntime/import";
+        res ~= "/usr/include/dmd/phobos";
+    }
+    return res;
+}
+
 /// DLANGIDE D project
 class Project : WorkspaceItem {
     protected Workspace _workspace;
     protected bool _opened;
     protected ProjectFolder _items;
     protected ProjectSourceFile _mainSourceFile;
+    protected SettingsFile _projectFile;
+
+    protected string[] _sourcePaths;
+    protected string[] _builderSourcePaths;
+
+
     this(string fname = null) {
         super(fname);
         _items = new ProjectFolder(fname);
+    }
+
+    /// returns project's own source paths
+    @property string[] sourcePaths() { return _sourcePaths; }
+    /// returns project's own source paths
+    @property string[] builderSourcePaths() { 
+        if (!_builderSourcePaths) {
+            _builderSourcePaths = dmdSourcePaths();
+        }
+        return _builderSourcePaths; 
     }
 
     string relativeToAbsolutePath(string path) {
@@ -238,11 +273,23 @@ class Project : WorkspaceItem {
         return buildNormalizedPath(_filename.dirName, toUTF8(name) ~ WORKSPACE_EXTENSION);
     }
 
-    ProjectFolder findItems() {
+    ProjectFolder findItems(string[] srcPaths) {
         ProjectFolder folder = new ProjectFolder(_filename);
         folder.project = this;
-        folder.loadDir(relativeToAbsolutePath("src"));
-        folder.loadDir(relativeToAbsolutePath("source"));
+        string path = relativeToAbsolutePath("src");
+        if (folder.loadDir(path))
+            _sourcePaths ~= path;
+        path = relativeToAbsolutePath("source");
+        if (folder.loadDir(path))
+            _sourcePaths ~= path;
+        foreach(customPath; srcPaths) {
+            path = relativeToAbsolutePath(customPath);
+            foreach(existing; _sourcePaths)
+                if (path.equal(existing))
+                    continue; // already exists
+            if (folder.loadDir(path))
+                _sourcePaths ~= path;
+        }
         return folder;
     }
 
@@ -286,24 +333,29 @@ class Project : WorkspaceItem {
     }
 
     override bool load(string fname = null) {
+        if (!_projectFile)
+            _projectFile = new SettingsFile();
         _mainSourceFile = null;
         if (fname.length > 0)
             filename = fname;
-        if (!exists(filename) || !isFile(filename))  {
+        if (!_projectFile.load(_filename)) {
+            Log.e("failed to load project from file ", _filename);
             return false;
         }
         Log.d("Reading project from file ", _filename);
 
         try {
-            string jsonSource = readText!string(_filename);
-            JSONValue json = parseJSON(jsonSource);
-            _name = toUTF32(json["name"].str);
-            _description = toUTF32(json["description"].str);
+            _name = toUTF32(_projectFile.getString("name"));
+            _description = toUTF32(_projectFile.getString("description"));
             Log.d("  project name: ", _name);
             Log.d("  project description: ", _description);
-
-            _items = findItems();
+            string[] srcPaths = _projectFile.getStringArray("sourcePaths");
+            _items = findItems(srcPaths);
             findMainSourceFile();
+
+            Log.i("Project source paths: ", sourcePaths);
+            Log.i("Builder source paths: ", builderSourcePaths);
+
         } catch (JSONException e) {
             Log.e("Cannot parse json", e);
             return false;
