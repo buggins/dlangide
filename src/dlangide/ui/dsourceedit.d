@@ -123,6 +123,7 @@ class DSourceEdit : SourceEdit {
     void showCompletionPopup(dstring[] suggestions) {
 
         if(suggestions.length == 0) {
+            setFocus();
             return;
         }
 
@@ -141,6 +142,7 @@ class DSourceEdit : SourceEdit {
 
         PopupWidget popup = window.showPopup(popupMenu, this, PopupAlign.Point | PopupAlign.Right, textPosToClient(_caretPos).left + left + _leftPaneWidth, textPosToClient(_caretPos).top + top + margins.top);
         popup.setFocus();
+        popup.onPopupCloseListener = delegate(PopupWidget source) { setFocus(); };
         popup.flags = PopupFlags.CloseOnClickOutside;
 
         Log.d("Showing popup at ", textPosToClient(_caretPos).left, " ", textPosToClient(_caretPos).top);

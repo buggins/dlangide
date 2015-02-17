@@ -36,6 +36,7 @@ class DEditorTool : EditorTool
 			case DCDResult.FAIL:
 			case DCDResult.DCD_NOT_RUNNING:
 			case DCDResult.NO_RESULT:
+                editor.setFocus();
 				return false;
 			case DCDResult.SUCCESS:
 				auto target = to!int(output.output[1]);
@@ -43,6 +44,7 @@ class DEditorTool : EditorTool
 					Log.d("Declaration is in current file. Jumping to it.");
 					auto destPos = byteOffsetToCaret(content, target);
 					editor.setCaretPos(destPos.line,destPos.pos);
+                    editor.setFocus();
 				}
 				else {
 					//Must open file first to get the content for finding the correct caret position.
@@ -51,6 +53,7 @@ class DEditorTool : EditorTool
                     txt = toUTF8(_frame.currentEditor.text);
 					auto destPos = byteOffsetToCaret(txt, target);
 					_frame.currentEditor.setCaretPos(destPos.line,destPos.pos);
+                    _frame.currentEditor.setFocus();
         		}
         		return true;
         	default:
