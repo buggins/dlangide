@@ -10,6 +10,7 @@ import dlangui.widgets.appframe;
 import dlangui.widgets.docks;
 import dlangui.widgets.toolbars;
 import dlangui.widgets.combobox;
+import dlangui.widgets.popup;
 import dlangui.dialogs.dialog;
 import dlangui.dialogs.filedlg;
 import dlangui.core.stdaction;
@@ -22,6 +23,7 @@ import dlangide.ui.homescreen;
 import dlangide.workspace.workspace;
 import dlangide.workspace.project;
 import dlangide.builders.builder;
+import dlangide.tools.editorTool;
 
 import std.conv;
 import std.utf;
@@ -60,6 +62,7 @@ class IDEFrame : AppFrame {
     OutputPanel _logPanel;
     DockHost _dockHost;
     TabWidget _tabs;
+    EditorTool _editorTool;
 
     dstring frameWindowCaptionSuffix = "DLangIDE"d;
 
@@ -72,6 +75,7 @@ class IDEFrame : AppFrame {
 
     override protected void init() {
         _appName = "dlangide";
+        _editorTool = new DEditorTool(this);
         super.init();
     }
 
@@ -333,6 +337,9 @@ class IDEFrame : AppFrame {
 
 		editItem.add(ACTION_EDIT_PREFERENCES);
 
+        MenuItem navItem = new MenuItem(new Action(21, "MENU_NAVIGATE"));
+        navItem.add(ACTION_GO_TO_DEFINITION, ACTION_GET_COMPLETIONS);
+
         MenuItem projectItem = new MenuItem(new Action(21, "MENU_PROJECT"));
         projectItem.add(ACTION_PROJECT_SET_STARTUP, ACTION_PROJECT_REFRESH, ACTION_PROJECT_UPDATE_DEPENDENCIES, ACTION_PROJECT_SETTINGS);
 
@@ -354,6 +361,7 @@ class IDEFrame : AppFrame {
         mainMenuItems.add(fileItem);
         mainMenuItems.add(editItem);
         mainMenuItems.add(projectItem);
+        mainMenuItems.add(navItem);
         mainMenuItems.add(buildItem);
         mainMenuItems.add(debugItem);
 		//mainMenuItems.add(viewItem);
@@ -537,6 +545,15 @@ class IDEFrame : AppFrame {
                         }
                     };
                     dlg.show();
+                    return true;
+                case IDEActions.GoToDefinition:
+                    Log.d("Trying to go to definition.");
+                    _editorTool.goToDefinition(currentEditor(), currentEditor.getCaretPosition());
+                    return true;
+                case IDEActions.GetCompletionSuggestions:
+                    Log.d("Getting auto completion suggestions.");
+                    auto results = _editorTool.getCompletions(currentEditor, currentEditor.getCaretPosition);
+                    currentEditor.showCompletionPopup(results);
                     return true;
                 default:
                     return super.handleAction(a);

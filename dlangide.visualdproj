@@ -209,6 +209,14 @@
     <File path="src\dlangide\builders\builder.d" />
     <File path="src\dlangide\builders\extprocess.d" />
    </Folder>
+   <Folder name="tools">
+    <Folder name="d">
+     <File path="src\dlangide\tools\d\dcdinterface.d" />
+     <File path="src\dlangide\tools\d\deditortool.d" />
+     <File path="src\dlangide\tools\d\simpledsyntaxhighlighter.d" />
+    </Folder>
+    <File path="src\dlangide\tools\editortool.d" />
+   </Folder>
    <Folder name="ui">
     <File path="src\dlangide\ui\commands.d" />
     <File path="src\dlangide\ui\dsourceedit.d" />
