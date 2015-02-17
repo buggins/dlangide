@@ -56,11 +56,17 @@ class DCDInterface {
         return output;
     }
 
-	ResultSet goToDefinition(in dstring content, int index) {
+	ResultSet goToDefinition(in string[] importPaths, in dstring content, int index) {
 		ResultSet result;
-
+        
 		string[] arguments = ["-l", "-c"];
 		arguments ~= [to!string(index)];
+        foreach(p; importPaths) {
+            arguments ~= "-I";
+            arguments ~= p;
+        }
+
+
 
         bool success = false;
 		dstring[] output =  invokeDcd(arguments, content, success);
@@ -93,12 +99,17 @@ class DCDInterface {
 		return result;
 	}
 
-	ResultSet getCompletions(in dstring content, int index) {
+	ResultSet getCompletions(in string[] importPaths, in dstring content, int index) {
 
 		ResultSet result;
 
 		string[] arguments = ["-c"];
 		arguments ~= [to!string(index)];
+
+        foreach(p; importPaths) {
+            arguments ~= "-I";
+            arguments ~= p;
+        }
 
         bool success = false;
 		dstring[] output =  invokeDcd(arguments, content, success);

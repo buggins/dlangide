@@ -11,6 +11,9 @@ import dlangui.core.logger;
 
 import std.conv;
 
+// TODO: async operation in background thread
+// TODO: effective caretPositionToByteOffset/byteOffsetToCaret impl
+
 class DEditorTool : EditorTool 
 {
 
@@ -21,9 +24,9 @@ class DEditorTool : EditorTool
 	}
 
 	override bool goToDefinition(DSourceEdit editor, TextPosition caretPosition) {
-
+        string[] importPaths = editor.importPaths();
 		auto byteOffset = caretPositionToByteOffset(editor.text, caretPosition);
-		ResultSet output = _dcd.goToDefinition(editor.text, byteOffset);
+		ResultSet output = _dcd.goToDefinition(importPaths, editor.text, byteOffset);
 
 
 		switch(output.result) {
@@ -52,9 +55,10 @@ class DEditorTool : EditorTool
     }
 
     override dstring[] getCompletions(DSourceEdit editor, TextPosition caretPosition) {
+        string[] importPaths = editor.importPaths();
 
 		auto byteOffset = caretPositionToByteOffset(editor.text, caretPosition);
-		ResultSet output = _dcd.getCompletions(editor.text, byteOffset);
+		ResultSet output = _dcd.getCompletions(importPaths, editor.text, byteOffset);
 		switch(output.result) {
 			//TODO: Show dialog
 			case DCDResult.FAIL:
@@ -69,6 +73,7 @@ class DEditorTool : EditorTool
 private:
 	DCDInterface _dcd;
 
+    // TODO: non-ascii characters support
 	int caretPositionToByteOffset(dstring content, TextPosition caretPosition) {
 		auto line = 0;
 		auto pos = 0;
