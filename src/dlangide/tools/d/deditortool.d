@@ -19,7 +19,7 @@ class DEditorTool : EditorTool
 
 
 	this(IDEFrame frame) {
-		_dcd = new DCDInterface();
+		_dcd = new DCDInterface(DCD_SERVER_PORT_FOR_DLANGIDE);
 		super(frame);
 	}
 

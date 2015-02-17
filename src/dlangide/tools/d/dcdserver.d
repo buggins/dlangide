@@ -5,6 +5,8 @@ import dlangui.core.files;
 import dlangide.builders.extprocess;
 import dlangide.workspace.project;
 import std.conv : to;
+import dlangide.tools.d.dcdinterface;
+
 
 /// encapsulates running DCD server access
 class DCDServer {
@@ -18,7 +20,7 @@ class DCDServer {
     @property int port() {
         return _port;
     }
-    this(int port = 9166) {
+    this(int port = DCD_SERVER_PORT_FOR_DLANGIDE) {
         _port = port;
     }
     /// returns true if there was error while trying to run server last time
@@ -51,6 +53,8 @@ class DCDServer {
             arguments ~= "-I";
             arguments ~= p;
         }
+        if (_port != DCD_DEFAULT_PORT)
+            arguments ~= "-p" ~ to!string(_port);
         Log.i("starting dcd-server: executable path is ", dcdServerExecutable, " args: ", arguments);
         dcdProcess = new ExternalProcess();
 		stdoutTarget = new ProtectedTextStorage();

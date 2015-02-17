@@ -9,7 +9,8 @@ import std.typecons;
 import std.conv;
 import std.string;
 
-
+const DCD_SERVER_PORT_FOR_DLANGIDE = 9167;
+const DCD_DEFAULT_PORT = 9166;
 
 enum DCDResult : int {
 	DCD_NOT_RUNNING = 0,
@@ -19,14 +20,16 @@ enum DCDResult : int {
 }
 alias ResultSet = Tuple!(DCDResult, "result", dstring[], "output");
 
+
 //Interface to DCD
 //TODO: Check if server is running, start server if needed etc.
 class DCDInterface {
 
-    private int _port = 9166;
+    private int _port;
     //ExternalProcess dcdProcess;
     //ProtectedTextStorage stdoutTarget;
-	this() {
+	this(int port = DCD_SERVER_PORT_FOR_DLANGIDE) {
+        _port = port;
         //dcdProcess = new ExternalProcess();
         //stdoutTarget = new ProtectedTextStorage();
 	}
@@ -65,8 +68,8 @@ class DCDInterface {
             arguments ~= "-I";
             arguments ~= p;
         }
-
-
+        if (_port != DCD_DEFAULT_PORT)
+            arguments ~= "-p" ~ to!string(_port);
 
         bool success = false;
 		dstring[] output =  invokeDcd(arguments, content, success);
@@ -110,6 +113,8 @@ class DCDInterface {
             arguments ~= "-I";
             arguments ~= p;
         }
+        if (_port != DCD_DEFAULT_PORT)
+            arguments ~= "-p" ~ to!string(_port);
 
         bool success = false;
 		dstring[] output =  invokeDcd(arguments, content, success);
