@@ -297,7 +297,7 @@ class SimpleDSyntaxHighlighter : SyntaxHighlighter {
                         res ~= ch;
                         x = newX;
                     }
-                    res ~= "//";
+                    res ~= "//"d;
                     x += 2;
                 } else {
                     res ~= ch;
@@ -306,7 +306,7 @@ class SimpleDSyntaxHighlighter : SyntaxHighlighter {
             } else {
                 if (!commented && x == commentX) {
                     commented = true;
-                    res ~= "//";
+                    res ~= "//"d;
                     res ~= ch;
                     x += 3;
                 } else {
@@ -318,7 +318,7 @@ class SimpleDSyntaxHighlighter : SyntaxHighlighter {
         if (!commented) {
             for (; x < commentX; x++)
                 res ~= ' ';
-            res ~= "//";
+            res ~= "//"d;
         }
         return cast(dstring)res;
     }
