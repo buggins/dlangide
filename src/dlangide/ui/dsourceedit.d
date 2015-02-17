@@ -86,17 +86,36 @@ class DSourceEdit : SourceEdit {
         return _content.save();
     }
 
+    void insertCompletion(dstring completionText) {
+        TextRange range;
+        TextPosition p = getCaretPosition;
+        range.start = range.end = p;
+        dstring lineText = content.line(p.line);
+        dchar prevChar = p.pos > 0 ? lineText[p.pos - 1] : 0;
+        dchar nextChar = p.pos < lineText.length ? lineText[p.pos] : 0;
+        if (isIdentMiddleChar(prevChar)) {
+            while(range.start.pos > 0 && isIdentMiddleChar(lineText[range.start.pos - 1]))
+                range.start.pos--;
+            if (isIdentMiddleChar(nextChar)) {
+                while(range.end.pos < lineText.length && isIdentMiddleChar(lineText[range.end.pos]))
+                    range.end.pos++;
+            }
+        }
+        EditOperation edit = new EditOperation(EditAction.Replace, range, completionText);
+        _content.performOperation(edit, this);
+        setFocus();
+    }
+
     /// override to handle specific actions
 	override bool handleAction(const Action a) {
+        import ddc.lexer.tokenizer;
         if (a) {
             switch (a.id) {
                 case IDEActions.FileSave:
                     save();
                     return true;
                 case IDEActions.InsertCompletion:
-                    EditOperation edit = new EditOperation(EditAction.Replace, getCaretPosition, a.label);
-                    _content.performOperation(edit, this);
-                    setFocus();
+                    insertCompletion(a.label);
                     return true;
                 default:
                     break;
@@ -124,6 +143,11 @@ class DSourceEdit : SourceEdit {
 
         if(suggestions.length == 0) {
             setFocus();
+            return;
+        }
+
+        if (suggestions.length == 1) {
+            insertCompletion(suggestions[0]);
             return;
         }
 
