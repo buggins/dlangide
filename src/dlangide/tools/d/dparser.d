@@ -80,12 +80,40 @@ class DParsedModule {
     }
 
 
+    static class IdentContext {
+        DParsedModule mod;
+        Token token;
+        string[] imports;
+        const(ASTNode)[] stack;
+        this(DParsedModule mod, const Token token, string[] imports, const(ASTNode)[] stack) {
+            this.mod = mod;
+            this.token = token;
+            this.imports = imports;
+            this.stack = stack;
+        }
+        void dump() {
+            Log.d("module: ", mod.moduleName, " token: ", token.text, "[", token.index, "] imports:", imports, " context:", stack);
+        }   
+    }
+
     static class IdentPositionIterator : ASTVisitor {
 
-        const(Token) * _tokenToFind;
+        private const(Token) * _tokenToFind;
+        private const(Token) * _tokenToFindReferences;
+        private string[] _scopedImportList;
         private const(ASTNode)[] _stack;
-        private const(ASTNode)[] _foundStack;
-        private const(ASTNode)[][] _referenceStacks;
+        private IdentContext _found;
+        private IdentContext[] _references;
+        private DParsedModule _mod;
+
+
+        private void addImport(string m) {
+            foreach(imp; _scopedImportList)
+                if (imp.equal(m))
+                    return;
+            _scopedImportList ~= m;
+        }
+
         private void push(const ASTNode node) {
             _stack ~= node;
         }
@@ -95,14 +123,20 @@ class DParsedModule {
             _stack.length--;
             return res;
         }
-        const(ASTNode)[] run(Module ast, const(Token) * tokenToFind) {
+        IdentContext run(DParsedModule mod, Module ast, const(Token) * tokenToFind, const(Token) * tokenToFindReferences) {
+            _mod = mod;
             _stack.length = 0;
-            _referenceStacks.length = 0;
-            _foundStack = null;
+            _references.length = 0;
+            _found = null;
             _tokenToFind = tokenToFind;
+            _tokenToFindReferences = tokenToFindReferences;
             visit(ast);
-            Log.d("References to the same ident found: ", _referenceStacks);
-            return _foundStack;
+            if (_references.length > 0) {
+                Log.d("References to the same ident found: ");
+                foreach(r; _references)
+                    r.dump();
+            }
+            return _found;
         }
 
         //alias visit = ASTVisitor.visit;
@@ -116,12 +150,19 @@ class DParsedModule {
                 res ~= n;
             return res;
         }
+
+        @property private string[] copyImports() {
+            string[]res;
+            foreach(imp; _scopedImportList)
+                res ~= imp;
+            return res;
+        }
         
         override void visit(const Token t) {
-            if (t.index == _tokenToFind.index) {
-                _foundStack = copyStack;
-            } else if (t.text.ptr is _tokenToFind.text.ptr) {
-                _referenceStacks ~= copyStack;
+            if (_tokenToFind && t.index == _tokenToFind.index) {
+                _found = new IdentContext(_mod, t, copyImports, copyStack);
+            } else if (_tokenToFindReferences && t.text.ptr is _tokenToFindReferences.text.ptr) {
+                _references ~= new IdentContext(_mod, t, copyImports, copyStack);
             }
         }
 
@@ -167,7 +208,10 @@ class DParsedModule {
         override void visit(const Attribute attribute) { mixin(def("attribute")); }
         override void visit(const AttributeDeclaration attributeDeclaration) { mixin(def("attributeDeclaration")); }
         override void visit(const AutoDeclaration autoDeclaration) { mixin(def("autoDeclaration")); }
-        override void visit(const BlockStatement blockStatement) { mixin(def("blockStatement")); }
+        override void visit(const BlockStatement blockStatement) { 
+            size_t importPos = _scopedImportList.length; scope(exit) _scopedImportList.length = importPos;
+            mixin(def("blockStatement")); 
+        }
         override void visit(const BodyStatement bodyStatement) { mixin(def("bodyStatement")); }
         override void visit(const BreakStatement breakStatement) { mixin(def("breakStatement")); }
         override void visit(const BaseClass baseClass) { mixin(def("baseClass")); }
@@ -218,7 +262,10 @@ class DParsedModule {
         override void visit(const ForeachType foreachType) { mixin(def("foreachType")); }
         override void visit(const ForeachTypeList foreachTypeList) { mixin(def("foreachTypeList")); }
         override void visit(const FunctionAttribute functionAttribute) { mixin(def("functionAttribute")); }
-        override void visit(const FunctionBody functionBody) { mixin(def("functionBody")); }
+        override void visit(const FunctionBody functionBody) {
+            size_t importPos = _scopedImportList.length; scope(exit) _scopedImportList.length = importPos;
+            mixin(def("functionBody"));
+        }
         override void visit(const FunctionCallExpression functionCallExpression) { mixin(def("functionCallExpression")); }
         override void visit(const FunctionDeclaration functionDeclaration) { mixin(def("functionDeclaration")); }
         override void visit(const FunctionLiteralExpression functionLiteralExpression) { mixin(def("functionLiteralExpression")); }
@@ -231,7 +278,12 @@ class DParsedModule {
         override void visit(const IfStatement ifStatement) { mixin(def("ifStatement")); }
         override void visit(const ImportBind importBind) { mixin(def("importBind")); }
         override void visit(const ImportBindings importBindings) { mixin(def("importBindings")); }
-        override void visit(const ImportDeclaration importDeclaration) { mixin(def("importDeclaration")); }
+        override void visit(const ImportDeclaration importDeclaration) {
+            foreach(imp; importDeclaration.singleImports) {
+                addImport(importDeclToModuleName(imp.identifierChain));
+            }
+            mixin(def("importDeclaration")); 
+        }
         override void visit(const ImportExpression importExpression) { mixin(def("importExpression")); }
         override void visit(const IndexExpression indexExpression) { mixin(def("indexExpression")); }
         override void visit(const InExpression inExpression) { mixin(def("inExpression")); }
@@ -342,10 +394,10 @@ class DParsedModule {
     }
 
     private IdentPositionIterator _identPositionIterator;
-    const(ASTNode)[] findTokenNode(const(Token)* token) {
+    IdentContext findTokenNode(const(Token)* tokenToFindPositionFor, const(Token)* tokenToFindReferencesFor) {
         if (!_identPositionIterator)
             _identPositionIterator = new IdentPositionIterator();
-        auto foundNode = _identPositionIterator.run(_ast, token);
+        auto foundNode = _identPositionIterator.run(this, _ast, tokenToFindPositionFor, tokenToFindReferencesFor);
         return foundNode;
     }
 
@@ -356,11 +408,11 @@ class DParsedModule {
             return;
 
         Log.d("Identifier token found by position: ", token.text);
-        auto foundNode = findTokenNode(token);
-        if (!foundNode)
+        auto found = findTokenNode(token, token);
+        if (!found)
             return;
-        Log.d("Found in node ", foundNode);
-
+        Log.d("Found in node:");
+        found.dump();
     }
 
     const(Token) * findIdentTokenByBytePosition(int bytePosition) {
