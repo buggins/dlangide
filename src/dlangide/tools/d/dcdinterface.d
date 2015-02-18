@@ -79,7 +79,7 @@ class DCDInterface {
         version(USE_LIBDPARSE) {
             import dlangide.tools.d.dparser;
             DParsingService.instance.addImportPaths(importPaths);
-            DParsedModule m = DParsingService.instance.scan(cast(ubyte[])content, filename);
+            DParsedModule m = DParsingService.instance.findDeclaration(cast(ubyte[])content, filename, index);
         }
         
         debug(DCD) Log.d("DCD Context: ", dumpContext(content, index));
