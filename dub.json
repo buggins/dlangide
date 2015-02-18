@@ -14,6 +14,7 @@
     "copyFiles-windows": ["lib/win32/FreeImage.dll", "lib/win32/SDL2.dll", "lib/win32/dcd-server.exe", "lib/win32/dcd-client.exe"],
 
     "dependencies": {
-        "dlangui": "~master"
+        "dlangui": "~master",
+	"libdparse": "~>0.1.1"
     }
 }
