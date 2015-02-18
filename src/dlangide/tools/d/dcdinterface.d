@@ -73,8 +73,14 @@ class DCDInterface {
         return output;
     }
 
-	ResultSet goToDefinition(in string[] importPaths, in string content, int index) {
+	ResultSet goToDefinition(in string[] importPaths, in string filename, in string content, int index) {
 		ResultSet result;
+
+        version(USE_LIBDPARSE) {
+            import dlangide.tools.d.dparser;
+            DParsingService.instance.addImportPaths(importPaths);
+            DParsedModule m = DParsingService.instance.scan(cast(ubyte[])content, filename);
+        }
         
         debug(DCD) Log.d("DCD Context: ", dumpContext(content, index));
 
@@ -122,7 +128,7 @@ class DCDInterface {
 		return result;
 	}
 
-	ResultSet getCompletions(in string[] importPaths, in string content, int index) {
+	ResultSet getCompletions(in string[] importPaths, in string filename, in string content, int index) {
 
         debug(DCD) Log.d("DCD Context: ", dumpContext(content, index));
 

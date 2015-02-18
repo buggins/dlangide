@@ -28,7 +28,7 @@ class DEditorTool : EditorTool
         string[] importPaths = editor.importPaths();
         string content = toUTF8(editor.text);
 		auto byteOffset = caretPositionToByteOffset(content, caretPosition);
-		ResultSet output = _dcd.goToDefinition(importPaths, content, byteOffset);
+		ResultSet output = _dcd.goToDefinition(importPaths, editor.filename, content, byteOffset);
 
 
 		switch(output.result) {
@@ -66,7 +66,7 @@ class DEditorTool : EditorTool
 
         string content = toUTF8(editor.text);
 		auto byteOffset = caretPositionToByteOffset(content, caretPosition);
-		ResultSet output = _dcd.getCompletions(importPaths, content, byteOffset);
+		ResultSet output = _dcd.getCompletions(importPaths, editor.filename, content, byteOffset);
 		switch(output.result) {
 			//TODO: Show dialog
 			case DCDResult.FAIL:
