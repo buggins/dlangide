@@ -214,6 +214,7 @@
      <File path="src\dlangide\tools\d\dcdinterface.d" />
      <File path="src\dlangide\tools\d\dcdserver.d" />
      <File path="src\dlangide\tools\d\deditortool.d" />
+     <File path="src\dlangide\tools\d\dparser.d" />
      <File path="src\dlangide\tools\d\dsyntaxhighlighter.d" />
     </Folder>
     <File path="src\dlangide\tools\editortool.d" />
