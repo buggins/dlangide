@@ -2029,39 +2029,40 @@ class Tokenizer
 	}
 		
 	protected Token processDecNumber(dchar c) {
-		_pos--;
 		_sharedIntegerToken.setPos(_startLine, _startPos);
 		_sharedRealToken.setPos(_startLine, _startPos);
-		if (_pos >= _len)
-			return parserError("Unexpected end of line in number", _sharedIntegerToken);
-		int digits = 0;
-		ulong number = 0;
+		//if (_pos >= _len)
+		//	return parserError("Unexpected end of line in number", _sharedIntegerToken);
+		int digits = 1;
+		ulong number = c - '0';
 		int i = _pos;
 		bool overflow = false;
-		for (;i < _len; i++) {
-			dchar ch = _lineText[i];
-			uint digit = 0;
-			if (ch >= '0' && ch <= '9')
-				digit = ch - '0';
-			else if (ch == '_')
-				continue;
-			else
-				break;
-			number *= 10;
-			if (digits >= 18) {
-				if ((number * 10) / 10 != number) {
-					overflow = true;
+		if (_line == _startLine) {
+			for (;i < _len; i++) {
+				dchar ch = _lineText[i];
+				uint digit = 0;
+				if (ch >= '0' && ch <= '9')
+					digit = ch - '0';
+				else if (ch == '_')
+					continue;
+				else
 					break;
+				number *= 10;
+				if (digits >= 18) {
+					if ((number * 10) / 10 != number) {
+						overflow = true;
+						break;
+					}
 				}
+				number += digit;
+				digits++;
 			}
-			number += digit;
-			digits++;
+			_pos = i;
 		}
-		_pos = i;
 		if (overflow)
 			return parserError("number is too big to fit 64 bits", _sharedIntegerToken);
 		_sharedIntegerToken.setValue(number);
-		dchar next = _pos < _len ? _lineText[_pos] : 0;
+		dchar next = _line == _startLine && _pos < _len ? _lineText[_pos] : 0;
 		if (next == 0)
 			return _sharedIntegerToken;
         if (next == 'e' || next == 'E') {
