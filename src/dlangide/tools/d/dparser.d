@@ -83,27 +83,52 @@ class DParsedModule {
     static class IdentPositionIterator : ASTVisitor {
 
         const(Token) * _tokenToFind;
-        private ASTNode _lastNode;
-        private ASTNode _foundNode;
-        ASTNode run(Module ast, const(Token) * tokenToFind) {
-            _foundNode = null;
-            _lastNode = null;
+        private const(ASTNode)[] _stack;
+        private const(ASTNode)[] _foundStack;
+        private const(ASTNode)[][] _referenceStacks;
+        private void push(const ASTNode node) {
+            _stack ~= node;
+        }
+        private const(ASTNode)pop() {
+            assert(_stack.length > 0);
+            auto res = _stack[$ - 1];
+            _stack.length--;
+            return res;
+        }
+        const(ASTNode)[] run(Module ast, const(Token) * tokenToFind) {
+            _stack.length = 0;
+            _referenceStacks.length = 0;
+            _foundStack = null;
             _tokenToFind = tokenToFind;
             visit(ast);
-            return _foundNode;
+            Log.d("References to the same ident found: ", _referenceStacks);
+            return _foundStack;
         }
 
         //alias visit = ASTVisitor.visit;
         static string def(string param) {
-            return "_lastNode = cast(ASTNode)" ~ param ~ "; super.visit(" ~ param ~ ");";
+            return "push(" ~ param ~ "); super.visit(" ~ param ~ "); pop();";
         }
 
+        @property private const(ASTNode)[] copyStack() {
+            const(ASTNode)[] res;
+            foreach(n; _stack)
+                res ~= n;
+            return res;
+        }
+        
         override void visit(const Token t) {
-            if (t.index == _tokenToFind.index) 
-                _foundNode = _lastNode; 
+            if (t.index == _tokenToFind.index) {
+                _foundStack = copyStack;
+            } else if (t.text.ptr is _tokenToFind.text.ptr) {
+                _referenceStacks ~= copyStack;
+            }
         }
 
-        override void visit(const ExpressionNode n) { mixin(def("n")); }
+        override void visit(const ExpressionNode n) { 
+            //mixin(def("n")); 
+            super.visit(n);
+        }
         override void visit(const AddExpression addExpression) { mixin(def("addExpression")); }
         override void visit(const AliasDeclaration aliasDeclaration) {  mixin(def("aliasDeclaration")); }
         override void visit(const AliasInitializer aliasInitializer) { mixin(def("aliasInitializer")); }
@@ -163,8 +188,14 @@ class DParsedModule {
         override void visit(const ContinueStatement continueStatement) { mixin(def("continueStatement")); }
         override void visit(const DebugCondition debugCondition) { mixin(def("debugCondition")); }
         override void visit(const DebugSpecification debugSpecification) { mixin(def("debugSpecification")); }
-        override void visit(const Declaration declaration) { mixin(def("declaration")); }
-        override void visit(const DeclarationOrStatement declarationsOrStatement) { mixin(def("declarationsOrStatement")); }
+        override void visit(const Declaration declaration) { 
+            super.visit(declaration);
+            //mixin(def("declaration")); 
+        }
+        override void visit(const DeclarationOrStatement declarationsOrStatement) { 
+            super.visit(declarationsOrStatement);
+            //mixin(def("declarationsOrStatement")); 
+        }
         override void visit(const DeclarationsAndStatements declarationsAndStatements) { mixin(def("declarationsAndStatements")); }
         override void visit(const Declarator declarator) { mixin(def("declarator")); }
         override void visit(const DefaultStatement defaultStatement) { mixin(def("defaultStatement")); }
@@ -247,8 +278,14 @@ class DParsedModule {
         override void visit(const ShiftExpression shiftExpression) { mixin(def("shiftExpression")); }
         override void visit(const SingleImport singleImport) { mixin(def("singleImport")); }
         override void visit(const SliceExpression sliceExpression) { mixin(def("sliceExpression")); }
-        override void visit(const Statement statement) { mixin(def("statement")); }
-        override void visit(const StatementNoCaseNoDefault statementNoCaseNoDefault) { mixin(def("statementNoCaseNoDefault")); }
+        override void visit(const Statement statement) { 
+            //mixin(def("statement")); 
+            super.visit(statement);
+        }
+        override void visit(const StatementNoCaseNoDefault statementNoCaseNoDefault) { 
+            super.visit(statementNoCaseNoDefault);
+            //mixin(def("statementNoCaseNoDefault")); 
+        }
         override void visit(const StaticAssertDeclaration staticAssertDeclaration) { mixin(def("staticAssertDeclaration")); }
         override void visit(const StaticAssertStatement staticAssertStatement) { mixin(def("staticAssertStatement")); }
         override void visit(const StaticConstructor staticConstructor) { mixin(def("staticConstructor")); }
@@ -281,8 +318,6 @@ class DParsedModule {
         override void visit(const TemplateValueParameterDefault templateValueParameterDefault) { mixin(def("templateValueParameterDefault")); }
         override void visit(const TernaryExpression ternaryExpression) { mixin(def("ternaryExpression")); }
         override void visit(const ThrowStatement throwStatement) { mixin(def("throwStatement")); }
-
-
         override void visit(const TraitsExpression traitsExpression) { mixin(def("traitsExpression")); }
         override void visit(const TryStatement tryStatement) { mixin(def("tryStatement")); }
         override void visit(const Type type) { mixin(def("type")); }
@@ -291,7 +326,10 @@ class DParsedModule {
         override void visit(const TypeSuffix typeSuffix) { mixin(def("typeSuffix")); }
         override void visit(const TypeidExpression typeidExpression) { mixin(def("typeidExpression")); }
         override void visit(const TypeofExpression typeofExpression) { mixin(def("typeofExpression")); }
-        override void visit(const UnaryExpression unaryExpression) { mixin(def("unaryExpression")); }
+        override void visit(const UnaryExpression unaryExpression) { 
+            super.visit(unaryExpression);
+            //mixin(def("unaryExpression")); 
+        }
         override void visit(const UnionDeclaration unionDeclaration) { mixin(def("unionDeclaration")); }
         override void visit(const Unittest unittest_) { mixin(def("unittest_")); }
         override void visit(const VariableDeclaration variableDeclaration) { mixin(def("variableDeclaration")); }
@@ -304,10 +342,10 @@ class DParsedModule {
     }
 
     private IdentPositionIterator _identPositionIterator;
-    ASTNode findTokenNode(const(Token)* token) {
+    const(ASTNode)[] findTokenNode(const(Token)* token) {
         if (!_identPositionIterator)
             _identPositionIterator = new IdentPositionIterator();
-        ASTNode foundNode = _identPositionIterator.run(_ast, token);
+        auto foundNode = _identPositionIterator.run(_ast, token);
         return foundNode;
     }
 
@@ -318,7 +356,7 @@ class DParsedModule {
             return;
 
         Log.d("Identifier token found by position: ", token.text);
-        ASTNode foundNode = findTokenNode(token);
+        auto foundNode = findTokenNode(token);
         if (!foundNode)
             return;
         Log.d("Found in node ", foundNode);
