@@ -92,7 +92,7 @@ class DParsedModule {
             this.stack = stack;
         }
         void dump() {
-            Log.d("module: ", mod.moduleName, " token: ", token.text, "[", token.index, "] imports:", imports, " context:", stack);
+            Log.d("module: ", mod.moduleName, " token: ", token.text, "[", token.line, ":", token.column, "-", token.index, "] imports:", imports, " context:", stack);
         }   
     }
 
@@ -241,7 +241,12 @@ class DParsedModule {
             //mixin(def("declarationsOrStatement")); 
         }
         override void visit(const DeclarationsAndStatements declarationsAndStatements) { mixin(def("declarationsAndStatements")); }
-        override void visit(const Declarator declarator) { mixin(def("declarator")); }
+        override void visit(const Declarator declarator) { 
+            push(declarator);
+            super.visit(declarator);
+            super.visit(declarator.name);
+            pop();
+        }
         override void visit(const DefaultStatement defaultStatement) { mixin(def("defaultStatement")); }
         override void visit(const DeleteExpression deleteExpression) { mixin(def("deleteExpression")); }
         override void visit(const DeleteStatement deleteStatement) { mixin(def("deleteStatement")); }
@@ -384,7 +389,9 @@ class DParsedModule {
         }
         override void visit(const UnionDeclaration unionDeclaration) { mixin(def("unionDeclaration")); }
         override void visit(const Unittest unittest_) { mixin(def("unittest_")); }
-        override void visit(const VariableDeclaration variableDeclaration) { mixin(def("variableDeclaration")); }
+        override void visit(const VariableDeclaration variableDeclaration) { 
+            mixin(def("variableDeclaration")); 
+        }
         override void visit(const Vector vector) { mixin(def("vector")); }
         override void visit(const VersionCondition versionCondition) { mixin(def("versionCondition")); }
         override void visit(const VersionSpecification versionSpecification) { mixin(def("versionSpecification")); }
@@ -436,7 +443,7 @@ class DParsedModule {
         uint errorCount;
         uint warningCount;
         _ast = parseModule(_tokens, _moduleFile, null, &msgFunction, &errorCount, &warningCount);
-        _moduleName = importDeclToModuleName(_ast.moduleDeclaration.moduleName);
+        _moduleName = _ast.moduleDeclaration ? importDeclToModuleName(_ast.moduleDeclaration.moduleName) : null;
         scanImports();
     }
 
