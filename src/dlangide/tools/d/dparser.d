@@ -80,12 +80,20 @@ class DParsedModule {
     }
 
 
+    static class ImportInfo {
+        string moduleName;
+        const ImportDeclaration decl;
+        this(const ImportDeclaration decl, string moduleName) {
+            this.decl = decl;
+            this.moduleName = moduleName;
+        }
+    }
     static class IdentContext {
         DParsedModule mod;
         Token token;
-        string[] imports;
+        ImportInfo[] imports;
         const(ASTNode)[] stack;
-        this(DParsedModule mod, const Token token, string[] imports, const(ASTNode)[] stack) {
+        this(DParsedModule mod, const Token token, ImportInfo[] imports, const(ASTNode)[] stack) {
             this.mod = mod;
             this.token = token;
             this.imports = imports;
@@ -100,29 +108,31 @@ class DParsedModule {
 
         private const(Token) * _tokenToFind;
         private const(Token) * _tokenToFindReferences;
-        private string[] _scopedImportList;
+        private ImportInfo[] _scopedImportList;
         private const(ASTNode)[] _stack;
         private IdentContext _found;
         private IdentContext[] _references;
         private DParsedModule _mod;
 
 
-        private void addImport(string m) {
+        private void addImport(const ImportDeclaration decl, string m) {
             foreach(imp; _scopedImportList)
-                if (imp.equal(m))
+                if (imp.moduleName.equal(m))
                     return;
-            _scopedImportList ~= m;
+            _scopedImportList ~= new ImportInfo(decl, m);
         }
 
         private void push(const ASTNode node) {
             _stack ~= node;
         }
+
         private const(ASTNode)pop() {
             assert(_stack.length > 0);
             auto res = _stack[$ - 1];
             _stack.length--;
             return res;
         }
+
         IdentContext run(DParsedModule mod, Module ast, const(Token) * tokenToFind, const(Token) * tokenToFindReferences) {
             _mod = mod;
             _stack.length = 0;
@@ -151,8 +161,8 @@ class DParsedModule {
             return res;
         }
 
-        @property private string[] copyImports() {
-            string[]res;
+        @property private ImportInfo[] copyImports() {
+            ImportInfo[]res;
             foreach(imp; _scopedImportList)
                 res ~= imp;
             return res;
@@ -285,7 +295,7 @@ class DParsedModule {
         override void visit(const ImportBindings importBindings) { mixin(def("importBindings")); }
         override void visit(const ImportDeclaration importDeclaration) {
             foreach(imp; importDeclaration.singleImports) {
-                addImport(importDeclToModuleName(imp.identifierChain));
+                addImport(importDeclaration, importDeclToModuleName(imp.identifierChain));
             }
             mixin(def("importDeclaration")); 
         }
