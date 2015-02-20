@@ -88,19 +88,131 @@ class DParsedModule {
             this.moduleName = moduleName;
         }
     }
+    enum DeclarationType {
+        none,
+        classVariableDeclaration,
+        structVariableDeclaration,
+        variableDeclaration,
+        classDeclaration, // class declaration
+        structDeclaration, // struct declaration
+        classFunctionDeclaration, // function inside class
+        structFunctionDeclaration, // function inside struct
+        functionDeclaration, // just function
+        functionParameter, // function parameter
+        functionTemplateTypeParameter,
+        classTemplateTypeParameter,
+        structTemplateTypeParameter,
+        templateTypeParameter,
+    }
     static class IdentContext {
         DParsedModule mod;
         Token token;
         ImportInfo[] imports;
         const(ASTNode)[] stack;
+        ASTNode declarationNode;
+        ASTNode baseDeclarationNode;
+        DeclarationType declarationType = DeclarationType.none;
         this(DParsedModule mod, const Token token, ImportInfo[] imports, const(ASTNode)[] stack) {
             this.mod = mod;
             this.token = token;
             this.imports = imports;
             this.stack = stack;
+            initDeclarationType();
+        }
+        /// returns true if context ident token is the same as t
+        bool sametok(const Token t) {
+            return t.text.ptr is token.text.ptr;
+        }
+        /// casts top object on stack with specified offset to specified type and returns result
+        T match(T)(int offset = 0) {
+            if (offset < 0 || offset >= stack.length)
+                return null;
+            return cast(T)stack[$ - 1 - offset];
+        }
+        /// returns true if top object on stack is T1 and second is T2
+        bool match(T1, T2)() {
+            if (stack.length < 2)
+                return false;
+            return cast(T1)stack[$ - 1] !is null && cast(T2)stack[$ - 2] !is null;
+        }
+        /// returns true if top object on stack is T1 and second is T2
+        bool match(T1, T2, T3)() {
+            if (stack.length < 3)
+                return false;
+            return cast(T1)stack[$ - 1] !is null && cast(T2)stack[$ - 2] !is null && cast(T3)stack[$ - 3] !is null;
+        }
+        bool initDeclarationType() {
+            if (match!(Declarator, VariableDeclaration) && sametok(match!Declarator.name)) {
+                if (match!StructBody(2) && match!ClassDeclaration(3)) {
+                    declarationType = DeclarationType.classVariableDeclaration;
+                    declarationNode = match!VariableDeclaration(1);
+                    baseDeclarationNode = match!ClassDeclaration(3);
+                } else if (match!StructBody(2) && match!StructDeclaration(3)) {
+                    declarationType = DeclarationType.structVariableDeclaration;
+                    declarationNode = match!VariableDeclaration(1);
+                    baseDeclarationNode = match!StructDeclaration(3);
+                } else {
+                    declarationType = DeclarationType.variableDeclaration;
+                    declarationNode = match!VariableDeclaration(1);
+                }
+                return true;
+            } else if (match!ClassDeclaration && sametok(match!ClassDeclaration.name)) {
+                declarationType = DeclarationType.classDeclaration;
+                declarationNode = match!ClassDeclaration;
+                return true;
+            } else if (match!StructDeclaration && sametok(match!StructDeclaration.name)) {
+                declarationType = DeclarationType.structDeclaration;
+                declarationNode = match!StructDeclaration;
+                return true;
+            } else if (match!FunctionDeclaration && sametok(match!FunctionDeclaration.name)) {
+                if (match!StructBody(1) && match!ClassDeclaration(2)) {
+                    declarationType = DeclarationType.classFunctionDeclaration;
+                    declarationNode = match!FunctionDeclaration;
+                    baseDeclarationNode = match!ClassDeclaration(2);
+                } else if (match!StructBody(1) && match!StructDeclaration(2)) {
+                    declarationType = DeclarationType.structFunctionDeclaration;
+                    declarationNode = match!FunctionDeclaration;
+                    baseDeclarationNode = match!StructDeclaration(2);
+                } else {
+                    declarationType = DeclarationType.functionDeclaration;
+                    declarationNode = match!FunctionDeclaration;
+                }
+                return true;
+            } else if (match!Parameter && sametok(match!Parameter.name) && match!Parameters(1)) {
+                if (match!FunctionDeclaration(2)) {
+                    declarationType = DeclarationType.functionParameter;
+                    declarationNode = match!Parameter;
+                    baseDeclarationNode = match!FunctionDeclaration(2);
+                    return true;
+                }
+            } else if (match!TemplateTypeParameter && sametok(match!TemplateTypeParameter.identifier) && match!TemplateParameter(1) && match!TemplateParameterList(2) && match!TemplateParameters(3)) {
+                if (match!FunctionDeclaration(4)) {
+                    declarationType = DeclarationType.functionTemplateTypeParameter;
+                    declarationNode = match!TemplateTypeParameter;
+                    baseDeclarationNode = match!FunctionDeclaration(4);
+                    return true;
+                } else if (match!ClassDeclaration(4)) {
+                    declarationType = DeclarationType.classTemplateTypeParameter;
+                    declarationNode = match!TemplateTypeParameter;
+                    baseDeclarationNode = match!ClassDeclaration(4);
+                    return true;
+                } else if (match!StructDeclaration(4)) {
+                    declarationType = DeclarationType.structTemplateTypeParameter;
+                    declarationNode = match!TemplateTypeParameter;
+                    baseDeclarationNode = match!StructDeclaration(4);
+                    return true;
+                }
+                declarationType = DeclarationType.templateTypeParameter;
+                declarationNode = match!TemplateTypeParameter;
+                return true;
+            }
+            return false;
         }
         void dump() {
-            Log.d("module: ", mod.moduleName, " token: ", token.text, "[", token.line, ":", token.column, "-", token.index, "] imports:", imports, " context:", stack);
+            Log.d("module: ", mod.moduleName, 
+                  "\n\ttoken: ", token.text, "    [", token.line, ":", token.column, "-", token.index, "]   declType: ", declarationType, 
+                  " declNode: ", declarationNode, " baseDeclNode: ", baseDeclarationNode, 
+                  "\n\timports: ", imports, "\n\tcontext: ", stack);
         }   
     }
 
@@ -152,6 +264,14 @@ class DParsedModule {
         //alias visit = ASTVisitor.visit;
         static string def(string param) {
             return "push(" ~ param ~ "); super.visit(" ~ param ~ "); pop();";
+        }
+        /// for objects which contain token not covered by visit()
+        static string deftoken(string param, string tokenField) {
+            return "push(" ~ param ~ "); visit(" ~ param ~ '.' ~ tokenField ~ "); super.visit(" ~ param ~ "); pop();";
+        }
+        /// for objects which can affect scope - save imports list, and restore after visiting
+        static string defblock(string param) {
+            return "size_t importPos = _scopedImportList.length; push(" ~ param ~ "); super.visit(" ~ param ~ "); pop(); _scopedImportList.length = importPos;";
         }
 
         @property private const(ASTNode)[] copyStack() {
@@ -214,13 +334,16 @@ class DParsedModule {
         override void visit(const AssertExpression assertExpression) { mixin(def("assertExpression")); }
         override void visit(const AssignExpression assignExpression) { mixin(def("assignExpression")); }
         override void visit(const AssocArrayLiteral assocArrayLiteral) { mixin(def("assocArrayLiteral")); }
-        override void visit(const AtAttribute atAttribute) { mixin(def("atAttribute")); }
-        override void visit(const Attribute attribute) { mixin(def("attribute")); }
+        override void visit(const AtAttribute atAttribute) { 
+            mixin(deftoken("atAttribute", "identifier")); 
+        }
+        override void visit(const Attribute attribute) { 
+            mixin(deftoken("attribute", "attribute")); 
+        }
         override void visit(const AttributeDeclaration attributeDeclaration) { mixin(def("attributeDeclaration")); }
         override void visit(const AutoDeclaration autoDeclaration) { mixin(def("autoDeclaration")); }
         override void visit(const BlockStatement blockStatement) { 
-            size_t importPos = _scopedImportList.length; scope(exit) _scopedImportList.length = importPos;
-            mixin(def("blockStatement")); 
+            mixin(defblock("blockStatement"));
         }
         override void visit(const BodyStatement bodyStatement) { mixin(def("bodyStatement")); }
         override void visit(const BreakStatement breakStatement) { mixin(def("breakStatement")); }
@@ -232,10 +355,17 @@ class DParsedModule {
         override void visit(const CastQualifier castQualifier) { mixin(def("castQualifier")); }
         override void visit(const Catch catch_) { mixin(def("catch_")); }
         override void visit(const Catches catches) { mixin(def("catches")); }
-        override void visit(const ClassDeclaration classDeclaration) { mixin(def("classDeclaration")); }
+        override void visit(const ClassDeclaration classDeclaration) { 
+            mixin(deftoken("classDeclaration", "name")); 
+        }
         override void visit(const CmpExpression cmpExpression) { mixin(def("cmpExpression")); }
         override void visit(const CompileCondition compileCondition) { mixin(def("compileCondition")); }
-        override void visit(const ConditionalDeclaration conditionalDeclaration) { mixin(def("conditionalDeclaration")); }
+        override void visit(const ConditionalDeclaration conditionalDeclaration) { 
+            super.visit(conditionalDeclaration);
+            // Don't put conditional decl into stack
+            // TODO: check conditional compilation conditions
+            //mixin(def("conditionalDeclaration")); 
+        }
         override void visit(const ConditionalStatement conditionalStatement) { mixin(def("conditionalStatement")); }
         override void visit(const Constraint constraint) { mixin(def("constraint")); }
         override void visit(const Constructor constructor) { mixin(def("constructor")); }
@@ -252,10 +382,7 @@ class DParsedModule {
         }
         override void visit(const DeclarationsAndStatements declarationsAndStatements) { mixin(def("declarationsAndStatements")); }
         override void visit(const Declarator declarator) { 
-            push(declarator);
-            super.visit(declarator);
-            super.visit(declarator.name);
-            pop();
+            mixin(deftoken("declarator", "name"));
         }
         override void visit(const DefaultStatement defaultStatement) { mixin(def("defaultStatement")); }
         override void visit(const DeleteExpression deleteExpression) { mixin(def("deleteExpression")); }
@@ -264,7 +391,9 @@ class DParsedModule {
         override void visit(const Destructor destructor) { mixin(def("destructor")); }
         override void visit(const DoStatement doStatement) { mixin(def("doStatement")); }
         override void visit(const EnumBody enumBody) { mixin(def("enumBody")); }
-        override void visit(const EnumDeclaration enumDeclaration) { mixin(def("enumDeclaration")); }
+        override void visit(const EnumDeclaration enumDeclaration) { 
+            mixin(deftoken("enumDeclaration", "name")); 
+        }
         override void visit(const EnumMember enumMember) { mixin(def("enumMember")); }
         override void visit(const EponymousTemplateDeclaration eponymousTemplateDeclaration) { mixin(def("eponymousTemplateDeclaration")); }
         override void visit(const EqualExpression equalExpression) { mixin(def("equalExpression")); }
@@ -278,11 +407,12 @@ class DParsedModule {
         override void visit(const ForeachTypeList foreachTypeList) { mixin(def("foreachTypeList")); }
         override void visit(const FunctionAttribute functionAttribute) { mixin(def("functionAttribute")); }
         override void visit(const FunctionBody functionBody) {
-            size_t importPos = _scopedImportList.length; scope(exit) _scopedImportList.length = importPos;
-            mixin(def("functionBody"));
+            mixin(defblock("functionBody"));
         }
         override void visit(const FunctionCallExpression functionCallExpression) { mixin(def("functionCallExpression")); }
-        override void visit(const FunctionDeclaration functionDeclaration) { mixin(def("functionDeclaration")); }
+        override void visit(const FunctionDeclaration functionDeclaration) { 
+            mixin(deftoken("functionDeclaration", "name")); 
+        }
         override void visit(const FunctionLiteralExpression functionLiteralExpression) { mixin(def("functionLiteralExpression")); }
         override void visit(const GotoStatement gotoStatement) { mixin(def("gotoStatement")); }
         override void visit(const IdentifierChain identifierChain) { mixin(def("identifierChain")); }
@@ -305,7 +435,9 @@ class DParsedModule {
         override void visit(const InStatement inStatement) { mixin(def("inStatement")); }
         override void visit(const Initialize initialize) { mixin(def("initialize")); }
         override void visit(const Initializer initializer) { mixin(def("initializer")); }
-        override void visit(const InterfaceDeclaration interfaceDeclaration) { mixin(def("interfaceDeclaration")); }
+        override void visit(const InterfaceDeclaration interfaceDeclaration) { 
+            mixin(deftoken("interfaceDeclaration", "name")); 
+        }
         override void visit(const Invariant invariant_) { mixin(def("invariant_")); }
         override void visit(const IsExpression isExpression) { mixin(def("isExpression")); }
         override void visit(const KeyValuePair keyValuePair) { mixin(def("keyValuePair")); }
@@ -360,7 +492,9 @@ class DParsedModule {
         override void visit(const StaticIfCondition staticIfCondition) { mixin(def("staticIfCondition")); }
         override void visit(const StorageClass storageClass) { mixin(def("storageClass")); }
         override void visit(const StructBody structBody) { mixin(def("structBody")); }
-        override void visit(const StructDeclaration structDeclaration) { mixin(def("structDeclaration")); }
+        override void visit(const StructDeclaration structDeclaration) { 
+            mixin(deftoken("structDeclaration", "name")); 
+        }
         override void visit(const StructInitializer structInitializer) { mixin(def("structInitializer")); }
         override void visit(const StructMemberInitializer structMemberInitializer) { mixin(def("structMemberInitializer")); }
         override void visit(const StructMemberInitializers structMemberInitializers) { mixin(def("structMemberInitializers")); }
