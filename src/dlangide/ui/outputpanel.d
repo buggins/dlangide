@@ -1,6 +1,6 @@
 module dlangide.ui.outputpanel;
 
-import dlangui.all;
+import dlangui;
 import dlangide.workspace.workspace;
 import dlangide.workspace.project;
 

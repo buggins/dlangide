@@ -2,7 +2,7 @@ module gui;
 
 import model;
 
-import dlangui.all;
+import dlangui;
 
 /// game action codes
 enum TetrisAction : int {

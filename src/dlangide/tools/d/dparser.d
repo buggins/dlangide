@@ -1,5 +1,7 @@
 module dlangide.tools.d.dparser;
 
+version(USE_LIBDPARSE):
+
 import dlangui.core.logger;
 
 import std.d.lexer;
