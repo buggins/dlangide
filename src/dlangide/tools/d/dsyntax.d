@@ -644,12 +644,80 @@ class SimpleDSyntaxSupport : SyntaxSupport {
         return true;
     }
 
+    protected bool _opInProgress;
+    protected void applyNewLineSmartIndent(EditOperation op, Object source) {
+        int line = op.newRange.end.line;
+        if (line == 0)
+            return; // not for first line
+        int prevLine = line - 1;
+        dstring lineText = _content.line(line);
+        TextLineMeasure lineMeasurement = _content.measureLine(line);
+        TextLineMeasure prevLineMeasurement = _content.measureLine(prevLine);
+        while (prevLineMeasurement.empty && prevLine > 0) {
+            prevLine--;
+            prevLineMeasurement = _content.measureLine(prevLine);
+        }
+        if (lineMeasurement.firstNonSpaceX >= 0 && lineMeasurement.firstNonSpaceX < prevLineMeasurement.firstNonSpaceX) {
+            dstring prevLineText = _content.line(prevLine);
+            TokenPropString prevLineTokenProps = _content.lineTokenProps(prevLine);
+            dchar lastOpChar = 0;
+            for (int j = prevLineMeasurement.lastNonSpace; j >= 0; j--) {
+                auto cat = j < prevLineTokenProps.length ? tokenCategory(prevLineTokenProps[j]) : 0;
+                if (cat == TokenCategory.Op) {
+                    lastOpChar = prevLineText[j];
+                    break;
+                } else if (cat != TokenCategory.Comment && cat != TokenCategory.WhiteSpace) {
+                    break;
+                }
+            }
+            int spacex = prevLineMeasurement.firstNonSpaceX;
+            if (lastOpChar == '{')
+                spacex = _content.nextTab(spacex);
+            dstring txt = _content.fillSpace(spacex);
+            EditOperation op2 = new EditOperation(EditAction.Replace, TextRange(TextPosition(line, 0), TextPosition(line, lineMeasurement.firstNonSpace >= 0 ? lineMeasurement.firstNonSpace : 0)), [txt]);
+            _opInProgress = true;
+            _content.performOperation(op2, source);
+            _opInProgress = false;
+        }
+    }
+
+    protected void applyClosingCurlySmartIndent(EditOperation op, Object source) {
+        int line = op.newRange.end.line;
+        TextPosition p2 = findPairedBracket(op.newRange.start);
+        if (p2 == op.newRange.start || p2.line > op.newRange.start.line)
+            return;
+        int prevLine = p2.line;
+        TextLineMeasure lineMeasurement = _content.measureLine(line);
+        TextLineMeasure prevLineMeasurement = _content.measureLine(prevLine);
+        if (lineMeasurement.firstNonSpace != op.newRange.start.pos)
+            return; // not in beginning of line
+        if (lineMeasurement.firstNonSpaceX >= 0 && lineMeasurement.firstNonSpaceX != prevLineMeasurement.firstNonSpaceX) {
+            dstring prevLineText = _content.line(prevLine);
+            TokenPropString prevLineTokenProps = _content.lineTokenProps(prevLine);
+            int spacex = prevLineMeasurement.firstNonSpaceX;
+            if (spacex != lineMeasurement.firstNonSpaceX) {
+                dstring txt = _content.fillSpace(spacex);
+                txt = txt ~ "}";
+                EditOperation op2 = new EditOperation(EditAction.Replace, TextRange(TextPosition(line, 0), TextPosition(line, lineMeasurement.firstNonSpace >= 0 ? lineMeasurement.firstNonSpace + 1 : 0)), [txt]);
+                _opInProgress = true;
+                _content.performOperation(op2, source);
+                _opInProgress = false;
+            }
+        }
+    }
+
     /// apply smart indent, if supported
     override void applySmartIndent(EditOperation op, Object source) {
+        if (_opInProgress)
+            return;
         if (op.isInsertNewLine) {
             // Enter key pressed - new line inserted or splitted
+            applyNewLineSmartIndent(op, source);
         } else if (op.singleChar == '}') {
-            // } entered - probably need 
+            // } entered - probably need unindent
+            applyClosingCurlySmartIndent(op, source);
+        } else if (op.singleChar == '{') {
+            // { entered - probably need auto closing }
         }
     }
 

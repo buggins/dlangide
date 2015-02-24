@@ -55,6 +55,8 @@ class DSourceEdit : SourceEdit {
             return;
         tabSize = _settings.tabSize;
         useSpacesForTabs = _settings.useSpacesForTabs;
+        smartIndents = _settings.smartIndents;
+        smartIndentsAfterPaste = _settings.smartIndentsAfterPaste;
     }
     protected ProjectSourceFile _projectSourceFile;
     @property ProjectSourceFile projectSourceFile() { return _projectSourceFile; }

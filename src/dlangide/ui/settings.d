@@ -16,6 +16,8 @@ class IDESettings : SettingsFile {
         Setting ed = editorSettings();
         ed.setBooleanDef("useSpacesForTabs", true);
         ed.setIntegerDef("tabSize", 4);
+        ed.setBooleanDef("smartIndents", true);
+        ed.setBooleanDef("smartIndentsAfterPaste", true);
         Setting ui = uiSettings();
         ui.setStringDef("theme", "theme_default");
         ui.setStringDef("language", "en");
@@ -90,4 +92,14 @@ class IDESettings : SettingsFile {
         editorSettings.setInteger("tabSize", limitInt(v, 1, 16));
         return this;
     }
+
+    /// true if smart indents are enabled
+    @property bool smartIndents() { return editorSettings.getBoolean("smartIndents", true); }
+    /// set smart indents enabled flag
+    @property IDESettings smartIndents(bool enabled) { editorSettings.setBoolean("smartIndents", enabled); return this; }
+
+    /// true if smart indents are enabled
+    @property bool smartIndentsAfterPaste() { return editorSettings.getBoolean("smartIndentsAfterPaste", true); }
+    /// set smart indents enabled flag
+    @property IDESettings smartIndentsAfterPaste(bool enabled) { editorSettings.setBoolean("smartIndentsAfterPaste", enabled); return this; }
 }
