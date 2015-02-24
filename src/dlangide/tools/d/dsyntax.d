@@ -637,5 +637,21 @@ class SimpleDSyntaxSupport : SyntaxSupport {
 		if (elapsed > 20)
 			Log.d("updateHighlight took ", elapsed, "ms");
     }
+
+
+    /// returns true if smart indent is supported
+    override bool supportsSmartIndents() {
+        return true;
+    }
+
+    /// apply smart indent, if supported
+    override void applySmartIndent(EditOperation op, Object source) {
+        if (op.isInsertNewLine) {
+            // Enter key pressed - new line inserted or splitted
+        } else if (op.singleChar == '}') {
+            // } entered - probably need 
+        }
+    }
+
 }
 
