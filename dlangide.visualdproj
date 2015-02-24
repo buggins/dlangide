@@ -66,7 +66,7 @@
   <debuglevel>0</debuglevel>
   <debugids>DebugInfo DCD</debugids>
   <versionlevel>0</versionlevel>
-  <versionids>Unicode  USE_FREETYPE USE_LIBDPARSE</versionids>
+  <versionids>Unicode  USE_FREETYPE USE_LIBDPARSE USE_MAGO</versionids>
   <dump_source>0</dump_source>
   <mapverbosity>3</mapverbosity>
   <createImplib>0</createImplib>
@@ -201,6 +201,7 @@
   <Folder name="ddebug">
    <Folder name="windows">
     <File path="src\ddebug\windows\debuginfo.d" />
+    <File path="src\ddebug\windows\mago.d" />
     <File path="src\ddebug\windows\windebug.d" />
    </Folder>
   </Folder>

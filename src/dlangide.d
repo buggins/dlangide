@@ -43,10 +43,14 @@ extern (C) int UIAppMain(string[] args) {
     //import ddc.lexer.tokenizer;
     //runTokenizerTest();
     debug(DebugInfo) {
+        version(USE_MAGO) {
+            import ddebug.windows.mago;
+            testMago();
+        }
         version(Windows) {
             import ddebug.windows.debuginfo;
             import std.file;
-            debugInfoTest(thisExePath);
+            //debugInfoTest(thisExePath);
         }
     }
 
