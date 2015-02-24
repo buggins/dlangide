@@ -62,7 +62,7 @@ class DSourceEdit : SourceEdit {
     override bool load(string fn) {
         _projectSourceFile = null;
         bool res = super.load(fn);
-        setHighlighter();
+        setSyntaxSupport();
         return res;
     }
 
@@ -70,11 +70,11 @@ class DSourceEdit : SourceEdit {
         return filename.endsWith(".d") || filename.endsWith(".dd") || filename.endsWith(".dh") || filename.endsWith(".ddoc");
     }
 
-    void setHighlighter() {
+    void setSyntaxSupport() {
         if (isDSourceFile) {
-            content.syntaxHighlighter = new SimpleDSyntaxHighlighter(filename);
+            content.syntaxSupport = new SimpleDSyntaxSupport(filename);
         } else {
-            content.syntaxHighlighter = null;
+            content.syntaxSupport = null;
         }
     }
 
@@ -92,7 +92,7 @@ class DSourceEdit : SourceEdit {
             return false;
         }
         _projectSourceFile = f;
-        setHighlighter();
+        setSyntaxSupport();
         return true;
     }
 

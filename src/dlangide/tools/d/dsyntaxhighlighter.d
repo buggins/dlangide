@@ -8,7 +8,7 @@ import ddc.lexer.textsource;
 import ddc.lexer.exceptions;
 import ddc.lexer.tokenizer;
 
-class SimpleDSyntaxHighlighter : SyntaxHighlighter {
+class SimpleDSyntaxSupport : SyntaxSupport {
 
     EditableContent _content;
     SourceFile _file;
@@ -26,7 +26,7 @@ class SimpleDSyntaxHighlighter : SyntaxHighlighter {
     /// returns editable content
     @property EditableContent content() { return _content; }
     /// set editable content
-    @property SyntaxHighlighter content(EditableContent content) {
+    @property SyntaxSupport content(EditableContent content) {
         _content = content;
         return this;
     }

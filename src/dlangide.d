@@ -1,6 +1,6 @@
 module app;
 
-import dlangui.all;
+import dlangui;
 import std.stdio;
 import std.conv;
 import dlangide.ui.frame;
