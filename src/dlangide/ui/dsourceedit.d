@@ -14,7 +14,7 @@ import dlangide.workspace.workspace;
 import dlangide.workspace.project;
 import dlangide.ui.commands;
 import dlangide.ui.settings;
-import dlangide.tools.d.dsyntaxhighlighter;
+import dlangide.tools.d.dsyntax;
 
 import std.algorithm;
 
