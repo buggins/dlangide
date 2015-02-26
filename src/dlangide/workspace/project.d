@@ -9,6 +9,7 @@ import std.file;
 import std.json;
 import std.utf;
 import std.algorithm;
+import std.process;
 
 /// return true if filename matches rules for workspace file names
 bool isProjectFile(string filename) {
@@ -230,15 +231,23 @@ class Project : WorkspaceItem {
     protected ProjectFolder _items;
     protected ProjectSourceFile _mainSourceFile;
     protected SettingsFile _projectFile;
+    protected bool _isDependency;
+    protected string _dependencyVersion;
 
     protected string[] _sourcePaths;
     protected string[] _builderSourcePaths;
 
 
-    this(string fname = null) {
+    this(Workspace ws, string fname = null, string dependencyVersion = null) {
         super(fname);
+        _workspace = ws;
         _items = new ProjectFolder(fname);
+        _dependencyVersion = dependencyVersion;
+        _isDependency = _dependencyVersion.length > 0;
     }
+
+    @property bool isDependency() { return _isDependency; }
+    @property string dependencyVersion() { return _dependencyVersion; }
 
     /// returns project's own source paths
     @property string[] sourcePaths() { return _sourcePaths; }
@@ -346,6 +355,10 @@ class Project : WorkspaceItem {
 
         try {
             _name = toUTF32(_projectFile.getString("name"));
+            if (_isDependency) {
+                _name ~= "-"d;
+                _name ~= toUTF32(_dependencyVersion.startsWith("~") ? _dependencyVersion[1..$] : _dependencyVersion);
+            }
             _description = toUTF32(_projectFile.getString("description"));
             Log.d("  project name: ", _name);
             Log.d("  project description: ", _description);
@@ -355,7 +368,8 @@ class Project : WorkspaceItem {
 
             Log.i("Project source paths: ", sourcePaths);
             Log.i("Builder source paths: ", builderSourcePaths);
-
+            if (!_isDependency)
+                loadSelections();
         } catch (JSONException e) {
             Log.e("Cannot parse json", e);
             return false;
@@ -364,6 +378,83 @@ class Project : WorkspaceItem {
             return false;
         }
         return true;
+    }
+
+    protected Project[] _dependencies;
+    @property Project[] dependencies() { return _dependencies; }
+    protected bool addDependency(Project dep) {
+        if (_workspace)
+            _workspace.addDependencyProject(dep);
+        _dependencies ~= dep;
+        return true;
+    }
+    bool loadSelections() {
+        _dependencies.length = 0;
+        DubPackageFinder finder = new DubPackageFinder();
+        scope(exit) destroy(finder);
+        SettingsFile selectionsFile = new SettingsFile(buildNormalizedPath(_dir, "dub.selections.json"));
+        if (!selectionsFile.load())
+            return false;
+        Setting versions = selectionsFile.objectByPath("versions");
+        if (!versions)
+            return false;
+        string[string] versionMap = versions.strMap;
+        foreach(packageName, packageVersion; versionMap) {
+            string fn = finder.findPackage(packageName, packageVersion);
+            Log.d("dependency ", packageName, " ", packageVersion, " : ", fn ? fn : "NOT FOUND");
+            if (fn) {
+                Project p = new Project(_workspace, fn, packageVersion);
+                if (p.load()) {
+                    addDependency(p);
+                } else {
+                    Log.e("cannot load dependency package ", packageName, " ", packageVersion, " from file ", fn);
+                    destroy(p);
+                }
+            }
+        }
+        return true;
+    }
+}
+
+class DubPackageFinder {
+    string systemDubPath;
+    string userDubPath;
+    string tempPath;
+    this() {
+        version(Windows){
+            systemDubPath = buildNormalizedPath(environment.get("ProgramData"), "dub", "packages");
+            userDubPath = buildNormalizedPath(environment.get("APPDATA"), "dub", "packages");
+            tempPath = buildNormalizedPath(environment.get("TEMP"), "dub", "packages");
+        } else version(Posix){
+            systemDubPath = "/var/lib/dub/packages";
+            userDubPath = buildNormalizedPath(environment.get("HOME"), ".dub", "packages");
+            if(!userDubPath.isAbsolute)
+                userDubPath = buildNormalizedPath(getcwd(), userDubPath);
+            tempPath = "/tmp/packages";
+        }
+    }
+
+    protected string findPackage(string packageDir, string packageName, string packageVersion) {
+        string fullName = packageVersion.startsWith("~") ? packageName ~ "-" ~ packageVersion[1..$] : packageName ~ "-" ~ packageVersion;
+        string pathName = absolutePath(buildNormalizedPath(packageDir, fullName));
+        if (pathName.exists && pathName.isDir) {
+            string fn = buildNormalizedPath(pathName, "dub.json");
+            if (fn.exists && fn.isFile)
+                return fn;
+            fn = buildNormalizedPath(pathName, "package.json");
+            if (fn.exists && fn.isFile)
+                return fn;
+        }
+        return null;
+    }
+
+    string findPackage(string packageName, string packageVersion) {
+        string res = null;
+        res = findPackage(userDubPath, packageName, packageVersion);
+        if (res)
+            return res;
+        res = findPackage(systemDubPath, packageName, packageVersion);
+        return res;
     }
 }
 

@@ -591,6 +591,16 @@ class IDEFrame : AppFrame {
 		return false;
 	}
 
+    private bool loadProject(Project project) {
+        if (!project.load()) {
+            _logPanel.logLine("Cannot read project " ~ project.filename);
+            window.showMessageBox(UIString("Cannot open project"d), UIString("Error occured while opening project "d ~ toUTF32(project.filename)));
+            return false;
+        }
+        _logPanel.logLine(toUTF32("Project file " ~ project.filename ~  " is opened ok"));
+        return true;
+    }
+
     void openFileOrWorkspace(string filename) {
         if (filename.isWorkspaceFile) {
             Workspace ws = new Workspace();
@@ -605,13 +615,7 @@ class IDEFrame : AppFrame {
         } else if (filename.isProjectFile) {
             _logPanel.clear();
             _logPanel.logLine("Trying to open project from " ~ filename);
-            Project project = new Project();
-            if (!project.load(filename)) {
-                _logPanel.logLine("Cannot read project file " ~ filename);
-                window.showMessageBox(UIString("Cannot open project"d), UIString("Error occured while opening project"d));
-                return;
-            }
-            _logPanel.logLine("Project file is opened ok");
+            Project project = new Project(currentWorkspace, filename);
             string defWsFile = project.defWorkspaceFile;
             if (currentWorkspace) {
                 Project existing = currentWorkspace.findProject(project.filename);
@@ -628,6 +632,7 @@ class IDEFrame : AppFrame {
                                           } else if (result.id == IDEActions.AddToCurrentWorkspace) {
                                               // add to current
                                               currentWorkspace.addProject(project);
+                                              loadProject(project);
                                               currentWorkspace.save();
                                               refreshWorkspace();
                                           }
@@ -656,6 +661,7 @@ class IDEFrame : AppFrame {
         ws.name = project.name;
         ws.description = project.description;
         ws.addProject(project);
+        loadProject(project);
         ws.save(defWsFile);
         setWorkspace(ws);
         _logPanel.logLine("Done");

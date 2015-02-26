@@ -93,6 +93,17 @@ class Workspace : WorkspaceItem {
         fillStartupProject();
     }
 
+    bool addDependencyProject(Project p) {
+        for (int i = 0; i < _projects.length; i++) {
+            if (_projects[i].filename.equal(p.filename)) {
+                _projects[i] = p;
+                return false;
+            }
+        }
+        addProject(p);
+        return true;
+    }
+
     string absoluteToRelativePath(string path) {
         return toForwardSlashSeparator(relativePath(path, _dir));
     }
@@ -108,6 +119,8 @@ class Workspace : WorkspaceItem {
             json["description"] = JSONValue(toUTF8(_description));
             JSONValue[string] projects;
             foreach (Project p; _projects) {
+                if (p.isDependency)
+                    continue; // don't save dependency
                 string pname = toUTF8(p.name);
                 string ppath = absoluteToRelativePath(p.filename);
                 projects[pname] = JSONValue(ppath);
@@ -147,7 +160,7 @@ class Workspace : WorkspaceItem {
                 Log.d("project: ", key, " path:", path);
                 if (!isAbsolute(path))
                     path = buildNormalizedPath(_dir, path); //, "dub.json"
-                Project project = new Project(path);
+                Project project = new Project(this, path);
                 _projects ~= project;
                 project.load();
 
