@@ -697,7 +697,7 @@ class IDEFrame : AppFrame {
             _logPanel.logLine("No project is opened");
             return;
         }
-        Builder op = new Builder(this, currentWorkspace.startupProject, _logPanel, currentWorkspace.buildConfiguration, buildOp, false);
+        Builder op = new Builder(this, currentWorkspace.startupProject, _logPanel, currentWorkspace.projectConfiguration, currentWorkspace.buildConfiguration, buildOp, false);
         setBackgroundOperation(op);
     }
 

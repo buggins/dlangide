@@ -16,6 +16,7 @@ class Builder : BackgroundOperationWatcher {
     protected ExternalProcess _extprocess;
     protected OutputPanel _log;
     protected ProtectedTextStorage _box;
+    protected dstring _projectConfig;
     protected BuildConfiguration _buildConfig;
     protected BuildOperation _buildOp;
     protected bool _verbose;
@@ -23,8 +24,9 @@ class Builder : BackgroundOperationWatcher {
     @property Project project() { return _project; }
     @property void project(Project p) { _project = p; }
 
-    this(AppFrame frame, Project project, OutputPanel log, BuildConfiguration buildConfig, BuildOperation buildOp, bool verbose) {
+    this(AppFrame frame, Project project, OutputPanel log, dstring projectConfig, BuildConfiguration buildConfig, BuildOperation buildOp, bool verbose) {
         super(frame);
+        _projectConfig = projectConfig;
         _buildConfig = buildConfig;
         _buildOp = buildOp;
         _verbose = verbose;
@@ -83,6 +85,10 @@ class Builder : BackgroundOperationWatcher {
                 }
             }
 
+            if(_projectConfig != DEFAULT_PROJECT_CONFIGURATION) {
+                params ~= "--config=".dup ~ cast(string)(_projectConfig);
+            }
+            
             if (_verbose)
                 params ~= "-v".dup;
 
