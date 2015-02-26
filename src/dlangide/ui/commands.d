@@ -16,6 +16,7 @@ enum IDEActions : int {
     FileClose,
     FileExit,
     EditPreferences,
+    ProjectConfigurations,
     BuildConfigurations,
     BuildWorkspace,
     RebuildWorkspace,
@@ -68,6 +69,7 @@ const Action ACTION_FILE_EXIT = new Action(IDEActions.FileExit, "MENU_FILE_EXIT"
 const Action ACTION_WORKSPACE_BUILD = new Action(IDEActions.BuildWorkspace, "MENU_BUILD_WORKSPACE_BUILD"c);
 const Action ACTION_WORKSPACE_REBUILD = new Action(IDEActions.RebuildWorkspace, "MENU_BUILD_WORKSPACE_REBUILD"c);
 const Action ACTION_WORKSPACE_CLEAN = new Action(IDEActions.CleanWorkspace, "MENU_BUILD_WORKSPACE_CLEAN"c);
+const Action ACTION_PROJECT_CONFIGURATIONS = new Action(IDEActions.ProjectConfigurations, "MENU_PROJECT_CONFIGURATIONS"c);
 const Action ACTION_BUILD_CONFIGURATIONS = new Action(IDEActions.BuildConfigurations, "MENU_BUILD_CONFIGURATIONS"c);
 const Action ACTION_PROJECT_BUILD = new Action(IDEActions.BuildProject, "MENU_BUILD_PROJECT_BUILD"c, "run-build", KeyCode.F7, 0);
 const Action ACTION_PROJECT_REBUILD = new Action(IDEActions.RebuildProject, "MENU_BUILD_PROJECT_REBUILD"c, "run-build-clean", KeyCode.F7, KeyFlag.Control);

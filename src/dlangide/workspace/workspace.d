@@ -35,6 +35,7 @@ class WorkspaceException : Exception
 }
 
 immutable string WORKSPACE_EXTENSION = ".dlangidews";
+immutable dstring DEFAULT_PROJECT_CONFIGURATION = "default"d;
 
 /// return true if filename matches rules for workspace file names
 bool isWorkspaceFile(string filename) {
@@ -46,7 +47,8 @@ class Workspace : WorkspaceItem {
     protected Project[] _projects;
 
     protected BuildConfiguration _buildConfiguration;
-
+    protected dstring _projectConfiguration = DEFAULT_PROJECT_CONFIGURATION;
+    
     this(string fname = null) {
         super(fname);
     }
@@ -58,6 +60,9 @@ class Workspace : WorkspaceItem {
     @property BuildConfiguration buildConfiguration() { return _buildConfiguration; }
     @property void buildConfiguration(BuildConfiguration config) { _buildConfiguration = config; }
 
+    @property dstring projectConfiguration() { return _projectConfiguration; }
+    @property void projectConfiguration(dstring config) { _projectConfiguration = config; }
+     
     protected Project _startupProject;
 
     @property Project startupProject() { return _startupProject; }

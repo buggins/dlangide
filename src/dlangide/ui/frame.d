@@ -434,6 +434,17 @@ class IDEFrame : AppFrame {
         tb.addButtons(ACTION_FILE_OPEN, ACTION_FILE_SAVE, ACTION_SEPARATOR);
 
         tb.addButtons(ACTION_DEBUG_START);
+        
+        ToolBarComboBox cbProjectConfiguration = new ToolBarComboBox("projectConfig", [DEFAULT_PROJECT_CONFIGURATION]);
+        cbProjectConfiguration.onItemClickListener = delegate(Widget source, int index) {
+            if (currentWorkspace) {
+                currentWorkspace.projectConfiguration = cbProjectConfiguration.text; 
+            }
+            return true;
+        };
+        cbProjectConfiguration.action = ACTION_PROJECT_CONFIGURATIONS;
+        tb.addControl(cbProjectConfiguration);
+        
         ToolBarComboBox cbBuildConfiguration = new ToolBarComboBox("buildConfig", ["Debug"d, "Release"d, "Unittest"d]);
         cbBuildConfiguration.onItemClickListener = delegate(Widget source, int index) {
             if (currentWorkspace && index < 3) {
