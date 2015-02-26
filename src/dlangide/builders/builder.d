@@ -64,7 +64,11 @@ class Builder : BackgroundOperationWatcher {
             } else if (_buildOp == BuildOperation.Clean) {
                 params ~= "clean".dup;
             } else if (_buildOp == BuildOperation.Run) {
-                params ~= "run".dup;
+                if (_projectConfig.type == ProjectConfiguration.Type.Library) {
+                    params ~= "test".dup;
+                } else {
+                	params ~= "run".dup;
+            	}
             } else if (_buildOp == BuildOperation.Upgrade) {
                 params ~= "upgrade".dup;
                 params ~= "--force-remove".dup;
