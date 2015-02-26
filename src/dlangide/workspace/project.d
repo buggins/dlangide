@@ -223,6 +223,59 @@ string[] dmdSourcePaths() {
     return res;
 }
 
+/// Stores info about project configuration
+struct ProjectConfiguration {
+    /// name used to build the project
+    string name;
+    /// type, for libraries one can run tests, for apps - execute them
+    Type type;
+    
+    /// How to display default configuration in ui
+    immutable static string DEFAULT_NAME = "default";
+    /// Default project configuration
+    immutable static ProjectConfiguration DEFAULT = ProjectConfiguration(DEFAULT_NAME, Type.Default);
+    
+    /// Type of configuration
+    enum Type {
+        Default,
+        Executable,
+        Library
+    }
+    
+    private static Type parseType(string s)
+    {
+        switch(s)
+        {
+            case "executable": return Type.Executable;
+            case "library": return Type.Library;
+            case "dynamicLibrary": return Type.Library;
+            case "staticLibrary": return Type.Library;
+            default: return Type.Default;
+        }
+    }
+    
+    /// parsing from setting file
+    static ProjectConfiguration[string] load(Setting s)
+    {
+        ProjectConfiguration[string] res = [DEFAULT_NAME: DEFAULT];
+        if(s.map is null || "configurations" !in s.map || s.map["configurations"].array is null) 
+        	return res;
+        
+        foreach(conf; s.map["configurations"].array)
+        {
+            if(conf.map is null || "name" !in conf.map) continue;
+            Type t = Type.Default;
+            if("targetType" in conf.map) {
+                t = parseType(conf.map["targetType"].str);
+            }
+            string confName = conf.map["name"].str;
+            res[confName] = ProjectConfiguration(confName, t);
+        }
+        
+        return res;
+    }
+}
+
 /// DLANGIDE D project
 class Project : WorkspaceItem {
     protected Workspace _workspace;
@@ -233,13 +286,19 @@ class Project : WorkspaceItem {
 
     protected string[] _sourcePaths;
     protected string[] _builderSourcePaths;
-
+    protected ProjectConfiguration[string] _configurations;
 
     this(string fname = null) {
         super(fname);
         _items = new ProjectFolder(fname);
     }
 
+    /// returns project configurations
+    @property const(ProjectConfiguration[string]) configurations() const
+    {
+        return _configurations;
+    }
+    
     /// returns project's own source paths
     @property string[] sourcePaths() { return _sourcePaths; }
     /// returns project's own source paths
@@ -356,6 +415,9 @@ class Project : WorkspaceItem {
             Log.i("Project source paths: ", sourcePaths);
             Log.i("Builder source paths: ", builderSourcePaths);
 
+            _configurations = ProjectConfiguration.load(_projectFile);
+            Log.i("Project configurations: ", _configurations);
+            
         } catch (JSONException e) {
             Log.e("Cannot parse json", e);
             return false;

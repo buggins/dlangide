@@ -57,9 +57,33 @@ class BackgroundOperationWatcherTest : BackgroundOperationWatcher {
     }
 }
 
+/// Subclass of toolbars that can update their items
+class UpdateableToolBarComboBox : ToolBarComboBox {
+    this(string id, dstring[] items) {
+        super(id, items);
+    }
+    
+    @property items(dstring[] newItems) {
+        _adapter.items = newItems;
+        if(newItems.length > 0) {
+           selectedItemIndex = 0;
+        }
+        requestLayout();
+    }
+    
+    @property dstring selectedItem() {
+        size_t index = _selectedItemIndex;
+        if(index < 0 || index >= _adapter.itemCount) return "";
+        
+        return _adapter.items.get(index);
+    }
+}
+
 /// DIDE app frame
 class IDEFrame : AppFrame {
 
+	private UpdateableToolBarComboBox projectConfigurationCombo;
+	
     MenuItem mainMenuItems;
     WorkspacePanel _wsPanel;
     OutputPanel _logPanel;
@@ -435,15 +459,15 @@ class IDEFrame : AppFrame {
 
         tb.addButtons(ACTION_DEBUG_START);
         
-        ToolBarComboBox cbProjectConfiguration = new ToolBarComboBox("projectConfig", [DEFAULT_PROJECT_CONFIGURATION]);
-        cbProjectConfiguration.onItemClickListener = delegate(Widget source, int index) {
+        projectConfigurationCombo = new UpdateableToolBarComboBox("projectConfig", [ProjectConfiguration.DEFAULT_NAME.to!dstring]);
+        projectConfigurationCombo.onItemClickListener = delegate(Widget source, int index) {
             if (currentWorkspace) {
-                currentWorkspace.projectConfiguration = cbProjectConfiguration.text; 
+                currentWorkspace.setStartupProjectConfiguration(projectConfigurationCombo.selectedItem.to!string); 
             }
             return true;
         };
-        cbProjectConfiguration.action = ACTION_PROJECT_CONFIGURATIONS;
-        tb.addControl(cbProjectConfiguration);
+        projectConfigurationCombo.action = ACTION_PROJECT_CONFIGURATIONS;
+        tb.addControl(projectConfigurationCombo);
         
         ToolBarComboBox cbBuildConfiguration = new ToolBarComboBox("buildConfig", ["Debug"d, "Release"d, "Unittest"d]);
         cbBuildConfiguration.onItemClickListener = delegate(Widget source, int index) {
@@ -604,7 +628,7 @@ class IDEFrame : AppFrame {
 
     void openFileOrWorkspace(string filename) {
         if (filename.isWorkspaceFile) {
-            Workspace ws = new Workspace();
+            Workspace ws = new Workspace(this);
             if (ws.load(filename)) {
                 askForUnsavedEdits(delegate() {
                     setWorkspace(ws);
@@ -663,7 +687,7 @@ class IDEFrame : AppFrame {
         string defWsFile = project.defWorkspaceFile;
         _logPanel.logLine("Creating new workspace " ~ defWsFile);
         // new ws
-        Workspace ws = new Workspace();
+        Workspace ws = new Workspace(this);
         ws.name = project.name;
         ws.description = project.description;
         ws.addProject(project);
@@ -700,7 +724,12 @@ class IDEFrame : AppFrame {
         Builder op = new Builder(this, currentWorkspace.startupProject, _logPanel, currentWorkspace.projectConfiguration, currentWorkspace.buildConfiguration, buildOp, false);
         setBackgroundOperation(op);
     }
-
+    
+    /// updates list of available configurations
+    void setProjectConfigurations(dstring[] items) {
+        projectConfigurationCombo.items = items;
+    }
+    
     /// handle files dropped to application window
     void onFilesDropped(string[] filenames) {
         //Log.d("onFilesDropped(", filenames, ")");
