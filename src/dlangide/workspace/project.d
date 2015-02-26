@@ -259,6 +259,29 @@ class Project : WorkspaceItem {
         return _builderSourcePaths; 
     }
 
+    private static void addUnique(ref string[] dst, string[] items) {
+        foreach(item; items) {
+            bool found = false;
+            foreach(existing; dst) {
+                if (item.equal(existing)) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found)
+                dst ~= item;
+        }
+    }
+    @property string[] importPaths() {
+        string[] res;
+        addUnique(res, sourcePaths);
+        addUnique(res, builderSourcePaths);
+        foreach(dep; _dependencies) {
+            addUnique(res, dep.sourcePaths);
+        }
+        return res;
+    }
+
     string relativeToAbsolutePath(string path) {
         if (isAbsolute(path))
             return path;

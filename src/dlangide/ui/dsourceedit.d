@@ -83,7 +83,7 @@ class DSourceEdit : SourceEdit {
     /// returns project import paths - if file from project is opened in current editor
     string[] importPaths() {
         if (_projectSourceFile)
-            return _projectSourceFile.project.sourcePaths  ~ _projectSourceFile.project.builderSourcePaths;
+            return _projectSourceFile.project.importPaths;
         return null;
     }
 
