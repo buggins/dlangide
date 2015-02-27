@@ -11,15 +11,18 @@ Currently supported features:
 * Build and run project with DUB
 * Build log highlight and navigation to place of error or warning by clicking on log line
 * DUB dependencies update
+* DUB package configuration selection (implemented by NCrashed)
+* Dependency projects are shown in workspace tree
 
 Source editor features:
 
 * D language source code syntax highlight (basic)
 * Indent / unindent text with Tab and Shift+Tab or Ctrl+\[ and Ctrl+\]
 * Toggle line or block comments by Ctrl+/ and Ctrl+Shift+/
-* Select word by mouse double click
 * D source code autocompletion by Ctrl+Space or Ctrl+Shift+G (using DCD)
 * D source code Go To Definition by Ctrl+G or F12 (using DCD)
+* D source code Smart Indents
+* Select word by mouse double click
 
 
 ![screenshot](http://buggins.github.io/dlangui/screenshots/screenshot-dlangide.png "screenshot")
