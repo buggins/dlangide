@@ -259,20 +259,18 @@ struct ProjectConfiguration {
     static ProjectConfiguration[string] load(Setting s)
     {
         ProjectConfiguration[string] res = [DEFAULT_NAME: DEFAULT];
-        if(s.map is null || "configurations" !in s.map || s.map["configurations"].array is null) 
+        Setting configs = s.objectByPath("configurations");
+        if(configs is null || configs.type != SettingType.ARRAY) 
         	return res;
         
-        foreach(conf; s.map["configurations"].array)
-        {
-            if(conf.map is null || "name" !in conf.map) continue;
+        foreach(conf; configs) {
+            if(!conf.isObject) continue;
             Type t = Type.Default;
-            if("targetType" in conf.map) {
-                t = parseType(conf.map["targetType"].str);
-            }
-            string confName = conf.map["name"].str;
-            res[confName] = ProjectConfiguration(confName, t);
+            if(auto typeName = conf.getString("targetType"))
+                t = parseType(typeName);
+            if (string confName = conf.getString("name"))
+                res[confName] = ProjectConfiguration(confName, t);
         }
-        
         return res;
     }
 }
