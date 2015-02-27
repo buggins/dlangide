@@ -1,10 +1,13 @@
 module dlangide.workspace.workspace;
 
 import dlangide.workspace.project;
+import dlangide.ui.frame;
 import dlangui.core.logger;
+import std.conv;
 import std.path;
 import std.file;
 import std.json;
+import std.range;
 import std.utf;
 import std.algorithm;
 
@@ -44,11 +47,14 @@ bool isWorkspaceFile(string filename) {
 /// DlangIDE workspace
 class Workspace : WorkspaceItem {
     protected Project[] _projects;
-
+    
+    protected IDEFrame _frame;
     protected BuildConfiguration _buildConfiguration;
-
-    this(string fname = null) {
+    protected ProjectConfiguration _projectConfiguration = ProjectConfiguration.DEFAULT;
+    
+    this(IDEFrame frame, string fname = null) {
         super(fname);
+        _frame = frame;
     }
 
     @property Project[] projects() {
@@ -58,14 +64,28 @@ class Workspace : WorkspaceItem {
     @property BuildConfiguration buildConfiguration() { return _buildConfiguration; }
     @property void buildConfiguration(BuildConfiguration config) { _buildConfiguration = config; }
 
+    @property ProjectConfiguration projectConfiguration() { return _projectConfiguration; }
+    @property void projectConfiguration(ProjectConfiguration config) { _projectConfiguration = config; }
+     
     protected Project _startupProject;
 
     @property Project startupProject() { return _startupProject; }
-    @property void startupProject(Project project) { _startupProject = project; }
+    @property void startupProject(Project project) { 
+        _startupProject = project;
+        _frame.setProjectConfigurations(project.configurations.keys.map!(k => k.to!dstring).array); 
+    }
 
+    /// setups currrent project configuration by name
+    void setStartupProjectConfiguration(string conf)
+    {
+        if(_startupProject && conf in _startupProject.configurations) {
+            _projectConfiguration = _startupProject.configurations[conf];
+        }
+    }
+    
     protected void fillStartupProject() {
         if (!_startupProject && _projects.length)
-            _startupProject = _projects[0];
+            startupProject = _projects[0];
     }
 
     /// tries to find source file in one of projects, returns found project source file item, or null if not found
