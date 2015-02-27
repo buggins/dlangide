@@ -28,6 +28,8 @@ GitHub page: [https://github.com/buggins/dlangide](https://github.com/buggins/dl
 
 DlangUI project GitHub page: [https://github.com/buggins/dlangui](https://github.com/buggins/dlangui)
 
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/buggins/dlangide?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)  [![Build Status](https://travis-ci.org/buggins/dlangide.svg?branch=master)](https://travis-ci.org/buggins/dlangide) [![PayPayl donate button](https://img.shields.io/badge/paypal-donate-yellow.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=H2ADZV8S6TDHQ "Donate once-off to this project using Paypal")
+
 
 DCD integration
 ===============
