@@ -3,15 +3,18 @@ module dlangide.ui.outputpanel;
 import dlangui;
 import dlangide.workspace.workspace;
 import dlangide.workspace.project;
+import dlangide.ui.frame;
 
 import std.utf;
 import std.regex;
 import std.algorithm : startsWith;
+import std.string;
 
 /// event listener to navigate by error/warning position
 interface CompilerLogIssueClickHandler {
 	bool onCompilerLogIssueClick(dstring filename, int line, int column);
 }
+
 
 /// Log widget with parsing of compiler output
 class CompilerLogWidget : LogWidget {
@@ -113,19 +116,41 @@ class OutputPanel : DockWindow {
 
 	protected CompilerLogWidget _logWidget;
 
+    TabWidget _tabs;
+
+	@property TabWidget getTabs() { return _tabs;}
+
     this(string id) {
+		_showCloseButton = false;
+		dockAlignment = DockAlignment.Bottom;
         super(id);
-        _caption.text = "Output"d;
-        dockAlignment = DockAlignment.Bottom;
-    }
+
+	}
 
     override protected Widget createBodyWidget() {
+        _tabs = new TabWidget("OutputPanelTabs");
+        _tabs.setStyles(STYLE_DOCK_HOST_BODY, STYLE_TAB_UP_DARK, STYLE_TAB_UP_BUTTON_DARK, STYLE_TAB_UP_BUTTON_DARK_TEXT);
+
 		_logWidget = new CompilerLogWidget("logwidget");
         _logWidget.readOnly = true;
-        _logWidget.layoutHeight(FILL_PARENT).layoutHeight(FILL_PARENT);
+        _logWidget.layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT);
 		_logWidget.compilerLogIssueClickHandler = &onIssueClick;
-        return _logWidget;
+
+        _tabs.addTab(_logWidget, "Compiler Log"d);
+		_tabs.selectTab("logwidget");
+
+        return _tabs;
     }
+
+	override protected void init() {
+		
+		styleId = STYLE_DOCK_WINDOW;
+		_bodyWidget = createBodyWidget();
+		_bodyWidget.styleId = STYLE_DOCK_WINDOW_BODY;
+		addChild(_bodyWidget);
+	}
+
+    //TODO: Refactor OutputPanel to expose CompilerLogWidget
 
     void appendText(string category, dstring msg) {
         _logWidget.appendText(msg);

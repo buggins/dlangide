@@ -341,6 +341,11 @@ class IDEFrame : AppFrame {
             _logPanel.appendText(null, "cannot start dcd-server: code completion for D code will not work"d);
         }
 
+		import dlangide.ui.searchPanel;
+		auto searchPanel = new SearchWidget("search", this);
+
+		_logPanel.getTabs.addTab( searchPanel, "Search"d, null, true);
+
         _dockHost.addDockedWindow(_logPanel);
 
         return _dockHost;
