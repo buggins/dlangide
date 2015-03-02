@@ -79,6 +79,9 @@ void testMago() {
         Log.e("OLE 2 failed to initialize");
         return;
     }
+
+    IDebugCoreServer2 coreServer = null;
+
     //hr = CoCreateInstance(&CLSID_MAGO, null, CLSCTX_ALL, &IID_IDebugEngine2, cast(void**)&piUnknown);
     hr = CoCreateInstance(&IID_MAGO_NATIVE_ENGINE, //CLSID_MAGO, 
                           null, 
@@ -118,10 +121,10 @@ void testMago() {
     envblock ~= 0;
     opts ~= 0;
 
-
+    IDebugPort2 port;
     hr = debugEngineLaunch.LaunchSuspended ( 
                              null,
-                             null,
+                             port,
                              exe.ptr,//LPCOLESTR
                              args.ptr,
                              dir.ptr,

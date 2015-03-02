@@ -1,10 +1,13 @@
 module dlangide.workspace.workspace;
 
 import dlangide.workspace.project;
+import dlangide.ui.frame;
 import dlangui.core.logger;
+import std.conv;
 import std.path;
 import std.file;
 import std.json;
+import std.range;
 import std.utf;
 import std.algorithm;
 
@@ -44,11 +47,14 @@ bool isWorkspaceFile(string filename) {
 /// DlangIDE workspace
 class Workspace : WorkspaceItem {
     protected Project[] _projects;
-
+    
+    protected IDEFrame _frame;
     protected BuildConfiguration _buildConfiguration;
-
-    this(string fname = null) {
+    protected ProjectConfiguration _projectConfiguration = ProjectConfiguration.DEFAULT;
+    
+    this(IDEFrame frame, string fname = null) {
         super(fname);
+        _frame = frame;
     }
 
     @property Project[] projects() {
@@ -58,14 +64,28 @@ class Workspace : WorkspaceItem {
     @property BuildConfiguration buildConfiguration() { return _buildConfiguration; }
     @property void buildConfiguration(BuildConfiguration config) { _buildConfiguration = config; }
 
+    @property ProjectConfiguration projectConfiguration() { return _projectConfiguration; }
+    @property void projectConfiguration(ProjectConfiguration config) { _projectConfiguration = config; }
+     
     protected Project _startupProject;
 
     @property Project startupProject() { return _startupProject; }
-    @property void startupProject(Project project) { _startupProject = project; }
+    @property void startupProject(Project project) { 
+        _startupProject = project;
+        _frame.setProjectConfigurations(project.configurations.keys.map!(k => k.to!dstring).array); 
+    }
 
+    /// setups currrent project configuration by name
+    void setStartupProjectConfiguration(string conf)
+    {
+        if(_startupProject && conf in _startupProject.configurations) {
+            _projectConfiguration = _startupProject.configurations[conf];
+        }
+    }
+    
     protected void fillStartupProject() {
         if (!_startupProject && _projects.length)
-            _startupProject = _projects[0];
+            startupProject = _projects[0];
     }
 
     /// tries to find source file in one of projects, returns found project source file item, or null if not found
@@ -93,6 +113,17 @@ class Workspace : WorkspaceItem {
         fillStartupProject();
     }
 
+    bool addDependencyProject(Project p) {
+        for (int i = 0; i < _projects.length; i++) {
+            if (_projects[i].filename.equal(p.filename)) {
+                _projects[i] = p;
+                return false;
+            }
+        }
+        addProject(p);
+        return true;
+    }
+
     string absoluteToRelativePath(string path) {
         return toForwardSlashSeparator(relativePath(path, _dir));
     }
@@ -108,6 +139,8 @@ class Workspace : WorkspaceItem {
             json["description"] = JSONValue(toUTF8(_description));
             JSONValue[string] projects;
             foreach (Project p; _projects) {
+                if (p.isDependency)
+                    continue; // don't save dependency
                 string pname = toUTF8(p.name);
                 string ppath = absoluteToRelativePath(p.filename);
                 projects[pname] = JSONValue(ppath);
@@ -147,7 +180,7 @@ class Workspace : WorkspaceItem {
                 Log.d("project: ", key, " path:", path);
                 if (!isAbsolute(path))
                     path = buildNormalizedPath(_dir, path); //, "dub.json"
-                Project project = new Project(path);
+                Project project = new Project(this, path);
                 _projects ~= project;
                 project.load();
 

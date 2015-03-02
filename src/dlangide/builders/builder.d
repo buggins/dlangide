@@ -16,6 +16,7 @@ class Builder : BackgroundOperationWatcher {
     protected ExternalProcess _extprocess;
     protected OutputPanel _log;
     protected ProtectedTextStorage _box;
+    protected ProjectConfiguration _projectConfig;
     protected BuildConfiguration _buildConfig;
     protected BuildOperation _buildOp;
     protected bool _verbose;
@@ -23,8 +24,9 @@ class Builder : BackgroundOperationWatcher {
     @property Project project() { return _project; }
     @property void project(Project p) { _project = p; }
 
-    this(AppFrame frame, Project project, OutputPanel log, BuildConfiguration buildConfig, BuildOperation buildOp, bool verbose) {
+    this(AppFrame frame, Project project, OutputPanel log, ProjectConfiguration projectConfig, BuildConfiguration buildConfig, BuildOperation buildOp, bool verbose) {
         super(frame);
+        _projectConfig = projectConfig;
         _buildConfig = buildConfig;
         _buildOp = buildOp;
         _verbose = verbose;
@@ -62,7 +64,11 @@ class Builder : BackgroundOperationWatcher {
             } else if (_buildOp == BuildOperation.Clean) {
                 params ~= "clean".dup;
             } else if (_buildOp == BuildOperation.Run) {
-                params ~= "run".dup;
+                if (_projectConfig.type == ProjectConfiguration.Type.Library) {
+                    params ~= "test".dup;
+                } else {
+                	params ~= "run".dup;
+            	}
             } else if (_buildOp == BuildOperation.Upgrade) {
                 params ~= "upgrade".dup;
                 params ~= "--force-remove".dup;
@@ -83,6 +89,10 @@ class Builder : BackgroundOperationWatcher {
                 }
             }
 
+            if(_projectConfig.name != ProjectConfiguration.DEFAULT_NAME) {
+                params ~= "--config=".dup ~ _projectConfig.name;
+            }
+            
             if (_verbose)
                 params ~= "-v".dup;
 
