@@ -3,13 +3,25 @@
 import dlangide.ui.frame;
 import dlangui;
 
+import std.string;
+import std.conv;
+
 class SearchWidget : TabWidget {
 	HorizontalLayout _layout;
 	EditLine _findText;
 	LogWidget _resultLog;
 
-
 	protected IDEFrame _frame;
+
+	struct SearchMatch {
+		int line;
+		long col;
+		string fileName;
+		
+		string toString() {
+			return to!string(line) ~ ':' ~ to!string(col) ~ ' ' ~ fileName;
+		}
+	}
 	
 	this(string ID, IDEFrame frame) {
 		super(ID);
@@ -41,26 +53,23 @@ class SearchWidget : TabWidget {
 	}
 	
 	bool findText(dstring source) {
-		struct SearchMatch {
-			int line;
-			long col;
-			string fileName;
-		}
-
-		import std.string;
 		SearchMatch[] matches;
 		//TODO Should not crash when in homepage.
 		foreach(int lineIndex, dstring line; _frame.currentEditor.content.lines) {
 			auto colIndex = line.indexOf(source);
 			if( colIndex != -1) {
 				matches ~= SearchMatch(lineIndex+1, colIndex, "");
-				_resultLog.appendText( "   " ~ to!dstring(matches[$-1]) ~ '\n');
 			}
 		}
-//		_resultLog.text = "";
-//		if(matches.length > 1){
-//			_resultLog.appendText(to!dstring(matches[0].line));
-//		}
-		return false;
+		if(matches.length == 0) {
+			_resultLog.appendText(to!dstring("No matches in current file." ~ '\n'));
+		}
+		else {
+			_resultLog.appendText(to!dstring("Matches found in current file: " ~ '\n'));
+			foreach(SearchMatch match; matches) {
+				_resultLog.appendText(to!dstring("  ->" ~ match.toString ~ '\n'));
+			}
+		}
+		return true;
 	}
 }
