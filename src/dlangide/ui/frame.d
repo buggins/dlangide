@@ -13,6 +13,7 @@ import dlangui.widgets.combobox;
 import dlangui.widgets.popup;
 import dlangui.dialogs.dialog;
 import dlangui.dialogs.filedlg;
+import dlangui.dialogs.settingsdialog;
 import dlangui.core.stdaction;
 import dlangui.core.files;
 
@@ -489,6 +490,8 @@ class IDEFrame : AppFrame {
 	/// override to handle specific actions state (e.g. change enabled state for supported actions)
 	override bool handleActionStateRequest(const Action a) {
         switch (a.id) {
+            case IDEActions.EditPreferences:
+                return true;
             case IDEActions.FileExit:
             case IDEActions.FileOpen:
             case IDEActions.WindowCloseAllDocuments:
@@ -619,12 +622,27 @@ class IDEFrame : AppFrame {
                     auto results = _editorTool.getCompletions(currentEditor, currentEditor.getCaretPosition);
                     currentEditor.showCompletionPopup(results);
                     return true;
+                case IDEActions.EditPreferences:
+                    showPreferences();
+                    return true;
                 default:
                     return super.handleAction(a);
             }
         }
 		return false;
 	}
+
+    void showPreferences() {
+        Setting s = _settings.copySettings();
+        SettingsDialog dlg = new SettingsDialog(UIString("DlangIDE settings"d), window, s, createSettingsPages());
+        dlg.onDialogResult = delegate(Dialog dlg, const Action result) {
+			if (result.id == ACTION_APPLY.id) {
+                _settings.applySettings(s);
+                _settings.save();
+            }
+        };
+        dlg.show();
+    }
 
     private bool loadProject(Project project) {
         if (!project.load()) {

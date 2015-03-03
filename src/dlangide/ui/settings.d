@@ -1,6 +1,8 @@
 module dlangide.ui.settings;
 
 import dlangui.core.settings;
+import dlangui.core.i18n;
+import dlangui.dialogs.settingsdialog;
 
 
 const AVAILABLE_THEMES = ["theme_default", "theme_dark"];
@@ -102,4 +104,19 @@ class IDESettings : SettingsFile {
     @property bool smartIndentsAfterPaste() { return editorSettings.getBoolean("smartIndentsAfterPaste", true); }
     /// set smart indents enabled flag
     @property IDESettings smartIndentsAfterPaste(bool enabled) { editorSettings.setBoolean("smartIndentsAfterPaste", enabled); return this; }
+}
+
+/// create DlangIDE settings pages tree
+SettingsPage createSettingsPages() {
+    SettingsPage res = new SettingsPage("", UIString(""d));
+    SettingsPage ed = res.addChild("editors", UIString("Editors"d));
+    SettingsPage texted = ed.addChild("editors/textEditor", UIString("Text Editors"d));
+    texted.addCheckbox("editors/textEditor/useSpacesForTabs", UIString("Use spaces for tabs"d));
+    texted.addCheckbox("editors/textEditor/smartIndents", UIString("Smart indents"d));
+    texted.addCheckbox("editors/textEditor/smartIndentsAfterPaste", UIString("Smart indent after paste"d));
+    //ed.setIntegerDef("tabSize", 4);
+    SettingsPage ui = res.addChild("interface", UIString("Interface"d));
+    //ui.setStringDef("theme", "theme_default");
+    //ui.setStringDef("language", "en");
+    return res;
 }
