@@ -9,9 +9,9 @@ Currently supported features:
 * Shows tree with project source files
 * Can open and edit source files from project or file system in multi-tab editor
 * Build and run project with DUB
-* Build log highlight and navigation to place of error or warning by clicking on log line
+* Build log highlight and navigation to place of error or warning by clicking on log line (contributed by Extrawurst)
 * DUB dependencies update
-* DUB package configuration selection (implemented by NCrashed)
+* DUB package configuration selection (contributed by NCrashed)
 * Dependency projects are shown in workspace tree
 
 Source editor features:

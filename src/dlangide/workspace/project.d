@@ -480,7 +480,7 @@ class Project : WorkspaceItem {
         if (!selectionsFile.load())
             return false;
         Setting versions = selectionsFile.objectByPath("versions");
-        if (!versions)
+        if (!versions.isObject)
             return false;
         string[string] versionMap = versions.strMap;
         foreach(packageName, packageVersion; versionMap) {

@@ -2596,8 +2596,16 @@ class Tokenizer
 		for (;;) {
 			int i = _pos;
 			int endPos = int.max;
+            bool lastBackSlash = false;
 			for(; i < _len; i++) {
-				if (_lineText[i] == delimiter && (i == 0 || _lineText[i - 1] != '\\')) {
+                dchar ch = _lineText[i];
+                if (ch == '\\') {
+                    if (lastBackSlash)
+                        lastBackSlash = false;
+                    else
+                        lastBackSlash = true;
+                }
+				if (ch == delimiter && !lastBackSlash) {
 					endPos = i;
 					break;
 				}
