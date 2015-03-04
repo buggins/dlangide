@@ -113,6 +113,7 @@ class IDEFrame : AppFrame {
         _settings.updateDefaults();
         _settings.save();
         super.init();
+        applySettings(_settings);
     }
 
     /// move focus to editor in currently selected tab
@@ -182,7 +183,7 @@ class IDEFrame : AppFrame {
                 TabItem tab = _tabs.tab(filename);
                 tab.objectParam = file;
                 editor.onModifiedStateChangeListener = &onModifiedStateChange;
-                editor.settings(settings).applySettings();
+                applySettings(editor, settings);
                 _tabs.selectTab(index, true);
             } else {
                 destroy(editor);
@@ -641,10 +642,30 @@ class IDEFrame : AppFrame {
 			if (result.id == ACTION_APPLY.id) {
                 //Log.d("settings after edit:\n", s.toJSON(true));
                 _settings.applySettings(s);
+                applySettings(_settings);
                 _settings.save();
             }
         };
         dlg.show();
+    }
+
+    void applySettings(IDESettings settings) {
+        for (int i = _tabs.tabCount - 1; i >= 0; i--) {
+            DSourceEdit ed = cast(DSourceEdit)_tabs.tabBody(i);
+            if (ed) {
+                applySettings(ed, settings);
+            }
+        }
+        FontManager.fontGamma = settings.fontGamma;
+        FontManager.hintingMode = settings.hintingMode;
+        FontManager.minAnitialiasedFontSize = settings.minAntialiasedFontSize;
+	    Platform.instance.uiLanguage = settings.uiLanguage;
+	    Platform.instance.uiTheme = settings.uiTheme;
+        requestLayout();
+    }
+
+    void applySettings(DSourceEdit editor, IDESettings settings) {
+        editor.settings(settings).applySettings();
     }
 
     private bool loadProject(Project project) {

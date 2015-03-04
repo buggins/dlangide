@@ -2,6 +2,7 @@ module dlangide.ui.settings;
 
 import dlangui.core.settings;
 import dlangui.core.i18n;
+import dlangui.graphics.fonts;
 import dlangui.widgets.lists;
 import dlangui.dialogs.settingsdialog;
 
@@ -25,6 +26,7 @@ class IDESettings : SettingsFile {
         ui.setStringDef("theme", "theme_default");
         ui.setStringDef("language", "en");
         ui.setIntegerDef("hintingMode", 1);
+        ui.setIntegerDef("minAntialiasedFontSize", 0);
         ui.setFloatingDef("fontGamma", 0.8);
     }
 
@@ -107,6 +109,28 @@ class IDESettings : SettingsFile {
     @property bool smartIndentsAfterPaste() { return editorSettings.getBoolean("smartIndentsAfterPaste", true); }
     /// set smart indents enabled flag
     @property IDESettings smartIndentsAfterPaste(bool enabled) { editorSettings.setBoolean("smartIndentsAfterPaste", enabled); return this; }
+
+    @property double fontGamma() {
+        double gamma = uiSettings.getFloating("fontGamma", 1.0);
+        if (gamma >= 0.5 && gamma <= 2.0)
+            return gamma;
+        return 1.0;
+    }
+
+    @property HintingMode hintingMode() {
+        long mode = uiSettings.getInteger("hintingMode", HintingMode.Normal);
+        if (mode >= HintingMode.Normal && mode <= HintingMode.Light)
+            return cast(HintingMode)mode;
+        return HintingMode.Normal;
+    }
+
+    @property int minAntialiasedFontSize() {
+        long sz = uiSettings.getInteger("minAntialiasedFontSize", 0);
+        if (sz >= 0)
+            return cast(int)sz;
+        return 0;
+    }
+
 }
 
 /// create DlangIDE settings pages tree
@@ -123,6 +147,16 @@ SettingsPage createSettingsPages() {
     ui.addStringComboBox("interface/language", UIString("Language"d), [StringListValue("en", "English"d), StringListValue("ru", "Russian"d)]);
     ui.addIntComboBox("interface/hintingMode", UIString("Font hinting mode"d), [StringListValue(0, "Normal"d), StringListValue(1, "Force Auto Hint"d), 
                 StringListValue(2, "Disabled"d), StringListValue(3, "Light"d)]);
+    ui.addIntComboBox("interface/minAntialiasedFontSize", UIString("Minimum font size for antialiasing"d), 
+                      [StringListValue(0, "Always ON"d), 
+                      StringListValue(12, "12"d), 
+                      StringListValue(14, "14"d), 
+                      StringListValue(16, "16"d), 
+                      StringListValue(20, "20"d), 
+                      StringListValue(24, "24"d), 
+                      StringListValue(32, "32"d), 
+                      StringListValue(48, "48"d), 
+                      StringListValue(255, "Always OFF"d)]);
     ui.addFloatComboBox("interface/fontGamma", UIString("Font gamma"d), 
                    [
                     StringListValue(500,  "0.5   "d),
