@@ -111,10 +111,10 @@ SettingsPage createSettingsPages() {
     SettingsPage res = new SettingsPage("", UIString(""d));
     SettingsPage ed = res.addChild("editors", UIString("Editors"d));
     SettingsPage texted = ed.addChild("editors/textEditor", UIString("Text Editors"d));
+    texted.addNumberEdit("editors/textEditor/tabSize", UIString("Tab size"d), 1, 16, 4);
     texted.addCheckbox("editors/textEditor/useSpacesForTabs", UIString("Use spaces for tabs"d));
     texted.addCheckbox("editors/textEditor/smartIndents", UIString("Smart indents"d));
     texted.addCheckbox("editors/textEditor/smartIndentsAfterPaste", UIString("Smart indent after paste"d));
-    //ed.setIntegerDef("tabSize", 4);
     SettingsPage ui = res.addChild("interface", UIString("Interface"d));
     //ui.setStringDef("theme", "theme_default");
     //ui.setStringDef("language", "en");

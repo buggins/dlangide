@@ -633,10 +633,13 @@ class IDEFrame : AppFrame {
 	}
 
     void showPreferences() {
+        //Log.d("settings before copy:\n", _settings.setting.toJSON(true));
         Setting s = _settings.copySettings();
+        //Log.d("settings after copy:\n", s.toJSON(true));
         SettingsDialog dlg = new SettingsDialog(UIString("DlangIDE settings"d), window, s, createSettingsPages());
         dlg.onDialogResult = delegate(Dialog dlg, const Action result) {
 			if (result.id == ACTION_APPLY.id) {
+                //Log.d("settings after edit:\n", s.toJSON(true));
                 _settings.applySettings(s);
                 _settings.save();
             }
