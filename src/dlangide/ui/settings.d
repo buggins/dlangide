@@ -2,6 +2,7 @@ module dlangide.ui.settings;
 
 import dlangui.core.settings;
 import dlangui.core.i18n;
+import dlangui.widgets.lists;
 import dlangui.dialogs.settingsdialog;
 
 
@@ -23,6 +24,8 @@ class IDESettings : SettingsFile {
         Setting ui = uiSettings();
         ui.setStringDef("theme", "theme_default");
         ui.setStringDef("language", "en");
+        ui.setIntegerDef("hintingMode", 1);
+        ui.setFloatingDef("fontGamma", 0.8);
     }
 
     /// override to do something after loading - e.g. set defaults
@@ -116,7 +119,29 @@ SettingsPage createSettingsPages() {
     texted.addCheckbox("editors/textEditor/smartIndents", UIString("Smart indents"d));
     texted.addCheckbox("editors/textEditor/smartIndentsAfterPaste", UIString("Smart indent after paste"d));
     SettingsPage ui = res.addChild("interface", UIString("Interface"d));
-    //ui.setStringDef("theme", "theme_default");
-    //ui.setStringDef("language", "en");
+    ui.addStringComboBox("interface/theme", UIString("Theme"d), [StringListValue("theme_default", "Default"d), StringListValue("theme_dark", "Dark"d)]);
+    ui.addStringComboBox("interface/language", UIString("Language"d), [StringListValue("en", "English"d), StringListValue("ru", "Russian"d)]);
+    ui.addIntComboBox("interface/hintingMode", UIString("Font hinting mode"d), [StringListValue(0, "Normal"d), StringListValue(1, "Force Auto Hint"d), 
+                StringListValue(2, "Disabled"d), StringListValue(3, "Light"d)]);
+    ui.addFloatComboBox("interface/fontGamma", UIString("Font gamma"d), 
+                   [
+                    StringListValue(500,  "0.5   "d),
+                    StringListValue(600,  "0.6   "d),
+                    StringListValue(700,  "0.7   "d),
+                    StringListValue(800,  "0.8   "d),
+                    StringListValue(850,  "0.85  "d),
+                    StringListValue(900,  "0.9   "d),
+                    StringListValue(950,  "0.95  "d),
+                    StringListValue(1000, "1.0   "d),
+                    StringListValue(1050, "1.05  "d),
+                    StringListValue(1100, "1.1   "d), 
+                    StringListValue(1150, "1.15  "d), 
+                    StringListValue(1200, "1.2   "d), 
+                    StringListValue(1250, "1.25  "d), 
+                    StringListValue(1300, "1.3   "d), 
+                    StringListValue(1400, "1.4   "d), 
+                    StringListValue(1500, "1.5   "d), 
+                    StringListValue(1700, "1.7   "d), 
+                    StringListValue(2000, "2.0   "d)]);
     return res;
 }
