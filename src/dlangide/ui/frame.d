@@ -424,7 +424,7 @@ class IDEFrame : AppFrame {
         mainMenuItems.add(helpItem);
 
         MainMenu mainMenu = new MainMenu(mainMenuItems);
-        mainMenu.backgroundColor = 0xd6dbe9;
+        //mainMenu.backgroundColor = 0xd6dbe9;
         return mainMenu;
     }
 

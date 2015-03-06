@@ -24,7 +24,7 @@ class DSourceEdit : SourceEdit {
 	this(string ID) {
 		super(ID);
 		styleId = null;
-		backgroundColor = 0xFFFFFF;
+		backgroundColor = style.customColor("edit_background");
         setTokenHightlightColor(TokenCategory.Comment, 0x008000); // green
         setTokenHightlightColor(TokenCategory.Keyword, 0x0000FF); // blue
         setTokenHightlightColor(TokenCategory.String, 0xA31515);  // brown
@@ -42,6 +42,12 @@ class DSourceEdit : SourceEdit {
 	this() {
 		this("SRCEDIT");
 	}
+
+    /// handle theme change: e.g. reload some themed resources
+    override void onThemeChanged() {
+		backgroundColor = style.customColor("edit_background");
+    }
+
     protected IDESettings _settings;
     @property DSourceEdit settings(IDESettings s) {
         _settings = s;

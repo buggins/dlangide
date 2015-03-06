@@ -143,7 +143,9 @@ SettingsPage createSettingsPages() {
     texted.addCheckbox("editors/textEditor/smartIndents", UIString("Smart indents"d));
     texted.addCheckbox("editors/textEditor/smartIndentsAfterPaste", UIString("Smart indent after paste"d));
     SettingsPage ui = res.addChild("interface", UIString("Interface"d));
-    ui.addStringComboBox("interface/theme", UIString("Theme"d), [StringListValue("theme_default", "Default"d), StringListValue("theme_dark", "Dark"d)]);
+    ui.addStringComboBox("interface/theme", UIString("Theme"d), [
+            StringListValue("ide_theme_default", "Default"d), 
+            StringListValue("ide_theme_dark", "Dark"d)]);
     ui.addStringComboBox("interface/language", UIString("Language"d), [StringListValue("en", "English"d), StringListValue("ru", "Russian"d)]);
     ui.addIntComboBox("interface/hintingMode", UIString("Font hinting mode"d), [StringListValue(0, "Normal"d), StringListValue(1, "Force Auto Hint"d), 
                 StringListValue(2, "Disabled"d), StringListValue(3, "Light"d)]);
