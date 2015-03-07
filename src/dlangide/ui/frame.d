@@ -13,6 +13,7 @@ import dlangui.widgets.combobox;
 import dlangui.widgets.popup;
 import dlangui.dialogs.dialog;
 import dlangui.dialogs.filedlg;
+import dlangui.dialogs.settingsdialog;
 import dlangui.core.stdaction;
 import dlangui.core.files;
 
@@ -112,6 +113,7 @@ class IDEFrame : AppFrame {
         _settings.updateDefaults();
         _settings.save();
         super.init();
+        applySettings(_settings);
     }
 
     /// move focus to editor in currently selected tab
@@ -181,7 +183,7 @@ class IDEFrame : AppFrame {
                 TabItem tab = _tabs.tab(filename);
                 tab.objectParam = file;
                 editor.onModifiedStateChangeListener = &onModifiedStateChange;
-                editor.settings(settings).applySettings();
+                applySettings(editor, settings);
                 _tabs.selectTab(index, true);
             } else {
                 destroy(editor);
@@ -427,7 +429,7 @@ class IDEFrame : AppFrame {
         mainMenuItems.add(helpItem);
 
         MainMenu mainMenu = new MainMenu(mainMenuItems);
-        mainMenu.backgroundColor = 0xd6dbe9;
+        //mainMenu.backgroundColor = 0xd6dbe9;
         return mainMenu;
     }
 
@@ -494,6 +496,8 @@ class IDEFrame : AppFrame {
 	/// override to handle specific actions state (e.g. change enabled state for supported actions)
 	override bool handleActionStateRequest(const Action a) {
         switch (a.id) {
+            case IDEActions.EditPreferences:
+                return true;
             case IDEActions.FileExit:
             case IDEActions.FileOpen:
             case IDEActions.WindowCloseAllDocuments:
@@ -624,12 +628,50 @@ class IDEFrame : AppFrame {
                     auto results = _editorTool.getCompletions(currentEditor, currentEditor.getCaretPosition);
                     currentEditor.showCompletionPopup(results);
                     return true;
+                case IDEActions.EditPreferences:
+                    showPreferences();
+                    return true;
                 default:
                     return super.handleAction(a);
             }
         }
 		return false;
 	}
+
+    void showPreferences() {
+        //Log.d("settings before copy:\n", _settings.setting.toJSON(true));
+        Setting s = _settings.copySettings();
+        //Log.d("settings after copy:\n", s.toJSON(true));
+        SettingsDialog dlg = new SettingsDialog(UIString("DlangIDE settings"d), window, s, createSettingsPages());
+        dlg.onDialogResult = delegate(Dialog dlg, const Action result) {
+			if (result.id == ACTION_APPLY.id) {
+                //Log.d("settings after edit:\n", s.toJSON(true));
+                _settings.applySettings(s);
+                applySettings(_settings);
+                _settings.save();
+            }
+        };
+        dlg.show();
+    }
+
+    void applySettings(IDESettings settings) {
+        for (int i = _tabs.tabCount - 1; i >= 0; i--) {
+            DSourceEdit ed = cast(DSourceEdit)_tabs.tabBody(i);
+            if (ed) {
+                applySettings(ed, settings);
+            }
+        }
+        FontManager.fontGamma = settings.fontGamma;
+        FontManager.hintingMode = settings.hintingMode;
+        FontManager.minAnitialiasedFontSize = settings.minAntialiasedFontSize;
+	    Platform.instance.uiLanguage = settings.uiLanguage;
+	    Platform.instance.uiTheme = settings.uiTheme;
+        requestLayout();
+    }
+
+    void applySettings(DSourceEdit editor, IDESettings settings) {
+        editor.settings(settings).applySettings();
+    }
 
     private bool loadProject(Project project) {
         if (!project.load()) {

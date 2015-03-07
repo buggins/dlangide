@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<theme id="ide_theme_default" parent="theme_default"
+        fontSize="12" 
+        fontFace="Verdana,Arial,DejaVu Sans"
+        fontFamily="SansSerif"
+	>
+    <color id="edit_background" value="#FFFFFF"/>
+    <color id="link_color" value="#2020FF"/>
+    <drawable id="btn_check" value="btn_check"/>
+</theme>
+
