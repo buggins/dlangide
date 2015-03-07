@@ -135,6 +135,21 @@ class ProjectFolder : ProjectItem {
             return path;
         return buildNormalizedPath(_filename, path);
     }
+    
+    int begin;
+    int end;
+    bool empty() const {
+        return begin == _children.count;
+    }
+    
+    void popFront()
+    {
+        ++begin;
+    }
+    
+    ProjectItem front() {
+        return _children[begin];
+    }
 }
 
 /// Project source file
