@@ -16,6 +16,8 @@ class SearchLogWidget : LogWidget {
 
 	this(string ID){
 		super(ID);
+        scrollLock = false;
+        
 	}
 
     override protected CustomCharProps[] handleCustomLineHighlight(int line, dstring txt, ref CustomCharProps[] buf) {
@@ -92,7 +94,8 @@ class SearchWidget : TabWidget {
 	this(string ID, IDEFrame frame) {
 		super(ID);
 		_frame = frame;
-
+        layoutHeight(FILL_PARENT);
+        
 		//Remove title, more button
 		removeAllChildren();
 		
@@ -115,17 +118,17 @@ class SearchWidget : TabWidget {
 		_resultLog = new SearchLogWidget("SearchLogWidget");
 		_resultLog.layoutHeight(FILL_PARENT);
         addChild(_resultLog);
-
-
 	}
     
     void searchInProject(ProjectItem project, ref SearchMatchList[] matchList, dstring text) {
-        if(project.isFolder) {
-            foreach(ProjectItem child; cast(ProjectFolder) project) {
-                searchInProject(child, matchList, text);   
-            }
+        if(project.isFolder == true) {
+        	ProjectFolder projFolder = cast(ProjectFolder) project;
+	        for(int i = 0; i < projFolder.childCount; i++) {
+                searchInProject(projFolder.child(i), matchList, text);   
+	        }
         }
         else {
+            Log.d("Searching in: " ~ project.filename);
             EditableContent content = new EditableContent(true);
             content.load(project.filename);
             SearchMatchList match;
@@ -141,16 +144,21 @@ class SearchWidget : TabWidget {
             if(match.matches.length > 0) {
                 matchList ~= match;
             }
+
         }
     }
 	
 	bool findText(dstring source) {
         Log.d("Finding " ~ source);
+        
 		SearchMatchList[] matches;
+        _resultLog.text = ""d;
 		//TODO Should not crash when in homepage.
         
         foreach(Project project; _frame._wsPanel.workspace.projects) {
+            Log.d("Searching in project " ~ project.filename);
         	searchInProject(project.items, matches, source);
+
         }
         
         if(matches.length == 0) {

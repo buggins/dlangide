@@ -63,7 +63,7 @@ class ProjectItem {
     }
 
     /// returns true if item is folder
-    @property bool isFolder() {
+    @property const bool isFolder() {
         return false;
     }
     /// returns child object count
@@ -84,7 +84,7 @@ class ProjectFolder : ProjectItem {
         super(filename);
     }
 
-    @property override bool isFolder() {
+    @property override const bool isFolder() {
         return true;
     }
     @property override int childCount() {
@@ -134,21 +134,6 @@ class ProjectFolder : ProjectItem {
         if (isAbsolute(path))
             return path;
         return buildNormalizedPath(_filename, path);
-    }
-    
-    int begin;
-    int end;
-    bool empty() const {
-        return begin == _children.count;
-    }
-    
-    void popFront()
-    {
-        ++begin;
-    }
-    
-    ProjectItem front() {
-        return _children[begin];
     }
 }
 
