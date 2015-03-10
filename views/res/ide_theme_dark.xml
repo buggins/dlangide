@@ -7,5 +7,15 @@
 	>
     <color id="edit_background" value="#070808"/>
     <color id="link_color" value="#2020FF"/>
+    <color id="syntax_highlight_comment" value="#10C010"/>
+    <color id="syntax_highlight_keyword" value="#4080FF"/>
+    <color id="syntax_highlight_string" value="#C37525"/>
+    <color id="syntax_highlight_character" value="#C37525"/>
+    <color id="syntax_highlight_error" value="#FF0000"/>
+    <color id="syntax_highlight_comment_documentation" value="#50a000"/>
+
+
+
+
     <drawable id="btn_check" value="btn_check_dark"/>
 </theme>

@@ -6,6 +6,14 @@
 	>
     <color id="edit_background" value="#FFFFFF"/>
     <color id="link_color" value="#2020FF"/>
+    <color id="syntax_highlight_comment" value="#008000"/>
+    <color id="syntax_highlight_keyword" value="#0000FF"/>
+    <color id="syntax_highlight_string" value="#a31515"/>
+    <color id="syntax_highlight_character" value="#a31515"/>
+    <color id="syntax_highlight_error" value="#FF0000"/>
+    <color id="syntax_highlight_comment_documentation" value="#206000"/>
+
+
     <drawable id="btn_check" value="btn_check"/>
 </theme>
 

@@ -241,6 +241,7 @@
     <File path="src\dlangide\ui\frame.d" />
     <File path="src\dlangide\ui\homescreen.d" />
     <File path="src\dlangide\ui\outputpanel.d" />
+    <File path="src\dlangide\ui\searchPanel.d" />
     <File path="src\dlangide\ui\settings.d" />
     <File path="src\dlangide\ui\wspanel.d" />
    </Folder>

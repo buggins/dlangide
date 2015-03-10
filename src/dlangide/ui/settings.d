@@ -7,7 +7,7 @@ import dlangui.widgets.lists;
 import dlangui.dialogs.settingsdialog;
 
 
-const AVAILABLE_THEMES = ["theme_default", "theme_dark"];
+const AVAILABLE_THEMES = ["ide_theme_default", "ide_theme_dark"];
 const AVAILABLE_LANGUAGES = ["en", "ru"];
 
 class IDESettings : SettingsFile {
@@ -23,7 +23,7 @@ class IDESettings : SettingsFile {
         ed.setBooleanDef("smartIndents", true);
         ed.setBooleanDef("smartIndentsAfterPaste", true);
         Setting ui = uiSettings();
-        ui.setStringDef("theme", "theme_default");
+        ui.setStringDef("theme", "ide_theme_default");
         ui.setStringDef("language", "en");
         ui.setIntegerDef("hintingMode", 1);
         ui.setIntegerDef("minAntialiasedFontSize", 0);
@@ -62,7 +62,7 @@ class IDESettings : SettingsFile {
 
     /// theme
     @property string uiTheme() {
-        return limitString(uiSettings.getString("theme", "theme_default"), AVAILABLE_THEMES);
+        return limitString(uiSettings.getString("theme", "ide_theme_default"), AVAILABLE_THEMES);
     }
     /// theme
     @property IDESettings uiTheme(string v) {

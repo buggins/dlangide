@@ -25,12 +25,7 @@ class DSourceEdit : SourceEdit {
 		super(ID);
 		styleId = null;
 		backgroundColor = style.customColor("edit_background");
-        setTokenHightlightColor(TokenCategory.Comment, 0x008000); // green
-        setTokenHightlightColor(TokenCategory.Keyword, 0x0000FF); // blue
-        setTokenHightlightColor(TokenCategory.String, 0xA31515);  // brown
-        setTokenHightlightColor(TokenCategory.Character, 0xA31515);  // brown
-        setTokenHightlightColor(TokenCategory.Error, 0xFF0000);  // red
-        setTokenHightlightColor(TokenCategory.Comment_Documentation, 0x206000);
+        onThemeChanged();
         //setTokenHightlightColor(TokenCategory.Identifier, 0x206000);  // no colors
 		MenuItem editPopupItem = new MenuItem(null);
 		editPopupItem.add(ACTION_EDIT_COPY, ACTION_EDIT_PASTE, ACTION_EDIT_CUT, ACTION_EDIT_UNDO, ACTION_EDIT_REDO, ACTION_EDIT_INDENT, ACTION_EDIT_UNINDENT, ACTION_EDIT_TOGGLE_LINE_COMMENT, ACTION_GET_COMPLETIONS, ACTION_GO_TO_DEFINITION);
@@ -46,6 +41,14 @@ class DSourceEdit : SourceEdit {
     /// handle theme change: e.g. reload some themed resources
     override void onThemeChanged() {
 		backgroundColor = style.customColor("edit_background");
+        setTokenHightlightColor(TokenCategory.Comment, style.customColor("syntax_highlight_comment")); // green
+        setTokenHightlightColor(TokenCategory.Keyword, style.customColor("syntax_highlight_keyword")); // blue
+        setTokenHightlightColor(TokenCategory.String, style.customColor("syntax_highlight_string"));  // brown
+        setTokenHightlightColor(TokenCategory.Character, style.customColor("syntax_highlight_character"));  // brown
+        setTokenHightlightColor(TokenCategory.Error, style.customColor("syntax_highlight_error"));  // red
+        setTokenHightlightColor(TokenCategory.Comment_Documentation, style.customColor("syntax_highlight_comment_documentation"));
+
+        super.onThemeChanged();
     }
 
     protected IDESettings _settings;
