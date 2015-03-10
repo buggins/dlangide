@@ -15,6 +15,7 @@ import dlangide.workspace.project;
 import dlangide.ui.commands;
 import dlangide.ui.settings;
 import dlangide.tools.d.dsyntax;
+import dlangide.tools.editorTool;
 
 import std.algorithm;
 
@@ -67,6 +68,11 @@ class DSourceEdit : SourceEdit {
         smartIndents = _settings.smartIndents;
         smartIndentsAfterPaste = _settings.smartIndentsAfterPaste;
     }
+
+    protected EditorTool _editorTool;
+    @property EditorTool editorTool() { return _editorTool; }
+    @property EditorTool editorTool(EditorTool tool) { return _editorTool = tool; };
+
     protected ProjectSourceFile _projectSourceFile;
     @property ProjectSourceFile projectSourceFile() { return _projectSourceFile; }
     /// load by filename

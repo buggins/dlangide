@@ -21,3 +21,18 @@ class EditorTool
 	protected IDEFrame _frame;
 	
 }
+
+class DefaultEditorTool : EditorTool
+{
+    this(IDEFrame frame) {
+        super(frame);
+    }
+    
+    override bool goToDefinition(DSourceEdit editor, TextPosition caretPosition) {
+        assert(0); //Go To Definition should not be called for normal files.
+    }
+    
+    override dstring[] getCompletions(DSourceEdit editor, TextPosition caretPosition) {
+        assert(0);
+    }
+}

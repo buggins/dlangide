@@ -106,7 +106,6 @@ class IDEFrame : AppFrame {
 
     override protected void init() {
         _appName = "dlangide";
-        _editorTool = new DEditorTool(this);
         _dcdServer = new DCDServer();
         _settings = new IDESettings(buildNormalizedPath(settingsDir, "settings.json"));
         _settings.load();
@@ -185,6 +184,10 @@ class IDEFrame : AppFrame {
                 editor.onModifiedStateChangeListener = &onModifiedStateChange;
                 applySettings(editor, settings);
                 _tabs.selectTab(index, true);
+                if( filename.endsWith(".d") )
+                    editor.editorTool = new DEditorTool(this);
+                else
+                    editor.editorTool = new DefaultEditorTool(this);
             } else {
                 destroy(editor);
                 if (window)
@@ -562,12 +565,11 @@ class IDEFrame : AppFrame {
                     caption = "Open Text File"d;
                     FileDialog dlg = createFileDialog(caption);
                     dlg.addFilter(FileFilterEntry(UIString("Source files"d), "*.d;*.dd;*.ddoc;*.dh;*.json;*.xml;*.ini"));
+                    dlg.addFilter(FileFilterEntry(UIString("All files"d), "*.*"));
                     dlg.onDialogResult = delegate(Dialog dlg, const Action result) {
 						if (result.id == ACTION_OPEN.id) {
                             string filename = result.stringParam;
-                            if (isSupportedSourceTextFileFormat(filename)) {
-                                openSourceFile(filename);
-                            }
+                            openSourceFile(filename);
                         }
                     };
                     dlg.show();
@@ -794,10 +796,8 @@ class IDEFrame : AppFrame {
         //Log.d("onFilesDropped(", filenames, ")");
         bool first = true;
         for (int i = 0; i < filenames.length; i++) {
-            if (isSupportedSourceTextFileFormat(filenames[i])) {
-                openSourceFile(filenames[i], null, first);
-                first = false;
-            }
+            openSourceFile(filenames[i], null, first);
+            first = false;
         }
     }
 
