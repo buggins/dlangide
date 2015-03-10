@@ -2,11 +2,9 @@ module dlangide.ui.searchPanel;
 
 
 import dlangui;
-import dlangui.core.editable;
 
 import dlangide.ui.frame;
 import dlangide.ui.wspanel;
-//import dlangui.widgets.tabs; //TODO: This is required for navigating to decleration of TabWidget / BUG
 import dlangide.workspace.workspace;
 import dlangide.workspace.project;
 
@@ -17,8 +15,10 @@ interface SearchResultClickHandler {
     bool onSearchResultClick(int line);
 }
 
+//LogWidget with highlighting for search results.
 class SearchLogWidget : LogWidget {
 
+    //Sends which line was clicked.
     Signal!SearchResultClickHandler searchResultClickHandler;
 
 	this(string ID){
@@ -35,6 +35,8 @@ class SearchLogWidget : LogWidget {
 		uint flags = 0;
 		if (buf.length < txt.length)
 			buf.length = txt.length;
+            
+        //Highlights the filename
 		if(txt.startsWith("Matches in ")) {
 			CustomCharProps[] colors = buf[0..txt.length];
 	    	uint cl = defColor;
@@ -49,7 +51,8 @@ class SearchLogWidget : LogWidget {
                 colors[i].textFlags = flags;
             }
             return colors;
-		} 
+		}
+        //Highlight line and collumn
 		else {
 		    CustomCharProps[] colors = buf[0..txt.length];
 		    uint cl = filenameColor;
@@ -68,7 +71,7 @@ class SearchLogWidget : LogWidget {
 		        colors[i].color = cl;
 		        colors[i].textFlags = flags;
 
-		        //Colors to applay after current character.
+		        //Colors to apply in following iterations of the loop.
 		        if(rest.startsWith("]")) {
 		        	cl = defColor;
 		        	flags = 0;
@@ -77,8 +80,6 @@ class SearchLogWidget : LogWidget {
 		    return colors;
 		}
 	}
-    
-    auto getCaretPos() { return _caretPos; }
     
 	override bool onMouseEvent(MouseEvent event) {
         super.onMouseEvent(event);
@@ -143,6 +144,7 @@ class SearchWidget : TabWidget {
         addChild(_resultLog);
 	}
     
+    //Recursively search for text in projectItem
     void searchInProject(ProjectItem project, dstring text) {
         if (project.isFolder == true) {
         	ProjectFolder projFolder = cast(ProjectFolder) project;
@@ -197,6 +199,7 @@ class SearchWidget : TabWidget {
 		return true;
 	}
     
+    //Find the match/matchList that corrosponds to the line in _resultLog
     bool onMatchClick(int line) {
         line++;
         foreach(matchList; _matchedList){
