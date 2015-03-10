@@ -113,7 +113,21 @@ class SearchWidget : TabWidget {
         string filename;
         SearchMatch[] matches;
     }
-	
+
+    bool onFindButtonPressed(Widget source) {
+        dstring txt = _findText.text;
+        if (txt.length > 0)
+		    findText(txt);
+		return true;
+    }
+
+	protected bool onEditorAction(const Action action) {
+		if (action.id == EditorActions.InsertNewLine) {
+			return onFindButtonPressed(this);
+		}
+		return false;
+	}
+
 	this(string ID, IDEFrame frame) {
 		super(ID);
 		_frame = frame;
@@ -129,13 +143,11 @@ class SearchWidget : TabWidget {
 		_findText = new EditLine();
 		_findText.padding(Rect(5,4,50,4));
 		_findText.layoutWidth(400);
+		_findText.editorActionListener = &onEditorAction; // to handle Enter key press in editor
 		_layout.addChild(_findText);
 		
-		auto goButton = new ImageButton("findTextButton", "edit-redo");
-		goButton.addOnClickListener( delegate(Widget) {
-				findText(_findText.text);
-				return true;
-			});
+		auto goButton = new ImageButton("findTextButton", "edit-find");
+		goButton.onClickListener = &onFindButtonPressed;
 		_layout.addChild(goButton);
         
         _searchScope = new ComboBox("searchScope", ["File"d, "Project"d, "Dependencies"d, "Everywhere"d]);
