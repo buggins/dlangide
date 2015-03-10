@@ -90,7 +90,6 @@ class IDEFrame : AppFrame {
     OutputPanel _logPanel;
     DockHost _dockHost;
     TabWidget _tabs;
-    EditorTool _editorTool;
     DCDServer _dcdServer;
     IDESettings _settings;
 
@@ -106,6 +105,7 @@ class IDEFrame : AppFrame {
 
     override protected void init() {
         _appName = "dlangide";
+        //_editorTool = new DEditorTool(this);
         _dcdServer = new DCDServer();
         _settings = new IDESettings(buildNormalizedPath(settingsDir, "settings.json"));
         _settings.load();
@@ -618,11 +618,11 @@ class IDEFrame : AppFrame {
                     return true;
                 case IDEActions.GoToDefinition:
                     Log.d("Trying to go to definition.");
-                    _editorTool.goToDefinition(currentEditor(), currentEditor.getCaretPosition());
+                    currentEditor.editorTool.goToDefinition(currentEditor(), currentEditor.getCaretPosition());
                     return true;
                 case IDEActions.GetCompletionSuggestions:
                     Log.d("Getting auto completion suggestions.");
-                    auto results = _editorTool.getCompletions(currentEditor, currentEditor.getCaretPosition);
+                    auto results = currentEditor.editorTool.getCompletions(currentEditor, currentEditor.getCaretPosition);
                     currentEditor.showCompletionPopup(results);
                     return true;
                 case IDEActions.EditPreferences:
