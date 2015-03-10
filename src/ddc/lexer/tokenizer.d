@@ -2605,10 +2605,12 @@ class Tokenizer
                     else
                         lastBackSlash = true;
                 }
-				if (ch == delimiter && !lastBackSlash) {
+                else if (ch == delimiter && !lastBackSlash) {
 					endPos = i;
 					break;
 				}
+                else if(lastBackSlash)
+                    lastBackSlash = false;
 			}
 			if (endPos != int.max) {
 				// found end quote
