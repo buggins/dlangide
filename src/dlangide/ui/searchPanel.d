@@ -98,6 +98,7 @@ class SearchWidget : TabWidget {
 	HorizontalLayout _layout;
 	EditLine _findText;
 	SearchLogWidget _resultLog;
+    ComboBox _searchScope;
 
 	protected IDEFrame _frame;
     protected SearchMatchList[] _matchedList;
@@ -136,6 +137,10 @@ class SearchWidget : TabWidget {
 				return true;
 			});
 		_layout.addChild(goButton);
+        
+        _searchScope = new ComboBox("searchScope", ["File"d, "Project"d, "Dependencies"d, "Everywhere"d]);
+        _searchScope.selectedItemIndex = 0;
+        _layout.addChild(_searchScope);
 		addChild(_layout);
 
 		_resultLog = new SearchLogWidget("SearchLogWidget");
@@ -178,11 +183,31 @@ class SearchWidget : TabWidget {
         _resultLog.text = ""d;
         _matchedList = [];
         
-		//TODO Should not crash when in homepage.
-        
-        foreach(Project project; _frame._wsPanel.workspace.projects) {
-            Log.d("Searching in project " ~ project.filename);
-        	searchInProject(project.items, source);
+        switch (_searchScope.text) {
+            case "File": //File
+                auto currentFileItem = _frame._wsPanel.workspace.findSourceFileItem(_frame.currentEditor.filename);
+                if(currentFileItem !is null)
+                    searchInProject(currentFileItem, source);
+                break;
+            case "Project": //Project
+               foreach(Project project; _frame._wsPanel.workspace.projects) {
+                    if(!project.isDependency)
+                        searchInProject(project.items, source);
+               }
+               break;
+            case "Dependencies": //Dependencies
+               foreach(Project project; _frame._wsPanel.workspace.projects) {
+                    if(project.isDependency)
+                        searchInProject(project.items, source);
+               }
+               break;
+            case "Everywhere": //Everywhere
+               foreach(Project project; _frame._wsPanel.workspace.projects) {
+                    searchInProject(project.items, source);
+               }
+               break;
+            default:
+                assert(0);
         }
         
         if (_matchedList.length == 0) {
