@@ -385,7 +385,7 @@ class IDEFrame : AppFrame {
 
         MenuItem editItem = new MenuItem(new Action(2, "MENU_EDIT"));
 		editItem.add(ACTION_EDIT_COPY, ACTION_EDIT_PASTE, 
-                     ACTION_EDIT_CUT, ACTION_EDIT_UNDO, ACTION_EDIT_REDO);
+                     ACTION_EDIT_CUT, ACTION_EDIT_UNDO, ACTION_EDIT_REDO, ACTION_FIND_TEXT);
         MenuItem editItemAdvanced = new MenuItem(new Action(221, "MENU_EDIT_ADVANCED"));
 		editItemAdvanced.add(ACTION_EDIT_INDENT, ACTION_EDIT_UNINDENT, ACTION_EDIT_TOGGLE_LINE_COMMENT, ACTION_EDIT_TOGGLE_BLOCK_COMMENT, ACTION_GO_TO_DEFINITION, ACTION_GET_COMPLETIONS);
 		editItem.add(editItemAdvanced);
@@ -625,6 +625,17 @@ class IDEFrame : AppFrame {
                     return true;
                 case IDEActions.EditPreferences:
                     showPreferences();
+                    return true;
+                case IDEActions.FindText:
+                    Log.d("Opening Search Field");
+               		import dlangide.ui.searchPanel;
+                    int searchPanelIndex = _logPanel.getTabs.tabIndex("search");
+                    if(searchPanelIndex == -1) {
+                        SearchWidget searchPanel = new SearchWidget("search", this);
+                  		_logPanel.getTabs.addTab( searchPanel, "Search"d, null, true);
+                    }
+                    _logPanel.getTabs.selectTab("search");
+                    //TODO: Focus search field
                     return true;
                 default:
                     return super.handleAction(a);

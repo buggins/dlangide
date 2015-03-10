@@ -63,7 +63,7 @@ class ProjectItem {
     }
 
     /// returns true if item is folder
-    @property bool isFolder() {
+    @property const bool isFolder() {
         return false;
     }
     /// returns child object count
@@ -84,7 +84,7 @@ class ProjectFolder : ProjectItem {
         super(filename);
     }
 
-    @property override bool isFolder() {
+    @property override const bool isFolder() {
         return true;
     }
     @property override int childCount() {
