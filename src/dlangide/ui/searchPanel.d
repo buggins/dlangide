@@ -6,6 +6,7 @@ import dlangui.core.editable;
 
 import dlangide.ui.frame;
 import dlangide.ui.wspanel;
+import dlangui.widgets.tabs; //TODO: This is required for navigating to decleration of TabWidget / BUG
 import dlangide.workspace.workspace;
 import dlangide.workspace.project;
 
