@@ -1,4 +1,4 @@
-﻿module dlangide.ui.searchPanel;
+module dlangide.ui.searchPanel;
 
 
 import dlangui;
@@ -6,19 +6,24 @@ import dlangui.core.editable;
 
 import dlangide.ui.frame;
 import dlangide.ui.wspanel;
-import dlangui.widgets.tabs; //TODO: This is required for navigating to decleration of TabWidget / BUG
+//import dlangui.widgets.tabs; //TODO: This is required for navigating to decleration of TabWidget / BUG
 import dlangide.workspace.workspace;
 import dlangide.workspace.project;
 
 import std.string;
 import std.conv;
 
+interface SearchResultClickHandler {
+    bool onSearchResultClick(int line);
+}
+
 class SearchLogWidget : LogWidget {
+
+    Signal!SearchResultClickHandler searchResultClickHandler;
 
 	this(string ID){
 		super(ID);
         scrollLock = false;
-        
 	}
 
     override protected CustomCharProps[] handleCustomLineHighlight(int line, dstring txt, ref CustomCharProps[] buf) {
@@ -72,14 +77,29 @@ class SearchLogWidget : LogWidget {
 		    return colors;
 		}
 	}
+    
+    auto getCaretPos() { return _caretPos; }
+    
+	override bool onMouseEvent(MouseEvent event) {
+        super.onMouseEvent(event);
+		if (event.action == MouseAction.ButtonDown && event.button == MouseButton.Left) {
+            int line = _caretPos.line;
+            if (searchResultClickHandler.assigned) {
+                searchResultClickHandler(line);
+                return true;
+            }
+        }
+        return false;
+    }
 }
 
 class SearchWidget : TabWidget {
 	HorizontalLayout _layout;
 	EditLine _findText;
-	LogWidget _resultLog;
+	SearchLogWidget _resultLog;
 
 	protected IDEFrame _frame;
+    protected SearchMatchList[] _matchedList;
 
 	struct SearchMatch {
 		int line;
@@ -95,6 +115,7 @@ class SearchWidget : TabWidget {
 	this(string ID, IDEFrame frame) {
 		super(ID);
 		_frame = frame;
+        
         layoutHeight(FILL_PARENT);
         
 		//Remove title, more button
@@ -117,15 +138,16 @@ class SearchWidget : TabWidget {
 		addChild(_layout);
 
 		_resultLog = new SearchLogWidget("SearchLogWidget");
+        _resultLog.searchResultClickHandler = &onMatchClick;
 		_resultLog.layoutHeight(FILL_PARENT);
         addChild(_resultLog);
 	}
     
-    void searchInProject(ProjectItem project, ref SearchMatchList[] matchList, dstring text) {
-        if(project.isFolder == true) {
+    void searchInProject(ProjectItem project, dstring text) {
+        if (project.isFolder == true) {
         	ProjectFolder projFolder = cast(ProjectFolder) project;
-	        for(int i = 0; i < projFolder.childCount; i++) {
-                searchInProject(projFolder.child(i), matchList, text);   
+	        for (int i = 0; i < projFolder.childCount; i++) {
+                searchInProject(projFolder.child(i), text);   
 	        }
         }
         else {
@@ -137,42 +159,63 @@ class SearchWidget : TabWidget {
 
             foreach(int lineIndex, dstring line; content.lines) {
     			auto colIndex = line.indexOf(text);
-    			if( colIndex != -1) {
-    				match.matches ~= SearchMatch(lineIndex+1, colIndex, line);
+    			if (colIndex != -1) {
+    				match.matches ~= SearchMatch(lineIndex, colIndex, line);
     			}
     		}
             
             if(match.matches.length > 0) {
-                matchList ~= match;
+                _matchedList ~= match;
             }
-
         }
     }
 	
 	bool findText(dstring source) {
         Log.d("Finding " ~ source);
         
-		SearchMatchList[] matches;
         _resultLog.text = ""d;
+        _matchedList = [];
+        
 		//TODO Should not crash when in homepage.
         
         foreach(Project project; _frame._wsPanel.workspace.projects) {
             Log.d("Searching in project " ~ project.filename);
-        	searchInProject(project.items, matches, source);
-
+        	searchInProject(project.items, source);
         }
         
-        if(matches.length == 0) {
+        if (_matchedList.length == 0) {
 			_resultLog.appendText(to!dstring("No matches found.\n"));
 		}
 		else {
-			foreach(SearchMatchList fileMatchList; matches) {
+			foreach(SearchMatchList fileMatchList; _matchedList) {
 				_resultLog.appendText("Matches in "d ~ to!dstring(fileMatchList.filename) ~ '\n');
 				foreach(SearchMatch match; fileMatchList.matches) {
-					_resultLog.appendText(" --> ["d ~ to!dstring(match.line) ~ ":"d ~ to!dstring(match.col) ~ "]" ~ match.lineContent ~"\n"d);
+					_resultLog.appendText(" --> ["d ~ to!dstring(match.line+1) ~ ":"d ~ to!dstring(match.col) ~ "]" ~ match.lineContent ~"\n"d);
 				}
 			}
 		}
 		return true;
 	}
+    
+    bool onMatchClick(int line) {
+        line++;
+        foreach(matchList; _matchedList){
+        	line--;
+        	if (line == 0) {
+        		_frame.openSourceFile(matchList.filename);
+        		_frame.currentEditor.setFocus();
+        		return true;
+        	}
+            foreach(match; matchList.matches) {
+            	line--;
+            	if (line == 0) {
+            		_frame.openSourceFile(matchList.filename);
+            		_frame.currentEditor.setCaretPos(match.line, to!int(match.col));
+            		_frame.currentEditor.setFocus();
+            		return true;
+            	}
+            }
+        }
+        return false;
+    }
 }
