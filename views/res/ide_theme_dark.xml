@@ -14,8 +14,10 @@
     <color id="syntax_highlight_error" value="#FF0000"/>
     <color id="syntax_highlight_comment_documentation" value="#50a000"/>
 
-
-
+    <color id="build_log_filename_color" value="#3030FF"/>
+    <color id="build_log_error_color" value="#FF4040"/>
+    <color id="build_log_warning_color" value="#E0E000"/>
+    <color id="build_log_deprecation_color" value="#F05080"/>
 
     <drawable id="btn_check" value="btn_check_dark"/>
 </theme>

@@ -13,6 +13,10 @@
     <color id="syntax_highlight_error" value="#FF0000"/>
     <color id="syntax_highlight_comment_documentation" value="#206000"/>
 
+    <color id="build_log_filename_color" value="#0000C0"/>
+    <color id="build_log_error_color" value="#FF0000"/>
+    <color id="build_log_warning_color" value="#606000"/>
+    <color id="build_log_deprecation_color" value="#802040"/>
 
     <drawable id="btn_check" value="btn_check"/>
 </theme>

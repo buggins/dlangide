@@ -28,6 +28,20 @@ class CompilerLogWidget : LogWidget {
 		super(ID);
 	}
 
+    protected uint _filenameColor = 0x0000C0;
+    protected uint _errorColor = 0xFF0000;
+    protected uint _warningColor = 0x606000;
+    protected uint _deprecationColor = 0x802040;
+
+    /// handle theme change: e.g. reload some themed resources
+    override void onThemeChanged() {
+        _filenameColor = style.customColor("build_log_filename_color", 0x0000C0);
+        _errorColor = style.customColor("build_log_error_color", 0xFF0000);
+        _warningColor = style.customColor("build_log_warning_color", 0x606000);
+        _deprecationColor = style.customColor("build_log_deprecation_color", 0x802040);
+        super.onThemeChanged();
+    }
+
     /** 
     Custom text color and style highlight (using text highlight) support.
 
@@ -36,27 +50,23 @@ class CompilerLogWidget : LogWidget {
     override protected CustomCharProps[] handleCustomLineHighlight(int line, dstring txt, ref CustomCharProps[] buf) {
         auto match = matchFirst(txt, ctr);
         uint defColor = textColor;
-        const uint filenameColor = 0x0000C0;
-        const uint errorColor = 0xFF0000;
-        const uint warningColor = 0x606000;
-        const uint deprecationColor = 0x802040;
         uint flags = 0;
         if(!match.empty) {
             if (buf.length < txt.length)
                 buf.length = txt.length;
             CustomCharProps[] colors = buf[0..txt.length];
-            uint cl = filenameColor;
+            uint cl = _filenameColor;
             flags = TextFlag.Underline;
             for (int i = 0; i < txt.length; i++) {
                 dstring rest = txt[i..$];
                 if (rest.startsWith(" Error"d)) {
-                    cl = errorColor;
+                    cl = _errorColor;
                     flags = 0;
                 } else if (rest.startsWith(" Warning"d)) {
-                    cl = warningColor;
+                    cl = _warningColor;
                     flags = 0;
                 } else if (rest.startsWith(" Deprecation"d)) {
-                    cl = deprecationColor;
+                    cl = _deprecationColor;
                     flags = 0;
                 }
                 colors[i].color = cl;
@@ -69,7 +79,7 @@ class CompilerLogWidget : LogWidget {
             for (int i = 0; i < txt.length; i++) {
                 dstring rest = txt[i..$];
                 if (i == 9) {
-                    cl = filenameColor;
+                    cl = _filenameColor;
                     flags = TextFlag.Underline;
                 } else if (rest.startsWith(" configuration"d)) {
                     cl = defColor;

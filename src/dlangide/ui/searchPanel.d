@@ -24,14 +24,29 @@ class SearchLogWidget : LogWidget {
 	this(string ID){
 		super(ID);
         scrollLock = false;
+        onThemeChanged();
 	}
+
+    protected dstring _textToHighlight;
+    @property dstring textToHighlight() { return _textToHighlight; }
+    @property void textToHighlight(dstring s) { _textToHighlight = s; }
+
+    protected uint _filenameColor = 0x0000C0;
+    protected uint _errorColor = 0xFF0000;
+    protected uint _warningColor = 0x606000;
+    protected uint _deprecationColor = 0x802040;
+
+    /// handle theme change: e.g. reload some themed resources
+    override void onThemeChanged() {
+        _filenameColor = style.customColor("build_log_filename_color", 0x0000C0);
+        _errorColor = style.customColor("build_log_error_color", 0xFF0000);
+        _warningColor = style.customColor("build_log_warning_color", 0x606000);
+        _deprecationColor = style.customColor("build_log_deprecation_color", 0x802040);
+        super.onThemeChanged();
+    }
 
     override protected CustomCharProps[] handleCustomLineHighlight(int line, dstring txt, ref CustomCharProps[] buf) {
 		uint defColor = textColor;
-		const uint filenameColor = 0x0000C0;
-		const uint errorColor = 0xFF0000;
-		const uint warningColor = 0x606000;
-		const uint deprecationColor = 0x802040;
 		uint flags = 0;
 		if (buf.length < txt.length)
 			buf.length = txt.length;
@@ -44,37 +59,52 @@ class SearchLogWidget : LogWidget {
 	    	for (int i = 0; i < txt.length; i++) {
 	        	dstring rest = txt[i..$];
 	        	if(i == 11) {
-					cl = filenameColor;
+					cl = _filenameColor;
                     flags = TextFlag.Underline;
 	        	}
 	        	colors[i].color = cl;
                 colors[i].textFlags = flags;
             }
             return colors;
-		}
-        //Highlight line and collumn
-		else {
+		} else { //Highlight line and column
 		    CustomCharProps[] colors = buf[0..txt.length];
-		    uint cl = filenameColor;
-		    flags = TextFlag.Underline;
+		    uint cl = _filenameColor;
+		    flags = 0;
+            int foundHighlightStart = 0;
+            int foundHighlightEnd = 0;
+            bool textStarted = false;
 		    for (int i = 0; i < txt.length; i++) {
 		        dstring rest = txt[i..$];
 		        if (rest.startsWith(" -->"d)) {
-		            cl = warningColor;
+		            cl = _warningColor;
 		            flags = 0;
 		        }
 		        if(i == 4) {
-		        	cl = errorColor;
-		        	flags = TextFlag.Underline;
+		        	cl = _errorColor;
 		        }
-		        
+
+                if (textStarted && _textToHighlight.length > 0) {
+                    if (rest.startsWith(_textToHighlight)) {
+                        foundHighlightStart = i;
+                        foundHighlightEnd = i + cast(int)_textToHighlight.length;
+                    }
+                    if (i >= foundHighlightStart && i < foundHighlightEnd) {
+                        flags = TextFlag.Underline;
+                        cl = _deprecationColor;
+                    } else {
+                        flags = 0;
+                        cl = defColor;
+                    }
+                }
+
 		        colors[i].color = cl;
 		        colors[i].textFlags = flags;
 
 		        //Colors to apply in following iterations of the loop.
-		        if(rest.startsWith("]")) {
+		        if(!textStarted && rest.startsWith("]")) {
 		        	cl = defColor;
 		        	flags = 0;
+                    textStarted = true;
 		        }
 		    }
 		    return colors;
@@ -192,6 +222,7 @@ class SearchWidget : TabWidget {
 	bool findText(dstring source) {
         Log.d("Finding " ~ source);
         
+        _resultLog.textToHighlight = ""d;
         _resultLog.text = ""d;
         _matchedList = [];
         
@@ -226,6 +257,7 @@ class SearchWidget : TabWidget {
 			_resultLog.appendText(to!dstring("No matches found.\n"));
 		}
 		else {
+            _resultLog.textToHighlight = source;
 			foreach(SearchMatchList fileMatchList; _matchedList) {
 				_resultLog.appendText("Matches in "d ~ to!dstring(fileMatchList.filename) ~ '\n');
 				foreach(SearchMatch match; fileMatchList.matches) {
