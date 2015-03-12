@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <theme id="ide_theme_dark" parent="theme_dark"
-        fontSize="12" 
         fontFace="Verdana,Arial,DejaVu Sans"
         fontFamily="SansSerif"
 	textColor="#E0E0E0"

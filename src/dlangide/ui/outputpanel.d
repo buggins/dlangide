@@ -134,18 +134,19 @@ class OutputPanel : DockWindow {
 		_showCloseButton = false;
 		dockAlignment = DockAlignment.Bottom;
         super(id);
-
 	}
 
     override protected Widget createBodyWidget() {
-        _tabs = new TabWidget("OutputPanelTabs");
-        _tabs.setStyles(STYLE_DOCK_HOST_BODY, STYLE_TAB_UP_DARK, STYLE_TAB_UP_BUTTON_DARK, STYLE_TAB_UP_BUTTON_DARK_TEXT);
+        _tabs = new TabWidget("OutputPanelTabs", Align.Bottom);
+        //_tabs.setStyles(STYLE_DOCK_HOST_BODY, STYLE_TAB_UP_DARK, STYLE_TAB_UP_BUTTON_DARK, STYLE_TAB_UP_BUTTON_DARK_TEXT);
+        _tabs.setStyles(null, STYLE_TAB_DOWN_DARK, STYLE_TAB_DOWN_BUTTON_DARK, STYLE_TAB_UP_BUTTON_DARK_TEXT);
 
 		_logWidget = new CompilerLogWidget("logwidget");
         _logWidget.readOnly = true;
         _logWidget.layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT);
 		_logWidget.compilerLogIssueClickHandler = &onIssueClick;
 
+        //_tabs.tabHost.styleId = STYLE_DOCK_WINDOW_BODY;
         _tabs.addTab(_logWidget, "Compiler Log"d);
 		_tabs.selectTab("logwidget");
 
@@ -154,9 +155,10 @@ class OutputPanel : DockWindow {
 
 	override protected void init() {
 		
-		styleId = STYLE_DOCK_WINDOW;
+		//styleId = STYLE_DOCK_WINDOW;
+        styleId = null;
 		_bodyWidget = createBodyWidget();
-		_bodyWidget.styleId = STYLE_DOCK_WINDOW_BODY;
+		//_bodyWidget.styleId = STYLE_DOCK_WINDOW_BODY;
 		addChild(_bodyWidget);
 	}
 
