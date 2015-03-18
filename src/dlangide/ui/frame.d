@@ -824,11 +824,7 @@ Widget createAboutWidget()
 {
 	LinearLayout res = new VerticalLayout();
 	res.padding(Rect(10,10,10,10));
-	res.addChild(new TextWidget(null, "DLangIDE"d));
-	res.addChild(new TextWidget(null, "(C) Vadim Lopatin, 2014"d));
-	res.addChild(new TextWidget(null, "http://github.com/buggins/dlangide"d));
-	res.addChild(new TextWidget(null, "IDE for D programming language written in D"d));
-	res.addChild(new TextWidget(null, "Uses DlangUI library for GUI"d));
+	res.addChild(new MultilineTextWidget(null, "DLangIDE\n(C) Vadim Lopatin, 2014\nhttp://github.com/buggins/dlangide\nIDE for D programming language written in D\nUses DlangUI library for GUI"d));
 	Button closeButton = new Button("close", "Close"d);
 	closeButton.onClickListener = delegate(Widget src) {
 		Log.i("Closing window");
