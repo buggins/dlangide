@@ -57,7 +57,7 @@ extern (C) int UIAppMain(string[] args) {
     }
 
     // create window
-    Window window = Platform.instance.createWindow("Dlang IDE", null, WindowFlag.Resizable, pointsToPixels(700), pointsToPixels(470));
+    Window window = Platform.instance.createWindow("Dlang IDE", null, WindowFlag.Resizable, 700, 470);
 	
     IDEFrame frame = new IDEFrame(window);
 
