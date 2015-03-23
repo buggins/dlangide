@@ -15,9 +15,11 @@ res/hdpi/hdpi_edit-copy.png
 res/hdpi/hdpi_edit-cut.png
 res/hdpi/hdpi_edit-delete.png
 res/hdpi/hdpi_edit-find.png
+res/hdpi/hdpi_edit-indent.png
 res/hdpi/hdpi_edit-paste.png
 res/hdpi/hdpi_edit-redo.png
 res/hdpi/hdpi_edit-undo.png
+res/hdpi/hdpi_edit-unindent.png
 res/hdpi/hdpi_project-d-dependency.png
 res/hdpi/hdpi_project-d.png
 res/hdpi/hdpi_project-development.png
