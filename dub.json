@@ -9,7 +9,7 @@
     "targetPath": "bin",
     "targetType": "executable",
 
-    "stringImportPaths": ["views", "views/res", "views/res/i18n", "views/res/mdpi"],
+    "stringImportPaths": ["views", "views/res", "views/res/i18n", "views/res/mdpi", "views/res/hdpi"],
 
     "copyFiles-windows": ["lib/win32/FreeImage.dll", "lib/win32/SDL2.dll", "lib/win32/dcd-server.exe", "lib/win32/dcd-client.exe"],
 
