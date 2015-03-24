@@ -144,8 +144,7 @@ class SearchWidget : TabWidget {
     ComboBox _searchScope;
 
 	protected IDEFrame _frame;
-    protected synchronized SearchMatchList[] _matchedList;
-
+    protected SearchMatchList[] _matchedList;
 
     bool onFindButtonPressed(Widget source) {
         dstring txt = _findText.text;
