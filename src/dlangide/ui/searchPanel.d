@@ -124,25 +124,28 @@ class SearchLogWidget : LogWidget {
     }
 }
 
+
+struct SearchMatch {
+	int line;
+	long col;
+	dstring lineContent;
+}
+    
+struct SearchMatchList {
+    string filename;
+    SearchMatch[] matches;
+}
+
 class SearchWidget : TabWidget {
 	HorizontalLayout _layout;
 	EditLine _findText;
 	SearchLogWidget _resultLog;
+    int _resultLogMatchIndex;
     ComboBox _searchScope;
 
 	protected IDEFrame _frame;
-    protected SearchMatchList[] _matchedList;
+    protected synchronized SearchMatchList[] _matchedList;
 
-	struct SearchMatch {
-		int line;
-		long col;
-		dstring lineContent;
-	}
-    
-    struct SearchMatchList {
-        string filename;
-        SearchMatch[] matches;
-    }
 
     bool onFindButtonPressed(Widget source) {
         dstring txt = _findText.text;
@@ -195,26 +198,19 @@ class SearchWidget : TabWidget {
     void searchInProject(ProjectItem project, dstring text) {
         if (project.isFolder == true) {
         	ProjectFolder projFolder = cast(ProjectFolder) project;
+        	import std.parallelism;
 	        for (int i = 0; i < projFolder.childCount; i++) {
-                searchInProject(projFolder.child(i), text);   
+                    taskPool.put(task(&searchInProject, projFolder.child(i), text));   
 	        }
         }
         else {
             Log.d("Searching in: " ~ project.filename);
-            EditableContent content = new EditableContent(true);
-            content.load(project.filename);
-            SearchMatchList match;
-            match.filename = project.filename;
-
-            foreach(int lineIndex, dstring line; content.lines) {
-    			auto colIndex = line.indexOf(text);
-    			if (colIndex != -1) {
-    				match.matches ~= SearchMatch(lineIndex, colIndex, line);
-    			}
-    		}
-            
+            SearchMatchList match = findMatches(project.filename, text);
             if(match.matches.length > 0) {
-                _matchedList ~= match;
+                synchronized {
+                    _matchedList ~= match;
+                    invalidate(); //Widget must updated with new matches
+                }
             }
         }
     }
@@ -225,48 +221,53 @@ class SearchWidget : TabWidget {
         _resultLog.textToHighlight = ""d;
         _resultLog.text = ""d;
         _matchedList = [];
+        _resultLogMatchIndex = 0;
+        
+        import std.parallelism; //for taskpool.
         
         switch (_searchScope.text) {
-            case "File": //File
+            case "File":
                 auto currentFileItem = _frame._wsPanel.workspace.findSourceFileItem(_frame.currentEditor.filename);
                 if(currentFileItem !is null)
-                    searchInProject(currentFileItem, source);
+                    taskPool.put(task(&searchInProject, currentFileItem, source));
                 break;
-            case "Project": //Project
+            case "Project":
                foreach(Project project; _frame._wsPanel.workspace.projects) {
                     if(!project.isDependency)
-                        searchInProject(project.items, source);
+                        taskPool.put(task(&searchInProject, project.items, source));
                }
                break;
-            case "Dependencies": //Dependencies
+            case "Dependencies":
                foreach(Project project; _frame._wsPanel.workspace.projects) {
                     if(project.isDependency)
-                        searchInProject(project.items, source);
+                        taskPool.put(task(&searchInProject, project.items, source));
                }
                break;
-            case "Everywhere": //Everywhere
+            case "Everywhere":
                foreach(Project project; _frame._wsPanel.workspace.projects) {
-                    searchInProject(project.items, source);
+                    taskPool.put(task(&searchInProject, project.items, source));
                }
                break;
             default:
                 assert(0);
         }
-        
-        if (_matchedList.length == 0) {
-			_resultLog.appendText(to!dstring("No matches found.\n"));
-		}
-		else {
-            _resultLog.textToHighlight = source;
-			foreach(SearchMatchList fileMatchList; _matchedList) {
-				_resultLog.appendText("Matches in "d ~ to!dstring(fileMatchList.filename) ~ '\n');
-				foreach(SearchMatch match; fileMatchList.matches) {
-					_resultLog.appendText(" --> ["d ~ to!dstring(match.line+1) ~ ":"d ~ to!dstring(match.col) ~ "]" ~ match.lineContent ~"\n"d);
-				}
-			}
-		}
+        _resultLog.textToHighlight = source;
 		return true;
 	}
+    
+    override void onDraw(DrawBuf buf) {
+        //Check if there are new matches to display
+        if(_resultLogMatchIndex < _matchedList.length) {
+            for(; _resultLogMatchIndex < _matchedList.length; _resultLogMatchIndex++) {
+                SearchMatchList matchList = _matchedList[_resultLogMatchIndex];
+                _resultLog.appendText("Matches in "d ~ to!dstring(matchList.filename) ~ '\n');
+    			foreach(SearchMatch match; matchList.matches) {
+                    _resultLog.appendText(" --> ["d ~ to!dstring(match.line+1) ~ ":"d ~ to!dstring(match.col) ~ "]" ~ match.lineContent ~"\n"d);
+    			}
+    		}
+        }
+        super.onDraw(buf);
+    }
     
     //Find the match/matchList that corrosponds to the line in _resultLog
     bool onMatchClick(int line) {
@@ -290,4 +291,20 @@ class SearchWidget : TabWidget {
         }
         return false;
     }
+}
+
+SearchMatchList findMatches(in string filename, in dstring searchString) {
+    EditableContent content = new EditableContent(true);
+    content.load(filename);
+    SearchMatchList match;
+    match.filename = filename;
+
+    foreach(int lineIndex, dstring line; content.lines) {
+		auto colIndex = line.indexOf(searchString);
+        
+		if (colIndex != -1) {
+			match.matches ~= SearchMatch(lineIndex, colIndex, line);
+		}
+	}
+    return match;  
 }
