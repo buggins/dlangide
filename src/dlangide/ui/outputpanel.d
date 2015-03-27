@@ -137,9 +137,12 @@ class OutputPanel : DockWindow {
 	}
 
     override protected Widget createBodyWidget() {
+        layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT);
         _tabs = new TabWidget("OutputPanelTabs", Align.Bottom);
         //_tabs.setStyles(STYLE_DOCK_HOST_BODY, STYLE_TAB_UP_DARK, STYLE_TAB_UP_BUTTON_DARK, STYLE_TAB_UP_BUTTON_DARK_TEXT);
         _tabs.setStyles(null, STYLE_TAB_DOWN_DARK, STYLE_TAB_DOWN_BUTTON_DARK, STYLE_TAB_UP_BUTTON_DARK_TEXT);
+        _tabs.layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT);
+        _tabs.tabHost.layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT);
 
 		_logWidget = new CompilerLogWidget("logwidget");
         _logWidget.readOnly = true;

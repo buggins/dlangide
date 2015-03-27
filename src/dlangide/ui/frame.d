@@ -553,9 +553,8 @@ class IDEFrame : AppFrame {
                         window.close();
                     return true;
                 case IDEActions.HelpAbout:
-                    Window wnd = Platform.instance.createWindow("About...", window, WindowFlag.Modal);
-                    wnd.mainWidget = createAboutWidget();
-                    wnd.show();
+                    window.showMessageBox(UIString("About DlangIDE"d), 
+                                          UIString("DLangIDE\n(C) Vadim Lopatin, 2014\nhttp://github.com/buggins/dlangide\nIDE for D programming language written in D\nUses DlangUI library for GUI"d));
                     return true;
                 case StandardAction.OpenUrl:
                     platform.openURL(a.stringParam);
@@ -820,17 +819,3 @@ class IDEFrame : AppFrame {
     }
 }
 
-Widget createAboutWidget() 
-{
-	LinearLayout res = new VerticalLayout();
-	res.padding(Rect(10,10,10,10));
-	res.addChild(new MultilineTextWidget(null, "DLangIDE\n(C) Vadim Lopatin, 2014\nhttp://github.com/buggins/dlangide\nIDE for D programming language written in D\nUses DlangUI library for GUI"d));
-	Button closeButton = new Button("close", "Close"d);
-	closeButton.onClickListener = delegate(Widget src) {
-		Log.i("Closing window");
-		res.window.close();
-		return true;
-	};
-	res.addChild(closeButton);
-	return res;
-}

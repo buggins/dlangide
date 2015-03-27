@@ -130,7 +130,7 @@ struct SearchMatch {
 	long col;
 	dstring lineContent;
 }
-    
+
 struct SearchMatchList {
     string filename;
     SearchMatch[] matches;
