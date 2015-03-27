@@ -101,6 +101,7 @@ class IDEFrame : AppFrame {
         window.onFilesDropped = &onFilesDropped;
         window.onCanClose = &onCanClose;
         window.onClose = &onWindowClose;
+        applySettings(_settings);
     }
 
     override protected void init() {
@@ -112,7 +113,6 @@ class IDEFrame : AppFrame {
         _settings.updateDefaults();
         _settings.save();
         super.init();
-        applySettings(_settings);
     }
 
     /// move focus to editor in currently selected tab
