@@ -112,7 +112,7 @@ class SearchLogWidget : LogWidget {
 	}
     
 	override bool onMouseEvent(MouseEvent event) {
-        super.onMouseEvent(event);
+        bool res = super.onMouseEvent(event);
 		if (event.action == MouseAction.ButtonDown && event.button == MouseButton.Left) {
             int line = _caretPos.line;
             if (searchResultClickHandler.assigned) {
@@ -120,7 +120,18 @@ class SearchLogWidget : LogWidget {
                 return true;
             }
         }
-        return false;
+        return res;
+    }
+    
+    override bool onKeyEvent(KeyEvent event) {
+        if (event.action == KeyAction.KeyDown && event.keyCode == KeyCode.RETURN) {
+            int line = _caretPos.line;
+            if (searchResultClickHandler.assigned) {
+                searchResultClickHandler(line);
+                return true;
+            }
+        }
+        return super.onKeyEvent(event);
     }
 }
 
@@ -146,10 +157,17 @@ class SearchWidget : TabWidget {
 	protected IDEFrame _frame;
     protected SearchMatchList[] _matchedList;
 
+    //Sets focus on result;
+    void focus() {
+        _findText.setFocus();
+        _findText.handleAction(new Action(EditorActions.SelectAll));
+    }
     bool onFindButtonPressed(Widget source) {
         dstring txt = _findText.text;
-        if (txt.length > 0)
-		    findText(txt);
+        if (txt.length > 0) {
+            findText(txt);
+            _resultLog.setFocus();
+        }
 		return true;
     }
 
@@ -226,9 +244,9 @@ class SearchWidget : TabWidget {
         
         switch (_searchScope.text) {
             case "File":
-                auto currentFileItem = _frame._wsPanel.workspace.findSourceFileItem(_frame.currentEditor.filename);
-                if(currentFileItem !is null)
-                    taskPool.put(task(&searchInProject, currentFileItem, source));
+                SearchMatchList match = findMatches(_frame.currentEditor.filename, source);
+                if(match.matches.length > 0)
+                    _matchedList ~= match;
                 break;
             case "Project":
                foreach(Project project; _frame._wsPanel.workspace.projects) {
