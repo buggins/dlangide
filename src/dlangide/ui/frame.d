@@ -631,12 +631,18 @@ class IDEFrame : AppFrame {
                     Log.d("Opening Search Field");
                		import dlangide.ui.searchPanel;
                     int searchPanelIndex = _logPanel.getTabs.tabIndex("search");
+                    SearchWidget searchPanel = null;
                     if(searchPanelIndex == -1) {
-                        SearchWidget searchPanel = new SearchWidget("search", this);
-                  		_logPanel.getTabs.addTab( searchPanel, "Search"d, null, true);
+                        searchPanel = new SearchWidget("search", this);
+                        _logPanel.getTabs.addTab( searchPanel, "Search"d, null, true);
+                    }
+                    else {
+                        searchPanel = cast(SearchWidget) _logPanel.getTabs.tabBody(searchPanelIndex);
                     }
                     _logPanel.getTabs.selectTab("search");
-                    //TODO: Focus search field
+                    if(searchPanel !is null) { 
+                        searchPanel.focus();
+                    }
                     return true;
                 default:
                     return super.handleAction(a);
