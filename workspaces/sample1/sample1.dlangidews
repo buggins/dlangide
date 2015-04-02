@@ -1,8 +1,8 @@
 {
     "description": "Sample workspace 1 for testing of DLANG IDE",
+    "name": "sample1",
     "projects": {
         "sampleproject1": "sampleproject1\/dub.json",
         "sampleproject2": "sampleproject2\/dub.json"
-    },
-    "name": "sample1"
+    }
 }
