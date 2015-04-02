@@ -120,7 +120,7 @@ class DSourceEdit : SourceEdit {
 
     void insertCompletion(dstring completionText) {
         TextRange range;
-        TextPosition p = getCaretPosition;
+        TextPosition p = caretPos;
         range.start = range.end = p;
         dstring lineText = content.line(p.line);
         dchar prevChar = p.pos > 0 ? lineText[p.pos - 1] : 0;
@@ -204,15 +204,4 @@ class DSourceEdit : SourceEdit {
         Log.d("Showing popup at ", textPosToClient(_caretPos).left, " ", textPosToClient(_caretPos).top);
     }
 
-    TextPosition getCaretPosition() {
-        return _caretPos;
-    }
-
-	/// change caret position and ensure it is visible
-	void setCaretPos(int line, int column)
-	{
-		_caretPos = TextPosition(line,column);
-		invalidate();
-		ensureCaretVisible();
-	}
 }

@@ -58,11 +58,11 @@ extern (C) int UIAppMain(string[] args) {
 
     // create window
     Window window = Platform.instance.createWindow("Dlang IDE", null, WindowFlag.Resizable, 700, 470);
+    // set window icon
+    window.windowIcon = drawableCache.getImage("dlangui-logo1");
 	
     IDEFrame frame = new IDEFrame(window);
 
-    // create some widget to show in window
-    window.windowIcon = drawableCache.getImage("dlangui-logo1");
 
     // open home screen tab
     frame.showHomeScreen();

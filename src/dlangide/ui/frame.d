@@ -617,11 +617,11 @@ class IDEFrame : AppFrame {
                     return true;
                 case IDEActions.GoToDefinition:
                     Log.d("Trying to go to definition.");
-                    currentEditor.editorTool.goToDefinition(currentEditor(), currentEditor.getCaretPosition());
+                    currentEditor.editorTool.goToDefinition(currentEditor(), currentEditor.caretPos);
                     return true;
                 case IDEActions.GetCompletionSuggestions:
                     Log.d("Getting auto completion suggestions.");
-                    auto results = currentEditor.editorTool.getCompletions(currentEditor, currentEditor.getCaretPosition);
+                    auto results = currentEditor.editorTool.getCompletions(currentEditor, currentEditor.caretPos);
                     currentEditor.showCompletionPopup(results);
                     return true;
                 case IDEActions.EditPreferences:
