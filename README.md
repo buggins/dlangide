@@ -56,9 +56,11 @@ Build and run with DUB:
 If you see build errors, try to upgrade dependencies:
 
 	dub upgrade --force-remove
+	dub build --force
 
 	
-Needs DMD 2.066.1 to build.
+Needs DMD 2.066.1 or newer to build.
+
 
 HINT: Try to open sample project Tetris, from workspaces/tetris with DlangIDE.
 
