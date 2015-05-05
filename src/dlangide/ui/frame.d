@@ -58,32 +58,10 @@ class BackgroundOperationWatcherTest : BackgroundOperationWatcher {
     }
 }
 
-/// Subclass of toolbars that can update their items
-class UpdateableToolBarComboBox : ToolBarComboBox {
-    this(string id, dstring[] items) {
-        super(id, items);
-    }
-    
-    @property items(dstring[] newItems) {
-        _adapter.items = newItems;
-        if(newItems.length > 0) {
-           selectedItemIndex = 0;
-        }
-        requestLayout();
-    }
-    
-    @property dstring selectedItem() {
-        size_t index = _selectedItemIndex;
-        if(index < 0 || index >= _adapter.itemCount) return "";
-        
-        return _adapter.items.get(index);
-    }
-}
-
 /// DIDE app frame
 class IDEFrame : AppFrame {
 
-	private UpdateableToolBarComboBox projectConfigurationCombo;
+	private ToolBarComboBox projectConfigurationCombo;
 	
     MenuItem mainMenuItems;
     WorkspacePanel _wsPanel;
@@ -464,7 +442,7 @@ class IDEFrame : AppFrame {
 
         tb.addButtons(ACTION_DEBUG_START);
         
-        projectConfigurationCombo = new UpdateableToolBarComboBox("projectConfig", [ProjectConfiguration.DEFAULT_NAME.to!dstring]);
+        projectConfigurationCombo = new ToolBarComboBox("projectConfig", [ProjectConfiguration.DEFAULT_NAME.to!dstring]);//Updateable
         projectConfigurationCombo.onItemClickListener = delegate(Widget source, int index) {
             if (currentWorkspace) {
                 currentWorkspace.setStartupProjectConfiguration(projectConfigurationCombo.selectedItem.to!string); 
