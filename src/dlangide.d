@@ -61,6 +61,9 @@ extern (C) int UIAppMain(string[] args) {
     // set window icon
     window.windowIcon = drawableCache.getImage("dlangui-logo1");
 	
+    Widget w = new Widget();
+    pragma(msg, w.click.return_t, "", w.click.params_t);
+
     IDEFrame frame = new IDEFrame(window);
 
 
