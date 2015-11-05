@@ -56,6 +56,10 @@ extern (C) int UIAppMain(string[] args) {
         }
     }
 
+    version(USE_WIN_DEBUG) {
+        debuggerTest();
+    }
+
     // create window
     Window window = Platform.instance.createWindow("Dlang IDE", null, WindowFlag.Resizable, 700, 470);
     // set window icon
@@ -81,6 +85,13 @@ extern (C) int UIAppMain(string[] args) {
     return Platform.instance.enterMessageLoop();
 }
 
+version(USE_WIN_DEBUG) {
+    void debuggerTest() {
+        import ddebug.windows.windebug;
+        WinDebugger debugger = new WinDebugger("test\\dmledit.exe", "");
+        debugger.start();
+    }
+}
 
 unittest {
     void jsonTest() {

@@ -72,7 +72,7 @@
   <debuglevel>0</debuglevel>
   <debugids>DebugInfo DCD</debugids>
   <versionlevel>0</versionlevel>
-  <versionids>Unicode  USE_FREETYPE USE_OPENGL EmbedStandardResources</versionids>
+  <versionids>Unicode  USE_FREETYPE USE_OPENGL EmbedStandardResources USE_WIN_DEBUG</versionids>
   <dump_source>0</dump_source>
   <mapverbosity>0</mapverbosity>
   <createImplib>0</createImplib>
@@ -248,7 +248,7 @@
   <pic>0</pic>
   <cov>0</cov>
   <nofloat>0</nofloat>
-  <Dversion>2.043</Dversion>
+  <Dversion>2</Dversion>
   <ignoreUnsupportedPragmas>0</ignoreUnsupportedPragmas>
   <allinst>0</allinst>
   <stackStomp>0</stackStomp>
@@ -276,7 +276,7 @@
   <debuglevel>0</debuglevel>
   <debugids>DebugInfo DCD</debugids>
   <versionlevel>0</versionlevel>
-  <versionids>Unicode  USE_FREETYPE USE_OPENGL EmbedStandardResources</versionids>
+  <versionids>Unicode  USE_FREETYPE USE_OPENGL EmbedStandardResources USE_WIN_DEBUG</versionids>
   <dump_source>0</dump_source>
   <mapverbosity>0</mapverbosity>
   <createImplib>0</createImplib>
@@ -441,10 +441,6 @@
     </Folder>
     <File path="src\dlangide\tools\editortool.d" />
    </Folder>
-   <Folder name="workspace">
-    <File path="src\dlangide\workspace\project.d" />
-    <File path="src\dlangide\workspace\workspace.d" />
-   </Folder>
    <Folder name="ui">
     <File path="src\dlangide\ui\commands.d" />
     <File path="src\dlangide\ui\dsourceedit.d" />
@@ -455,6 +451,10 @@
     <File path="src\dlangide\ui\searchPanel.d" />
     <File path="src\dlangide\ui\settings.d" />
     <File path="src\dlangide\ui\wspanel.d" />
+   </Folder>
+   <Folder name="workspace">
+    <File path="src\dlangide\workspace\project.d" />
+    <File path="src\dlangide\workspace\workspace.d" />
    </Folder>
   </Folder>
   <File path="src\dlangide.d" />

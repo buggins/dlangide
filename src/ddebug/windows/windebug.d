@@ -1,30 +1,52 @@
 // just an attempt to implement D debugger for win32
 module ddebug.windows.windebug;
 
+version(Windows):
+version(USE_WIN_DEBUG):
+
+import dlangui.core.logger;
 import win32.windows;
 
 import std.utf;
+import core.thread;
+import std.format;
 
-version(Windows):
 
+class WinDebugger : Thread {
+    string _exefile;
+    string _args;
 
-class WinDebugger {
-    this() {
+    this(string exefile, string args) {
+        super(&run);
+        _exefile = exefile;
+        _args = args;
     }
 
+    private void run() {
+        Log.i("Debugger thread started");
+        if (startDebugging())
+            enterDebugLoop();
+        Log.i("Debugger thread finished");
+        _finished = true;
+    }
+
+    private shared bool _finished;
     STARTUPINFOW _si; 
     PROCESS_INFORMATION _pi;
 
-    bool startDebugging(string exefile, string args) {
+    bool startDebugging() {
+
+        Log.i("starting debug for '" ~ _exefile ~ "' args: " ~ _args);
+
         _stopRequested = false;
         _si = STARTUPINFOW.init;
         _si.cb = _si.sizeof;
         _pi = PROCESS_INFORMATION.init;
 
-        string cmdline = "\"" ~ exefile ~ "\"";
-        if (args.length > 0)
-            cmdline = cmdline ~ " " ~ args;
-        wchar[] exefilew = cast(wchar[])toUTF16(exefile);
+        string cmdline = "\"" ~ _exefile ~ "\"";
+        if (_args.length > 0)
+            cmdline = cmdline ~ " " ~ _args;
+        wchar[] exefilew = cast(wchar[])toUTF16(_exefile);
         exefilew ~= cast(dchar)0;
         wchar[] cmdlinew = cast(wchar[])toUTF16(cmdline);
         cmdlinew ~= cast(dchar)0;
@@ -37,31 +59,40 @@ class WinDebugger {
                             cast(const wchar*)NULL, &_si, &_pi)) {
             return false;
         }
+        Log.i("Executable '" ~ _exefile ~ "' started successfully");
         return true;
     }
 
     uint onCreateThreadDebugEvent(ref DEBUG_EVENT debug_event) {
+        Log.d("onCreateThreadDebugEvent");
         return DBG_CONTINUE;
     }
     uint onCreateProcessDebugEvent(ref DEBUG_EVENT debug_event) {
+        Log.d("onCreateProcessDebugEvent");
         return DBG_CONTINUE;
     }
     uint onExitThreadDebugEvent(ref DEBUG_EVENT debug_event) {
+        Log.d("onExitThreadDebugEvent");
         return DBG_CONTINUE;
     }
     uint onExitProcessDebugEvent(ref DEBUG_EVENT debug_event) {
+        Log.d("onExitProcessDebugEvent");
         return DBG_CONTINUE;
     }
     uint onLoadDllDebugEvent(ref DEBUG_EVENT debug_event) {
+        Log.d("onLoadDllDebugEvent");
         return DBG_CONTINUE;
     }
     uint onUnloadDllDebugEvent(ref DEBUG_EVENT debug_event) {
+        Log.d("onUnloadDllDebugEvent");
         return DBG_CONTINUE;
     }
     uint onOutputDebugStringEvent(ref DEBUG_EVENT debug_event) {
+        Log.d("onOutputDebugStringEvent");
         return DBG_CONTINUE;
     }
     uint onRipEvent(ref DEBUG_EVENT debug_event) {
+        Log.d("onRipEvent");
         return DBG_TERMINATE_PROCESS;
     }
 
@@ -175,16 +206,27 @@ class WinDebugger {
     bool _stopRequested;
 
     bool enterDebugLoop() {
+        Log.i("entering debug loop");
         _continueStatus = DBG_CONTINUE;
         DEBUG_EVENT debug_event;
+        debug_event = DEBUG_EVENT.init;
+
         for(;;)
         {
-            if (!WaitForDebugEvent(&debug_event, INFINITE))
+            if (!WaitForDebugEvent(&debug_event, INFINITE)) {
+                uint err = GetLastError();
+                Log.e("WaitForDebugEvent returned false. Error=" ~ format("%08x", err));
                 return false;
+            }
+            Log.i("processDebugEvent");
             processDebugEvent(debug_event);
+            if (_continueStatus == DBG_TERMINATE_PROCESS)
+                break;
             ContinueDebugEvent(debug_event.dwProcessId,
                                debug_event.dwThreadId,
                                _continueStatus);
         }
+        Log.i("exiting debug loop");
+        return true;
     }
 }
