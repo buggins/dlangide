@@ -557,7 +557,7 @@ class SimpleDSyntaxSupport : SyntaxSupport {
                 }
 
                 // fill with category
-                for (int i = tokenLine; i <= newLine; i++) {
+                for (int i = tokenLine; i <= newLine && i < lines.length; i++) {
                     int start = i > tokenLine ? 0 : tokenPos;
                     int end = i < newLine ? cast(int)lines[i].length : newPos;
                     for (int j = start; j < end; j++) {
