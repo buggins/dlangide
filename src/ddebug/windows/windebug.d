@@ -5,16 +5,194 @@ version(Windows):
 version(USE_WIN_DEBUG):
 
 import dlangui.core.logger;
+import win32.psapi;
 import win32.windows;
 
 import std.utf;
 import core.thread;
 import std.format;
 
+class ModuleInfo {
+    HANDLE hFile;
+    ulong baseOfImage;
+    ulong debugInfoFileOffset;
+    ulong debugInfoSize;
+    string imageFileName;
+}
+
+class DllInfo : ModuleInfo {
+    ProcessInfo process;
+    this(ProcessInfo baseProcess, ref DEBUG_EVENT di) {
+        process = baseProcess;
+        hFile = di.LoadDll.hFile;
+        baseOfImage = cast(ulong)di.LoadDll.lpBaseOfDll;
+        debugInfoFileOffset = di.LoadDll.dwDebugInfoFileOffset;
+        debugInfoSize = di.LoadDll.nDebugInfoSize;
+        ulong imageName = cast(ulong)di.LoadDll.lpImageName;
+        Log.d(format("imageName address: %x", imageName));
+        imageFileName = getFileNameFromHandle(hFile);
+        //imageFileName = decodeZString(di.LoadDll.lpImageName, di.LoadDll.fUnicode != 0);
+        //if (imageFileName.length == 0)
+        //    imageFileName = getModuleFileName(process.hProcess, hFile);
+    }
+}
+
+class ProcessInfo : ModuleInfo {
+	HANDLE hProcess;
+    uint processId;
+	HANDLE hThread;
+	ulong threadLocalBase;
+	ulong startAddress; //LPTHREAD_START_ROUTINE
+
+    this(ref DEBUG_EVENT di) {
+	    hFile = di.CreateProcessInfo.hFile;
+	    hProcess = di.CreateProcessInfo.hProcess;
+        processId = di.dwProcessId;
+	    hThread = di.CreateProcessInfo.hThread;
+	    LPVOID lpBaseOfImage;
+        baseOfImage = cast(ulong)di.CreateProcessInfo.lpBaseOfImage;
+        debugInfoFileOffset = di.CreateProcessInfo.dwDebugInfoFileOffset;
+        debugInfoSize = di.CreateProcessInfo.nDebugInfoSize;
+        threadLocalBase = cast(ulong)di.CreateProcessInfo.lpThreadLocalBase;
+        startAddress = cast(ulong)di.CreateProcessInfo.lpStartAddress;
+        //imageFileName = decodeZString(di.CreateProcessInfo.lpImageName, di.CreateProcessInfo.fUnicode != 0);
+        //if (imageFileName.length == 0)
+        imageFileName = getFileNameFromHandle(hFile);
+//            imageFileName = getModuleFileName(hProcess, hFile);
+    }
+}
+
+private string decodeZString(void * pstr, bool isUnicode) {
+    if (!pstr)
+        return null;
+    if (isUnicode) {
+        wchar * ptr = cast(wchar*)pstr;
+        wchar[] buf;
+        for(; *ptr; ptr++)
+            buf ~= *ptr;
+        return toUTF8(buf);
+    } else {
+        char * ptr = cast(char*)pstr;
+        char[] buf;
+        for(; *ptr; ptr++)
+            buf ~= *ptr;
+        return buf.dup;
+    }
+}
+
+private string getModuleFileName(HANDLE hProcess, HANDLE hFile) {
+    //wchar[4096] buf;
+    //uint chars = GetModuleFileNameExW(hProcess, hFile, buf.ptr, 4096);
+    //return toUTF8(buf[0..chars]);
+    return null;
+}
+
+// based on sample from MSDN https://msdn.microsoft.com/ru-ru/library/windows/desktop/aa366789(v=vs.85).aspx
+string getFileNameFromHandle(HANDLE hFile) 
+{
+    string res = null;
+    bool bSuccess = false;
+    const int BUFSIZE = 4096;
+    wchar pszFilename[BUFSIZE + 1];
+    HANDLE hFileMap;
+
+    // Get the file size.
+    DWORD dwFileSizeHi = 0;
+    DWORD dwFileSizeLo = GetFileSize(hFile, &dwFileSizeHi); 
+
+    if( dwFileSizeLo == 0 && dwFileSizeHi == 0 ) {
+       return null;
+    }
+
+    // Create a file mapping object.
+    hFileMap = CreateFileMapping(hFile, 
+                                 null, 
+                    PAGE_READONLY,
+                    0, 
+                    1,
+                                 null);
+
+    if (hFileMap) {
+        // Create a file mapping to get the file name.
+        void* pMem = MapViewOfFile(hFileMap, FILE_MAP_READ, 0, 0, 1);
+
+        if (pMem) {
+            if (win32.psapi.GetMappedFileNameW(GetCurrentProcess(), 
+                                 pMem,
+                                 pszFilename.ptr,
+                                 MAX_PATH)) 
+            {
+
+                // Translate path with device name to drive letters.
+                TCHAR szTemp[BUFSIZE];
+                szTemp[0] = '\0';
+
+                size_t uFilenameLen = 0;
+                for (int i = 0; i < MAX_PATH && pszFilename[i]; i++)
+                    uFilenameLen++;
+
+                if (GetLogicalDriveStrings(BUFSIZE-1, szTemp.ptr)) {
+                    wchar szName[MAX_PATH];
+                    wchar szDrive[3] = [' ', ':', 0];
+                    bool bFound = false;
+                    wchar* p = szTemp.ptr;
+
+                    do {
+                        // Copy the drive letter to the template string
+                        szDrive[0] = *p;
+
+                        // Look up each device name
+                        if (QueryDosDevice(szDrive.ptr, szName.ptr, MAX_PATH)) {
+                            size_t uNameLen = 0;
+                            for (int i = 0; i < MAX_PATH && szName[i]; i++)
+                                uNameLen++;
+                            //_tcslen(szName);
+
+                            if (uNameLen < MAX_PATH) {
+                                bFound = false; //_tcsnicmp(pszFilename, szName, uNameLen) == 0
+                                     //&& *(pszFilename + uNameLen) == _T('\\');
+                                for (int i = 0; pszFilename[i] && i <= uNameLen; i++) {
+                                    wchar c1 = pszFilename[i];
+                                    wchar c2 = szName[i];
+                                    if (c1 >= 'a' && c1 <= 'z') 
+                                        c1 = cast(wchar)(c1 - 'a' + 'A');
+                                    if (c2 >= 'a' && c2 <= 'z') 
+                                        c2 = cast(wchar)(c2 - 'a' + 'A');
+                                    if (c1 != c2) {
+                                        if (c1 == '\\' && c2 == 0)
+                                            bFound = true;
+                                        break;
+                                    }
+                                }
+
+                                if (bFound) {
+                                    // Reconstruct pszFilename using szTempFile
+                                    // Replace device path with DOS path
+                                    res = toUTF8(szDrive[0..2] ~ pszFilename[uNameLen .. uFilenameLen]);
+                                }
+                            }
+                        }
+
+                        // Go to the next NULL character.
+                        while (*p++) {
+                        }
+                    } while (!bFound && *p); // end of string
+                }
+            }
+            UnmapViewOfFile(pMem);
+        } 
+
+        CloseHandle(hFileMap);
+    }
+    return res;
+}
 
 class WinDebugger : Thread {
     string _exefile;
     string _args;
+
+    DllInfo[] _dlls;
+    ProcessInfo[] _processes;
 
     this(string exefile, string args) {
         super(&run);
@@ -67,20 +245,40 @@ class WinDebugger : Thread {
         Log.d("onCreateThreadDebugEvent");
         return DBG_CONTINUE;
     }
+
     uint onCreateProcessDebugEvent(ref DEBUG_EVENT debug_event) {
-        Log.d("onCreateProcessDebugEvent");
+        ProcessInfo pi = new ProcessInfo(debug_event);
+        _processes ~= pi;
+        Log.d("onCreateProcessDebugEvent " ~ pi.imageFileName ~ " debugInfoSize=" ~ format("%d", pi.debugInfoSize));
         return DBG_CONTINUE;
     }
+
     uint onExitThreadDebugEvent(ref DEBUG_EVENT debug_event) {
         Log.d("onExitThreadDebugEvent");
         return DBG_CONTINUE;
     }
+
     uint onExitProcessDebugEvent(ref DEBUG_EVENT debug_event) {
         Log.d("onExitProcessDebugEvent");
         return DBG_CONTINUE;
     }
+    ProcessInfo findProcess(uint id) {
+        foreach(p; _processes) {
+            if (p.processId == id)
+                return p;
+        }
+        return null;
+    }
+
     uint onLoadDllDebugEvent(ref DEBUG_EVENT debug_event) {
-        Log.d("onLoadDllDebugEvent");
+        ProcessInfo pi = findProcess(debug_event.dwProcessId);
+        if (pi !is null) {
+            DllInfo dll = new DllInfo(pi, debug_event);
+            _dlls ~= dll;
+            Log.d("onLoadDllDebugEvent " ~ dll.imageFileName ~ " debugInfoSize=" ~ format("%d", dll.debugInfoSize));
+        } else {
+            Log.d("onLoadDllDebugEvent : process not found");
+        }
         return DBG_CONTINUE;
     }
     uint onUnloadDllDebugEvent(ref DEBUG_EVENT debug_event) {
@@ -218,7 +416,7 @@ class WinDebugger : Thread {
                 Log.e("WaitForDebugEvent returned false. Error=" ~ format("%08x", err));
                 return false;
             }
-            Log.i("processDebugEvent");
+            //Log.i("processDebugEvent");
             processDebugEvent(debug_event);
             if (_continueStatus == DBG_TERMINATE_PROCESS)
                 break;
