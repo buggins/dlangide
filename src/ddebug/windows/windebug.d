@@ -93,7 +93,7 @@ string getFileNameFromHandle(HANDLE hFile)
     string res = null;
     bool bSuccess = false;
     const int BUFSIZE = 4096;
-    wchar pszFilename[BUFSIZE + 1];
+    wchar[BUFSIZE + 1] pszFilename;
     HANDLE hFileMap;
 
     // Get the file size.
@@ -124,7 +124,7 @@ string getFileNameFromHandle(HANDLE hFile)
             {
 
                 // Translate path with device name to drive letters.
-                TCHAR szTemp[BUFSIZE];
+                TCHAR[BUFSIZE] szTemp;
                 szTemp[0] = '\0';
 
                 size_t uFilenameLen = 0;
@@ -132,8 +132,8 @@ string getFileNameFromHandle(HANDLE hFile)
                     uFilenameLen++;
 
                 if (GetLogicalDriveStrings(BUFSIZE-1, szTemp.ptr)) {
-                    wchar szName[MAX_PATH];
-                    wchar szDrive[3] = [' ', ':', 0];
+                    wchar[MAX_PATH] szName;
+                    wchar[3] szDrive = [' ', ':', 0];
                     bool bFound = false;
                     wchar* p = szTemp.ptr;
 
