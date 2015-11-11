@@ -15,7 +15,7 @@
 
     "dependencies": {
         "dlangui": "~>0.6.44",
-	"libdparse": "~master"
+	"libdparse": "==0.2.0"
     },
 
     "versions": ["EmbedStandardResources"],
