@@ -190,5 +190,7 @@
     <Compile Include="src\dlangide\ui\wspanel.d" />
     <Compile Include="src\dlangide\workspace\project.d" />
     <Compile Include="src\dlangide\workspace\workspace.d" />
+    <Compile Include="src\ddebug\common\debugger.d" />
+    <Compile Include="src\ddebug\common\queue.d" />
   </ItemGroup>
 </Project>
