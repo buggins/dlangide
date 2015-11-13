@@ -44,7 +44,7 @@
   <pic>0</pic>
   <cov>0</cov>
   <nofloat>0</nofloat>
-  <Dversion>2.043</Dversion>
+  <Dversion>2</Dversion>
   <ignoreUnsupportedPragmas>0</ignoreUnsupportedPragmas>
   <allinst>0</allinst>
   <stackStomp>0</stackStomp>
@@ -72,7 +72,7 @@
   <debuglevel>0</debuglevel>
   <debugids>DebugInfo DCD</debugids>
   <versionlevel>0</versionlevel>
-  <versionids>Unicode  USE_FREETYPE USE_OPENGL EmbedStandardResources USE_WIN_DEBUG</versionids>
+  <versionids>Unicode  USE_FREETYPE USE_OPENGL EmbedStandardResources</versionids>
   <dump_source>0</dump_source>
   <mapverbosity>0</mapverbosity>
   <createImplib>0</createImplib>
@@ -89,7 +89,7 @@
   <cv2pdbOptions />
   <objfiles />
   <linkswitches />
-  <libfiles>ole32.lib kernel32.lib user32.lib comctl32.lib comdlg32.lib</libfiles>
+  <libfiles>ole32.lib kernel32.lib user32.lib comctl32.lib comdlg32.lib psapi.lib</libfiles>
   <libpaths />
   <deffile />
   <resfile />
@@ -146,7 +146,7 @@
   <pic>0</pic>
   <cov>0</cov>
   <nofloat>0</nofloat>
-  <Dversion>2.043</Dversion>
+  <Dversion>2</Dversion>
   <ignoreUnsupportedPragmas>0</ignoreUnsupportedPragmas>
   <allinst>0</allinst>
   <stackStomp>0</stackStomp>
@@ -155,7 +155,7 @@
   <cccmd>$(CC) -c</cccmd>
   <ccTransOpt>1</ccTransOpt>
   <program>$(DMDInstallDir)windows\bin\dmd.exe</program>
-  <imppath>$(SolutionDir)/src $(SolutionDir)/3rdparty $(SolutionDir)/3rdparty/libpng/source $(SolutionDir)/../DerelictGL3/source  $(SolutionDir)/../DerelictUtil/source  $(SolutionDir)/../DerelictFT/source  $(SolutionDir)/../DerelictSDL2/source  $(SolutionDir)/../de_image/source/interfaces $(SolutionDir)/../de_image/source/png $(SolutionDir)/../dlib $(SolutionDir)/../libdparse/src</imppath>
+  <imppath>$(ProjectDir)/../dlangui/src $(ProjectDir)/../dlangui/3rdparty $(ProjectDir)/../dlangui/deps/DerelictGL3/source  $(ProjectDir)/../dlangui/deps/DerelictUtil/source  $(ProjectDir)/../dlangui/deps/DerelictFT/source  $(ProjectDir)/../dlangui/deps/DerelictSDL2/source  $(ProjectDir)/../dlangui/deps/de_image/source/interfaces $(ProjectDir)/../dlangui/deps/de_image/source/png $(ProjectDir)/../dlangui/deps/dlib $(ProjectDir)/../dlangui/deps/libdparse/src</imppath>
   <fileImppath>views views/res views/res/i18n views/res/mdpi views/res/hdpi</fileImppath>
   <outdir>$(ConfigurationName)</outdir>
   <objdir>$(OutDir)</objdir>
@@ -191,7 +191,7 @@
   <cv2pdbOptions />
   <objfiles />
   <linkswitches />
-  <libfiles>ole32.lib kernel32.lib user32.lib comctl32.lib comdlg32.lib</libfiles>
+  <libfiles>ole32.lib kernel32.lib user32.lib comctl32.lib comdlg32.lib psapi.lib</libfiles>
   <libpaths />
   <deffile />
   <resfile />
@@ -350,7 +350,7 @@
   <pic>0</pic>
   <cov>0</cov>
   <nofloat>0</nofloat>
-  <Dversion>2.043</Dversion>
+  <Dversion>2</Dversion>
   <ignoreUnsupportedPragmas>0</ignoreUnsupportedPragmas>
   <allinst>0</allinst>
   <stackStomp>0</stackStomp>
