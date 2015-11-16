@@ -33,6 +33,7 @@
         <String>USE_OPENGL</String>
         <String>USE_SDL</String>
         <String>USE_FREETYPE</String>
+        <String>USE_GDB_DEBUG</String>
         <String>EmbedStandardResources</String>
       </VersionIds>
     </VersionIds>
@@ -192,5 +193,9 @@
     <Compile Include="src\dlangide\workspace\workspace.d" />
     <Compile Include="src\ddebug\common\debugger.d" />
     <Compile Include="src\ddebug\common\queue.d" />
+    <Compile Include="src\ddebug\gdb\gdbinterface.d" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="src\ddebug\gdb\" />
   </ItemGroup>
 </Project>

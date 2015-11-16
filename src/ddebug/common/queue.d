@@ -82,7 +82,6 @@ class BlockingQueue(T) {
 			foreach(ref item; items) {
 				append(item);
 			}
-			append(item);
 			_condition.notifyAll();
 		}
 	}
@@ -99,7 +98,7 @@ class BlockingQueue(T) {
 			}
 			if (timeoutMillis <= 0)
 				_condition.wait(); // no timeout
-			else if (!_condition.wait(dur!msecs(timeoutMillis)))
+			else if (!_condition.wait(dur!"msecs"(timeoutMillis)))
 				return false; // timeout
 			if (_readPos < _writePos) {
 				value = _buffer[_readPos++];
@@ -122,7 +121,7 @@ class BlockingQueue(T) {
 				return true;
 			if (timeoutMillis <= 0)
 				_condition.wait(); // no timeout
-			else if (!_condition.wait(dur!msecs(timeoutMillis)))
+			else if (!_condition.wait(dur!"msecs"(timeoutMillis)))
 				return false; // timeout
 			while (_readPos < _writePos)
 				values ~= _buffer[_readPos++];
