@@ -5,6 +5,7 @@ import dlangui.core.logger;
 import ddebug.common.queue;
 import dlangide.builders.extprocess;
 import std.utf;
+import std.conv : to;
 
 class ConsoleDebuggerInterface : DebuggerBase, TextWriter {
 	protected ExternalProcess _debuggerProcess;
@@ -51,6 +52,10 @@ class ConsoleDebuggerInterface : DebuggerBase, TextWriter {
 		}
 	}
 
+	bool sendLine(string text) {
+		return _debuggerProcess.write(text ~ "\n");
+	}
+
 	/// log lines
 	override void writeText(dstring text) {
 		string text8 = toUTF8(text);
@@ -62,6 +67,15 @@ class ConsoleDebuggerInterface : DebuggerBase, TextWriter {
 }
 
 class GDBInterface : ConsoleDebuggerInterface {
+
+	protected int commandId;
+
+
+	int sendCommand(string text) {
+		commandId++;
+		sendLine(to!string(commandId) ~ text);
+		return commandId;
+	}
 
 	override void startDebugging(string debuggerExecutable, string executable, string[] args, string workingDir, DebuggerResponse response) {
 		string[] debuggerArgs;
@@ -75,6 +89,8 @@ class GDBInterface : ConsoleDebuggerInterface {
 		Log.i("Debugger process state:");
 		if (state == ExternalProcessState.Running) {
 			response(ResponseCode.Ok, "Started");
+			sendCommand("-break-insert main");
+			sendCommand("-exec-run");
 		} else {
 			response(ResponseCode.CannotRunDebugger, "Error while trying to run debugger process");
 		}
