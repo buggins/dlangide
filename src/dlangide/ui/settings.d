@@ -142,7 +142,10 @@ SettingsPage createSettingsPages() {
     texted.addCheckbox("editors/textEditor/useSpacesForTabs", UIString("Use spaces for tabs"d));
     texted.addCheckbox("editors/textEditor/smartIndents", UIString("Smart indents"d));
     texted.addCheckbox("editors/textEditor/smartIndentsAfterPaste", UIString("Smart indent after paste"d));
-    SettingsPage ui = res.addChild("interface", UIString("Interface"d));
+	SettingsPage dlang = res.addChild("dlang", UIString("D"d));
+	SettingsPage ddebug = dlang.addChild("dlang/debugger", UIString("Debugger"d));
+	ddebug.addStringEdit("dlang/debugger/executable", UIString("Debugger executable"d), "gdb");
+	SettingsPage ui = res.addChild("interface", UIString("Interface"d));
     ui.addStringComboBox("interface/theme", UIString("Theme"d), [
             StringListValue("ide_theme_default", "Default"d), 
             StringListValue("ide_theme_dark", "Dark"d)]);
