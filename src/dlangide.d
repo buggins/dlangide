@@ -122,9 +122,9 @@ version(USE_GDB_DEBUG) {
 				Log.d("startDebugging result: ", code, " : ", msg);
 				//assert(code == ResponseCode.NotImplemented);
 			});
-		Thread.sleep(dur!"msecs"(2000));
+		Thread.sleep(dur!"msecs"(200000));
 		debugger.stop();
-		Thread.sleep(dur!"msecs"(2000));
+		Thread.sleep(dur!"msecs"(200000));
 		destroy(debugger);
 		Log.d("Testing of GDB debugger is finished");
 	}
