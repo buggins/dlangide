@@ -64,10 +64,10 @@ class WorkspacePanel : DockWindow {
     override protected Widget createBodyWidget() {
         _tree = new TreeWidget("wstree");
         _tree.layoutHeight(FILL_PARENT).layoutHeight(FILL_PARENT);
-        _tree.selectionListener = &onTreeItemSelected;
+        _tree.selectionChange = &onTreeItemSelected;
 		_tree.fontSize = 16;
         _tree.noCollapseForSingleTopLevelItem = true;
-        _tree.popupMenuListener = &onTreeItemPopupMenu;
+        _tree.popupMenu = &onTreeItemPopupMenu;
 
         _workspacePopupMenu = new MenuItem();
         _workspacePopupMenu.add(ACTION_PROJECT_FOLDER_ADD_ITEM);

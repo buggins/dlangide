@@ -192,13 +192,13 @@ class DSourceEdit : SourceEdit {
         completionPopupItems.updateActionState(this);
 
         PopupMenu popupMenu = new PopupMenu(completionPopupItems);
-        popupMenu.onMenuItemActionListener = this;
+        popupMenu.menuItemAction = this;
         popupMenu.maxHeight(400);
         popupMenu.selectItem(0);
 
         PopupWidget popup = window.showPopup(popupMenu, this, PopupAlign.Point | PopupAlign.Right, textPosToClient(_caretPos).left + left + _leftPaneWidth, textPosToClient(_caretPos).top + top + margins.top);
         popup.setFocus();
-        popup.onPopupCloseListener = delegate(PopupWidget source) { setFocus(); };
+        popup.popupClosed = delegate(PopupWidget source) { setFocus(); };
         popup.flags = PopupFlags.CloseOnClickOutside;
 
         Log.d("Showing popup at ", textPosToClient(_caretPos).left, " ", textPosToClient(_caretPos).top);

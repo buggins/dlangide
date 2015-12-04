@@ -193,7 +193,7 @@ class SearchWidget : TabWidget {
 		_findText = new EditLine();
 		_findText.padding(Rect(5,4,50,4));
 		_findText.layoutWidth(400);
-		_findText.editorActionListener = &onEditorAction; // to handle Enter key press in editor
+		_findText.editorAction = &onEditorAction; // to handle Enter key press in editor
 		_layout.addChild(_findText);
 		
 		auto goButton = new ImageButton("findTextButton", "edit-find");

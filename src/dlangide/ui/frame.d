@@ -318,8 +318,8 @@ class IDEFrame : AppFrame {
         _tabs = new TabWidget("TABS");
         _tabs.hiddenTabsVisibility = Visibility.Gone;
         _tabs.setStyles(STYLE_DOCK_HOST_BODY, STYLE_TAB_UP_DARK, STYLE_TAB_UP_BUTTON_DARK, STYLE_TAB_UP_BUTTON_DARK_TEXT);
-        _tabs.onTabChangedListener = &onTabChanged;
-        _tabs.onTabCloseListener = &onTabClose;
+        _tabs.tabChanged = &onTabChanged;
+        _tabs.tabClose = &onTabClose;
 
         _dockHost.bodyWidget = _tabs;
 
@@ -443,7 +443,7 @@ class IDEFrame : AppFrame {
         tb.addButtons(ACTION_DEBUG_START);
         
         projectConfigurationCombo = new ToolBarComboBox("projectConfig", [ProjectConfiguration.DEFAULT_NAME.to!dstring]);//Updateable
-        projectConfigurationCombo.onItemClickListener = delegate(Widget source, int index) {
+        projectConfigurationCombo.itemClick = delegate(Widget source, int index) {
             if (currentWorkspace) {
                 currentWorkspace.setStartupProjectConfiguration(projectConfigurationCombo.selectedItem.to!string); 
             }
@@ -453,7 +453,7 @@ class IDEFrame : AppFrame {
         tb.addControl(projectConfigurationCombo);
         
         ToolBarComboBox cbBuildConfiguration = new ToolBarComboBox("buildConfig", ["Debug"d, "Release"d, "Unittest"d]);
-        cbBuildConfiguration.onItemClickListener = delegate(Widget source, int index) {
+        cbBuildConfiguration.itemClick = delegate(Widget source, int index) {
             if (currentWorkspace && index < 3) {
                 currentWorkspace.buildConfiguration = [BuildConfiguration.Debug, BuildConfiguration.Release, BuildConfiguration.Unittest][index];
             }
@@ -543,7 +543,7 @@ class IDEFrame : AppFrame {
                     FileDialog dlg = createFileDialog(caption);
                     dlg.addFilter(FileFilterEntry(UIString("Source files"d), "*.d;*.dd;*.ddoc;*.dh;*.json;*.xml;*.ini"));
                     dlg.addFilter(FileFilterEntry(UIString("All files"d), "*.*"));
-                    dlg.onDialogResult = delegate(Dialog dlg, const Action result) {
+                    dlg.dialogResult = delegate(Dialog dlg, const Action result) {
 						if (result.id == ACTION_OPEN.id) {
                             string filename = result.stringParam;
                             openSourceFile(filename);
@@ -584,7 +584,7 @@ class IDEFrame : AppFrame {
                     caption = "Open Workspace or Project"d;
                     FileDialog dlg = createFileDialog(caption);
                     dlg.addFilter(FileFilterEntry(UIString("Workspace and project files"d), "*.dlangidews;dub.json;package.json"));
-                    dlg.onDialogResult = delegate(Dialog dlg, const Action result) {
+                    dlg.dialogResult = delegate(Dialog dlg, const Action result) {
 						if (result.id == ACTION_OPEN.id) {
                             string filename = result.stringParam;
                             if (filename.length)
@@ -634,7 +634,7 @@ class IDEFrame : AppFrame {
         Setting s = _settings.copySettings();
         //Log.d("settings after copy:\n", s.toJSON(true));
         SettingsDialog dlg = new SettingsDialog(UIString("DlangIDE settings"d), window, s, createSettingsPages());
-        dlg.onDialogResult = delegate(Dialog dlg, const Action result) {
+        dlg.dialogResult = delegate(Dialog dlg, const Action result) {
 			if (result.id == ACTION_APPLY.id) {
                 //Log.d("settings after edit:\n", s.toJSON(true));
                 _settings.applySettings(s);
