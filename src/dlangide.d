@@ -60,7 +60,7 @@ extern (C) int UIAppMain(string[] args) {
         debuggerTest();
     }
 	version(USE_GDB_DEBUG) {
-		debuggerTest();
+		debuggerTestGDB();
 	}
 
     // create window
@@ -97,7 +97,7 @@ version(USE_WIN_DEBUG) {
 }
 
 version(USE_GDB_DEBUG) {
-	void debuggerTest() {
+	void debuggerTestGDB() {
 		import ddebug.gdb.gdbinterface;
 		import core.thread;
 		Log.d("Testing GDB debugger");

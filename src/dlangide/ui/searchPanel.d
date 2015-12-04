@@ -197,7 +197,7 @@ class SearchWidget : TabWidget {
 		_layout.addChild(_findText);
 		
 		auto goButton = new ImageButton("findTextButton", "edit-find");
-		goButton.onClickListener = &onFindButtonPressed;
+		goButton.click = &onFindButtonPressed;
 		_layout.addChild(goButton);
         
         _searchScope = new ComboBox("searchScope", ["File"d, "Project"d, "Dependencies"d, "Everywhere"d]);
