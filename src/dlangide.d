@@ -59,14 +59,17 @@ extern (C) int UIAppMain(string[] args) {
     version(USE_WIN_DEBUG) {
         debuggerTest();
     }
+	version(USE_GDB_DEBUG) {
+		debuggerTestGDB();
+	}
 
     // create window
     Window window = Platform.instance.createWindow("Dlang IDE", null, WindowFlag.Resizable, 800, 600);
     // set window icon
     window.windowIcon = drawableCache.getImage("dlangui-logo1");
 	
-    Widget w = new Widget();
-    pragma(msg, w.click.return_t, "", w.click.params_t);
+    //Widget w = new Widget();
+    //pragma(msg, w.click.return_t, "", w.click.params_t);
 
     IDEFrame frame = new IDEFrame(window);
 
@@ -91,6 +94,40 @@ version(USE_WIN_DEBUG) {
         WinDebugger debugger = new WinDebugger("test\\dmledit.exe", "");
         debugger.start();
     }
+}
+
+version(USE_GDB_DEBUG) {
+	void debuggerTestGDB() {
+		import ddebug.gdb.gdbinterface;
+		import core.thread;
+		Log.d("Testing GDB debugger");
+		DebuggerBase debugger = new DebuggerBase();
+		debugger.startDebugging("gdb", "test", [], "", delegate(ResponseCode code, string msg) {
+				Log.d("startDebugging result: ", code, " : ", msg);
+				//assert(code == ResponseCode.NotImplemented);
+			});
+		debugger.stop();
+		destroy(debugger);
+
+		// async
+
+		debugger = new GDBInterface();
+		DebuggerProxy proxy = new DebuggerProxy(debugger, delegate(Runnable runnable) {
+				runnable();
+			});
+		Log.d("calling debugger.start()");
+		debugger.start();
+		Log.d("calling proxy.startDebugging()");
+		proxy.startDebugging("gdb", "/home/lve/src/d/dlangide/test/gdbtest", ["param1", "param2"], "/home/lve/src/d/dlangide/test", delegate(ResponseCode code, string msg) {
+				Log.d("startDebugging result: ", code, " : ", msg);
+				//assert(code == ResponseCode.NotImplemented);
+			});
+		Thread.sleep(dur!"msecs"(200000));
+		debugger.stop();
+		Thread.sleep(dur!"msecs"(200000));
+		destroy(debugger);
+		Log.d("Testing of GDB debugger is finished");
+	}
 }
 
 unittest {

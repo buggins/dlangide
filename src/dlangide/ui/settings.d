@@ -8,7 +8,7 @@ import dlangui.dialogs.settingsdialog;
 
 
 const AVAILABLE_THEMES = ["ide_theme_default", "ide_theme_dark"];
-const AVAILABLE_LANGUAGES = ["en", "ru"];
+const AVAILABLE_LANGUAGES = ["en", "ru", "es"];
 
 class IDESettings : SettingsFile {
 
@@ -142,11 +142,17 @@ SettingsPage createSettingsPages() {
     texted.addCheckbox("editors/textEditor/useSpacesForTabs", UIString("Use spaces for tabs"d));
     texted.addCheckbox("editors/textEditor/smartIndents", UIString("Smart indents"d));
     texted.addCheckbox("editors/textEditor/smartIndentsAfterPaste", UIString("Smart indent after paste"d));
-    SettingsPage ui = res.addChild("interface", UIString("Interface"d));
+	SettingsPage dlang = res.addChild("dlang", UIString("D"d));
+	SettingsPage ddebug = dlang.addChild("dlang/debugger", UIString("Debugger"d));
+	ddebug.addStringEdit("dlang/debugger/executable", UIString("Debugger executable"d), "gdb");
+	SettingsPage ui = res.addChild("interface", UIString("Interface"d));
     ui.addStringComboBox("interface/theme", UIString("Theme"d), [
             StringListValue("ide_theme_default", "Default"d), 
             StringListValue("ide_theme_dark", "Dark"d)]);
-    ui.addStringComboBox("interface/language", UIString("Language"d), [StringListValue("en", "English"d), StringListValue("ru", "Russian"d)]);
+	ui.addStringComboBox("interface/language", UIString("Language"d), [
+			StringListValue("en", "English"d), 
+			StringListValue("ru", "Russian"d), 
+			StringListValue("es", "Spanish"d)]);
     ui.addIntComboBox("interface/hintingMode", UIString("Font hinting mode"d), [StringListValue(0, "Normal"d), StringListValue(1, "Force Auto Hint"d), 
                 StringListValue(2, "Disabled"d), StringListValue(3, "Light"d)]);
     ui.addIntComboBox("interface/minAntialiasedFontSize", UIString("Minimum font size for antialiasing"d), 

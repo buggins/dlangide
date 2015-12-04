@@ -2,6 +2,7 @@ res/ide_theme_default.xml
 res/ide_theme_dark.xml
 res/i18n/en.ini
 res/i18n/ru.ini
+res/i18n/es.ini
 res/hdpi/hdpi_configure.png
 res/hdpi/hdpi_debug-run.png
 res/hdpi/hdpi_document-close.png
