@@ -125,4 +125,12 @@ Global
 		{FB7A3FF6-0E67-47D1-BA70-F258F9A0E332}.UnittestMinimal|Any CPU.ActiveCfg = Debug|Any CPU
 		{FB7A3FF6-0E67-47D1-BA70-F258F9A0E332}.UnittestMinimal|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		Policies = $0
+		$0.TextStylePolicy = $1
+		$1.FileWidth = 120
+		$1.inheritsSet = VisualStudio
+		$1.inheritsScope = text/plain
+		$1.scope = text/plain
+	EndGlobalSection
 EndGlobal

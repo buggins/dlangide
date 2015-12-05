@@ -20,6 +20,7 @@ import dlangui.core.files;
 import dlangide.ui.commands;
 import dlangide.ui.wspanel;
 import dlangide.ui.outputpanel;
+import dlangide.ui.newproject;
 import dlangide.ui.dsourceedit;
 import dlangide.ui.homescreen;
 import dlangide.ui.settings;
@@ -622,11 +623,27 @@ class IDEFrame : AppFrame {
                         searchPanel.focus();
                     }
                     return true;
-                default:
+				case IDEActions.FileNewWorkspace:
+					createNewProject(true);
+					return true;
+				case IDEActions.FileNewProject:
+					createNewProject(false);
+					return true;
+				default:
                     return super.handleAction(a);
             }
         }
 		return false;
+	}
+
+	void createNewProject(bool newWorkspace) {
+		NewProjectDlg dlg = new NewProjectDlg(window, newWorkspace);
+		dlg.dialogResult = delegate(Dialog dlg, const Action result) {
+			if (result.id == ACTION_APPLY.id) {
+				//Log.d("settings after edit:\n", s.toJSON(true));
+			}
+		};
+		dlg.show();
 	}
 
     void showPreferences() {

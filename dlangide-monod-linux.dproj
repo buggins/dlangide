@@ -33,7 +33,6 @@
         <String>USE_OPENGL</String>
         <String>USE_SDL</String>
         <String>USE_FREETYPE</String>
-        <String>USE_GDB_DEBUG</String>
         <String>EmbedStandardResources</String>
       </VersionIds>
     </VersionIds>
