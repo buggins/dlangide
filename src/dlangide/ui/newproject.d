@@ -7,12 +7,18 @@ import dlangui.dialogs.dialog;
 import dlangui.widgets.widget;
 import dlangui.widgets.layouts;
 import dlangui.widgets.editors;
+import dlangui.widgets.lists;
 import dlangui.dml.parser;
 import dlangui.core.stdaction;
 
 class NewProjectDlg : Dialog {
 
 	bool _newWorkspace;
+
+    StringListWidget _projectTypeList;
+    StringListWidget _projectTemplateList;
+    EditBox _templateDescription;
+
     this(Window parent, bool newWorkspace) {
 		super(newWorkspace ? UIString("New Workspace"d) : UIString("New Project"d), parent, DialogFlag.Modal);
         _icon = "dlangui-logo1";
@@ -34,21 +40,21 @@ class NewProjectDlg : Dialog {
                             TextWidget {
                             text: "Project type"
                             }
-                            EditBox {}
+                            StringListWidget { id: projectTypeList }
                         }
                         VerticalLayout {
                         layoutWidth: FILL_PARENT; layoutHeight: FILL_PARENT
                             TextWidget {
                             text: "Template"
                             }
-                            EditBox {}
+                            StringListWidget { id: projectTemplateList }
                         }
                         VerticalLayout {
                         layoutWidth: FILL_PARENT; layoutHeight: FILL_PARENT
                             TextWidget {
                             text: "Description"
                             }
-                            EditBox {}
+                            EditBox { id: templateDescription }
                         }
                     }
                     TableLayout {
@@ -71,6 +77,22 @@ class NewProjectDlg : Dialog {
                     }
                 }
             });
+
+        _projectTypeList = content.childById!StringListWidget("projectTypeList");
+        _projectTemplateList = content.childById!StringListWidget("projectTemplateList");
+        _templateDescription = content.childById!EditBox("templateDescription");
+        _projectTypeList.items = [
+            "Empty Project"d,
+            "Library"d,
+            "Console Application"d,
+            "DlangUI Library"d,
+            "DlangUI Application"d,
+        ];
+        _projectTemplateList.items = [
+            "Hello World"d,
+            "DlangUI Form based app"d,
+            "DlangUI Frame based app"d,
+        ];
 
         addChild(content);
         addChild(createButtonsPanel([ACTION_OK, ACTION_CANCEL], 0, 0));
