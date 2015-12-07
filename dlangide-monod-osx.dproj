@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
+    <ProjectGuid>{5125282E-FF14-4FF9-A65A-1B4816D76C6A}</ProjectGuid>
+    <Compiler>DMD2</Compiler>
+    <PreferOneStepBuild>true</PreferOneStepBuild>
+    <UseDefaultCompiler>true</UseDefaultCompiler>
+    <IncrementalLinking>true</IncrementalLinking>
+    <DependentProjectIds>
+      <DependentProjectIds>
+        <String>{1CC7C43E-7B39-4AFC-A45B-F1D9F582CF6D}</String>
+      </DependentProjectIds>
+    </DependentProjectIds>
+    <Includes>
+      <Includes>
+        <Path>../dlangui/src</Path>
+        <Path>../dlangui/deps/dlib</Path>
+        <Path>../dlangui/deps/gl3n</Path>
+        <Path>../dlangui/deps/DerelictGL3/source</Path>
+        <Path>../dlangui/deps/DerelictSDL2/source</Path>
+        <Path>../dlangui/deps/DerelictFT/source</Path>
+        <Path>../dlangui/deps/DerelictUtil/source</Path>
+      </Includes>
+    </Includes>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Debug</OutputPath>
+    <ObjectsDirectory>obj/Debug</ObjectsDirectory>
+    <LinkinThirdPartyLibraries>true</LinkinThirdPartyLibraries>
+    <UnittestMode>false</UnittestMode>
+    <OutputName>dlangide-monod-osx</OutputName>
+    <Target>Executable</Target>
+    <Externalconsole>true</Externalconsole>
+    <DebugLevel>0</DebugLevel>
+    <VersionIds>
+      <VersionIds>
+        <String>USE_SDL</String>
+        <String>USE_OPENGL</String>
+        <String>USE_FREETYPE</String>
+        <String>EmbedStandardResources</String>
+      </VersionIds>
+    </VersionIds>
+    <ExtraCompilerArguments>-Jviews -Jviews/res -Jviews/res/i18n -Jviews/res/mdpi -Jviews/res/hdpi</ExtraCompilerArguments>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
+    <OutputPath>bin\Release</OutputPath>
+    <VersionIds>
+      <VersionIds>
+        <String>USE_SDL</String>
+        <String>USE_OPENGL</String>
+        <String>USE_FREETYPE</String>
+        <String>EmbedStandardResources</String>
+      </VersionIds>
+    </VersionIds>
+    <ObjectsDirectory>obj/Release</ObjectsDirectory>
+    <LinkinThirdPartyLibraries>true</LinkinThirdPartyLibraries>
+    <UnittestMode>false</UnittestMode>
+    <OutputName>dlangide-monod-osx</OutputName>
+    <Target>Executable</Target>
+    <Externalconsole>true</Externalconsole>
+    <DebugLevel>0</DebugLevel>
+    <ExtraCompilerArguments>-Jviews -Jviews/res -Jviews/res/i18n -Jviews/res/mdpi -Jviews/res/hdpi</ExtraCompilerArguments>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Unittest|x64' ">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Unittest</OutputPath>
+    <VersionIds>
+      <VersionIds>
+        <String>USE_SDL</String>
+        <String>USE_OPENGL</String>
+        <String>USE_FREETYPE</String>
+        <String>EmbedStandardResources</String>
+      </VersionIds>
+    </VersionIds>
+    <ObjectsDirectory>obj/Unittest</ObjectsDirectory>
+    <LinkinThirdPartyLibraries>true</LinkinThirdPartyLibraries>
+    <UnittestMode>true</UnittestMode>
+    <OutputName>dlangide-monod-osx</OutputName>
+    <Target>Executable</Target>
+    <Externalconsole>true</Externalconsole>
+    <DebugLevel>0</DebugLevel>
+    <ExtraCompilerArguments>-Jviews -Jviews/res -Jviews/res/i18n -Jviews/res/mdpi -Jviews/res/hdpi</ExtraCompilerArguments>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'DebugX11|x64' ">
+    <OutputPath>bin\DebugX11</OutputPath>
+    <VersionIds>
+      <VersionIds>
+        <String>USE_SDL</String>
+        <String>USE_OPENGL</String>
+        <String>USE_FREETYPE</String>
+        <String>EmbedStandardResources</String>
+      </VersionIds>
+    </VersionIds>
+    <ObjectsDirectory>obj/DebugX11</ObjectsDirectory>
+    <LinkinThirdPartyLibraries>true</LinkinThirdPartyLibraries>
+    <ExtraLinkerArguments>-L-lX11</ExtraLinkerArguments>
+    <ExtraCompilerArguments>-Jviews -Jviews/res -Jviews/res/i18n -Jviews/res/mdpi -Jviews/res/hdpi</ExtraCompilerArguments>
+    <UnittestMode>false</UnittestMode>
+    <OutputName>dlangide-monod-osx</OutputName>
+    <Target>Executable</Target>
+    <Externalconsole>true</Externalconsole>
+    <DebugLevel>0</DebugLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="src\dlangide.d" />
+    <Compile Include="src\dlangide\workspace\project.d" />
+    <Compile Include="src\dlangide\workspace\workspace.d" />
+    <Compile Include="src\dlangide\ui\commands.d" />
+    <Compile Include="src\dlangide\ui\dsourceedit.d" />
+    <Compile Include="src\dlangide\ui\frame.d" />
+    <Compile Include="src\dlangide\ui\homescreen.d" />
+    <Compile Include="src\dlangide\ui\newproject.d" />
+    <Compile Include="src\dlangide\ui\outputpanel.d" />
+    <Compile Include="src\dlangide\ui\searchPanel.d" />
+    <Compile Include="src\dlangide\ui\settings.d" />
+    <Compile Include="src\dlangide\ui\wspanel.d" />
+    <Compile Include="src\dlangide\tools\editortool.d" />
+    <Compile Include="src\dlangide\tools\d\dcdinterface.d" />
+    <Compile Include="src\dlangide\tools\d\dcdserver.d" />
+    <Compile Include="src\dlangide\tools\d\deditortool.d" />
+    <Compile Include="src\dlangide\tools\d\dparser.d" />
+    <Compile Include="src\dlangide\tools\d\dsyntax.d" />
+    <Compile Include="src\dlangide\builders\builder.d" />
+    <Compile Include="src\dlangide\builders\extprocess.d" />
+    <Compile Include="src\ddebug\common\debugger.d" />
+    <Compile Include="src\ddebug\common\queue.d" />
+    <Compile Include="src\ddebug\gdb\gdbinterface.d" />
+    <Compile Include="src\ddebug\windows\debuginfo.d" />
+    <Compile Include="src\ddebug\windows\mago.d" />
+    <Compile Include="src\ddebug\windows\msdbg.d" />
+    <Compile Include="src\ddebug\windows\windebug.d" />
+    <Compile Include="src\ddc\lexer\exceptions.d" />
+    <Compile Include="src\ddc\lexer\Lexer.d" />
+    <Compile Include="src\ddc\lexer\LexerException.d" />
+    <Compile Include="src\ddc\lexer\textsource.d" />
+    <Compile Include="src\ddc\lexer\tokenizer.d" />
+  </ItemGroup>
+</Project>
