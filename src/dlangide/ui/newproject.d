@@ -93,27 +93,22 @@ class NewProjectDlg : Dialog {
                             TextWidget { text: "" }
                             CheckBox { id: cbCreateWorkspace; text: "Create new solution"; checked: true }
                             TextWidget { text: "Workspace name" }
-                            EditLine {
-                                id: edWorkspaceName; text: "newworkspace"
-                            }
+                            EditLine { id: edWorkspaceName; text: "newworkspace"; layoutWidth: fill }
                             TextWidget { text: "Project name" }
-                            EditLine {
-                                id: edProjectName; text: "newproject"
-                            }
+                            EditLine { id: edProjectName; text: "newproject"; layoutWidth: fill }
                             TextWidget { text: "" }
                             CheckBox { id: cbCreateSubdir; text: "Create subdirectory for project"; checked: true }
                             TextWidget { text: "Location" }
-                            DirEditLine {
-                                id: edLocation
-                            }
+                            DirEditLine { id: edLocation; layoutWidth: fill }
                         }
-                        TextWidget { id: statusText; text: "" }
+                        TextWidget { id: statusText; text: ""; layoutWidth: fill }
                     }
                 });
         } catch (Exception e) {
             Log.e("Exceptin while parsing DML", e);
             throw e;
         }
+
 
         _projectTemplateList = content.childById!StringListWidget("projectTemplateList");
         _templateDescription = content.childById!EditBox("templateDescription");
@@ -129,6 +124,9 @@ class NewProjectDlg : Dialog {
         if (_currentWorkspace) {
             _workspaceName = toUTF8(_currentWorkspace.name);
             _edWorkspaceName.text = toUTF32(_workspaceName);
+        } else {
+            _cbCreateWorkspace.checked = true;
+            _cbCreateWorkspace.enabled = false;
         }
         if (!_newWorkspace) {
             _cbCreateWorkspace.checked = false;
@@ -180,7 +178,6 @@ class NewProjectDlg : Dialog {
 
         addChild(content);
         addChild(createButtonsPanel([_newWorkspace ? ACTION_FILE_NEW_WORKSPACE : ACTION_FILE_NEW_PROJECT, ACTION_CANCEL], 0, 0));
-
 	}
 
 	bool _newWorkspace;
@@ -257,7 +254,7 @@ class NewProjectDlg : Dialog {
 
     override void close(const Action action) {
         Action newaction = action.clone();
-        if (action == ACTION_FILE_NEW_WORKSPACE || action == ACTION_FILE_NEW_PROJECT) {
+        if (action.id == IDEActions.FileNewWorkspace || action.id == IDEActions.FileNewProject) {
             if (!validate()) {
                 window.showMessageBox(UIString("Cannot create project"d), UIString("Invalid parameters"));
                 return;
@@ -306,6 +303,8 @@ class NewProjectDlg : Dialog {
         string pfile = buildNormalizedPath(pdir, "dub.json");
         Project project = new Project(ws, pfile);
         project.name = toUTF32(_projectName);
+        if (!project.save())
+            return setError("Cannot save project");
         project.content.setString("targetName", _projectName);
         if (_currentTemplate.isLibrary) {
             project.content.setString("targetType", "staticLibrary");
