@@ -639,10 +639,21 @@ class IDEFrame : AppFrame {
 	void createNewProject(bool newWorkspace) {
         if (currentWorkspace is null)
             newWorkspace = true;
-		NewProjectDlg dlg = new NewProjectDlg(window, newWorkspace, currentWorkspace);
+		NewProjectDlg dlg = new NewProjectDlg(this, newWorkspace, currentWorkspace);
 		dlg.dialogResult = delegate(Dialog dlg, const Action result) {
-			if (result.id == ACTION_APPLY.id) {
+			if (result.id == ACTION_FILE_NEW_PROJECT.id || result.id == ACTION_FILE_NEW_WORKSPACE.id) {
 				//Log.d("settings after edit:\n", s.toJSON(true));
+                ProjectCreationResult res = cast(ProjectCreationResult)result.objectParam;
+                if (res) {
+                    // open workspace/project
+                    if (currentWorkspace is null || res.workspace !is currentWorkspace) {
+                        // open new workspace
+                        setWorkspace(res.workspace);
+                    } else {
+                        // project added to current workspace
+                        loadProject(res.project);
+                    }
+                }
 			}
 		};
 		dlg.show();

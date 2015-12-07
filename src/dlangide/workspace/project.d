@@ -305,6 +305,9 @@ class Project : WorkspaceItem {
     {
         return _configurations;
     }
+
+    /// direct access to project file (json)
+    @property SettingsFile content() { return _projectFile; }
     
     /// returns project's own source paths
     @property string[] sourcePaths() { return _sourcePaths; }
