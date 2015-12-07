@@ -29,69 +29,60 @@ class NewProjectDlg : Dialog {
         super.init();
 		Widget content = parseML(q{
                 VerticalLayout {
-                id: vlayout
+                    id: vlayout
                     margins: Rect { left: 5; right: 3; top: 2; bottom: 4 }
-                padding: Rect { 5, 4, 3, 2 } // same as Rect { left: 5; top: 4; right: 3; bottom: 2 }
-                layoutWidth: FILL_PARENT; layoutHeight: FILL_PARENT
-                    HorizontalLayout {
+                    padding: Rect { 5, 4, 3, 2 } // same as Rect { left: 5; top: 4; right: 3; bottom: 2 }
                     layoutWidth: FILL_PARENT; layoutHeight: FILL_PARENT
-                        VerticalLayout {
+                    HorizontalLayout {
                         layoutWidth: FILL_PARENT; layoutHeight: FILL_PARENT
-                            TextWidget {
-                            text: "Project type"
-                            }
-                            StringListWidget { id: projectTypeList }
-                        }
                         VerticalLayout {
-                        layoutWidth: FILL_PARENT; layoutHeight: FILL_PARENT
-                            TextWidget {
-                            text: "Template"
-                            }
+                            layoutWidth: FILL_PARENT; layoutHeight: FILL_PARENT
+                            TextWidget { text: "Project template" }
                             StringListWidget { id: projectTemplateList }
                         }
                         VerticalLayout {
-                        layoutWidth: FILL_PARENT; layoutHeight: FILL_PARENT
-                            TextWidget {
-                            text: "Description"
-                            }
-                            EditBox { id: templateDescription }
+                            layoutWidth: FILL_PARENT; layoutHeight: FILL_PARENT
+                            TextWidget { text: "Template description" }
+                            EditBox { id: templateDescription; readOnly: true }
                         }
                     }
-                    TableLayout {
-                    colCount: 2
+                    HorizontalLayout {
+                        TableLayout {
+                            colCount: 2
                             layoutWidth: FILL_PARENT; layoutHeight: FILL_PARENT
-                        TextWidget { text: "Project name" }
-                        EditLine {
-                        id: edProjectName
+                            TextWidget { text: "Project name" }
+                            EditLine {
+                                id: edProjectName
+                            }
+                            TextWidget { text: "Solution name" }
+                            EditLine {
+                                id: edSolutionName
+                            }
+                            TextWidget { text: "Location" }
+                            EditLine {
+                                id: edLocation
+                            }
+                            TextWidget { text: "" }
+                            CheckBox { id: cbCreateSubdir; text: "Create subdirectory for project" }
                         }
-                        TextWidget { text: "Solution name" }
-                        EditLine {
-                        id: edSolutionName
+                        VerticalLayout {
+                            layoutWidth: FILL_PARENT; layoutHeight: FILL_PARENT
+                            TextWidget { text: "Description" }
+                            EditBox { id: directoryLayout }
                         }
-                        TextWidget { text: "Location" }
-                        EditLine {
-                        id: edLocation
-                        }
-                        TextWidget { text: "" }
-                        CheckBox { id: cbCreateSubdir; text: "Create subdirectory for project" }
                     }
                 }
             });
 
-        _projectTypeList = content.childById!StringListWidget("projectTypeList");
         _projectTemplateList = content.childById!StringListWidget("projectTemplateList");
         _templateDescription = content.childById!EditBox("templateDescription");
-        _projectTypeList.items = [
-            "Empty Project"d,
-            "Library"d,
+        _projectTemplateList.items = [
+            "Empty App Project"d,
+            "Empty Library Project"d,
+            "Hello World App"d,
             "Console Application"d,
             "DlangUI Library"d,
             "DlangUI Application"d,
-        ];
-        _projectTemplateList.items = [
-            "Hello World"d,
-            "DlangUI Form based app"d,
-            "DlangUI Frame based app"d,
         ];
 
         addChild(content);
