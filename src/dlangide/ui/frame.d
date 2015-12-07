@@ -160,7 +160,7 @@ class IDEFrame : AppFrame {
                 index = _tabs.tabIndex(filename);
                 TabItem tab = _tabs.tab(filename);
                 tab.objectParam = file;
-                editor.onModifiedStateChangeListener = &onModifiedStateChange;
+                editor.modifiedStateChange = &onModifiedStateChange;
                 applySettings(editor, settings);
                 _tabs.selectTab(index, true);
                 if( filename.endsWith(".d") )
@@ -637,7 +637,9 @@ class IDEFrame : AppFrame {
 	}
 
 	void createNewProject(bool newWorkspace) {
-		NewProjectDlg dlg = new NewProjectDlg(window, newWorkspace);
+        if (currentWorkspace is null)
+            newWorkspace = true;
+		NewProjectDlg dlg = new NewProjectDlg(window, newWorkspace, currentWorkspace);
 		dlg.dialogResult = delegate(Dialog dlg, const Action result) {
 			if (result.id == ACTION_APPLY.id) {
 				//Log.d("settings after edit:\n", s.toJSON(true));
