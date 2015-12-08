@@ -232,6 +232,7 @@ class NewFileDlg : Dialog {
             _packageName = buf.dup;
             string m = !_packageName.empty ? _packageName ~ '.' ~ _moduleName : _moduleName;
             _edModuleName.text = toUTF32(m);
+            _packageName = m;
         } else {
             string projectPath = _project.dir;
             if (!isSubdirOf(_location, projectPath))

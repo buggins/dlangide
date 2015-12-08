@@ -112,6 +112,7 @@
     <Compile Include="src\dlangide\ui\dsourceedit.d" />
     <Compile Include="src\dlangide\ui\frame.d" />
     <Compile Include="src\dlangide\ui\homescreen.d" />
+    <Compile Include="src\dlangide\ui\newfile.d" />
     <Compile Include="src\dlangide\ui\newproject.d" />
     <Compile Include="src\dlangide\ui\outputpanel.d" />
     <Compile Include="src\dlangide\ui\searchPanel.d" />

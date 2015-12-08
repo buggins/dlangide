@@ -152,7 +152,10 @@ class ProjectFolder : ProjectItem {
 
     void loadItems() {
         bool[string] loaded;
-        foreach(e; dirEntries(_filename, SpanMode.shallow)) {
+        string path = _filename;
+        if (exists(path) && isFile(path))
+            path = dirName(path);
+        foreach(e; dirEntries(path, SpanMode.shallow)) {
             string fn = baseName(e.name);
             if (e.isDir) {
                 loadDir(fn);
