@@ -176,7 +176,10 @@ class ProjectFolder : ProjectItem {
     string relativeToAbsolutePath(string path) {
         if (isAbsolute(path))
             return path;
-        return buildNormalizedPath(_filename, path);
+        string fn = _filename;
+        if (exists(fn) && isFile(fn))
+            fn = dirName(fn);
+        return buildNormalizedPath(fn, path);
     }
 
     override void refresh() {
@@ -456,7 +459,10 @@ class Project : WorkspaceItem {
     }
 
     void refresh() {
-        _items.refresh();
+        for (int i = _items._children.count - 1; i >= 0; i--) {
+            if (_items._children[i].isFolder)
+                _items._children[i].refresh();
+        }
     }
 
     void findMainSourceFile() {

@@ -234,6 +234,19 @@ class IDEFrame : AppFrame {
         }
     }
 
+    /// close editor tabs for which files are removed from filesystem
+    void closeRemovedDocuments() {
+        import std.file;
+        for (int i = _tabs.tabCount - 1; i >= 0; i--) {
+            DSourceEdit ed = cast(DSourceEdit)_tabs.tabBody(i);
+            if (ed) {
+                if (!exists(ed.id) || !isFile(ed.id)) {
+                    closeTab(ed.id);
+                }
+            }
+        }
+    }
+
     /// returns first unsaved document
     protected DSourceEdit hasUnsavedEdits() {
         for (int i = _tabs.tabCount - 1; i >= 0; i--) {
@@ -369,7 +382,7 @@ class IDEFrame : AppFrame {
         fileNewItem.add(ACTION_FILE_NEW_SOURCE_FILE, ACTION_FILE_NEW_WORKSPACE, ACTION_FILE_NEW_PROJECT);
         fileItem.add(fileNewItem);
         fileItem.add(ACTION_FILE_OPEN_WORKSPACE, ACTION_FILE_OPEN, 
-                     ACTION_FILE_SAVE, ACTION_FILE_SAVE_AS, ACTION_FILE_SAVE_ALL, ACTION_FILE_EXIT);
+                     ACTION_FILE_SAVE, ACTION_FILE_SAVE_AS, ACTION_FILE_SAVE_ALL, ACTION_FILE_WORKSPACE_CLOSE, ACTION_FILE_EXIT);
 
         MenuItem editItem = new MenuItem(new Action(2, "MENU_EDIT"));
 		editItem.add(ACTION_EDIT_COPY, ACTION_EDIT_PASTE, 
@@ -638,6 +651,15 @@ class IDEFrame : AppFrame {
                 case IDEActions.FileNew:
                     addProjectItem(a.objectParam);
                     return true;
+                case IDEActions.ProjectFolderRemoveItem:
+                    removeProjectItem(a.objectParam);
+                    return true;
+                case IDEActions.ProjectFolderRefresh:
+                    refreshProjectItem(a.objectParam);
+                    return true;
+                case IDEActions.CloseWorkspace:
+                    closeWorkspace();
+                    return true;
 				default:
                     return super.handleAction(a);
             }
@@ -651,6 +673,71 @@ class IDEFrame : AppFrame {
             return cast(ProjectSourceFile)tab.objectParam;
         }
         return null;
+    }
+
+    void closeWorkspace() {
+        askForUnsavedEdits(delegate() {
+            setWorkspace(null);
+            showHomeScreen();
+        });
+    }
+
+    void refreshProjectItem(const Object obj) {
+        if (currentWorkspace is null)
+            return;
+        Project project;
+        ProjectFolder folder;
+        if (cast(Project)obj) {
+            project = cast(Project)obj;
+        } else if (cast(ProjectFolder)obj) {
+            folder = cast(ProjectFolder)obj;
+            project = folder.project;
+        } else if (cast(ProjectSourceFile)obj) {
+            ProjectSourceFile srcfile = cast(ProjectSourceFile)obj;
+            folder = cast(ProjectFolder)srcfile.parent;
+            project = srcfile.project;
+        } else {
+            ProjectSourceFile srcfile = currentEditorSourceFile;
+            if (srcfile) {
+                folder = cast(ProjectFolder)srcfile.parent;
+                project = srcfile.project;
+            }
+        }
+        if (project) {
+            project.refresh();
+            refreshWorkspace();
+        }
+    }
+
+    void removeProjectItem(const Object obj) {
+        if (currentWorkspace is null)
+            return;
+        ProjectSourceFile srcfile = cast(ProjectSourceFile)obj;
+        if (!srcfile)
+            return;
+        Project project = srcfile.project;
+        if (!project)
+            return;
+        window.showMessageBox(UIString("Remove file"d), 
+                UIString("Do you want to remove file "d ~ srcfile.name ~ "?"), 
+                [ACTION_YES, ACTION_NO], 
+                1, delegate(const Action result) {
+                    if (result == StandardAction.Yes) {
+                        // save and close
+                        try {
+                            import std.file : remove;
+                            closeTab(srcfile.filename);
+                            remove(srcfile.filename);
+                            project.refresh();
+                            refreshWorkspace();
+                        } catch (Exception e) {
+                            Log.e("Error while removing file");
+                        }
+                    }
+                    // else ignore
+                    return true;
+                });
+
     }
 
     void addProjectItem(const Object obj) {
@@ -818,6 +905,7 @@ class IDEFrame : AppFrame {
     void refreshWorkspace() {
         _logPanel.logLine("Refreshing workspace");
         _wsPanel.reloadItems();
+        closeRemovedDocuments();
     }
 
     void createNewWorkspaceForExistingProject(Project project) {

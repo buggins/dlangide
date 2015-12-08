@@ -41,10 +41,12 @@ enum IDEActions : int {
     ProjectFolderRemoveItem,
     ProjectFolderOpenItem,
     ProjectFolderRenameItem,
+    ProjectFolderRefresh,
     GoToDefinition,
     GetCompletionSuggestions,
     InsertCompletion,
     FindText,
+    CloseWorkspace,
 }
 
 __gshared static this() {
@@ -57,6 +59,8 @@ __gshared static this() {
 const Action ACTION_PROJECT_FOLDER_OPEN_ITEM = new Action(IDEActions.ProjectFolderOpenItem, "MENU_PROJECT_FOLDER_OPEN_ITEM"c);
 const Action ACTION_PROJECT_FOLDER_REMOVE_ITEM = new Action(IDEActions.ProjectFolderRemoveItem, "MENU_PROJECT_FOLDER_REMOVE_ITEM"c);
 const Action ACTION_PROJECT_FOLDER_RENAME_ITEM = new Action(IDEActions.ProjectFolderRenameItem, "MENU_PROJECT_FOLDER_RENAME_ITEM"c);
+const Action ACTION_PROJECT_FOLDER_REFRESH = new Action(IDEActions.ProjectFolderRefresh, "MENU_PROJECT_FOLDER_REFRESH"c);
+const Action ACTION_FILE_WORKSPACE_CLOSE = new Action(IDEActions.CloseWorkspace, "MENU_FILE_WORKSPACE_CLOSE"c);
 
 const Action ACTION_FILE_NEW_SOURCE_FILE = new Action(IDEActions.FileNew, "MENU_FILE_NEW_SOURCE_FILE"c, "document-new", KeyCode.KEY_N, KeyFlag.Control);
 const Action ACTION_FILE_NEW_PROJECT = new Action(IDEActions.FileNewProject, "MENU_FILE_NEW_PROJECT"c);

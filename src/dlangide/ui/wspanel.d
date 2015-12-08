@@ -75,18 +75,27 @@ class WorkspacePanel : DockWindow {
         _tree.popupMenu = &onTreeItemPopupMenu;
 
         _workspacePopupMenu = new MenuItem();
-        _workspacePopupMenu.add(ACTION_FILE_NEW_SOURCE_FILE.clone());
+        _workspacePopupMenu.add(ACTION_FILE_NEW_SOURCE_FILE, ACTION_FILE_WORKSPACE_CLOSE);
 
         _projectPopupMenu = new MenuItem();
-        _projectPopupMenu.add(ACTION_FILE_NEW_SOURCE_FILE, ACTION_PROJECT_FOLDER_OPEN_ITEM,
-                           ACTION_PROJECT_FOLDER_REMOVE_ITEM);
+        _projectPopupMenu.add(ACTION_FILE_NEW_SOURCE_FILE, 
+                              ACTION_PROJECT_FOLDER_REFRESH, 
+                              ACTION_PROJECT_FOLDER_OPEN_ITEM,
+                              //ACTION_PROJECT_FOLDER_REMOVE_ITEM
+                              );
 
         _folderPopupMenu = new MenuItem();
-        _folderPopupMenu.add(ACTION_FILE_NEW_SOURCE_FILE, ACTION_PROJECT_FOLDER_OPEN_ITEM, 
-                             ACTION_PROJECT_FOLDER_REMOVE_ITEM, ACTION_PROJECT_FOLDER_RENAME_ITEM);
+        _folderPopupMenu.add(ACTION_FILE_NEW_SOURCE_FILE, ACTION_PROJECT_FOLDER_REFRESH, ACTION_PROJECT_FOLDER_OPEN_ITEM, 
+                             //ACTION_PROJECT_FOLDER_REMOVE_ITEM, 
+                             //ACTION_PROJECT_FOLDER_RENAME_ITEM
+                             );
+
         _filePopupMenu = new MenuItem();
-        _filePopupMenu.add(ACTION_FILE_NEW_SOURCE_FILE, ACTION_PROJECT_FOLDER_OPEN_ITEM, 
-                             ACTION_PROJECT_FOLDER_REMOVE_ITEM, ACTION_PROJECT_FOLDER_RENAME_ITEM);
+        _filePopupMenu.add(ACTION_FILE_NEW_SOURCE_FILE, ACTION_PROJECT_FOLDER_REFRESH, 
+                           ACTION_PROJECT_FOLDER_OPEN_ITEM, 
+                           ACTION_PROJECT_FOLDER_REMOVE_ITEM, 
+                           //ACTION_PROJECT_FOLDER_RENAME_ITEM
+                           );
         return _tree;
     }
 
