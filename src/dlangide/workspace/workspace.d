@@ -199,6 +199,12 @@ class Workspace : WorkspaceItem {
     }
     void close() {
     }
+
+    void refresh() {
+        foreach (Project p; _projects) {
+            p.refresh();
+        }
+    }
 }
 
 /// global workspace

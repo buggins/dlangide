@@ -75,7 +75,8 @@ class WorkspacePanel : DockWindow {
         _tree.popupMenu = &onTreeItemPopupMenu;
 
         _workspacePopupMenu = new MenuItem();
-        _workspacePopupMenu.add(ACTION_FILE_NEW_SOURCE_FILE, ACTION_FILE_WORKSPACE_CLOSE);
+        _workspacePopupMenu.add(ACTION_PROJECT_FOLDER_REFRESH, 
+                                ACTION_FILE_WORKSPACE_CLOSE);
 
         _projectPopupMenu = new MenuItem();
         _projectPopupMenu.add(ACTION_FILE_NEW_SOURCE_FILE, 

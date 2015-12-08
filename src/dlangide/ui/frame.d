@@ -687,7 +687,11 @@ class IDEFrame : AppFrame {
             return;
         Project project;
         ProjectFolder folder;
-        if (cast(Project)obj) {
+        if (cast(Workspace)obj) {
+            Workspace ws = cast(Workspace)obj;
+            ws.refresh();
+            refreshWorkspace();
+        } else if (cast(Project)obj) {
             project = cast(Project)obj;
         } else if (cast(ProjectFolder)obj) {
             folder = cast(ProjectFolder)obj;
