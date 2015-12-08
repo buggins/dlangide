@@ -17,12 +17,17 @@ interface SourceFileSelectionHandler {
     bool onSourceFileSelected(ProjectSourceFile file, bool activate);
 }
 
+interface WorkspaceActionHandler {
+    bool onWorkspaceAction(const Action a);
+}
+
 class WorkspacePanel : DockWindow {
     protected Workspace _workspace;
     protected TreeWidget _tree;
 
     /// handle source file selection change
     Signal!SourceFileSelectionHandler sourceFileSelectionListener;
+    Signal!WorkspaceActionHandler workspaceActionListener;
 
     this(string id) {
         super(id);
@@ -70,17 +75,17 @@ class WorkspacePanel : DockWindow {
         _tree.popupMenu = &onTreeItemPopupMenu;
 
         _workspacePopupMenu = new MenuItem();
-        _workspacePopupMenu.add(ACTION_PROJECT_FOLDER_ADD_ITEM);
+        _workspacePopupMenu.add(ACTION_FILE_NEW_SOURCE_FILE.clone());
 
         _projectPopupMenu = new MenuItem();
-        _projectPopupMenu.add(ACTION_PROJECT_FOLDER_ADD_ITEM, ACTION_PROJECT_FOLDER_OPEN_ITEM,
+        _projectPopupMenu.add(ACTION_FILE_NEW_SOURCE_FILE, ACTION_PROJECT_FOLDER_OPEN_ITEM,
                            ACTION_PROJECT_FOLDER_REMOVE_ITEM);
 
         _folderPopupMenu = new MenuItem();
-        _folderPopupMenu.add(ACTION_PROJECT_FOLDER_ADD_ITEM, ACTION_PROJECT_FOLDER_OPEN_ITEM, 
+        _folderPopupMenu.add(ACTION_FILE_NEW_SOURCE_FILE, ACTION_PROJECT_FOLDER_OPEN_ITEM, 
                              ACTION_PROJECT_FOLDER_REMOVE_ITEM, ACTION_PROJECT_FOLDER_RENAME_ITEM);
         _filePopupMenu = new MenuItem();
-        _filePopupMenu.add(ACTION_PROJECT_FOLDER_ADD_ITEM, ACTION_PROJECT_FOLDER_OPEN_ITEM, 
+        _filePopupMenu.add(ACTION_FILE_NEW_SOURCE_FILE, ACTION_PROJECT_FOLDER_OPEN_ITEM, 
                              ACTION_PROJECT_FOLDER_REMOVE_ITEM, ACTION_PROJECT_FOLDER_RENAME_ITEM);
         return _tree;
     }
@@ -108,7 +113,15 @@ class WorkspacePanel : DockWindow {
             menu = _workspacePopupMenu;
         }
         if (menu && menu.subitemCount) {
-            menu.onMenuItem = &onPopupMenuItem;
+            for (int i = 0; i < menu.subitemCount; i++) {
+                Action a = menu.subitem(i).action.clone();
+                a.objectParam = selectedItem.objectParam;
+                menu.subitem(i).action = a;
+                //menu.subitem(i).menuItemAction = &handleAction;
+            }
+            //menu.onMenuItem = &onPopupMenuItem;
+            //menu.menuItemClick = &onPopupMenuItem;
+            menu.menuItemAction = &handleAction;
             menu.updateActionState(this);
             return menu;
         }
@@ -160,5 +173,12 @@ class WorkspacePanel : DockWindow {
     @property void workspace(Workspace w) {
         _workspace = w;
         reloadItems();
+    }
+
+    /// override to handle specific actions
+	override bool handleAction(const Action a) {
+        if (workspaceActionListener.assigned)
+            return workspaceActionListener(a);
+        return false;
     }
 }

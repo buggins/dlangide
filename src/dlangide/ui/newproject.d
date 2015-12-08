@@ -284,6 +284,10 @@ class NewProjectDlg : Dialog {
         if (!exists(_location) || !isDir(_location)) {
             return setError("Invalid location");
         }
+        if (!isValidProjectName(_projectName))
+            return setError("Invalid project name");
+        if (!isValidProjectName(_workspaceName))
+            return setError("Invalid workspace name");
         return setError("");
     }
 

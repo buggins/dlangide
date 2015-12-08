@@ -20,6 +20,7 @@ import dlangui.core.files;
 import dlangide.ui.commands;
 import dlangide.ui.wspanel;
 import dlangide.ui.outputpanel;
+import dlangide.ui.newfile;
 import dlangide.ui.newproject;
 import dlangide.ui.dsourceedit;
 import dlangide.ui.homescreen;
@@ -332,6 +333,7 @@ class IDEFrame : AppFrame {
         // Create workspace docked panel
         _wsPanel = new WorkspacePanel("workspace");
         _wsPanel.sourceFileSelectionListener = &onSourceFileSelected;
+        _wsPanel.workspaceActionListener = &handleAction;
         _wsPanel.dockAlignment = DockAlignment.Left;
         _dockHost.addDockedWindow(_wsPanel);
 
@@ -633,12 +635,63 @@ class IDEFrame : AppFrame {
 				case IDEActions.FileNewProject:
 					createNewProject(false);
 					return true;
+                case IDEActions.FileNew:
+                    addProjectItem(a.objectParam);
+                    return true;
 				default:
                     return super.handleAction(a);
             }
         }
 		return false;
 	}
+
+    @property ProjectSourceFile currentEditorSourceFile() {
+        TabItem tab = _tabs.selectedTab;
+        if (tab) {
+            return cast(ProjectSourceFile)tab.objectParam;
+        }
+        return null;
+    }
+
+    void addProjectItem(const Object obj) {
+        if (currentWorkspace is null)
+            return;
+        Project project;
+        ProjectFolder folder;
+        if (cast(Project)obj) {
+            project = cast(Project)obj;
+        } else if (cast(ProjectFolder)obj) {
+            folder = cast(ProjectFolder)obj;
+            project = folder.project;
+        } else if (cast(ProjectSourceFile)obj) {
+            ProjectSourceFile srcfile = cast(ProjectSourceFile)obj;
+            folder = cast(ProjectFolder)srcfile.parent;
+            project = srcfile.project;
+        } else {
+            ProjectSourceFile srcfile = currentEditorSourceFile;
+            if (srcfile) {
+                folder = cast(ProjectFolder)srcfile.parent;
+                project = srcfile.project;
+            }
+        }
+        if (project && folder && project.workspace is currentWorkspace) {
+    		NewFileDlg dlg = new NewFileDlg(this, project, folder);
+    		dlg.dialogResult = delegate(Dialog dlg, const Action result) {
+			    if (result.id == ACTION_FILE_NEW_SOURCE_FILE.id) {
+                    FileCreationResult res = cast(FileCreationResult)result.objectParam;
+                    if (res) {
+                        //res.project.reload();
+                        res.project.refresh();
+                        refreshWorkspace();
+                        if (isSupportedSourceTextFileFormat(res.filename)) {
+                            openSourceFile(res.filename, null, true);
+                        }
+                    }
+			    }
+		    };
+		    dlg.show();
+        }
+    }
 
 	void createNewProject(bool newWorkspace) {
         if (currentWorkspace is null)

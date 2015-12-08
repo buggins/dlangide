@@ -10,6 +10,7 @@ import std.json;
 import std.utf;
 import std.algorithm;
 import std.process;
+import std.array;
 
 /// return true if filename matches rules for workspace file names
 bool isProjectFile(string filename) {
@@ -74,6 +75,9 @@ class ProjectItem {
     ProjectItem child(int index) {
         return null;
     }
+
+    void refresh() {
+    }
 }
 
 /// Project folder
@@ -99,9 +103,30 @@ class ProjectFolder : ProjectItem {
         item._parent = this;
         item._project = _project;
     }
+    ProjectItem childByPathName(string path) {
+        for (int i = 0; i < _children.count; i++) {
+            if (_children[i].filename.equal(path))
+                return _children[i];
+        }
+        return null;
+    }
+    ProjectItem childByName(dstring s) {
+        for (int i = 0; i < _children.count; i++) {
+            if (_children[i].name.equal(s))
+                return _children[i];
+        }
+        return null;
+    }
+
     bool loadDir(string path) {
         string src = relativeToAbsolutePath(path);
         if (exists(src) && isDir(src)) {
+            ProjectFolder existing = cast(ProjectFolder)childByPathName(src);
+            if (existing) {
+                if (existing.isFolder)
+                    existing.loadItems();
+                return true;
+            }
             ProjectFolder dir = new ProjectFolder(src);
             addChild(dir);
             Log.d("    added project folder ", src);
@@ -110,9 +135,13 @@ class ProjectFolder : ProjectItem {
         }
         return false;
     }
+
     bool loadFile(string path) {
         string src = relativeToAbsolutePath(path);
         if (exists(src) && isFile(src)) {
+            ProjectItem existing = childByPathName(src);
+            if (existing)
+                return true;
             ProjectSourceFile f = new ProjectSourceFile(src);
             addChild(f);
             Log.d("    added project file ", src);
@@ -120,20 +149,35 @@ class ProjectFolder : ProjectItem {
         }
         return false;
     }
+
     void loadItems() {
+        bool[string] loaded;
         foreach(e; dirEntries(_filename, SpanMode.shallow)) {
             string fn = baseName(e.name);
             if (e.isDir) {
                 loadDir(fn);
+                loaded[fn] = true;
             } else if (e.isFile) {
                 loadFile(fn);
+                loaded[fn] = true;
+            }
+        }
+        // removing non-reloaded items
+        for (int i = _children.count - 1; i >= 0; i--) {
+            if (!(toUTF8(_children[i].name) in loaded)) {
+                _children.remove(i);
             }
         }
     }
+
     string relativeToAbsolutePath(string path) {
         if (isAbsolute(path))
             return path;
         return buildNormalizedPath(_filename, path);
+    }
+
+    override void refresh() {
+        loadItems();
     }
 }
 
@@ -408,6 +452,10 @@ class Project : WorkspaceItem {
         return folder;
     }
 
+    void refresh() {
+        _items.refresh();
+    }
+
     void findMainSourceFile() {
         string n = toUTF8(name);
         string[] mainnames = ["app.d", "main.d", n ~ ".d"];
@@ -575,3 +623,35 @@ class DubPackageFinder {
     }
 }
 
+bool isValidProjectName(string s) {
+    if (s.empty)
+        return false;
+    for (int i = 0; i < s.length; i++) {
+        char ch = s[i];
+        if (ch != '_' && ch != '-' && (ch < '0' || ch > '9') && (ch < 'a' || ch > 'z') && (ch < 'A' || ch > 'Z'))
+            return false;
+    }
+    return true;
+}
+
+bool isValidModuleName(string s) {
+    if (s.empty)
+        return false;
+    for (int i = 0; i < s.length; i++) {
+        char ch = s[i];
+        if (ch != '_' && (ch < '0' || ch > '9') && (ch < 'a' || ch > 'z') && (ch < 'A' || ch > 'Z'))
+            return false;
+    }
+    return true;
+}
+
+bool isValidFileName(string s) {
+    if (s.empty)
+        return false;
+    for (int i = 0; i < s.length; i++) {
+        char ch = s[i];
+        if (ch != '_' && ch != '.' && ch != '-' && (ch < '0' || ch > '9') && (ch < 'a' || ch > 'z') && (ch < 'A' || ch > 'Z'))
+            return false;
+    }
+    return true;
+}

@@ -37,7 +37,7 @@ enum IDEActions : int {
     WindowCloseAllDocuments,
     CreateNewWorkspace,
 	AddToCurrentWorkspace,
-    ProjectFolderAddItem,
+    //ProjectFolderAddItem,
     ProjectFolderRemoveItem,
     ProjectFolderOpenItem,
     ProjectFolderRenameItem,
@@ -53,7 +53,7 @@ __gshared static this() {
 }
 
 
-const Action ACTION_PROJECT_FOLDER_ADD_ITEM = new Action(IDEActions.ProjectFolderAddItem, "MENU_PROJECT_FOLDER_ADD_ITEM"c);
+//const Action ACTION_PROJECT_FOLDER_ADD_ITEM = new Action(IDEActions.ProjectFolderAddItem, "MENU_PROJECT_FOLDER_ADD_ITEM"c);
 const Action ACTION_PROJECT_FOLDER_OPEN_ITEM = new Action(IDEActions.ProjectFolderOpenItem, "MENU_PROJECT_FOLDER_OPEN_ITEM"c);
 const Action ACTION_PROJECT_FOLDER_REMOVE_ITEM = new Action(IDEActions.ProjectFolderRemoveItem, "MENU_PROJECT_FOLDER_REMOVE_ITEM"c);
 const Action ACTION_PROJECT_FOLDER_RENAME_ITEM = new Action(IDEActions.ProjectFolderRenameItem, "MENU_PROJECT_FOLDER_RENAME_ITEM"c);
