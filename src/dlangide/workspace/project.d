@@ -295,6 +295,7 @@ class Project : WorkspaceItem {
         _items = new ProjectFolder(fname);
         _dependencyVersion = dependencyVersion;
         _isDependency = _dependencyVersion.length > 0;
+        _projectFile = new SettingsFile(fname);
     }
 
     @property bool isDependency() { return _isDependency; }
@@ -308,7 +309,29 @@ class Project : WorkspaceItem {
 
     /// direct access to project file (json)
     @property SettingsFile content() { return _projectFile; }
-    
+
+    /// name
+    override @property dstring name() {
+        return super.name();
+    }
+
+    /// name
+    override @property void name(dstring s) {
+        super.name(s);
+        _projectFile.setString("name", toUTF8(s));
+    }
+
+    /// name
+    override @property dstring description() {
+        return super.description();
+    }
+
+    /// name
+    override @property void description(dstring s) {
+        super.description(s);
+        _projectFile.setString("description", toUTF8(s));
+    }
+
     /// returns project's own source paths
     @property string[] sourcePaths() { return _sourcePaths; }
     /// returns project's own source paths
@@ -465,6 +488,13 @@ class Project : WorkspaceItem {
             return false;
         }
         return true;
+    }
+
+    override bool save(string fname = null) {
+        if (fname !is null)
+            filename = fname;
+        assert(filename !is null);
+        return _projectFile.save(filename, true);
     }
 
     protected Project[] _dependencies;

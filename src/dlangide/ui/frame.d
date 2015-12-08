@@ -193,6 +193,10 @@ class IDEFrame : AppFrame {
         }
     }
 
+    void hideHomeScreen() {
+        _tabs.removeTab(HOME_SCREEN_ID);
+    }
+
     void onTabChanged(string newActiveTabId, string previousTabId) {
         int index = _tabs.tabIndex(newActiveTabId);
         if (index >= 0) {
@@ -649,9 +653,13 @@ class IDEFrame : AppFrame {
                     if (currentWorkspace is null || res.workspace !is currentWorkspace) {
                         // open new workspace
                         setWorkspace(res.workspace);
+                        refreshWorkspace();
+                        hideHomeScreen();
                     } else {
                         // project added to current workspace
                         loadProject(res.project);
+                        refreshWorkspace();
+                        hideHomeScreen();
                     }
                 }
 			}
@@ -708,8 +716,9 @@ class IDEFrame : AppFrame {
         if (filename.isWorkspaceFile) {
             Workspace ws = new Workspace(this);
             if (ws.load(filename)) {
-                askForUnsavedEdits(delegate() {
+                    askForUnsavedEdits(delegate() {
                     setWorkspace(ws);
+                    hideHomeScreen();
                 });
             } else {
                 window.showMessageBox(UIString("Cannot open workspace"d), UIString("Error occured while opening workspace"d));
@@ -732,12 +741,14 @@ class IDEFrame : AppFrame {
                                           if (result.id == IDEActions.CreateNewWorkspace) {
                                               // new ws
                                               createNewWorkspaceForExistingProject(project);
+                                              hideHomeScreen();
                                           } else if (result.id == IDEActions.AddToCurrentWorkspace) {
                                               // add to current
                                               currentWorkspace.addProject(project);
                                               loadProject(project);
                                               currentWorkspace.save();
                                               refreshWorkspace();
+                                              hideHomeScreen();
                                           }
                                           return true;
                                       });
