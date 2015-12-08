@@ -546,7 +546,7 @@ class IDEFrame : AppFrame {
                     UIString caption;
                     caption = "Open Text File"d;
                     FileDialog dlg = createFileDialog(caption);
-                    dlg.addFilter(FileFilterEntry(UIString("Source files"d), "*.d;*.dd;*.ddoc;*.dh;*.json;*.xml;*.ini"));
+                    dlg.addFilter(FileFilterEntry(UIString("Source files"d), "*.d;*.dd;*.ddoc;*.di;*.dh;*.json;*.xml;*.ini"));
                     dlg.addFilter(FileFilterEntry(UIString("All files"d), "*.*"));
                     dlg.dialogResult = delegate(Dialog dlg, const Action result) {
 						if (result.id == ACTION_OPEN.id) {

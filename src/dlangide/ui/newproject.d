@@ -37,7 +37,8 @@ class NewProjectDlg : Dialog {
     IDEFrame _ide;
 
     this(IDEFrame parent, bool newWorkspace, Workspace currentWorkspace) {
-		super(newWorkspace ? UIString("New Workspace"d) : UIString("New Project"d), parent.window, DialogFlag.Modal | DialogFlag.Resizable, 500, 400);
+		super(newWorkspace ? UIString("New Workspace"d) : UIString("New Project"d), parent.window, 
+              DialogFlag.Modal | DialogFlag.Resizable | DialogFlag.Popup, 500, 400);
         _ide = parent;
         _icon = "dlangui-logo1";
         this._currentWorkspace = currentWorkspace;
@@ -94,6 +95,8 @@ class NewProjectDlg : Dialog {
                             CheckBox { id: cbCreateWorkspace; text: "Create new solution"; checked: true }
                             TextWidget { text: "Workspace name" }
                             EditLine { id: edWorkspaceName; text: "newworkspace"; layoutWidth: fill }
+                            TextWidget { text: "" }
+                            CheckBox { id: cbCreateWorkspaceSubdir; text: "Create subdirectory for workspace"; checked: true }
                             TextWidget { text: "Project name" }
                             EditLine { id: edProjectName; text: "newproject"; layoutWidth: fill }
                             TextWidget { text: "" }
@@ -117,13 +120,23 @@ class NewProjectDlg : Dialog {
         _edWorkspaceName = content.childById!EditLine("edWorkspaceName");
         _cbCreateSubdir = content.childById!CheckBox("cbCreateSubdir");
         _cbCreateWorkspace = content.childById!CheckBox("cbCreateWorkspace");
+        _cbCreateWorkspaceSubdir = content.childById!CheckBox("cbCreateWorkspaceSubdir");
         _edLocation = content.childById!DirEditLine("edLocation");
         _edLocation.text = toUTF32(_location);
         _statusText = content.childById!TextWidget("statusText");
 
+        _edLocation.filetypeIcons[".d"] = "text-d";
+        _edLocation.filetypeIcons["dub.json"] = "project-d";
+        _edLocation.filetypeIcons["package.json"] = "project-d";
+        _edLocation.filetypeIcons[".dlangidews"] = "project-development";
+        _edLocation.addFilter(FileFilterEntry(UIString("DlangIDE files"d), "*.dlangidews;*.d;*.dd;*.di;*.ddoc;*.dh;*.json;*.xml;*.ini"));
+        _edLocation.caption = "Select directory"d;
+
         if (_currentWorkspace) {
             _workspaceName = toUTF8(_currentWorkspace.name);
             _edWorkspaceName.text = toUTF32(_workspaceName);
+            _cbCreateWorkspaceSubdir.enabled = false;
+            _cbCreateWorkspaceSubdir.checked = false;
         } else {
             _cbCreateWorkspace.checked = true;
             _cbCreateWorkspace.enabled = false;
@@ -163,6 +176,18 @@ class NewProjectDlg : Dialog {
 
         _cbCreateWorkspace.checkChange = delegate (Widget source, bool checked) {
             _edWorkspaceName.readOnly = !checked;
+            _cbCreateWorkspaceSubdir.enabled = checked;
+            updateDirLayout();
+            return true;
+        };
+
+        _cbCreateSubdir.checkChange = delegate (Widget source, bool checked) {
+            updateDirLayout();
+            return true;
+        };
+
+        _cbCreateWorkspaceSubdir.checkChange = delegate (Widget source, bool checked) {
+            _edWorkspaceName.readOnly = !checked;
             updateDirLayout();
             return true;
         };
@@ -190,6 +215,7 @@ class NewProjectDlg : Dialog {
     EditLine _edProjectName;
     CheckBox _cbCreateSubdir;
     CheckBox _cbCreateWorkspace;
+    CheckBox _cbCreateWorkspaceSubdir;
     TextWidget _statusText;
     string _projectName = "newproject";
     string _workspaceName = "newworkspace";
@@ -210,16 +236,21 @@ class NewProjectDlg : Dialog {
 
     protected void updateDirLayout() {
         dchar[] buf;
-        if (_cbCreateSubdir.checked)
-            buf ~= toUTF32(_workspaceName) ~ toUTF32(WORKSPACE_EXTENSION) ~ "\n";
         dstring level = "";
+        if (_cbCreateWorkspaceSubdir.checked) {
+            buf ~= toUTF32(_workspaceName) ~ "/\n";
+            level ~= "    ";
+        }
+        if (_cbCreateWorkspace.checked) {
+            buf ~= level ~ toUTF32(_workspaceName) ~ toUTF32(WORKSPACE_EXTENSION) ~ "\n";
+        }
         if (_cbCreateSubdir.checked) {
-            buf ~= toUTF32(_projectName) ~ "/\n";
-            level = "    ";
+            buf ~= level ~ toUTF32(_projectName) ~ "/\n";
+            level ~= "    ";
         }
         buf ~= level ~ "dub.json" ~ "\n";
         buf ~= level ~ "source/" ~ "\n";
-        if (_currentTemplate.srcfile.length) {
+        if (!_currentTemplate.srcfile.empty) {
             buf ~= level ~ "    " ~ toUTF32(_currentTemplate.srcfile) ~ "\n";
         }
         _directoryLayout.text = buf.dup;
@@ -260,14 +291,28 @@ class NewProjectDlg : Dialog {
         if (!validate())
             return false;
         Workspace ws = _currentWorkspace;
+        string wsdir = _location;
         if (_newWorkspace) {
-            string wsfilename = buildNormalizedPath(_location, _workspaceName ~ WORKSPACE_EXTENSION);
+            if (_cbCreateWorkspaceSubdir.checked) {
+                wsdir = buildNormalizedPath(wsdir, _workspaceName);
+                if (wsdir.exists) {
+                    if (!wsdir.isDir)
+                        return setError("Cannot create workspace directory");
+                } else {
+                    try {
+                        mkdir(wsdir);
+                    } catch (Exception e) {
+                        return setError("Cannot create workspace directory");
+                    }
+                }
+            }
+            string wsfilename = buildNormalizedPath(wsdir, _workspaceName ~ WORKSPACE_EXTENSION);
             ws = new Workspace(_ide, wsfilename);
             ws.name = toUTF32(_workspaceName);
             if (!ws.save())
                 return setError("Cannot create workspace file");
         }
-        string pdir = _location;
+        string pdir = wsdir;
         if (_cbCreateSubdir.checked) {
             pdir = buildNormalizedPath(pdir, _projectName);
             if (pdir.exists) {
@@ -317,12 +362,12 @@ class NewProjectDlg : Dialog {
     }
 
     void initTemplates() {
-        _templates ~= new ProjectTemplate("Empty app project"d, "Empty application project.\nNo source files."d, null, null, false);
-        _templates ~= new ProjectTemplate("Empty library project"d, "Empty library project.\nNo Source files."d, null, null, true);
         _templates ~= new ProjectTemplate("Hello world app"d, "Hello world application."d, "app.d",
                     SOURCE_CODE_HELLOWORLD, false);
         _templates ~= new ProjectTemplate("DlangUI: hello world app"d, "Hello world application\nbased on DlangUI library"d, "app.d",
                     SOURCE_CODE_DLANGUI_HELLOWORLD, false, DUB_JSON_DLANGUI_HELLOWORLD);
+        _templates ~= new ProjectTemplate("Empty app project"d, "Empty application project.\nNo source files."d, null, null, false);
+        _templates ~= new ProjectTemplate("Empty library project"d, "Empty library project.\nNo Source files."d, null, null, true);
     }
 }
 
