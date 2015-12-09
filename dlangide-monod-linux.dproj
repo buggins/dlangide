@@ -218,6 +218,8 @@
     <Compile Include="src\dlangide\workspace\workspace.d" />
     <Compile Include="src\ddebug\common\debugger.d" />
     <Compile Include="src\ddebug\common\queue.d" />
+    <Compile Include="src\ddebug\common\execution.d" />
+    <Compile Include="src\ddebug\common\nodebug.d" />
     <Compile Include="src\ddebug\gdb\gdbinterface.d" />
   </ItemGroup>
   <ItemGroup>

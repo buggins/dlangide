@@ -128,6 +128,8 @@
     <Compile Include="src\dlangide\builders\extprocess.d" />
     <Compile Include="src\ddebug\common\debugger.d" />
     <Compile Include="src\ddebug\common\queue.d" />
+    <Compile Include="src\ddebug\common\execution.d" />
+    <Compile Include="src\ddebug\common\nodebug.d" />
     <Compile Include="src\ddebug\gdb\gdbinterface.d" />
     <Compile Include="src\ddebug\windows\debuginfo.d" />
     <Compile Include="src\ddebug\windows\mago.d" />

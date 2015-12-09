@@ -31,6 +31,9 @@ import dlangide.workspace.project;
 import dlangide.builders.builder;
 import dlangide.tools.editorTool;
 
+import ddebug.common.execution;
+import ddebug.common.nodebug;
+
 import std.conv;
 import std.utf;
 import std.algorithm;
@@ -61,7 +64,7 @@ class BackgroundOperationWatcherTest : BackgroundOperationWatcher {
 }
 
 /// DIDE app frame
-class IDEFrame : AppFrame {
+class IDEFrame : AppFrame, ProgramExecutionStatusListener {
 
 	private ToolBarComboBox projectConfigurationCombo;
 	
@@ -72,6 +75,7 @@ class IDEFrame : AppFrame {
     TabWidget _tabs;
     DCDServer _dcdServer;
     IDESettings _settings;
+    ProgramExecution _execution;
 
     dstring frameWindowCaptionSuffix = "DLangIDE"d;
 
@@ -82,6 +86,65 @@ class IDEFrame : AppFrame {
         window.onCanClose = &onCanClose;
         window.onClose = &onWindowClose;
         applySettings(_settings);
+    }
+
+    /// stop current program execution
+    void stopExecution() {
+        if (_execution) {
+            _execution.stop();
+            destroy(_execution);
+            _execution = null;
+        }
+    }
+
+    /// called when program execution is stopped
+    protected void onProgramExecutionStatus(ProgramExecution process, ExecutionStatus status, int exitCode) {
+        executeInUiThread(delegate() {
+            Log.d("onProgramExecutionStatus process: ", process.executableFile, " status: ", status, " exitCode: ", exitCode);
+            _execution = null;
+            // TODO: update state
+            switch(status) {
+                case ExecutionStatus.Error:
+                    _logPanel.logLine("Cannot run program " ~ process.executableFile);
+                    break;
+                case ExecutionStatus.Finished:
+                    _logPanel.logLine("Program " ~ process.executableFile ~ " finished with exit code " ~ to!string(exitCode));
+                    break;
+                case ExecutionStatus.Killed:
+                    _logPanel.logLine("Program " ~ process.executableFile ~ " is killed");
+                    break;
+                default:
+                    _logPanel.logLine("Program " ~ process.executableFile ~ " is finished");
+                    break;
+            }
+        });
+    }
+
+    protected void runProject() {
+        import std.file;
+        stopExecution();
+        if (!currentWorkspace)
+            return;
+        Project project = currentWorkspace.startupProject;
+        if (!project) {
+             window.showMessageBox(UIString("Cannot run project"d), UIString("Startup project is not specified"d));
+            return;
+        }
+        // build project
+        // TODO
+        string executableFileName = project.executableFileName;
+        if (!executableFileName || !exists(executableFileName) || !isFile(executableFileName)) {
+            window.showMessageBox(UIString("Cannot run project"d), UIString("Cannot find executable"d));
+            return;
+        }
+        string[] args;
+        string externalConsoleExecutable = null; // TODO
+        string workingDirectory = null; // TODO
+        // TODO: provide thread safe listener
+        _logPanel.logLine("Starting " ~ executableFileName);
+        _execution = new ProgramExecutionNoDebug(executableFileName, args, workingDirectory, externalConsoleExecutable, this);
+        _execution.run();
+        // TODO: update status
     }
 
     override protected void init() {
@@ -586,7 +649,8 @@ class IDEFrame : AppFrame {
                 case IDEActions.DebugStart:
                 case IDEActions.DebugStartNoDebug:
                 case IDEActions.DebugContinue:
-                    buildProject(BuildOperation.Run);
+                    runProject();
+                    //buildProject(BuildOperation.Run);
                     return true;
                 case IDEActions.UpdateProjectDependencies:
                     buildProject(BuildOperation.Upgrade);
@@ -980,6 +1044,7 @@ class IDEFrame : AppFrame {
     /// called when main window is closing
     void onWindowClose() {
         Log.i("onWindowClose()");
+        stopExecution();
         if (_dcdServer) {
             if (_dcdServer.isRunning)
                 _dcdServer.stop();

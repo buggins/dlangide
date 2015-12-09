@@ -419,6 +419,15 @@
    </Folder>
   </Folder>
   <Folder name="ddebug">
+   <Folder name="common">
+    <File path="src\ddebug\common\debugger.d" />
+    <File path="src\ddebug\common\execution.d" />
+    <File path="src\ddebug\common\nodebug.d" />
+    <File path="src\ddebug\common\queue.d" />
+   </Folder>
+   <Folder name="gdbinterface">
+    <File path="src\ddebug\gdb\gdbinterface.d" />
+   </Folder>
    <Folder name="windows">
     <File path="src\ddebug\windows\debuginfo.d" />
     <File path="src\ddebug\windows\mago.d" />

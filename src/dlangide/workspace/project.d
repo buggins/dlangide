@@ -438,6 +438,25 @@ class Project : WorkspaceItem {
         return buildNormalizedPath(_filename.dirName, toUTF8(name) ~ WORKSPACE_EXTENSION);
     }
 
+    @property bool isExecutable() {
+        // TODO: use targetType
+        return true;
+    }
+
+    /// return executable file name, or null if it's library project or executable is not found
+    @property string executableFileName() {
+        if (!isExecutable)
+            return null;
+        string exename = toUTF8(name);
+        // TODO: use targetName
+        version (Windows) {
+            exename = exename ~ ".exe";
+        }
+        // TODO: use targetPath
+        string exePath = buildNormalizedPath(_filename.dirName, "bin", exename);
+        return exePath;
+    }
+
     ProjectFolder findItems(string[] srcPaths) {
         ProjectFolder folder = new ProjectFolder(_filename);
         folder.project = this;
