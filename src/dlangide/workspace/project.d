@@ -457,6 +457,23 @@ class Project : WorkspaceItem {
         return exePath;
     }
 
+    /// working directory for running and debugging project
+    @property string workingDirectory() {
+        // TODO: get from settings
+        return _filename.dirName;
+    }
+
+    /// commandline parameters for running and debugging project
+    @property string runArgs() {
+        // TODO: get from settings
+        return null;
+    }
+
+    @property bool runInExternalConsole() {
+        // TODO
+        return true;
+    }
+
     ProjectFolder findItems(string[] srcPaths) {
         ProjectFolder folder = new ProjectFolder(_filename);
         folder.project = this;

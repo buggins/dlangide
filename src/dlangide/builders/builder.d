@@ -11,6 +11,8 @@ import core.thread;
 import std.string;
 import std.conv;
 
+alias BuildResultListener = void delegate(int);
+
 class Builder : BackgroundOperationWatcher {
     protected Project _project;
     protected ExternalProcess _extprocess;
@@ -20,12 +22,15 @@ class Builder : BackgroundOperationWatcher {
     protected BuildConfiguration _buildConfig;
     protected BuildOperation _buildOp;
     protected bool _verbose;
+    protected BuildResultListener _listener;
+    protected int _exitCode = int.min;
 
     @property Project project() { return _project; }
     @property void project(Project p) { _project = p; }
 
-    this(AppFrame frame, Project project, OutputPanel log, ProjectConfiguration projectConfig, BuildConfiguration buildConfig, BuildOperation buildOp, bool verbose) {
+    this(AppFrame frame, Project project, OutputPanel log, ProjectConfiguration projectConfig, BuildConfiguration buildConfig, BuildOperation buildOp, bool verbose, BuildResultListener listener = null) {
         super(frame);
+        _listener = listener;
         _projectConfig = projectConfig;
         _buildConfig = buildConfig;
         _buildOp = buildOp;
@@ -35,6 +40,7 @@ class Builder : BackgroundOperationWatcher {
         _extprocess = new ExternalProcess();
         _box = new ProtectedTextStorage();
     }
+
     /// log lines
     void pollText() {
         dstring text = _box.readText();
@@ -107,6 +113,7 @@ class Builder : BackgroundOperationWatcher {
         }
         state = _extprocess.poll();
         if (state == ExternalProcessState.Stopped) {
+            _exitCode = _extprocess.result;
             _box.writeText("Builder finished with result "d ~ to!dstring(_extprocess.result) ~ "\n"d);
             _finished = true;
             return;
@@ -118,5 +125,10 @@ class Builder : BackgroundOperationWatcher {
             return;
         }
         super.update();
+    }
+    override void removing() {
+        super.removing();
+        if (_exitCode != int.min && _listener)
+            _listener(_exitCode);
     }
 }

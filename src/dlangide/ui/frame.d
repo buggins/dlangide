@@ -117,6 +117,22 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener {
                     _logPanel.logLine("Program " ~ process.executableFile ~ " is finished");
                     break;
             }
+            _statusLine.setBackgroundOperationStatus(null, null);
+        });
+    }
+
+    protected void buildAndRunProject() {
+        if (!currentWorkspace)
+            return;
+        Project project = currentWorkspace.startupProject;
+        if (!project) {
+            window.showMessageBox(UIString("Cannot run project"d), UIString("Startup project is not specified"d));
+            return;
+        }
+        buildProject(BuildOperation.Build, delegate(int result) {
+            if (!result) {
+                runProject();
+            }
         });
     }
 
@@ -127,7 +143,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener {
             return;
         Project project = currentWorkspace.startupProject;
         if (!project) {
-             window.showMessageBox(UIString("Cannot run project"d), UIString("Startup project is not specified"d));
+            window.showMessageBox(UIString("Cannot run project"d), UIString("Startup project is not specified"d));
             return;
         }
         // build project
@@ -138,13 +154,19 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener {
             return;
         }
         string[] args;
-        string externalConsoleExecutable = null; // TODO
-        string workingDirectory = null; // TODO
+        string externalConsoleExecutable = null;
+        string workingDirectory = project.workingDirectory;
+        if (project.runInExternalConsole) {
+            version(Windows) {
+            } else {
+                externalConsoleExecutable = "xterm";
+            }
+        }
         // TODO: provide thread safe listener
         _logPanel.logLine("Starting " ~ executableFileName);
+        _statusLine.setBackgroundOperationStatus("debug-run", "running..."d);
         _execution = new ProgramExecutionNoDebug(executableFileName, args, workingDirectory, externalConsoleExecutable, this);
         _execution.run();
-        // TODO: update status
     }
 
     override protected void init() {
@@ -649,8 +671,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener {
                 case IDEActions.DebugStart:
                 case IDEActions.DebugStartNoDebug:
                 case IDEActions.DebugContinue:
-                    runProject();
-                    //buildProject(BuildOperation.Run);
+                    buildAndRunProject();
                     return true;
                 case IDEActions.UpdateProjectDependencies:
                     buildProject(BuildOperation.Upgrade);
@@ -1010,12 +1031,12 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener {
         }
     }
 
-    void buildProject(BuildOperation buildOp) {
+    void buildProject(BuildOperation buildOp, BuildResultListener listener = null) {
         if (!currentWorkspace || !currentWorkspace.startupProject) {
             _logPanel.logLine("No project is opened");
             return;
         }
-        Builder op = new Builder(this, currentWorkspace.startupProject, _logPanel, currentWorkspace.projectConfiguration, currentWorkspace.buildConfiguration, buildOp, false);
+        Builder op = new Builder(this, currentWorkspace.startupProject, _logPanel, currentWorkspace.projectConfiguration, currentWorkspace.buildConfiguration, buildOp, false, listener);
         setBackgroundOperation(op);
     }
     
