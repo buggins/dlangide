@@ -91,10 +91,17 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener {
     /// stop current program execution
     void stopExecution() {
         if (_execution) {
+            _logPanel.logLine("Stopping program execution");
+            Log.d("Stopping execution");
             _execution.stop();
-            destroy(_execution);
+            //destroy(_execution);
             _execution = null;
         }
+    }
+
+    /// returns true if program execution or debugging is active
+    @property bool isExecutionActive() {
+        return _execution !is null;
     }
 
     /// called when program execution is stopped
@@ -571,6 +578,8 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener {
         tb = res.getOrAddToolbar("Edit");
         tb.addButtons(ACTION_EDIT_COPY, ACTION_EDIT_PASTE, ACTION_EDIT_CUT, ACTION_SEPARATOR,
                       ACTION_EDIT_UNDO, ACTION_EDIT_REDO, ACTION_EDIT_INDENT, ACTION_EDIT_UNINDENT);
+        tb = res.getOrAddToolbar("Debug");
+        tb.addButtons(ACTION_DEBUG_STOP, ACTION_DEBUG_CONTINUE, ACTION_DEBUG_PAUSE);
         return res;
     }
 
@@ -602,7 +611,6 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener {
             case IDEActions.CleanWorkspace:
             case IDEActions.DebugStart:
             case IDEActions.DebugStartNoDebug:
-            case IDEActions.DebugContinue:
             case IDEActions.UpdateProjectDependencies:
             case IDEActions.RefreshProject:
 			case IDEActions.SetStartupProject:
@@ -612,6 +620,13 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener {
                     a.state = ACTION_STATE_ENABLED;
                 else
                     a.state = ACTION_STATE_DISABLE;
+                return true;
+            case IDEActions.DebugStop:
+                a.state = isExecutionActive ? ACTION_STATE_ENABLED : ACTION_STATE_DISABLE;
+                return true;
+            case IDEActions.DebugContinue:
+            case IDEActions.DebugPause:
+                a.state = isExecutionActive && _execution.isDebugger ? ACTION_STATE_ENABLED : ACTION_STATE_DISABLE;
                 return true;
             default:
                 return super.handleActionStateRequest(a);
@@ -672,6 +687,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener {
                 case IDEActions.DebugStartNoDebug:
                 case IDEActions.DebugContinue:
                     buildAndRunProject();
+                    return true;
+                case IDEActions.DebugStop:
+                    stopExecution();
                     return true;
                 case IDEActions.UpdateProjectDependencies:
                     buildProject(BuildOperation.Upgrade);

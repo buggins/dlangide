@@ -100,6 +100,7 @@ class ProgramExecutionNoDebug : Thread, ProgramExecution {
         }
 
         // finished
+        Log.d("ProgramExecutionNoDebug: finished, execution status: ", _status);
         _listener.onProgramExecutionStatus(this, _status, _exitCode);
     }
 

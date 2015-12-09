@@ -31,6 +31,8 @@ res/hdpi/hdpi_run-build.png
 res/hdpi/hdpi_text-d.png
 res/mdpi/cr3_logo.png
 res/mdpi/debug-run.png
+res/mdpi/debug-pause.png
+res/mdpi/debug-stop.png
 res/mdpi/dlangui-logo1.png
 res/mdpi/document-close.png
 res/mdpi/document-open-recent.png
