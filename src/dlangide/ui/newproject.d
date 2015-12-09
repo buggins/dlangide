@@ -261,6 +261,9 @@ class NewProjectDlg : Dialog {
         _statusText.text = msg;
         return msg.empty;
     }
+    dstring getError() {
+        return _statusText.text;
+    }
 
     ProjectCreationResult _result;
 
@@ -268,7 +271,7 @@ class NewProjectDlg : Dialog {
         Action newaction = action.clone();
         if (action.id == IDEActions.FileNewWorkspace || action.id == IDEActions.FileNewProject) {
             if (!validate()) {
-                window.showMessageBox(UIString("Cannot create project"d), UIString("Invalid parameters"));
+                window.showMessageBox(UIString("Cannot create project"d), UIString(getError()));
                 return;
             }
             if (!createProject()) {
@@ -281,8 +284,11 @@ class NewProjectDlg : Dialog {
     }
 
     bool validate() {
-        if (!exists(_location) || !isDir(_location)) {
-            return setError("Invalid location");
+        if (!exists(_location)) {
+            return setError("The location directory does not exist");
+        }
+        if(!isDir(_location)) {
+            return setError("The location is not a directory");
         }
         if (!isValidProjectName(_projectName))
             return setError("Invalid project name");
