@@ -609,8 +609,6 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener {
             case IDEActions.RebuildWorkspace:
             case IDEActions.CleanProject:
             case IDEActions.CleanWorkspace:
-            case IDEActions.DebugStart:
-            case IDEActions.DebugStartNoDebug:
             case IDEActions.UpdateProjectDependencies:
             case IDEActions.RefreshProject:
 			case IDEActions.SetStartupProject:
@@ -623,6 +621,13 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener {
                 return true;
             case IDEActions.DebugStop:
                 a.state = isExecutionActive ? ACTION_STATE_ENABLED : ACTION_STATE_DISABLE;
+                return true;
+            case IDEActions.DebugStart:
+            case IDEActions.DebugStartNoDebug:
+                if (!isExecutionActive && currentWorkspace && currentWorkspace.startupProject && !_currentBackgroundOperation)
+                    a.state = ACTION_STATE_ENABLED;
+                else
+                    a.state = ACTION_STATE_DISABLE;
                 return true;
             case IDEActions.DebugContinue:
             case IDEActions.DebugPause:

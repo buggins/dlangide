@@ -70,9 +70,23 @@ class ProgramExecutionNoDebug : Thread, ProgramExecution {
 
     private void threadFunc() {
         import std.stdio;
+        import std.array: empty;
+
+        // prepare parameter list
         string[] params;
         params ~= _executableFile;
         params ~= _args;
+
+        // external console support
+        if (!_externalConsole.empty) {
+            string cmdline = escapeShellCommand(params);
+            cmdline = escapeShellFileName(cmdline);
+            params.length = 0;
+            params ~= _externalConsole;
+            params ~= "-e";
+            params ~= cmdline;
+        }
+
         File newstdin;
         File newstdout;
         File newstderr;
