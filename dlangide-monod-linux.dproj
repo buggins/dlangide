@@ -213,7 +213,6 @@
     <Compile Include="src\dlangide\ui\settings.d" />
     <Compile Include="src\dlangide\ui\wspanel.d" />
     <Compile Include="src\dlangide\ui\newfile.d" />
-    <Compile Include="src\dlangide\ui\newproject.d" />
     <Compile Include="src\dlangide\workspace\project.d" />
     <Compile Include="src\dlangide\workspace\workspace.d" />
     <Compile Include="src\ddebug\common\debugger.d" />

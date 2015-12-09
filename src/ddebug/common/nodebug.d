@@ -80,7 +80,6 @@ class ProgramExecutionNoDebug : Thread, ProgramExecution {
         // external console support
         if (!_externalConsole.empty) {
             string cmdline = escapeShellCommand(params);
-            cmdline = escapeShellFileName(cmdline);
             params.length = 0;
             params ~= _externalConsole;
             params ~= "-e";
@@ -90,6 +89,12 @@ class ProgramExecutionNoDebug : Thread, ProgramExecution {
         File newstdin;
         File newstdout;
         File newstderr;
+        version (Windows) {
+        } else {
+            newstdin = stdin;
+            newstdout = stdout;
+            newstderr = stderr;
+        }
         try {
 		    _pid = spawnProcess(params, newstdin, newstdout, newstderr, null, Config.none, _workDir);
         } catch (Exception e) {
