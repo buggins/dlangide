@@ -14,7 +14,7 @@
     "copyFiles-windows": ["lib/win32/dcd-server.exe", "lib/win32/dcd-client.exe"],
 
     "dependencies": {
-        "dlangui": "~>0.7.9",
+        "dlangui": "~>0.7.10",
         "libdparse": "==0.2.0"
     },
 

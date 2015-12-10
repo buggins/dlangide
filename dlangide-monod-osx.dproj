@@ -16,6 +16,7 @@
     <Includes>
       <Includes>
         <Path>../dlangui/src</Path>
+        <Path>../dlangui/3rdparty</Path>
         <Path>../dlangui/deps/gl3n</Path>
         <Path>../dlangui/deps/DerelictGL3/source</Path>
         <Path>../dlangui/deps/DerelictSDL2/source</Path>
