@@ -128,15 +128,16 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener {
         });
     }
 
-    protected void buildAndRunProject() {
+    protected void buildAndRunProject(Project project) {
         if (!currentWorkspace)
             return;
-        Project project = currentWorkspace.startupProject;
+        if (!project)
+            project = currentWorkspace.startupProject;
         if (!project) {
             window.showMessageBox(UIString("Cannot run project"d), UIString("Startup project is not specified"d));
             return;
         }
-        buildProject(BuildOperation.Build, delegate(int result) {
+        buildProject(BuildOperation.Build, project, delegate(int result) {
             if (!result) {
                 runProject();
             }
@@ -678,26 +679,26 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener {
                     return true;
                 case IDEActions.BuildProject:
                 case IDEActions.BuildWorkspace:
-                    buildProject(BuildOperation.Build);
+                    buildProject(BuildOperation.Build, cast(Project)a.objectParam);
                     return true;
                 case IDEActions.RebuildProject:
                 case IDEActions.RebuildWorkspace:
-                    buildProject(BuildOperation.Rebuild);
+                    buildProject(BuildOperation.Rebuild, cast(Project)a.objectParam);
                     return true;
                 case IDEActions.CleanProject:
                 case IDEActions.CleanWorkspace:
-                    buildProject(BuildOperation.Clean);
+                    buildProject(BuildOperation.Clean, cast(Project)a.objectParam);
                     return true;
                 case IDEActions.DebugStart:
                 case IDEActions.DebugStartNoDebug:
                 case IDEActions.DebugContinue:
-                    buildAndRunProject();
+                    buildAndRunProject(cast(Project)a.objectParam);
                     return true;
                 case IDEActions.DebugStop:
                     stopExecution();
                     return true;
                 case IDEActions.UpdateProjectDependencies:
-                    buildProject(BuildOperation.Upgrade);
+                    buildProject(BuildOperation.Upgrade, cast(Project)a.objectParam);
                     return true;
                 case IDEActions.RefreshProject:
                     refreshWorkspace();
@@ -1075,16 +1076,22 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener {
         }
     }
 
-    void buildProject(BuildOperation buildOp, BuildResultListener listener = null) {
-        if (!currentWorkspace || !currentWorkspace.startupProject) {
+    void buildProject(BuildOperation buildOp, Project project, BuildResultListener listener = null) {
+        if (!currentWorkspace) {
+            _logPanel.logLine("No workspace is opened");
+            return;
+        }
+        if (!project)
+            project = currentWorkspace.startupProject;
+        if (!project) {
             _logPanel.logLine("No project is opened");
             return;
         }
-        ProjectSettings projectSettings = currentWorkspace.startupProject.settings;
+        ProjectSettings projectSettings = project.settings;
         string toolchain = projectSettings.getToolchain(_settings);
         string arch = projectSettings.getArch(_settings);
         bool verbose = projectSettings.buildVerbose;
-        Builder op = new Builder(this, currentWorkspace.startupProject, _logPanel, currentWorkspace.projectConfiguration, currentWorkspace.buildConfiguration, buildOp, 
+        Builder op = new Builder(this, project, _logPanel, currentWorkspace.projectConfiguration, currentWorkspace.buildConfiguration, buildOp, 
                                  verbose, 
                                  toolchain,
                                  arch,

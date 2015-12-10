@@ -79,9 +79,15 @@ class WorkspacePanel : DockWindow {
                                 ACTION_FILE_WORKSPACE_CLOSE);
 
         _projectPopupMenu = new MenuItem();
-        _projectPopupMenu.add(ACTION_FILE_NEW_SOURCE_FILE, 
+        _projectPopupMenu.add(ACTION_PROJECT_SET_STARTUP,
                               ACTION_PROJECT_FOLDER_REFRESH, 
-                              ACTION_PROJECT_FOLDER_OPEN_ITEM,
+                              ACTION_FILE_NEW_SOURCE_FILE, 
+                              //ACTION_PROJECT_FOLDER_OPEN_ITEM,
+                              ACTION_PROJECT_BUILD,
+                              ACTION_PROJECT_REBUILD,
+                              ACTION_PROJECT_CLEAN,
+                              ACTION_PROJECT_UPDATE_DEPENDENCIES,
+                              ACTION_PROJECT_SETTINGS,
                               //ACTION_PROJECT_FOLDER_REMOVE_ITEM
                               );
 
@@ -172,12 +178,25 @@ class WorkspacePanel : DockWindow {
             foreach(project; _workspace.projects) {
                 TreeItem p = root.newChild(project.filename, project.name, project.isDependency ? "project-d-dependency" : "project-d");
                 p.intParam = ProjectItemType.Project;
+                p.objectParam = project;
                 addProjectItems(p, project.items);
             }
         } else {
             _tree.items.newChild("none", "No workspace"d, "project-development");
         }
         _tree.onTreeContentChange(null);
+        if (_workspace) {
+            TreeItem root = _tree.items.child(0);
+            for (int i = 0; i < root.childCount; i++) {
+                TreeItem child = root.child(i);
+                if (child.intParam == ProjectItemType.Project) {
+                    Object obj = child.objectParam;
+                    Project prj = cast(Project)obj;
+                    if (prj && prj.isDependency)
+                        child.collapse();
+                }
+            }
+        }
     }
 
     @property void workspace(Workspace w) {
