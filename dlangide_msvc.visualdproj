@@ -463,8 +463,11 @@
     <File path="src\dlangide\ui\wspanel.d" />
    </Folder>
    <Folder name="workspace">
+    <File path="src\dlangide\workspace\idesettings.d" />
     <File path="src\dlangide\workspace\project.d" />
+    <File path="src\dlangide\workspace\projectsettings.d" />
     <File path="src\dlangide\workspace\workspace.d" />
+    <File path="src\dlangide\workspace\workspacesettings.d" />
    </Folder>
   </Folder>
   <File path="src\dlangide.d" />
