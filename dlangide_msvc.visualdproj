@@ -53,7 +53,7 @@
   <cccmd>$(CC) -c</cccmd>
   <ccTransOpt>1</ccTransOpt>
   <program>$(DMDInstallDir)windows\bin\dmd.exe</program>
-  <imppath>$(ProjectDir)/../dlangui/src $(ProjectDir)/../dlangui/3rdparty $(ProjectDir)/../dlangui/deps/DerelictGL3/source  $(ProjectDir)/../dlangui/deps/DerelictUtil/source  $(ProjectDir)/../dlangui/deps/DerelictFT/source  $(ProjectDir)/../dlangui/deps/DerelictSDL2/source  $(ProjectDir)/../dlangui/deps/de_image/source/interfaces $(ProjectDir)/../dlangui/deps/de_image/source/png $(ProjectDir)/../dlangui/deps/dlib $(ProjectDir)/../dlangui/deps/libdparse/src</imppath>
+  <imppath>$(ProjectDir)/../dlangui/src $(ProjectDir)/../dlangui/3rdparty $(ProjectDir)/../dlangui/deps/DerelictGL3/source  $(ProjectDir)/../dlangui/deps/DerelictUtil/source  $(ProjectDir)/../dlangui/deps/DerelictFT/source  $(ProjectDir)/../dlangui/deps/DerelictSDL2/source  $(ProjectDir)/../dlangui/deps/libdparse/src</imppath>
   <fileImppath>views views/res views/res/i18n views/res/mdpi views/res/hdpi</fileImppath>
   <outdir>$(ConfigurationName)</outdir>
   <objdir>$(OutDir)</objdir>
@@ -257,7 +257,7 @@
   <cccmd>$(CC) -c</cccmd>
   <ccTransOpt>1</ccTransOpt>
   <program>$(DMDInstallDir)windows\bin\dmd.exe</program>
-  <imppath>$(ProjectDir)/../dlangui/src $(ProjectDir)/../dlangui/3rdparty $(ProjectDir)/../dlangui/deps/DerelictGL3/source  $(ProjectDir)/../dlangui/deps/DerelictUtil/source  $(ProjectDir)/../dlangui/deps/DerelictFT/source  $(ProjectDir)/../dlangui/deps/DerelictSDL2/source  $(ProjectDir)/../dlangui/deps/de_image/source/interfaces $(ProjectDir)/../dlangui/deps/de_image/source/png $(ProjectDir)/../dlangui/deps/dlib $(ProjectDir)/../dlangui/deps/libdparse/src</imppath>
+  <imppath>$(ProjectDir)/../dlangui/src $(ProjectDir)/../dlangui/3rdparty $(ProjectDir)/../dlangui/deps/DerelictGL3/source  $(ProjectDir)/../dlangui/deps/DerelictUtil/source  $(ProjectDir)/../dlangui/deps/DerelictFT/source  $(ProjectDir)/../dlangui/deps/DerelictSDL2/source  $(ProjectDir)/../dlangui/deps/libdparse/src</imppath>
   <fileImppath>views views/res views/res/i18n views/res/mdpi views/res/hdpi</fileImppath>
   <outdir>$(ConfigurationName)</outdir>
   <objdir>$(OutDir)</objdir>

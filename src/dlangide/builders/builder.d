@@ -80,6 +80,7 @@ class Builder : BackgroundOperationWatcher {
                     params ~= ("--arch=" ~ _arch).dup;
                 if (!_toolchain.empty)
                     params ~= ("--compiler=" ~ _toolchain).dup;
+                params ~= "--build-mode=allAtOnce".dup;
             } else if (_buildOp == BuildOperation.Clean) {
                 params ~= "clean".dup;
             } else if (_buildOp == BuildOperation.Run) {
