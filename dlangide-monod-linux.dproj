@@ -16,7 +16,6 @@
     <Includes>
       <Includes>
         <Path>../dlangui/src</Path>
-        <Path>../dlangui/deps/dlib</Path>
         <Path>../dlangui/deps/gl3n</Path>
         <Path>../dlangui/deps/DerelictSDL2/source</Path>
         <Path>../dlangui/deps/DerelictFT/source</Path>
