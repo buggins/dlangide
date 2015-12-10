@@ -166,7 +166,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener {
         if (project.runInExternalConsole) {
             version(Windows) {
             } else {
-                externalConsoleExecutable = "xterm";
+                externalConsoleExecutable = _settings.terminalExecutable;
             }
         }
         // TODO: provide thread safe listener

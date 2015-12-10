@@ -28,6 +28,13 @@ class IDESettings : SettingsFile {
         ui.setIntegerDef("hintingMode", 1);
         ui.setIntegerDef("minAntialiasedFontSize", 0);
         ui.setFloatingDef("fontGamma", 0.8);
+        debuggerSettings.setStringDef("executable", "gdb");
+        terminalSettings.setStringDef("executable", "xterm");
+        dubSettings.setStringDef("executable", "dub");
+        dubSettings.setStringDef("additional_params", "");
+        dmdToolchainSettings.setStringDef("executable", "dmd");
+        ldcToolchainSettings.setStringDef("executable", "ldc2");
+        gdcToolchainSettings.setStringDef("executable", "gdc");
     }
 
     /// override to do something after loading - e.g. set defaults
@@ -41,6 +48,36 @@ class IDESettings : SettingsFile {
 
     @property Setting uiSettings() {
         Setting res = _setting.objectByPath("interface", true);
+        return res;
+    }
+
+    @property Setting debuggerSettings() {
+        Setting res = _setting.objectByPath("dlang/debugger", true);
+        return res;
+    }
+
+    @property Setting terminalSettings() {
+        Setting res = _setting.objectByPath("dlang/terminal", true);
+        return res;
+    }
+
+    @property Setting dubSettings() {
+        Setting res = _setting.objectByPath("dlang/dub", true);
+        return res;
+    }
+
+    @property Setting dmdToolchainSettings() {
+        Setting res = _setting.objectByPath("dlang/toolchains/dmd", true);
+        return res;
+    }
+
+    @property Setting ldcToolchainSettings() {
+        Setting res = _setting.objectByPath("dlang/toolchains/ldc", true);
+        return res;
+    }
+
+    @property Setting gdcToolchainSettings() {
+        Setting res = _setting.objectByPath("dlang/toolchains/gdc", true);
         return res;
     }
 
@@ -131,6 +168,21 @@ class IDESettings : SettingsFile {
         return 0;
     }
 
+    @property string debuggerExecutable() {
+        return debuggerSettings.getString("executable", "gdb");
+    }
+
+    @property string terminalExecutable() {
+        return terminalSettings.getString("executable", "xterm");
+    }
+
+    @property string dubExecutable() {
+        return dubSettings.getString("executable", "dub");
+    }
+
+    @property string dubAdditionalParams() {
+        return dubSettings.getString("additional_params", "");
+    }
 }
 
 /// create DlangIDE settings pages tree
@@ -143,8 +195,22 @@ SettingsPage createSettingsPages() {
     texted.addCheckbox("editors/textEditor/smartIndents", UIString("Smart indents"d));
     texted.addCheckbox("editors/textEditor/smartIndentsAfterPaste", UIString("Smart indent after paste"d));
 	SettingsPage dlang = res.addChild("dlang", UIString("D"d));
+	SettingsPage dub = dlang.addChild("dlang/dub", UIString("DUB"d));
+	dub.addExecutableFileNameEdit("dlang/dub/executable", UIString("DUB executable"d), "dub");
+	dub.addStringEdit("dlang/dub/additional_params", UIString("DUB additional params"d), "");
 	SettingsPage ddebug = dlang.addChild("dlang/debugger", UIString("Debugger"d));
-	ddebug.addStringEdit("dlang/debugger/executable", UIString("Debugger executable"d), "gdb");
+	ddebug.addExecutableFileNameEdit("dlang/debugger/executable", UIString("Debugger executable"d), "gdb");
+	SettingsPage terminal = dlang.addChild("dlang/terminal", UIString("Terminal"d));
+	terminal.addExecutableFileNameEdit("dlang/terminal/executable", UIString("Terminal executable"d), "xterm");
+
+	SettingsPage toolchains = dlang.addChild("dlang/toolchains", UIString("Toolchains"d));
+	SettingsPage dmdtoolchain = toolchains.addChild("dlang/toolchains/dmd", UIString("DMD"d));
+	dmdtoolchain.addExecutableFileNameEdit("dlang/toolchains/dmd/executable", UIString("DMD executable"d), "dmd");
+	SettingsPage ldctoolchain = toolchains.addChild("dlang/toolchains/ldc", UIString("LDC"d));
+	ldctoolchain.addExecutableFileNameEdit("dlang/toolchains/ldc/executable", UIString("LDC2 executable"d), "ldc2");
+	SettingsPage gdctoolchain = toolchains.addChild("dlang/toolchains/gdc", UIString("GDC"d));
+	gdctoolchain.addExecutableFileNameEdit("dlang/toolchains/gdc/executable", UIString("GDC executable"d), "gdc");
+
 	SettingsPage ui = res.addChild("interface", UIString("Interface"d));
     ui.addStringComboBox("interface/theme", UIString("Theme"d), [
             StringListValue("ide_theme_default", "Default"d), 
