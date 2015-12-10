@@ -108,6 +108,9 @@
     <Compile Include="src\dlangide.d" />
     <Compile Include="src\dlangide\workspace\project.d" />
     <Compile Include="src\dlangide\workspace\workspace.d" />
+    <Compile Include="src\dlangide\workspace\idesettings.d" />
+    <Compile Include="src\dlangide\workspace\projectsettings.d" />
+    <Compile Include="src\dlangide\workspace\workspacesettings.d" />
     <Compile Include="src\dlangide\ui\commands.d" />
     <Compile Include="src\dlangide\ui\dsourceedit.d" />
     <Compile Include="src\dlangide\ui\frame.d" />

@@ -215,6 +215,9 @@
     <Compile Include="src\dlangide\ui\newfile.d" />
     <Compile Include="src\dlangide\workspace\project.d" />
     <Compile Include="src\dlangide\workspace\workspace.d" />
+    <Compile Include="src\dlangide\workspace\idesettings.d" />
+    <Compile Include="src\dlangide\workspace\projectsettings.d" />
+    <Compile Include="src\dlangide\workspace\workspacesettings.d" />
     <Compile Include="src\ddebug\common\debugger.d" />
     <Compile Include="src\ddebug\common\queue.d" />
     <Compile Include="src\ddebug\common\execution.d" />
