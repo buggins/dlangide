@@ -169,9 +169,9 @@ class IDESettings : SettingsFile {
         if (toolchainName.equal("dmd"))
             return dmdToolchainSettings.getString("executable", "dmd");
         if (toolchainName.equal("gdc"))
-            return dmdToolchainSettings.getString("executable", "gdc");
+            return gdcToolchainSettings.getString("executable", "gdc");
         if (toolchainName.equal("ldc"))
-            return dmdToolchainSettings.getString("executable", "ldc2");
+            return ldcToolchainSettings.getString("executable", "ldc2");
         return null;
     }
 

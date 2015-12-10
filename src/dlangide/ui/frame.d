@@ -733,6 +733,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener {
                 case IDEActions.EditPreferences:
                     showPreferences();
                     return true;
+                case IDEActions.ProjectSettings:
+                    showProjectSettings();
+                    return true;
                 case IDEActions.FindText:
                     Log.d("Opening Search Field");
                		import dlangide.ui.searchPanel;
@@ -935,6 +938,24 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener {
         dlg.show();
     }
 
+    void showProjectSettings() {
+        if (!currentWorkspace)
+            return;
+        Project project = currentWorkspace.startupProject;
+        if (!project)
+            return;
+        Setting s = project.settings.copySettings();
+        SettingsDialog dlg = new SettingsDialog(UIString(project.name ~ " settings"d), window, s, createProjectSettingsPages());
+        dlg.dialogResult = delegate(Dialog dlg, const Action result) {
+			if (result.id == ACTION_APPLY.id) {
+                //Log.d("settings after edit:\n", s.toJSON(true));
+                project.settings.applySettings(s);
+                project.settings.save();
+            }
+        };
+        dlg.show();
+    }
+
     void applySettings(IDESettings settings) {
         for (int i = _tabs.tabCount - 1; i >= 0; i--) {
             DSourceEdit ed = cast(DSourceEdit)_tabs.tabBody(i);
@@ -1059,7 +1080,15 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener {
             _logPanel.logLine("No project is opened");
             return;
         }
-        Builder op = new Builder(this, currentWorkspace.startupProject, _logPanel, currentWorkspace.projectConfiguration, currentWorkspace.buildConfiguration, buildOp, false, listener);
+        ProjectSettings projectSettings = currentWorkspace.startupProject.settings;
+        string toolchain = projectSettings.getToolchain(_settings);
+        string arch = projectSettings.getArch(_settings);
+        bool verbose = projectSettings.buildVerbose;
+        Builder op = new Builder(this, currentWorkspace.startupProject, _logPanel, currentWorkspace.projectConfiguration, currentWorkspace.buildConfiguration, buildOp, 
+                                 verbose, 
+                                 toolchain,
+                                 arch,
+                                 listener);
         setBackgroundOperation(op);
     }
     

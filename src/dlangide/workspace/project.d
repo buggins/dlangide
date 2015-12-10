@@ -1,6 +1,7 @@
 module dlangide.workspace.project;
 
 import dlangide.workspace.workspace;
+import dlangide.workspace.projectsettings;
 import dlangui.core.logger;
 import dlangui.core.collections;
 import dlangui.core.settings;
@@ -332,6 +333,7 @@ class Project : WorkspaceItem {
     protected ProjectFolder _items;
     protected ProjectSourceFile _mainSourceFile;
     protected SettingsFile _projectFile;
+    protected ProjectSettings _settingsFile;
     protected bool _isDependency;
     protected string _dependencyVersion;
 
@@ -346,6 +348,20 @@ class Project : WorkspaceItem {
         _dependencyVersion = dependencyVersion;
         _isDependency = _dependencyVersion.length > 0;
         _projectFile = new SettingsFile(fname);
+    }
+
+    @property ProjectSettings settings() {
+        if (!_settingsFile) {
+            _settingsFile = new ProjectSettings(settingsFileName);
+            _settingsFile.updateDefaults();
+            _settingsFile.load();
+            _settingsFile.save();
+        }
+        return _settingsFile;
+    }
+
+    @property string settingsFileName() {
+        return buildNormalizedPath(dir, toUTF8(name) ~ ".settings");
     }
 
     @property bool isDependency() { return _isDependency; }

@@ -7,6 +7,7 @@ import dlangide.ui.outputpanel;
 import dlangide.builders.extprocess;
 import dlangui.widgets.appframe;
 import std.algorithm;
+import std.array;
 import core.thread;
 import std.string;
 import std.conv;
@@ -24,11 +25,17 @@ class Builder : BackgroundOperationWatcher {
     protected bool _verbose;
     protected BuildResultListener _listener;
     protected int _exitCode = int.min;
+    protected string _toolchain;
+    protected string _arch;
 
     @property Project project() { return _project; }
     @property void project(Project p) { _project = p; }
 
-    this(AppFrame frame, Project project, OutputPanel log, ProjectConfiguration projectConfig, BuildConfiguration buildConfig, BuildOperation buildOp, bool verbose, BuildResultListener listener = null) {
+    this(AppFrame frame, Project project, OutputPanel log, ProjectConfiguration projectConfig, BuildConfiguration buildConfig, 
+             BuildOperation buildOp, bool verbose, 
+             string toolchain = null,
+             string arch = null,
+             BuildResultListener listener = null) {
         super(frame);
         _listener = listener;
         _projectConfig = projectConfig;
@@ -37,6 +44,8 @@ class Builder : BackgroundOperationWatcher {
         _verbose = verbose;
         _project = project;
         _log = log;
+        _toolchain = toolchain;
+        _arch = arch;
         _extprocess = new ExternalProcess();
         _box = new ProtectedTextStorage();
     }
@@ -67,6 +76,10 @@ class Builder : BackgroundOperationWatcher {
                 if (_buildOp == BuildOperation.Rebuild) {
                     params ~= "--force".dup;
                 }
+                if (!_arch.empty)
+                    params ~= ("--arch=" ~ _arch).dup;
+                if (!_toolchain.empty)
+                    params ~= ("--compiler=" ~ _toolchain).dup;
             } else if (_buildOp == BuildOperation.Clean) {
                 params ~= "clean".dup;
             } else if (_buildOp == BuildOperation.Run) {

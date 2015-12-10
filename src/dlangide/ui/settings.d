@@ -13,12 +13,14 @@ public import dlangide.workspace.workspacesettings;
 /// create DlangIDE settings pages tree
 SettingsPage createSettingsPages() {
     SettingsPage res = new SettingsPage("", UIString(""d));
+
     SettingsPage ed = res.addChild("editors", UIString("Editors"d));
     SettingsPage texted = ed.addChild("editors/textEditor", UIString("Text Editors"d));
     texted.addNumberEdit("editors/textEditor/tabSize", UIString("Tab size"d), 1, 16, 4);
     texted.addCheckbox("editors/textEditor/useSpacesForTabs", UIString("Use spaces for tabs"d));
     texted.addCheckbox("editors/textEditor/smartIndents", UIString("Smart indents"d));
     texted.addCheckbox("editors/textEditor/smartIndentsAfterPaste", UIString("Smart indent after paste"d));
+
 	SettingsPage dlang = res.addChild("dlang", UIString("D"d));
 	SettingsPage dub = dlang.addChild("dlang/dub", UIString("DUB"d));
 	dub.addExecutableFileNameEdit("dlang/dub/executable", UIString("DUB executable"d), "dub");
@@ -82,6 +84,7 @@ SettingsPage createSettingsPages() {
 /// create DlangIDE settings pages tree
 SettingsPage createProjectSettingsPages() {
     SettingsPage res = new SettingsPage("", UIString(""d));
+
     SettingsPage build = res.addChild("build", UIString("Build"d));
 	build.addStringComboBox("build/toolchain", UIString("Toolchain"d), [
 			StringListValue("default", "Default"d), 
@@ -91,10 +94,13 @@ SettingsPage createProjectSettingsPages() {
 	build.addStringComboBox("build/arch", UIString("Architecture"d), [
 			StringListValue("default", "Default"d), 
 			StringListValue("x86", "x86"d), 
-			StringListValue("x86_64", "x86_6"d)]);
+			StringListValue("x86_64", "x86_64"d)]);
+    build.addCheckbox("build/verbose", UIString("Verbose"d), true);
+
     SettingsPage dbg = res.addChild("debug", UIString("Run and Debug"d));
 	dbg.addStringEdit("debug/run_args", UIString("Command line args"d), "");
 	dbg.addDirNameEdit("debug/working_dir", UIString("Working directory"d), "");
     dbg.addCheckbox("debug/external_console", UIString("Run in external console"d), true);
+
     return res;
 }

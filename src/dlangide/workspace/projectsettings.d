@@ -22,6 +22,7 @@ class ProjectSettings : SettingsFile {
         Setting build = buildSettings();
         build.setStringDef("toolchain", "default");
         build.setStringDef("arch", "default");
+        build.setBooleanDef("verbose", false);
         Setting dbg = debugSettings();
         dbg.setBooleanDef("external_console", true);
     }
@@ -34,6 +35,10 @@ class ProjectSettings : SettingsFile {
     @property Setting debugSettings() {
         Setting res = _setting.objectByPath("debug", true);
         return res;
+    }
+
+    @property bool buildVerbose() {
+        return buildSettings.getBoolean("verbose", false);
     }
 
     string getToolchain(IDESettings idesettings) {
