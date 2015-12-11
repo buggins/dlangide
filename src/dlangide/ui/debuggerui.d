@@ -46,6 +46,9 @@ class DebuggerUIHandler : DebuggerCallback {
         if (state == DebuggingState.stopped) {
             _ide.logPanel.logLine("Program is stopped: " ~ msg);
             _debugger.stop();
+        } else if (state == DebuggingState.running) {
+            _ide.logPanel.logLine("Program is started");
+        } else if (state == DebuggingState.paused) {
         }
     }
 
