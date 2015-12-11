@@ -92,7 +92,7 @@ class GDBInterface : ConsoleDebuggerInterface {
 	string terminalTty;
 
 	string startTerminal() {
-		Log.d("Starting terminal");
+		Log.d("Starting terminal ", _terminalExecutable);
 		import std.random;
 		import std.file;
 		import std.path;
@@ -103,20 +103,22 @@ class GDBInterface : ConsoleDebuggerInterface {
 		string termfile = buildPath(tempDir, format("dlangide-term-name-%07x.tmp", n));
 		Log.d("temp file for tty name: ", termfile);
 		try {
-			terminalPid = spawnProcess([
-				_terminalExecutable,
-				"-title",
-				"DLangIDE External Console",
-				"-e",
-				"echo 'DlangIDE External Console' && tty > " ~ termfile ~ " && sleep 1000000"
-			]);
-			for (int i = 0; i < 20; i++) {
+            string[] args = [
+                _terminalExecutable,
+                "-title",
+                "DLangIDE External Console",
+                "-e",
+                "echo 'DlangIDE External Console' && tty > " ~ termfile ~ " && sleep 1000000"
+            ];
+            Log.d("Terminal command line: ", args);
+			terminalPid = spawnProcess(args);
+			for (int i = 0; i < 40; i++) {
 				Thread.sleep(dur!"msecs"(100));
 				if (!isTerminalActive) {
 					Log.e("Failed to get terminal TTY");
 					return null;
 				}
-				if (!exists(termfile)) {
+				if (exists(termfile)) {
 					Thread.sleep(dur!"msecs"(20));
 					break;
 				}
@@ -128,6 +130,7 @@ class GDBInterface : ConsoleDebuggerInterface {
 					terminalTty = terminalTty[0 .. $-1];
 				// delete file
 				remove(termfile);
+                Log.d("Terminal tty: ", terminalTty);
 			}
 		} catch (Exception e) {
 			Log.e("Failed to start terminal ", e);
@@ -182,10 +185,10 @@ class GDBInterface : ConsoleDebuggerInterface {
         if (!_terminalExecutable.empty) {
 		    terminalTty = startTerminal();
 		    if (terminalTty.length == 0) {
-			    _callback.onResponse(ResponseCode.CannotRunDebugger, "Cannot start terminal");
+			    //_callback.onResponse(ResponseCode.CannotRunDebugger, "Cannot start terminal");
                 _status = ExecutionStatus.Error;
-                _callback.onProgramExecutionStatus(this, _status, _exitCode);
-			    return;
+                _stopRequested = true;
+                return;
 		    }
 		    debuggerArgs ~= "-tty";
 		    debuggerArgs ~= terminalTty;
@@ -203,17 +206,37 @@ class GDBInterface : ConsoleDebuggerInterface {
 			//sendCommand("-break-insert main");
 		} else {
             _status = ExecutionStatus.Error;
-            _callback.onProgramExecutionStatus(this, _status, _exitCode);
+            _stopRequested = true;
 			return;
 		}
     }
 
+    override protected void onDebuggerThreadFinished() {
+        Log.d("Debugger thread finished");
+        if (_debuggerProcess !is null) {
+            Log.d("Killing debugger process");
+            _debuggerProcess.kill();
+            Log.d("Waiting for debugger process finishing");
+            //_debuggerProcess.wait();
+        }
+        killTerminal();
+        Log.d("Sending execution status");
+        _callback.onProgramExecutionStatus(this, _status, _exitCode);
+    }
+
+    bool _threadJoined = false;
 	override void stop() {
-        Log.d("GDBInterface.run()");
-		if (_debuggerProcess !is null)
-			_debuggerProcess.kill();
-		killTerminal();
-		super.stop();
+        if (_stopRequested)
+            return;
+        Log.d("GDBInterface.stop()");
+        _stopRequested = true;
+        postRequest(delegate() {
+        });
+        _queue.close();
+        if (!_threadJoined) {
+            _threadJoined = true;
+            join();
+        }
 	}
 
     /// start program execution, can be called after program is loaded

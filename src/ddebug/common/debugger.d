@@ -146,8 +146,8 @@ class DebuggerProxy : Debugger, DebuggerCallback {
 }
 
 abstract class DebuggerBase : Thread, Debugger {
-	private bool _runRequested;
-	private bool _stopRequested;
+    protected bool _runRequested;
+	protected bool _stopRequested;
 	private bool _finished;
 	protected BlockingQueue!Runnable _queue;
 
