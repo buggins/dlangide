@@ -204,6 +204,7 @@
     <Compile Include="src\dlangide\tools\d\dparser.d" />
     <Compile Include="src\dlangide\tools\d\dsyntax.d" />
     <Compile Include="src\dlangide\ui\commands.d" />
+    <Compile Include="src\dlangide\ui\debuggerui.d" />
     <Compile Include="src\dlangide\ui\dsourceedit.d" />
     <Compile Include="src\dlangide\ui\frame.d" />
     <Compile Include="src\dlangide\ui\homescreen.d" />

@@ -44,24 +44,24 @@ extern (C) int UIAppMain(string[] args) {
 
     //import ddc.lexer.tokenizer;
     //runTokenizerTest();
-    debug(DebugInfo) {
-        version(USE_MAGO) {
-            import ddebug.windows.mago;
-            testMago();
-        }
-        version(Windows) {
-            import ddebug.windows.debuginfo;
-            import std.file;
-            //debugInfoTest(thisExePath);
-        }
-    }
+    //debug(DebugInfo) {
+    //    version(USE_MAGO) {
+    //        import ddebug.windows.mago;
+    //        testMago();
+    //    }
+    //    version(Windows) {
+    //        import ddebug.windows.debuginfo;
+    //        import std.file;
+    //        //debugInfoTest(thisExePath);
+    //    }
+    //}
 
-    version(USE_WIN_DEBUG) {
-        debuggerTest();
-    }
-	version(USE_GDB_DEBUG) {
-		debuggerTestGDB();
-	}
+    //version(USE_WIN_DEBUG) {
+    //    debuggerTest();
+    //}
+    //version(USE_GDB_DEBUG) {
+    //    debuggerTestGDB();
+    //}
 
     // create window
     Window window = Platform.instance.createWindow("Dlang IDE", null, WindowFlag.Resizable, 800, 600);
@@ -88,6 +88,7 @@ extern (C) int UIAppMain(string[] args) {
     return Platform.instance.enterMessageLoop();
 }
 
+/*
 version(USE_WIN_DEBUG) {
     void debuggerTest() {
         import ddebug.windows.windebug;
@@ -129,6 +130,7 @@ version(USE_GDB_DEBUG) {
 		Log.d("Testing of GDB debugger is finished");
 	}
 }
+*/
 
 unittest {
     void jsonTest() {

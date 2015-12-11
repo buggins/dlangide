@@ -113,6 +113,7 @@
     <Compile Include="src\dlangide\workspace\workspacesettings.d" />
     <Compile Include="src\dlangide\ui\commands.d" />
     <Compile Include="src\dlangide\ui\dsourceedit.d" />
+    <Compile Include="src\dlangide\ui\debuggerui.d" />
     <Compile Include="src\dlangide\ui\frame.d" />
     <Compile Include="src\dlangide\ui\homescreen.d" />
     <Compile Include="src\dlangide\ui\newfile.d" />

@@ -9,29 +9,24 @@ import dlangui.core.logger;
 class ProgramExecutionNoDebug : Thread, ProgramExecution {
 
     // parameters
-    protected string _executableFile;
-    protected string[] _args;
-    protected string _workDir;
-    protected string _externalConsole;
-    protected ProgramExecutionStatusListener _listener;
+    /// provides _executableFile, _executableArgs, _executableWorkingDir, _executableEnvVars parameters and setter function setExecutableParams
+    mixin ExecutableParams;
+    /// provides _terminalExecutable and setTerminalExecutable setter
+    mixin TerminalParams;
 
+    protected ProgramExecutionStatusListener _listener;
+    void setProgramExecutionStatusListener(ProgramExecutionStatusListener listener) {
+        _listener = listener;
+    }
 
     // status
 	protected Pid _pid;
     protected ExecutionStatus _status = ExecutionStatus.NotStarted;
     protected int _exitCode = 0;
 
-
-
     /// initialize but do not run
-    this(string executable, string[] args, string workDir, string externalConsole, ProgramExecutionStatusListener listener) {
+    this() {
         super(&threadFunc);
-        _executableFile = executable;
-        _args = args;
-        _workDir = workDir;
-        _externalConsole = externalConsole;
-        _listener = listener;
-        assert(_listener !is null);
     }
 
     ~this() {
@@ -75,13 +70,13 @@ class ProgramExecutionNoDebug : Thread, ProgramExecution {
         // prepare parameter list
         string[] params;
         params ~= _executableFile;
-        params ~= _args;
+        params ~= _executableArgs;
 
         // external console support
-        if (!_externalConsole.empty) {
+        if (!_terminalExecutable.empty) {
             string cmdline = escapeShellCommand(params);
             params.length = 0;
-            params ~= _externalConsole;
+            params ~= _terminalExecutable;
             params ~= "-e";
             params ~= cmdline;
         }
@@ -96,7 +91,7 @@ class ProgramExecutionNoDebug : Thread, ProgramExecution {
             newstderr = stderr;
         }
         try {
-		    _pid = spawnProcess(params, newstdin, newstdout, newstderr, null, Config.none, _workDir);
+		    _pid = spawnProcess(params, newstdin, newstdout, newstderr, null, Config.none, _executableWorkingDir);
         } catch (Exception e) {
             Log.e("ProgramExecutionNoDebug: Failed to spawn process: ", e);
             killProcess();
@@ -135,28 +130,27 @@ class ProgramExecutionNoDebug : Thread, ProgramExecution {
     @property ExecutionStatus status() { return _status; }
 
     /// start execution
-    bool run() {
+    void run() {
         if (_runRequested)
-            return false; // already running
+            return; // already running
+        assert(_listener !is null);
         _runRequested = true;
         _threadStarted = true;
         _status = ExecutionStatus.Running;
         start();
-        return true;
     }
 
     /// stop execution (call from GUI thread)
-    bool stop() {
+    void stop() {
         if (!_runRequested)
-            return false;
+            return;
         if (_stopRequested)
-            return true;
+            return;
         _stopRequested = true;
         if (_threadStarted && !_threadJoined) {
             _threadJoined = true;
             join();
         }
-        return true;
     }
 
     protected bool _threadStarted;

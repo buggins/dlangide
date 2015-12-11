@@ -25,6 +25,7 @@ import dlangide.ui.newproject;
 import dlangide.ui.dsourceedit;
 import dlangide.ui.homescreen;
 import dlangide.ui.settings;
+import dlangide.ui.debuggerui;
 import dlangide.tools.d.dcdserver;
 import dlangide.workspace.workspace;
 import dlangide.workspace.project;
@@ -33,6 +34,8 @@ import dlangide.tools.editorTool;
 
 import ddebug.common.execution;
 import ddebug.common.nodebug;
+import ddebug.common.debugger;
+import ddebug.gdb.gdbinterface;
 
 import std.conv;
 import std.utf;
@@ -88,6 +91,8 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener {
         applySettings(_settings);
     }
 
+    @property OutputPanel logPanel() { return _logPanel; }
+
     /// stop current program execution
     void stopExecution() {
         if (_execution) {
@@ -128,6 +133,70 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener {
         });
     }
 
+    protected void buildAndDebugProject(Project project) {
+        if (!currentWorkspace)
+            return;
+        if (!project)
+            project = currentWorkspace.startupProject;
+        if (!project) {
+            window.showMessageBox(UIString("Cannot debug project"d), UIString("Startup project is not specified"d));
+            return;
+        }
+        buildProject(BuildOperation.Build, project, delegate(int result) {
+            if (!result) {
+                Log.i("Build completed successfully. Starting debug for project.");
+                debugProject(project);
+            }
+        });
+    }
+
+    void debugFinished(ProgramExecution process, ExecutionStatus status, int exitCode) {
+         _execution = null;
+        switch(status) {
+            case ExecutionStatus.Error:
+                _logPanel.logLine("Cannot run program " ~ process.executableFile);
+                break;
+            case ExecutionStatus.Finished:
+                _logPanel.logLine("Program " ~ process.executableFile ~ " finished with exit code " ~ to!string(exitCode));
+                break;
+            case ExecutionStatus.Killed:
+                _logPanel.logLine("Program " ~ process.executableFile ~ " is killed");
+                break;
+            default:
+                _logPanel.logLine("Program " ~ process.executableFile ~ " is finished");
+                break;
+        }
+        _statusLine.setBackgroundOperationStatus(null, null);
+    }
+
+    DebuggerUIHandler _debugHandler;
+    protected void debugProject(Project project) {
+        import std.file;
+        stopExecution();
+        if (!project) {
+            window.showMessageBox(UIString("Cannot debug project"d), UIString("Startup project is not specified"d));
+            return;
+        }
+        string executableFileName = project.executableFileName;
+        if (!executableFileName || !exists(executableFileName) || !isFile(executableFileName)) {
+            window.showMessageBox(UIString("Cannot debug project"d), UIString("Cannot find executable file"d));
+            return;
+        }
+        string debuggerExecutable = _settings.debuggerExecutable;
+        if (debuggerExecutable.empty) {
+            window.showMessageBox(UIString("Cannot debug project"d), UIString("No debugger executable specified in settings"d));
+            return;
+        }
+
+        GDBInterface program = new GDBInterface();
+        DebuggerProxy debuggerProxy = new DebuggerProxy(program, &executeInUiThread);
+        setExecutableParameters(debuggerProxy, project, executableFileName);
+        debuggerProxy.setDebuggerExecutable(debuggerExecutable);
+        _execution = debuggerProxy;
+        _debugHandler = new DebuggerUIHandler(this, debuggerProxy);
+        _debugHandler.run();
+    }
+
     protected void buildAndRunProject(Project project) {
         if (!currentWorkspace)
             return;
@@ -139,28 +208,32 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener {
         }
         buildProject(BuildOperation.Build, project, delegate(int result) {
             if (!result) {
-                runProject();
+                Log.i("Build completed successfully. Running program...");
+                runProject(project);
             }
         });
     }
 
-    protected void runProject() {
+    protected void runProject(Project project) {
         import std.file;
         stopExecution();
-        if (!currentWorkspace)
-            return;
-        Project project = currentWorkspace.startupProject;
         if (!project) {
             window.showMessageBox(UIString("Cannot run project"d), UIString("Startup project is not specified"d));
             return;
         }
-        // build project
-        // TODO
         string executableFileName = project.executableFileName;
         if (!executableFileName || !exists(executableFileName) || !isFile(executableFileName)) {
-            window.showMessageBox(UIString("Cannot run project"d), UIString("Cannot find executable"d));
+            window.showMessageBox(UIString("Cannot run project"d), UIString("Cannot find executable file"d));
             return;
         }
+        ProgramExecutionNoDebug program = new ProgramExecutionNoDebug();
+        setExecutableParameters(program, project, executableFileName);
+        program.setProgramExecutionStatusListener(this);
+        _execution = program;
+        program.run();
+    }
+
+    bool setExecutableParameters(ProgramExecution program, Project project, string executableFileName) {
         string[] args;
         string externalConsoleExecutable = null;
         string workingDirectory = project.workingDirectory;
@@ -170,11 +243,15 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener {
                 externalConsoleExecutable = _settings.terminalExecutable;
             }
         }
-        // TODO: provide thread safe listener
-        _logPanel.logLine("Starting " ~ executableFileName);
-        _statusLine.setBackgroundOperationStatus("debug-run", "running..."d);
-        _execution = new ProgramExecutionNoDebug(executableFileName, args, workingDirectory, externalConsoleExecutable, this);
-        _execution.run();
+        if (!program.isDebugger)
+            _logPanel.logLine("Starting " ~ executableFileName);
+        else
+            _logPanel.logLine("Starting debugger for " ~ executableFileName);
+        _statusLine.setBackgroundOperationStatus("debug-run", program.isDebugger ?  "debugging..."d : "running..."d);
+        string[string] env;
+        program.setExecutableParams(executableFileName, args, workingDirectory, env);
+        program.setTerminalExecutable(externalConsoleExecutable);
+        return true;
     }
 
     override protected void init() {
@@ -689,8 +766,10 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener {
                 case IDEActions.CleanWorkspace:
                     buildProject(BuildOperation.Clean, cast(Project)a.objectParam);
                     return true;
-                case IDEActions.DebugStart:
                 case IDEActions.DebugStartNoDebug:
+                case IDEActions.DebugStart:
+                    buildAndDebugProject(cast(Project)a.objectParam);
+                    return true;
                 case IDEActions.DebugContinue:
                     buildAndRunProject(cast(Project)a.objectParam);
                     return true;

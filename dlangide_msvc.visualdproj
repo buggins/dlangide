@@ -425,7 +425,7 @@
     <File path="src\ddebug\common\nodebug.d" />
     <File path="src\ddebug\common\queue.d" />
    </Folder>
-   <Folder name="gdbinterface">
+   <Folder name="gdb">
     <File path="src\ddebug\gdb\gdbinterface.d" />
    </Folder>
    <Folder name="windows">
@@ -452,6 +452,7 @@
    </Folder>
    <Folder name="ui">
     <File path="src\dlangide\ui\commands.d" />
+    <File path="src\dlangide\ui\debuggerui.d" />
     <File path="src\dlangide\ui\dsourceedit.d" />
     <File path="src\dlangide\ui\frame.d" />
     <File path="src\dlangide\ui\homescreen.d" />

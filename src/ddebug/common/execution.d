@@ -17,15 +17,51 @@ interface ProgramExecutionStatusListener {
     void onProgramExecutionStatus(ProgramExecution process, ExecutionStatus status, int exitCode);
 }
 
+// Interface to run program and control program execution
 interface ProgramExecution {
+    /// set executable parameters before execution
+    void setExecutableParams(string executableFile, string[] args, string workingDir, string[string] envVars);
+    /// set external terminal parameters before execution
+    void setTerminalExecutable(string terminalExecutable);
+
     /// returns true if it's debugger
     @property bool isDebugger();
     /// executable file
     @property string executableFile();
     /// returns execution status
-    @property ExecutionStatus status();
+    //@property ExecutionStatus status();
     /// start execution
-    bool run();
+    void run();
     /// stop execution
-    bool stop();
+    void stop();
 }
+
+/// provides _executableFile, _executableArgs, _executableWorkingDir, _executableEnvVars parameters and setter function setExecutableParams
+mixin template ExecutableParams() {
+    protected string _executableFile;
+    protected string[] _executableArgs;
+    protected string _executableWorkingDir;
+    protected string[string] _executableEnvVars;
+
+    /// set executable parameters before execution
+    void setExecutableParams(string executableFile, string[] args, string workingDir, string[string] envVars) {
+        _executableFile = executableFile;
+        _executableArgs = args;
+        _executableWorkingDir = workingDir;
+        _executableEnvVars = envVars;
+    }
+}
+
+
+/// provides _terminalExecutable and setTerminalExecutable setter
+mixin template TerminalParams() {
+
+    /// executable file name for external console/terminal
+    protected string _terminalExecutable;
+
+    /// set external terminal parameters before execution
+    void setTerminalExecutable(string terminalExecutable) {
+        _terminalExecutable = terminalExecutable;
+    }
+}
+
