@@ -229,6 +229,9 @@ class GDBInterface : ConsoleDebuggerInterface {
         if (_stopRequested)
             return;
         Log.d("GDBInterface.stop()");
+        postRequest(delegate() {
+            execStop();
+        });
         _stopRequested = true;
         postRequest(delegate() {
         });
@@ -249,6 +252,32 @@ class GDBInterface : ConsoleDebuggerInterface {
     int _continueRequestId;
     void execContinue() {
         _continueRequestId = sendCommand("-exec-continue");
+    }
+
+    /// stop program execution
+    int _stopRequestId;
+    void execStop() {
+        _continueRequestId = sendCommand("-gdb-exit");
+    }
+    /// interrupt execution
+    int _pauseRequestId;
+    void execPause() {
+        _pauseRequestId = sendCommand("-exec-interrupt");
+    }
+    /// step over
+    int _stepOverRequestId;
+    void execStepOver() {
+        _stepOverRequestId = sendCommand("-exec-next");
+    }
+    /// step in
+    int _stepInRequestId;
+    void execStepIn() {
+        _stepInRequestId = sendCommand("-exec-step");
+    }
+    /// step out
+    int _stepOutRequestId;
+    void execStepOut() {
+        _stepOutRequestId = sendCommand("-exec-finish");
     }
 
     // ~message

@@ -33,6 +33,16 @@ interface Debugger : ProgramExecution {
     void execStart();
     /// continue execution
     void execContinue();
+    /// stop program execution
+    void execStop();
+    /// interrupt execution
+    void execPause();
+    /// step over
+    void execStepOver();
+    /// step in
+    void execStepIn();
+    /// step out
+    void execStepOut();
 }
 
 enum ResponseCode : int {
@@ -142,6 +152,26 @@ class DebuggerProxy : Debugger, DebuggerCallback {
     /// continue program
     void execContinue() {
         _debugger.postRequest(delegate() { _debugger.execContinue(); });
+    }
+    /// stop program execution
+    void execStop() {
+        _debugger.postRequest(delegate() { _debugger.execStop(); });
+    }
+    /// interrupt execution
+    void execPause() {
+        _debugger.postRequest(delegate() { _debugger.execPause(); });
+    }
+    /// step over
+    void execStepOver() {
+        _debugger.postRequest(delegate() { _debugger.execStepOver(); });
+    }
+    /// step in
+    void execStepIn() {
+        _debugger.postRequest(delegate() { _debugger.execStepIn(); });
+    }
+    /// step out
+    void execStepOut() {
+        _debugger.postRequest(delegate() { _debugger.execStepOut(); });
     }
 }
 
