@@ -280,6 +280,12 @@ class GDBInterface : ConsoleDebuggerInterface {
         _stepOutRequestId = sendCommand("-exec-finish");
     }
 
+    /// update list of breakpoints
+    void setBreakpoints(Breakpoint[] bp) {
+        // TODO
+    }
+
+
     // ~message
     void handleStreamLineCLI(string s) {
         Log.d("GDB CLI: ", s);

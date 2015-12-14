@@ -8,6 +8,7 @@ import dlangide.workspace.idesettings;
 const AVAILABLE_TOOLCHAINS = ["default", "dmd", "ldc", "gdc"];
 const AVAILABLE_ARCH = ["default", "x86", "x86_64"];
 
+/// local settings for project (not supposed to put under source control)
 class ProjectSettings : SettingsFile {
 
     this(string filename) {

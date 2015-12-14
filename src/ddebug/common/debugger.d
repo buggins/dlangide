@@ -12,18 +12,20 @@ enum DebuggingState {
     stopped
 }
 
-interface DebuggerCallback : ProgramExecutionStatusListener {
-    /// debugger message line
-    void onDebuggerMessage(string msg);
-
-    /// debugger is started and loaded program, you can set breakpoints at this time
-    void onProgramLoaded(bool successful, bool debugInfoLoaded);
-
-    /// state changed: running / paused / stopped
-    void onDebugState(DebuggingState state, string msg, int param);
-
-    void onResponse(ResponseCode code, string msg);
+class Breakpoint {
+    int id;
+    string file;
+    string fullFilePath;
+    string projectFilePath;
+    int line;
+    bool enabled;
+    string projectName;
+    this() {
+        id = nextBreakpointId++;
+    }
 }
+
+private static __gshared nextBreakpointId = 1;
 
 interface Debugger : ProgramExecution {
     void setDebuggerCallback(DebuggerCallback callback);
@@ -43,6 +45,22 @@ interface Debugger : ProgramExecution {
     void execStepIn();
     /// step out
     void execStepOut();
+
+    /// update list of breakpoints
+    void setBreakpoints(Breakpoint[] bp);
+}
+
+interface DebuggerCallback : ProgramExecutionStatusListener {
+    /// debugger message line
+    void onDebuggerMessage(string msg);
+
+    /// debugger is started and loaded program, you can set breakpoints at this time
+    void onProgramLoaded(bool successful, bool debugInfoLoaded);
+
+    /// state changed: running / paused / stopped
+    void onDebugState(DebuggingState state, string msg, int param);
+
+    void onResponse(ResponseCode code, string msg);
 }
 
 enum ResponseCode : int {
@@ -172,6 +190,10 @@ class DebuggerProxy : Debugger, DebuggerCallback {
     /// step out
     void execStepOut() {
         _debugger.postRequest(delegate() { _debugger.execStepOut(); });
+    }
+    /// update list of breakpoints
+    void setBreakpoints(Breakpoint[] bp) {
+        _debugger.postRequest(delegate() { _debugger.setBreakpoints(bp); });
     }
 }
 

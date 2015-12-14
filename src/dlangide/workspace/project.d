@@ -7,7 +7,6 @@ import dlangui.core.collections;
 import dlangui.core.settings;
 import std.path;
 import std.file;
-import std.json;
 import std.utf;
 import std.algorithm;
 import std.process;
@@ -589,9 +588,6 @@ class Project : WorkspaceItem {
             _configurations = ProjectConfiguration.load(_projectFile);
             Log.i("Project configurations: ", _configurations);
             
-        } catch (JSONException e) {
-            Log.e("Cannot parse json", e);
-            return false;
         } catch (Exception e) {
             Log.e("Cannot read project file", e);
             return false;

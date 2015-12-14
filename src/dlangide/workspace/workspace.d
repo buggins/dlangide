@@ -1,15 +1,18 @@
 module dlangide.workspace.workspace;
 
 import dlangide.workspace.project;
+import dlangide.workspace.workspacesettings;
 import dlangide.ui.frame;
 import dlangui.core.logger;
+import dlangui.core.settings;
 import std.conv;
 import std.path;
 import std.file;
-import std.json;
 import std.range;
 import std.utf;
 import std.algorithm;
+
+import ddebug.common.debugger;
 
 enum BuildOperation {
     Build,
@@ -38,6 +41,7 @@ class WorkspaceException : Exception
 }
 
 immutable string WORKSPACE_EXTENSION = ".dlangidews";
+immutable string WORKSPACE_SETTINGS_EXTENSION = ".wssettings";
 
 /// return true if filename matches rules for workspace file names
 bool isWorkspaceFile(string filename) {
@@ -47,6 +51,8 @@ bool isWorkspaceFile(string filename) {
 /// DlangIDE workspace
 class Workspace : WorkspaceItem {
     protected Project[] _projects;
+    protected SettingsFile _workspaceFile;
+    protected WorkspaceSettings _settings;
     
     protected IDEFrame _frame;
     protected BuildConfiguration _buildConfiguration;
@@ -54,6 +60,8 @@ class Workspace : WorkspaceItem {
     
     this(IDEFrame frame, string fname = null) {
         super(fname);
+        _workspaceFile = new SettingsFile(fname);
+        _settings = new WorkspaceSettings(fname ? fname ~ WORKSPACE_SETTINGS_EXTENSION : null);
         _frame = frame;
     }
 
@@ -73,6 +81,7 @@ class Workspace : WorkspaceItem {
     @property void startupProject(Project project) { 
         _startupProject = project;
         _frame.setProjectConfigurations(project.configurations.keys.map!(k => k.to!dstring).array); 
+        _settings.startupProjectName = toUTF8(project.name);
     }
 
     /// setups currrent project configuration by name
@@ -84,8 +93,19 @@ class Workspace : WorkspaceItem {
     }
     
     protected void fillStartupProject() {
-        if (!_startupProject && _projects.length)
-            startupProject = _projects[0];
+        string s = _settings.startupProjectName;
+        if ((!_startupProject || !_startupProject.name.toUTF8.equal(s)) && _projects.length) {
+            if (!s.empty) {
+                foreach(p; _projects) {
+                    if (p.name.toUTF8.equal(s)) {
+                        _startupProject = p;
+                    }
+                }
+            }
+            if (!_startupProject) {
+                startupProject = _projects[0];
+            }
+        }
     }
 
     /// tries to find source file in one of projects, returns found project source file item, or null if not found
@@ -128,32 +148,25 @@ class Workspace : WorkspaceItem {
         return toForwardSlashSeparator(relativePath(path, _dir));
     }
 
-
     override bool save(string fname = null) {
         if (fname.length > 0)
             filename = fname;
-        try {
-            JSONValue content;
-            JSONValue[string] json;
-            json["name"] = JSONValue(toUTF8(_name));
-            json["description"] = JSONValue(toUTF8(_description));
-            JSONValue[string] projects;
-            foreach (Project p; _projects) {
-                if (p.isDependency)
-                    continue; // don't save dependency
-                string pname = toUTF8(p.name);
-                string ppath = absoluteToRelativePath(p.filename);
-                projects[pname] = JSONValue(ppath);
-            }
-            json["projects"] = projects;
-            content = json;
-            string js = content.toPrettyString;
-            write(_filename, js);
-        } catch (JSONException e) {
-            Log.e("Cannot parse json", e);
+        if (!filename) // no file name specified
             return false;
-        } catch (Exception e) {
-            Log.e("Cannot read workspace file", e);
+        _settings.save(filename ~ WORKSPACE_SETTINGS_EXTENSION);
+        _workspaceFile.setString("name", toUTF8(_name));
+        _workspaceFile.setString("description", toUTF8(_description));
+        Setting projects = _workspaceFile.objectByPath("projects", true);
+        projects.clear(SettingType.OBJECT);
+        foreach (Project p; _projects) {
+            if (p.isDependency)
+                continue; // don't save dependency
+            string pname = toUTF8(p.name);
+            string ppath = absoluteToRelativePath(p.filename);
+            projects[pname] = ppath;
+        }
+        if (!_workspaceFile.save(_filename, true)) {
+            Log.e("Cannot save workspace file");
             return false;
         }
         return true;
@@ -166,33 +179,28 @@ class Workspace : WorkspaceItem {
             return false;
         }
         Log.d("Reading workspace from file ", _filename);
-
-        try {
-            string jsonSource = readText!string(_filename);
-            JSONValue json = parseJSON(jsonSource);
-            _name = toUTF32(json["name"].str);
-            _description = toUTF32(json["description"].str);
-            Log.d("workspace name: ", _name);
-            Log.d("workspace description: ", _description);
-            JSONValue projects = json["projects"];
-            foreach(string key, ref JSONValue value; projects) {
-                string path = value.str;
-                Log.d("project: ", key, " path:", path);
-                if (!isAbsolute(path))
-                    path = buildNormalizedPath(_dir, path); //, "dub.json"
-                Project project = new Project(this, path);
-                _projects ~= project;
-                project.load();
-
-            }
-            string js = json.toPrettyString;
-            write(_filename, js);
-        } catch (JSONException e) {
-            Log.e("Cannot parse json", e);
+        if (!_workspaceFile.load(_filename)) {
+            Log.e("Cannot read workspace file");
             return false;
-        } catch (Exception e) {
-            Log.e("Cannot read workspace file", e);
+        }
+        _settings.load(filename ~ WORKSPACE_SETTINGS_EXTENSION);
+        _name = toUTF32(_workspaceFile["name"].str);
+        _description = toUTF32(_workspaceFile["description"].str);
+        Log.d("workspace name: ", _name);
+        Log.d("workspace description: ", _description);
+        if (_name.empty()) {
+            Log.e("empty workspace name");
             return false;
+        }
+        Setting projects = _workspaceFile.objectByPath("projects", true);
+        foreach(string key, Setting value; projects) {
+            string path = value.str;
+            Log.d("project: ", key, " path:", path);
+            if (!isAbsolute(path))
+                path = buildNormalizedPath(_dir, path); //, "dub.json"
+            Project project = new Project(this, path);
+            _projects ~= project;
+            project.load();
         }
         fillStartupProject();
         return true;
