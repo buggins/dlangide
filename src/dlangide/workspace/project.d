@@ -192,6 +192,10 @@ class ProjectSourceFile : ProjectItem {
     this(string filename) {
         super(filename);
     }
+    /// file path relative to project directory
+    @property string projectFilePath() {
+        return project.absoluteToRelativePath(filename);
+    }
 }
 
 class WorkspaceItem {
@@ -434,6 +438,12 @@ class Project : WorkspaceItem {
         if (isAbsolute(path))
             return path;
         return buildNormalizedPath(_dir, path);
+    }
+
+    string absoluteToRelativePath(string path) {
+        if (!isAbsolute(path))
+            return path;
+        return relativePath(path, _dir);
     }
 
     @property ProjectSourceFile mainSourceFile() { return _mainSourceFile; }

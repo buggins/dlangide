@@ -91,6 +91,24 @@ class Workspace : WorkspaceItem {
             _projectConfiguration = _startupProject.configurations[conf];
         }
     }
+
+    void updateBreakpointFiles(Breakpoint[] breakpoints) {
+        foreach(bp; breakpoints) {
+            Project project = findProjectByName(bp.projectName);
+            if (project)
+                bp.fullFilePath = project.relativeToAbsolutePath(bp.projectFilePath);
+        }
+    }
+
+    Breakpoint[] getSourceFileBreakpoints(ProjectSourceFile file) {
+        Breakpoint[] res = _settings.getProjectBreakpoints(toUTF8(file.project.name), file.projectFilePath);
+        updateBreakpointFiles(res);
+        return res;
+    }
+    
+    void setSourceFileBreakpoints(ProjectSourceFile file, Breakpoint[] breakpoints) {
+        _settings.setProjectBreakpoints(toUTF8(file.project.name), file.projectFilePath, breakpoints);
+    }
     
     protected void fillStartupProject() {
         string s = _settings.startupProjectName;
@@ -122,6 +140,15 @@ class Workspace : WorkspaceItem {
     Project findProject(string filename) {
         foreach (Project p; _projects) {
             if (p.filename.equal(filename))
+                return p;
+        }
+        return null;
+    }
+
+    /// find project in workspace by filename
+    Project findProjectByName(string name) {
+        foreach (Project p; _projects) {
+            if (p.name.toUTF8.equal(name))
                 return p;
         }
         return null;

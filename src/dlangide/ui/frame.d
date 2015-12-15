@@ -67,7 +67,7 @@ class BackgroundOperationWatcherTest : BackgroundOperationWatcher {
 }
 
 /// DIDE app frame
-class IDEFrame : AppFrame, ProgramExecutionStatusListener {
+class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeListener {
 
 	private ToolBarComboBox projectConfigurationCombo;
 	
@@ -332,6 +332,8 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener {
                 TabItem tab = _tabs.tab(filename);
                 tab.objectParam = file;
                 editor.modifiedStateChange = &onModifiedStateChange;
+                editor.breakpointListChanged = this; //onBreakpointListChanged
+                editor.setBreakpointList(currentWorkspace.getSourceFileBreakpoints(file));
                 applySettings(editor, settings);
                 _tabs.selectTab(index, true);
                 if( filename.endsWith(".d") )
@@ -876,6 +878,14 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener {
             setWorkspace(null);
             showHomeScreen();
         });
+    }
+
+    void onBreakpointListChanged(ProjectSourceFile sourcefile, Breakpoint[] breakpoints) {
+        if (!currentWorkspace)
+            return;
+        if (sourcefile) {
+            currentWorkspace.setSourceFileBreakpoints(sourcefile, breakpoints);
+        }
     }
 
     void refreshProjectItem(const Object obj) {

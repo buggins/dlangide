@@ -1,6 +1,7 @@
 module dlangide.ui.dsourceedit;
 
 import dlangui.core.logger;
+import dlangui.core.signals;
 import dlangui.widgets.editors;
 import dlangui.widgets.srcedit;
 import dlangui.widgets.menu;
@@ -16,12 +17,17 @@ import dlangide.ui.commands;
 import dlangide.ui.settings;
 import dlangide.tools.d.dsyntax;
 import dlangide.tools.editorTool;
+import ddebug.common.debugger;
 
 import std.algorithm;
+import std.utf : toUTF8, toUTF32;
 
+interface BreakpointListChangeListener {
+    void onBreakpointListChanged(ProjectSourceFile sourceFile, Breakpoint[] breakpoints);
+}
 
 /// DIDE source file editor
-class DSourceEdit : SourceEdit {
+class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
 	this(string ID) {
 		super(ID);
 		styleId = null;
@@ -36,11 +42,14 @@ class DSourceEdit : SourceEdit {
         popupMenu = editPopupItem;
         showIcons = true;
         showFolding = true;
+        content.marksChanged = this;
 	}
 
 	this() {
 		this("SRCEDIT");
 	}
+
+    Signal!BreakpointListChangeListener breakpointListChanged;
 
     /// handle theme change: e.g. reload some themed resources
     override void onThemeChanged() {
@@ -184,15 +193,87 @@ class DSourceEdit : SourceEdit {
         return super.handleAction(a);
     }
 
+    protected void addBreakpoint(int line) {
+        import std.path;
+        Breakpoint bp = new Breakpoint();
+        bp.file = baseName(filename);
+        bp.line = line + 1;
+        bp.fullFilePath = filename;
+        if (projectSourceFile) {
+            bp.projectName = toUTF8(projectSourceFile.project.name);
+            bp.projectFilePath = projectSourceFile.project.absoluteToRelativePath(filename);
+        }
+        LineIcon icon = new LineIcon(LineIconType.breakpoint, line, bp);
+        content.lineIcons.add(icon);
+        notifyBreakpointListChanged();
+    }
+
+    protected void removeBreakpoint(int line, LineIcon icon) {
+        content.lineIcons.remove(icon);
+        notifyBreakpointListChanged();
+    }
+
+    void setBreakpointList(Breakpoint[] breakpoints) {
+        // remove all existing breakpoints
+        content.lineIcons.removeByType(LineIconType.breakpoint);
+        // add new breakpoints
+        foreach(bp; breakpoints) {
+            LineIcon icon = new LineIcon(LineIconType.breakpoint, bp.line - 1, bp);
+            content.lineIcons.add(icon);
+        }
+    }
+
+    Breakpoint[] getBreakpointList() {
+        LineIcon[] icons = content.lineIcons.findByType(LineIconType.breakpoint);
+        Breakpoint[] breakpoints;
+        foreach(icon; icons) {
+            Breakpoint bp = cast(Breakpoint)icon.objectParam;
+            if (bp)
+                breakpoints ~= bp;
+        }
+        return breakpoints;
+    }
+
+    protected void onMarksChange(EditableContent content, LineIcon[] movedMarks, LineIcon[] removedMarks) {
+        bool changed = false;
+        foreach(moved; movedMarks) {
+            if (moved.type == LineIconType.breakpoint) {
+                Breakpoint bp = cast(Breakpoint)moved.objectParam;
+                if (bp) {
+                    // update Breakpoint line
+                    bp.line = moved.line + 1;
+                    changed = true;
+                }
+            }
+        }
+        foreach(removed; removedMarks) {
+            if (removed.type == LineIconType.breakpoint) {
+                Breakpoint bp = cast(Breakpoint)removed.objectParam;
+                if (bp) {
+                    changed = true;
+                }
+            }
+        }
+        if (changed)
+            notifyBreakpointListChanged();
+    }
+
+    protected void notifyBreakpointListChanged() {
+        if (projectSourceFile) {
+            if (breakpointListChanged.assigned)
+                breakpointListChanged(projectSourceFile, getBreakpointList());
+        }
+    }
+
     protected void handleBreakpointAction(const Action a) {
         int line = a.longParam >= 0 ? cast(int)a.longParam : caretPos.line;
         LineIcon icon = content.lineIcons.findByLineAndType(line, LineIconType.breakpoint);
         switch(a.id) {
             case IDEActions.DebugToggleBreakpoint:
                 if (icon)
-                    content.lineIcons.remove(icon);
+                    removeBreakpoint(line, icon);
                 else
-                    content.lineIcons.add(new LineIcon(LineIconType.breakpoint, line));
+                    addBreakpoint(line);
                 break;
             case IDEActions.DebugEnableBreakpoint:
                 break;

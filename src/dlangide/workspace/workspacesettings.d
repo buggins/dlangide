@@ -4,6 +4,8 @@ import dlangui.core.settings;
 import dlangui.core.i18n;
 import ddebug.common.debugger;
 
+import std.array;
+
 /// local settings for workspace (not supposed to put under source control)
 class WorkspaceSettings : SettingsFile {
 
@@ -21,6 +23,44 @@ class WorkspaceSettings : SettingsFile {
         if (s.equal(_startupProjectName)) {
             _startupProjectName = s;
             save();
+        }
+    }
+
+    /// get all breakpoints for project (for specified source file only, if specified)
+    Breakpoint[] getProjectBreakpoints(string projectName, string projectFilePath) {
+        Breakpoint[] res;
+        for (int i = cast(int)_breakpoints.length - 1; i >= 0; i--) {
+            Breakpoint bp = _breakpoints[i];
+            if (!bp.projectName.equal(projectName))
+                continue;
+            if (!projectFilePath.empty && !bp.projectFilePath.equal(projectFilePath))
+                continue;
+            res ~= bp;
+        }
+        return res;
+    }
+
+    /// get all breakpoints for project (for specified source file only, if specified)
+    void setProjectBreakpoints(string projectName, string projectFilePath, Breakpoint[] bps) {
+        bool changed = false;
+        for (int i = cast(int)_breakpoints.length - 1; i >= 0; i--) {
+            Breakpoint bp = _breakpoints[i];
+            if (!bp.projectName.equal(projectName))
+                continue;
+            if (!projectFilePath.empty && !bp.projectFilePath.equal(projectFilePath))
+                continue;
+            for (auto j = i; j < _breakpoints.length - 1; j++)
+                _breakpoints[j] = _breakpoints[j + 1];
+            _breakpoints.length--;
+            changed = true;
+        }
+        if (bps.length) {
+            changed = true;
+            foreach(bp; bps)
+                _breakpoints ~= bp;
+        }
+        if (changed) {
+            setBreakpoints(_breakpoints);
         }
     }
 
@@ -53,10 +93,13 @@ class WorkspaceSettings : SettingsFile {
         _breakpoints = null;
         for (int i = 0; i < obj.length; i++) {
             Breakpoint bp = new Breakpoint();
-            bp.id = cast(int)obj.getInteger("id");
-            bp.file = obj.getString("file");
-            bp.line = cast(int)obj.getInteger("line");
-            bp.enabled = obj.getBoolean("enabled");
+            Setting item = obj[i];
+            bp.id = cast(int)item.getInteger("id");
+            bp.file = item.getString("file");
+            bp.projectName = item.getString("projectName");
+            bp.projectFilePath = item.getString("projectFilePath");
+            bp.line = cast(int)item.getInteger("line");
+            bp.enabled = item.getBoolean("enabled");
             _breakpoints ~= bp;
         }
     }

@@ -18,7 +18,7 @@ class Breakpoint {
     string fullFilePath;
     string projectFilePath;
     int line;
-    bool enabled;
+    bool enabled = true;
     string projectName;
     this() {
         id = nextBreakpointId++;
