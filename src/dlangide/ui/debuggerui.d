@@ -36,6 +36,8 @@ class DebuggerUIHandler : DebuggerCallback {
     void onProgramLoaded(bool successful, bool debugInfoLoaded) {
         _ide.logPanel.logLine("Program is loaded");
         // TODO: check succes status and debug info
+        if (_breakpoints.length)
+            _debugger.setBreakpoints(_breakpoints);
         _debugger.execStart();
     }
 
@@ -52,7 +54,12 @@ class DebuggerUIHandler : DebuggerCallback {
         }
     }
 
+    private Breakpoint[] _breakpoints;
     void onBreakpointListUpdated(Breakpoint[] breakpoints) {
+        _breakpoints = breakpoints;
+        if (_state == DebuggingState.running || _state == DebuggingState.paused) {
+            _debugger.setBreakpoints(_breakpoints);
+        }
     }
 
     void run() {

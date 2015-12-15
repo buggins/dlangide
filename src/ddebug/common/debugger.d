@@ -21,11 +21,22 @@ class Breakpoint {
     bool enabled = true;
     string projectName;
     this() {
-        id = nextBreakpointId++;
+        id = _nextBreakpointId++;
+    }
+    Breakpoint clone() {
+        Breakpoint v = new Breakpoint();
+        id = v.id;
+        file = v.file;
+        fullFilePath = v.fullFilePath;
+        projectFilePath = v.projectFilePath;
+        line = v.line;
+        enabled = v.enabled;
+        projectName = v.projectName;
+        return v;
     }
 }
 
-private static __gshared nextBreakpointId = 1;
+static __gshared _nextBreakpointId = 1;
 
 interface Debugger : ProgramExecution {
     void setDebuggerCallback(DebuggerCallback callback);
@@ -192,8 +203,11 @@ class DebuggerProxy : Debugger, DebuggerCallback {
         _debugger.postRequest(delegate() { _debugger.execStepOut(); });
     }
     /// update list of breakpoints
-    void setBreakpoints(Breakpoint[] bp) {
-        _debugger.postRequest(delegate() { _debugger.setBreakpoints(bp); });
+    void setBreakpoints(Breakpoint[] breakpoints) {
+        Breakpoint[] cloned;
+        foreach(bp; breakpoints)
+            cloned ~= bp.clone;
+        _debugger.postRequest(delegate() { _debugger.setBreakpoints(cloned); });
     }
 }
 

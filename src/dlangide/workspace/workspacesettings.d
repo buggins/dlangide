@@ -151,6 +151,7 @@ class WorkspaceSettings : SettingsFile {
         _startupProjectName = _setting.getString("startupProject");
         Setting obj = _setting.settingByPath("breakpoints", SettingType.ARRAY);
         _breakpoints = null;
+        int maxBreakpointId = 0;
         for (int i = 0; i < obj.length; i++) {
             Breakpoint bp = new Breakpoint();
             Setting item = obj[i];
@@ -160,8 +161,11 @@ class WorkspaceSettings : SettingsFile {
             bp.projectFilePath = item.getString("projectFilePath");
             bp.line = cast(int)item.getInteger("line");
             bp.enabled = item.getBoolean("enabled");
+            if (bp.id > maxBreakpointId)
+                maxBreakpointId = bp.id;
             _breakpoints ~= bp;
         }
+        _nextBreakpointId = maxBreakpointId + 1;
         obj = _setting.settingByPath("bookmarks", SettingType.ARRAY);
         _bookmarks = null;
         for (int i = 0; i < obj.length; i++) {

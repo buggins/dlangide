@@ -79,7 +79,6 @@ class GDBInterface : ConsoleDebuggerInterface {
 
 	protected int commandId;
 
-
 	int sendCommand(string text) {
 		commandId++;
         string cmd = to!string(commandId) ~ text;
@@ -280,9 +279,86 @@ class GDBInterface : ConsoleDebuggerInterface {
         _stepOutRequestId = sendCommand("-exec-finish");
     }
 
+    private GDBBreakpoint[] _breakpoints;
+    private static class GDBBreakpoint {
+        Breakpoint bp;
+        string number;
+        int createRequestId;
+    }
+    private GDBBreakpoint findBreakpoint(Breakpoint bp) {
+        foreach(gdbbp; _breakpoints) {
+            if (gdbbp.bp.id == bp.id)
+                return gdbbp;
+        }
+        return null;
+    }
+    private void addBreakpoint(Breakpoint bp) {
+        GDBBreakpoint gdbbp = new GDBBreakpoint();
+        gdbbp.bp = bp;
+        char[] cmd;
+        cmd ~= "-break-insert ";
+        if (!bp.enabled)
+            cmd ~= "-d "; // create disabled
+        cmd ~= bp.fullFilePath;
+        cmd ~= ":";
+        cmd ~= to!string(bp.line);
+        gdbbp.createRequestId = sendCommand(cmd.dup);
+        _breakpoints ~= gdbbp;
+    }
+
     /// update list of breakpoints
-    void setBreakpoints(Breakpoint[] bp) {
-        // TODO
+    void setBreakpoints(Breakpoint[] breakpoints) {
+        char[] breakpointsToDelete;
+        char[] breakpointsToEnable;
+        char[] breakpointsToDisable;
+        // checking for removed breakpoints
+        for (int i = cast(int)_breakpoints.length - 1; i >= 0; i--) {
+            bool found = false;
+            foreach(bp; breakpoints)
+                if (bp.id == _breakpoints[i].bp.id) {
+                    found = true;
+                    break;
+                }
+            if (!found) {
+                for (int j = i; j < _breakpoints.length - 1; j++)
+                    _breakpoints[j] = _breakpoints[j + 1];
+                _breakpoints.length = _breakpoints.length - 1;
+                if (breakpointsToDelete.length)
+                    breakpointsToDelete ~= ",";
+                breakpointsToDelete ~= _breakpoints[i].number;
+            }
+        }
+        // checking for added or updated breakpoints
+        foreach(bp; breakpoints) {
+            GDBBreakpoint existing = findBreakpoint(bp);
+            if (!existing) {
+                addBreakpoint(bp);
+            } else {
+                if (bp.enabled && !existing.bp.enabled) {
+                    if (breakpointsToEnable.length)
+                        breakpointsToEnable ~= ",";
+                    breakpointsToEnable ~= existing.number;
+                    existing.bp.enabled = true;
+                } else if (!bp.enabled && existing.bp.enabled) {
+                    if (breakpointsToDisable.length)
+                        breakpointsToDisable ~= ",";
+                    breakpointsToDisable ~= existing.number;
+                    existing.bp.enabled = false;
+                }
+            }
+        }
+        if (breakpointsToDelete.length) {
+            Log.d("Deleting breakpoints: " ~ breakpointsToDelete);
+            sendCommand(("-break-delete " ~ breakpointsToDelete).dup);
+        }
+        if (breakpointsToEnable.length) {
+            Log.d("Enabling breakpoints: " ~ breakpointsToEnable);
+            sendCommand(("-break-enable " ~ breakpointsToEnable).dup);
+        }
+        if (breakpointsToDisable.length) {
+            Log.d("Disabling breakpoints: " ~ breakpointsToDisable);
+            sendCommand(("-break-disable " ~ breakpointsToDisable).dup);
+        }
     }
 
 
@@ -315,6 +391,7 @@ class GDBInterface : ConsoleDebuggerInterface {
         if (msgId == AsyncClass.running) {
             _callback.onDebugState(DebuggingState.running, s, 0);
         } else if (msgId == AsyncClass.stopped) {
+
             _callback.onDebugState(DebuggingState.stopped, s, 0);
         }
     }
@@ -479,8 +556,195 @@ enum AsyncClass {
 }
 
 enum MITokenType {
+    /// end of line
+    eol,
+    /// error
+    error,
+    /// identifier
+    ident,
+    /// C string
     str,
+    /// = sign
+    eq,
+    /// , sign
+    comma,
+    /// { brace
+    curlyOpen,
+    /// } brace
+    curlyClose,
+    /// [ brace
+    squareOpen,
+    /// ] brace
+    squareClose,
 }
 
 struct MIToken {
+    MITokenType type;
+    string str;
+    this(MITokenType type, string str = null) {
+        this.type = type;
+        this.str = str;
+    }
 }
+
+MIToken parseMIToken(ref string s) {
+    if (s.empty)
+        return MIToken(MITokenType.eol);
+    char ch = s[0];
+    if (ch == ',') {
+        s = s[1..$];
+        return MIToken(MITokenType.comma, ",");
+    }
+    if (ch == '=') {
+        s = s[1..$];
+        return MIToken(MITokenType.eq, "=");
+    }
+    if (ch == '{') {
+        s = s[1..$];
+        return MIToken(MITokenType.curlyOpen, "{");
+    }
+    if (ch == '}') {
+        s = s[1..$];
+        return MIToken(MITokenType.curlyClose, "}");
+    }
+    if (ch == '[') {
+        s = s[1..$];
+        return MIToken(MITokenType.squareOpen, "[");
+    }
+    if (ch == ']') {
+        s = s[1..$];
+        return MIToken(MITokenType.squareClose, "]");
+    }
+    // C string
+    if (ch == '\"') {
+        string str = parseCString(s);
+        if (!str.ptr) {
+            return MIToken(MITokenType.error);
+        }
+        return MIToken(MITokenType.str, str);
+    }
+    // identifier
+    string str = parseIdent(s);
+    if (!str.empty)
+        return MIToken(MITokenType.ident, str);
+    return MIToken(MITokenType.error);
+}
+
+/// tokenize GDB MI output into array of tokens
+MIToken[] tokenizeMI(string s, out bool error) {
+    error = false;
+    string src = s;
+    MIToken[] res;
+    for(;;) {
+        MIToken token = parseMIToken(s);
+        if (token.type == MITokenType.eol)
+            break;
+        if (token.type == MITokenType.error) {
+            error = true;
+            Log.e("Error while tokenizing GDB output ", src, " near ", s);
+            break;
+        }
+        res ~= token;
+    }
+    return res;
+}
+
+private char nextChar(ref string s) {
+    if (s.empty)
+        return 0;
+    char ch = s[0];
+    s = s[1 .. $];
+    return ch;
+}
+
+string parseCString(ref string s) {
+    char[] res;
+    // skip opening "
+    char ch = nextChar(s);
+    if (!ch)
+        return null;
+    s = s[1 .. $];
+    if (ch != '\"')
+        return null;
+    for (;;) {
+        if (s.empty) {
+            // unexpected end of string
+            return null;
+        }
+        ch = nextChar(s);
+        if (ch == '\"')
+            break;
+        if (ch == '\\') {
+            // escape sequence
+            ch = nextChar(s);
+            if (ch >= '0' && ch <= '7') {
+                // octal
+                int number = (ch - '0');
+                char ch2 = nextChar(s);
+                char ch3 = nextChar(s);
+                if (ch2 < '0' || ch2 > '7')
+                    return null;
+                if (ch3 < '0' || ch3 > '7')
+                    return null;
+                number = number * 8 + (ch2 - '0');
+                number = number * 8 + (ch3 - '0');
+                if (number > 255)
+                    return null; // invalid octal number
+                res ~= cast(char)number;
+            } else {
+                switch (ch) {
+                    case 'n':
+                        res ~= '\n';
+                        break;
+                    case 'r':
+                        res ~= '\r';
+                        break;
+                    case 't':
+                        res ~= '\t';
+                        break;
+                    case 'a':
+                        res ~= '\a';
+                        break;
+                    case 'b':
+                        res ~= '\b';
+                        break;
+                    case 'f':
+                        res ~= '\f';
+                        break;
+                    case 'v':
+                        res ~= '\v';
+                        break;
+                    case 'x': {
+                        // 2 digit hex number
+                        uint ch2 = decodeHexDigit(nextChar(s));
+                        uint ch3 = decodeHexDigit(nextChar(s));
+                        if (ch2 > 15 || ch3 > 15)
+                            return null;
+                        res ~= cast(char)((ch2 << 4) | ch3);
+                        break;
+                    }
+                    default:
+                        res ~= ch;
+                        break;
+                }
+            }
+        } else {
+            res ~= ch;
+        }
+    }
+    if (!res.length)
+        return "";
+    return res.dup;
+}
+
+/// decodes hex digit (0..9, a..f, A..F), returns uint.max if invalid
+private uint decodeHexDigit(T)(T ch) {
+    if (ch >= '0' && ch <= '9')
+        return ch - '0';
+    else if (ch >= 'a' && ch <= 'f')
+        return ch - 'a' + 10;
+    else if (ch >= 'A' && ch <= 'F')
+        return ch - 'A' + 10;
+    return uint.max;
+}
+
