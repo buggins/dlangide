@@ -52,6 +52,9 @@ class DebuggerUIHandler : DebuggerCallback {
         }
     }
 
+    void onBreakpointListUpdated(Breakpoint[] breakpoints) {
+    }
+
     void run() {
         _debugger.run();
     }

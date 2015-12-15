@@ -26,6 +26,10 @@ interface BreakpointListChangeListener {
     void onBreakpointListChanged(ProjectSourceFile sourceFile, Breakpoint[] breakpoints);
 }
 
+interface BookmarkListChangeListener {
+    void onBookmarkListChanged(ProjectSourceFile sourceFile, EditorBookmark[] bookmarks);
+}
+
 /// DIDE source file editor
 class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
 	this(string ID) {
@@ -50,6 +54,7 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
 	}
 
     Signal!BreakpointListChangeListener breakpointListChanged;
+    Signal!BookmarkListChangeListener bookmarkListChanged;
 
     /// handle theme change: e.g. reload some themed resources
     override void onThemeChanged() {
@@ -186,6 +191,10 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
                 case IDEActions.DebugDisableBreakpoint:
                     handleBreakpointAction(a);
                     return true;
+    			case EditorActions.ToggleBookmark:
+                    super.handleAction(a);
+                    notifyBookmarkListChanged();
+                    return true;
                 default:
                     break;
             }
@@ -234,8 +243,37 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         return breakpoints;
     }
 
+    void setBookmarkList(EditorBookmark[] bookmarks) {
+        // remove all existing breakpoints
+        content.lineIcons.removeByType(LineIconType.bookmark);
+        // add new breakpoints
+        foreach(bp; bookmarks) {
+            LineIcon icon = new LineIcon(LineIconType.bookmark, bp.line - 1);
+            content.lineIcons.add(icon);
+        }
+    }
+
+    EditorBookmark[] getBookmarkList() {
+        import std.path;
+        LineIcon[] icons = content.lineIcons.findByType(LineIconType.bookmark);
+        EditorBookmark[] bookmarks;
+        if (projectSourceFile) {
+            foreach(icon; icons) {
+                EditorBookmark bp = new EditorBookmark();
+                bp.line = icon.line + 1;
+                bp.file = baseName(filename);
+                bp.projectName = projectSourceFile.project.name8;
+                bp.fullFilePath = filename;
+                bp.projectFilePath = projectSourceFile.project.absoluteToRelativePath(filename);
+                bookmarks ~= bp;
+            }
+        }
+        return bookmarks;
+    }
+
     protected void onMarksChange(EditableContent content, LineIcon[] movedMarks, LineIcon[] removedMarks) {
         bool changed = false;
+        bool bookmarkChanged = false;
         foreach(moved; movedMarks) {
             if (moved.type == LineIconType.breakpoint) {
                 Breakpoint bp = cast(Breakpoint)moved.objectParam;
@@ -243,6 +281,13 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
                     // update Breakpoint line
                     bp.line = moved.line + 1;
                     changed = true;
+                }
+            } else if (moved.type == LineIconType.bookmark) {
+                EditorBookmark bp = cast(EditorBookmark)moved.objectParam;
+                if (bp) {
+                    // update Breakpoint line
+                    bp.line = moved.line + 1;
+                    bookmarkChanged = true;
                 }
             }
         }
@@ -252,16 +297,30 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
                 if (bp) {
                     changed = true;
                 }
+            } else if (removed.type == LineIconType.bookmark) {
+                EditorBookmark bp = cast(EditorBookmark)removed.objectParam;
+                if (bp) {
+                    bookmarkChanged = true;
+                }
             }
         }
         if (changed)
             notifyBreakpointListChanged();
+        if (bookmarkChanged)
+            notifyBookmarkListChanged();
     }
 
     protected void notifyBreakpointListChanged() {
         if (projectSourceFile) {
             if (breakpointListChanged.assigned)
                 breakpointListChanged(projectSourceFile, getBreakpointList());
+        }
+    }
+
+    protected void notifyBookmarkListChanged() {
+        if (projectSourceFile) {
+            if (bookmarkListChanged.assigned)
+                bookmarkListChanged(projectSourceFile, getBookmarkList());
         }
     }
 

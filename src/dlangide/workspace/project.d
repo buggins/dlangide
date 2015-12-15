@@ -63,6 +63,10 @@ class ProjectItem {
         return _name;
     }
 
+    @property string name8() {
+        return _name.toUTF8;
+    }
+
     /// returns true if item is folder
     @property const bool isFolder() {
         return false;
@@ -232,6 +236,10 @@ class WorkspaceItem {
     /// name
     @property dstring name() {
         return _name;
+    }
+
+    @property string name8() {
+        return _name.toUTF8;
     }
 
     /// name
@@ -721,4 +729,12 @@ bool isValidFileName(string s) {
             return false;
     }
     return true;
+}
+
+class EditorBookmark {
+    string file;
+    string fullFilePath;
+    string projectFilePath;
+    int line;
+    string projectName;
 }

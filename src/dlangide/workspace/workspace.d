@@ -92,8 +92,16 @@ class Workspace : WorkspaceItem {
         }
     }
 
-    void updateBreakpointFiles(Breakpoint[] breakpoints) {
+    private void updateBreakpointFiles(Breakpoint[] breakpoints) {
         foreach(bp; breakpoints) {
+            Project project = findProjectByName(bp.projectName);
+            if (project)
+                bp.fullFilePath = project.relativeToAbsolutePath(bp.projectFilePath);
+        }
+    }
+
+    private void updateBookmarkFiles(EditorBookmark[] bookmarks) {
+        foreach(bp; bookmarks) {
             Project project = findProjectByName(bp.projectName);
             if (project)
                 bp.fullFilePath = project.relativeToAbsolutePath(bp.projectFilePath);
@@ -108,6 +116,23 @@ class Workspace : WorkspaceItem {
     
     void setSourceFileBreakpoints(ProjectSourceFile file, Breakpoint[] breakpoints) {
         _settings.setProjectBreakpoints(toUTF8(file.project.name), file.projectFilePath, breakpoints);
+    }
+
+    EditorBookmark[] getSourceFileBookmarks(ProjectSourceFile file) {
+        EditorBookmark[] res = _settings.getProjectBookmarks(toUTF8(file.project.name), file.projectFilePath);
+        updateBookmarkFiles(res);
+        return res;
+    }
+    
+    void setSourceFileBookmarks(ProjectSourceFile file, EditorBookmark[] bookmarks) {
+        _settings.setProjectBookmarks(toUTF8(file.project.name), file.projectFilePath, bookmarks);
+    }
+
+    /// returns all workspace breakpoints
+    Breakpoint[] getBreakpoints() {
+        Breakpoint[] res = _settings.getBreakpoints();
+        updateBreakpointFiles(res);
+        return res;
     }
     
     protected void fillStartupProject() {
@@ -178,9 +203,9 @@ class Workspace : WorkspaceItem {
     override bool save(string fname = null) {
         if (fname.length > 0)
             filename = fname;
-        if (!filename) // no file name specified
+        if (_filename.empty) // no file name specified
             return false;
-        _settings.save(filename ~ WORKSPACE_SETTINGS_EXTENSION);
+        _settings.save(_filename ~ WORKSPACE_SETTINGS_EXTENSION);
         _workspaceFile.setString("name", toUTF8(_name));
         _workspaceFile.setString("description", toUTF8(_description));
         Setting projects = _workspaceFile.objectByPath("projects", true);

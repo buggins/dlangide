@@ -67,7 +67,7 @@ class BackgroundOperationWatcherTest : BackgroundOperationWatcher {
 }
 
 /// DIDE app frame
-class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeListener {
+class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeListener, BookmarkListChangeListener {
 
 	private ToolBarComboBox projectConfigurationCombo;
 	
@@ -194,6 +194,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         debuggerProxy.setDebuggerExecutable(debuggerExecutable);
         _execution = debuggerProxy;
         _debugHandler = new DebuggerUIHandler(this, debuggerProxy);
+        _debugHandler.onBreakpointListUpdated(currentWorkspace.getBreakpoints());
         _debugHandler.run();
     }
 
@@ -332,8 +333,12 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                 TabItem tab = _tabs.tab(filename);
                 tab.objectParam = file;
                 editor.modifiedStateChange = &onModifiedStateChange;
-                editor.breakpointListChanged = this; //onBreakpointListChanged
-                editor.setBreakpointList(currentWorkspace.getSourceFileBreakpoints(file));
+                if (file) {
+                    editor.breakpointListChanged = this; //onBreakpointListChanged
+                    editor.bookmarkListChanged = this; //onBreakpointListChanged
+                    editor.setBreakpointList(currentWorkspace.getSourceFileBreakpoints(file));
+                    editor.setBookmarkList(currentWorkspace.getSourceFileBookmarks(file));
+                }
                 applySettings(editor, settings);
                 _tabs.selectTab(index, true);
                 if( filename.endsWith(".d") )
@@ -874,6 +879,8 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
     }
 
     void closeWorkspace() {
+        if (currentWorkspace)
+            currentWorkspace.save();
         askForUnsavedEdits(delegate() {
             setWorkspace(null);
             showHomeScreen();
@@ -886,6 +893,15 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         if (sourcefile) {
             currentWorkspace.setSourceFileBreakpoints(sourcefile, breakpoints);
         }
+        if (_debugHandler)
+            _debugHandler.onBreakpointListUpdated(currentWorkspace.getBreakpoints());
+    }
+
+    void onBookmarkListChanged(ProjectSourceFile sourcefile, EditorBookmark[] bookmarks) {
+        if (!currentWorkspace)
+            return;
+        if (sourcefile)
+            currentWorkspace.setSourceFileBookmarks(sourcefile, bookmarks);
     }
 
     void refreshProjectItem(const Object obj) {
@@ -1220,6 +1236,8 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
     /// return false to prevent closing
     bool onCanClose() {
         askForUnsavedEdits(delegate() {
+            if (currentWorkspace)
+                currentWorkspace.save();
             window.close();
         });
         return false;
