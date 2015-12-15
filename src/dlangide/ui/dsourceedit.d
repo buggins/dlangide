@@ -29,12 +29,15 @@ class DSourceEdit : SourceEdit {
         onThemeChanged();
         //setTokenHightlightColor(TokenCategory.Identifier, 0x206000);  // no colors
 		MenuItem editPopupItem = new MenuItem(null);
-		editPopupItem.add(ACTION_EDIT_COPY, ACTION_EDIT_PASTE, ACTION_EDIT_CUT, ACTION_EDIT_UNDO, ACTION_EDIT_REDO, ACTION_EDIT_INDENT, ACTION_EDIT_UNINDENT, ACTION_EDIT_TOGGLE_LINE_COMMENT, ACTION_GET_COMPLETIONS, ACTION_GO_TO_DEFINITION);
+		editPopupItem.add(ACTION_EDIT_COPY, ACTION_EDIT_PASTE, ACTION_EDIT_CUT, ACTION_EDIT_UNDO, 
+                          ACTION_EDIT_REDO, ACTION_EDIT_INDENT, ACTION_EDIT_UNINDENT, ACTION_EDIT_TOGGLE_LINE_COMMENT, ACTION_GET_COMPLETIONS, 
+                          ACTION_GO_TO_DEFINITION, ACTION_DEBUG_TOGGLE_BREAKPOINT);
         //ACTION_GO_TO_DEFINITION, ACTION_GET_COMPLETIONS
         popupMenu = editPopupItem;
         showIcons = true;
         showFolding = true;
 	}
+
 	this() {
 		this("SRCEDIT");
 	}
@@ -86,6 +89,26 @@ class DSourceEdit : SourceEdit {
     @property bool isDSourceFile() {
         return filename.endsWith(".d") || filename.endsWith(".dd") || filename.endsWith(".dh") || filename.endsWith(".ddoc");
     }
+
+    override protected MenuItem getLeftPaneIconsPopupMenu(int line) {
+        MenuItem menu = super.getLeftPaneIconsPopupMenu(line);
+        if (isDSourceFile) {
+            Action action = ACTION_DEBUG_TOGGLE_BREAKPOINT.clone();
+            action.longParam = line;
+            action.objectParam = this;
+            menu.add(action);
+            action = ACTION_DEBUG_ENABLE_BREAKPOINT.clone();
+            action.longParam = line;
+            action.objectParam = this;
+            menu.add(action);
+            action = ACTION_DEBUG_DISABLE_BREAKPOINT.clone();
+            action.longParam = line;
+            action.objectParam = this;
+            menu.add(action);
+        }
+        return menu;
+    }
+
 
     void setSyntaxSupport() {
         if (isDSourceFile) {
@@ -149,6 +172,11 @@ class DSourceEdit : SourceEdit {
                 case IDEActions.InsertCompletion:
                     insertCompletion(a.label);
                     return true;
+                case IDEActions.DebugToggleBreakpoint:
+                case IDEActions.DebugEnableBreakpoint:
+                case IDEActions.DebugDisableBreakpoint:
+                    handleBreakpointAction(a);
+                    return true;
                 default:
                     break;
             }
@@ -156,11 +184,33 @@ class DSourceEdit : SourceEdit {
         return super.handleAction(a);
     }
 
+    protected void handleBreakpointAction(const Action a) {
+        int line = a.longParam >= 0 ? cast(int)a.longParam : caretPos.line;
+        LineIcon icon = content.lineIcons.findByLineAndType(line, LineIconType.breakpoint);
+        switch(a.id) {
+            case IDEActions.DebugToggleBreakpoint:
+                if (icon)
+                    content.lineIcons.remove(icon);
+                else
+                    content.lineIcons.add(new LineIcon(LineIconType.breakpoint, line));
+                break;
+            case IDEActions.DebugEnableBreakpoint:
+                break;
+            case IDEActions.DebugDisableBreakpoint:
+                break;
+            default:
+                break;
+        }
+    }
+
 	/// override to handle specific actions state (e.g. change enabled state for supported actions)
 	override bool handleActionStateRequest(const Action a) {
 		switch (a.id) {
 			case IDEActions.GoToDefinition:
 			case IDEActions.GetCompletionSuggestions:
+            case IDEActions.DebugToggleBreakpoint:
+            case IDEActions.DebugEnableBreakpoint:
+            case IDEActions.DebugDisableBreakpoint:
                 if (isDSourceFile)
                     a.state = ACTION_STATE_ENABLED;
                 else

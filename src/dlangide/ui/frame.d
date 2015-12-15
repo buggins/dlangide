@@ -575,7 +575,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener {
 
         MenuItem debugItem = new MenuItem(new Action(23, "MENU_DEBUG"));
         debugItem.add(ACTION_DEBUG_START, ACTION_DEBUG_START_NO_DEBUG, 
-                      ACTION_DEBUG_CONTINUE, ACTION_DEBUG_STOP, ACTION_DEBUG_PAUSE);
+                      ACTION_DEBUG_CONTINUE, ACTION_DEBUG_STOP, ACTION_DEBUG_PAUSE,
+                      ACTION_DEBUG_TOGGLE_BREAKPOINT, ACTION_DEBUG_ENABLE_BREAKPOINT, ACTION_DEBUG_DISABLE_BREAKPOINT
+                      );
 
 
 		MenuItem windowItem = new MenuItem(new Action(3, "MENU_WINDOW"c));

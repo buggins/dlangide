@@ -28,11 +28,16 @@ enum IDEActions : int {
     UpdateProjectDependencies,
     SetStartupProject,
     ProjectSettings,
+
     DebugStart,
     DebugStartNoDebug,
     DebugContinue,
     DebugStop,
     DebugPause,
+    DebugToggleBreakpoint,
+    DebugEnableBreakpoint,
+    DebugDisableBreakpoint,
+
     HelpAbout,
     WindowCloseAllDocuments,
     CreateNewWorkspace,
@@ -88,6 +93,11 @@ const Action ACTION_DEBUG_START_NO_DEBUG = new Action(IDEActions.DebugStartNoDeb
 const Action ACTION_DEBUG_CONTINUE = new Action(IDEActions.DebugContinue, "MENU_DEBUG_CONTINUE"c, "debug-run");
 const Action ACTION_DEBUG_STOP = (new Action(IDEActions.DebugStop, "MENU_DEBUG_STOP"c, "debug-stop")).disableByDefault();
 const Action ACTION_DEBUG_PAUSE = (new Action(IDEActions.DebugPause, "MENU_DEBUG_PAUSE"c, "debug-pause")).disableByDefault();
+
+const Action ACTION_DEBUG_TOGGLE_BREAKPOINT = (new Action(IDEActions.DebugToggleBreakpoint, "MENU_DEBUG_BREAKPOINT_TOGGLE"c, null, KeyCode.F9, 0)).disableByDefault();
+const Action ACTION_DEBUG_ENABLE_BREAKPOINT = (new Action(IDEActions.DebugEnableBreakpoint, "MENU_DEBUG_BREAKPOINT_ENABLE"c, null, KeyCode.F9, KeyFlag.Shift)).disableByDefault();
+const Action ACTION_DEBUG_DISABLE_BREAKPOINT = (new Action(IDEActions.DebugDisableBreakpoint, "MENU_DEBUG_BREAKPOINT_DISABLE"c, null, KeyCode.F9, KeyFlag.Control)).disableByDefault();
+
 const Action ACTION_EDIT_COPY = (new Action(EditorActions.Copy, "MENU_EDIT_COPY"c, "edit-copy"c, KeyCode.KEY_C, KeyFlag.Control)).addAccelerator(KeyCode.INS, KeyFlag.Control).disableByDefault();
 const Action ACTION_EDIT_PASTE = (new Action(EditorActions.Paste, "MENU_EDIT_PASTE"c, "edit-paste"c, KeyCode.KEY_V, KeyFlag.Control)).addAccelerator(KeyCode.INS, KeyFlag.Shift).disableByDefault();
 const Action ACTION_EDIT_CUT = (new Action(EditorActions.Cut, "MENU_EDIT_CUT"c, "edit-cut"c, KeyCode.KEY_X, KeyFlag.Control)).addAccelerator(KeyCode.DEL, KeyFlag.Shift).disableByDefault();
