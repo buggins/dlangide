@@ -556,7 +556,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener {
 
         MenuItem editItem = new MenuItem(new Action(2, "MENU_EDIT"));
 		editItem.add(ACTION_EDIT_COPY, ACTION_EDIT_PASTE, 
-                     ACTION_EDIT_CUT, ACTION_EDIT_UNDO, ACTION_EDIT_REDO, ACTION_FIND_TEXT);
+                     ACTION_EDIT_CUT, ACTION_EDIT_UNDO, ACTION_EDIT_REDO, ACTION_FIND_TEXT, ACTION_EDITOR_TOGGLE_BOOKMARK);
         MenuItem editItemAdvanced = new MenuItem(new Action(221, "MENU_EDIT_ADVANCED"));
 		editItemAdvanced.add(ACTION_EDIT_INDENT, ACTION_EDIT_UNINDENT, ACTION_EDIT_TOGGLE_LINE_COMMENT, ACTION_EDIT_TOGGLE_BLOCK_COMMENT, ACTION_GO_TO_DEFINITION, ACTION_GET_COMPLETIONS);
 		editItem.add(editItemAdvanced);
@@ -564,7 +564,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener {
 		editItem.add(ACTION_EDIT_PREFERENCES);
 
         MenuItem navItem = new MenuItem(new Action(21, "MENU_NAVIGATE"));
-        navItem.add(ACTION_GO_TO_DEFINITION, ACTION_GET_COMPLETIONS);
+        navItem.add(ACTION_GO_TO_DEFINITION, ACTION_GET_COMPLETIONS, ACTION_EDITOR_GOTO_PREVIOUS_BOOKMARK, ACTION_EDITOR_GOTO_NEXT_BOOKMARK);
 
         MenuItem projectItem = new MenuItem(new Action(21, "MENU_PROJECT"));
         projectItem.add(ACTION_PROJECT_SET_STARTUP, ACTION_PROJECT_REFRESH, ACTION_PROJECT_UPDATE_DEPENDENCIES, ACTION_PROJECT_SETTINGS);
@@ -814,7 +814,10 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener {
                     showPreferences();
                     return true;
                 case IDEActions.ProjectSettings:
-                    showProjectSettings();
+                    showProjectSettings(cast(Project)a.objectParam);
+                    return true;
+    			case IDEActions.SetStartupProject:
+                    setStartupProject(cast(Project)a.objectParam);
                     return true;
                 case IDEActions.FindText:
                     Log.d("Opening Search Field");
@@ -1018,10 +1021,19 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener {
         dlg.show();
     }
 
-    void showProjectSettings() {
+    void setStartupProject(Project project) {
         if (!currentWorkspace)
             return;
-        Project project = currentWorkspace.startupProject;
+        if (!project)
+            return;
+        currentWorkspace.startupProject = project;
+    }
+
+    void showProjectSettings(Project project) {
+        if (!currentWorkspace)
+            return;
+        if (!project)
+            project = currentWorkspace.startupProject;
         if (!project)
             return;
         Setting s = project.settings.copySettings();
