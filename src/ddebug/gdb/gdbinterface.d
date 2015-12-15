@@ -649,6 +649,96 @@ MIToken[] tokenizeMI(string s, out bool error) {
     return res;
 }
 
+MIValue parseMI(string s) {
+    bool err = false;
+    MIToken[] tokens = tokenizeMI(s, err);
+    if (error) {
+        // tokenizer error
+        return new MIValue(MIValueType.empty);
+    }
+    MIValue[] items = parseMI(tokens);
+    return new MIList(items);
+}
+
+MIValue[] parseMI(MIToken[] tokens) {
+    MIValue[] res;
+    if (tokens.length == 0)
+        return res;
+    MITokenType tokenType = tokens.length > 0 ? tokens[0].type : MITokenType.eol;
+    MITokenType nextTokenType = tokens.length > 1 ? tokens[1].type : MITokenType.eol;
+    if (tokenType = MITokenType.ident) {
+        string ident = tokens[0].str;
+        if (nextTokenType == MITokenType.eol || nextTokenType == MITokenType.comma) {
+            res ~= new MIIdent(ident);
+            tokens = tokens[1..$];
+            if (nextTokenType == MITokenType.comma)
+                tokens = tokens[1..$];
+        } else if (nextTokenType == MITokenType.eq) {
+        }
+    }
+    return res;
+}
+
+enum MIValueType {
+    /// ident
+    empty,
+    /// ident
+    ident,
+    /// c-string
+    str,
+    /// key=value pair
+    keyValue,
+    /// list []
+    list,
+    /// map {key=value, ...}
+    map,
+}
+
+class MIValue {
+    MIValueType type;
+    this(MIValueType type) {
+        this.type = type;
+    }
+    @property string str() { return null; }
+}
+
+class MIKeyValue {
+    string key;
+    MIValue value;
+    this(string key, MIValue value) {
+        super(MIValueType.keyValue);
+        this.key = key;
+        this.value = value;
+    }
+}
+
+class MIIdent {
+    string ident;
+    this(string ident) {
+        super(MIValueType.ident);
+        this.ident = ident;
+    }
+    override @property string str() { return ident; }
+}
+
+class MIString {
+    string str;
+    this(string str) {
+        super(MIValueType.str);
+        this.str = str;
+    }
+    override @property string str() { return str; }
+}
+
+class MIList {
+    MIValue[] items;
+    this(MIValue[] items) {
+        super(MIValueType.list);
+        this.items = items;
+    }
+    override @property string str() { return str; }
+}
+
 private char nextChar(ref string s) {
     if (s.empty)
         return 0;
