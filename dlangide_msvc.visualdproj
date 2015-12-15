@@ -427,6 +427,7 @@
    </Folder>
    <Folder name="gdb">
     <File path="src\ddebug\gdb\gdbinterface.d" />
+    <File path="src\ddebug\gdb\gdbmiparser.d" />
    </Folder>
    <Folder name="windows">
     <File path="src\ddebug\windows\debuginfo.d" />
