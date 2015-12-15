@@ -650,33 +650,75 @@ MIToken[] tokenizeMI(string s, out bool error) {
 }
 
 MIValue parseMI(string s) {
-    bool err = false;
-    MIToken[] tokens = tokenizeMI(s, err);
-    if (error) {
-        // tokenizer error
-        return new MIValue(MIValueType.empty);
+    string src = s;
+    try {
+        bool err = false;
+        MIToken[] tokens = tokenizeMI(s, err);
+        if (err) {
+            // tokenizer error
+            return null;
+        }
+        MIValue[] items = parseMIList(tokens);
+        return new MIList(items);
+    } catch (Exception e) {
+        Log.e("Cannot parse MI from " ~ src, e);
+        return null;
     }
-    MIValue[] items = parseMI(tokens);
-    return new MIList(items);
 }
 
-MIValue[] parseMI(MIToken[] tokens) {
-    MIValue[] res;
+MIValue parseMIValue(ref MIToken[] tokens) {
     if (tokens.length == 0)
-        return res;
+        return null;
     MITokenType tokenType = tokens.length > 0 ? tokens[0].type : MITokenType.eol;
     MITokenType nextTokenType = tokens.length > 1 ? tokens[1].type : MITokenType.eol;
-    if (tokenType = MITokenType.ident) {
+    if (tokenType == MITokenType.ident) {
         string ident = tokens[0].str;
         if (nextTokenType == MITokenType.eol || nextTokenType == MITokenType.comma) {
-            res ~= new MIIdent(ident);
+            MIValue res = new MIIdent(ident);
             tokens = tokens[1..$];
-            if (nextTokenType == MITokenType.comma)
-                tokens = tokens[1..$];
+            return res;
         } else if (nextTokenType == MITokenType.eq) {
+            tokens = tokens[1..$];
+            MIValue value = parseMIValue(tokens);
+            MIValue res = new MIKeyValue(ident, value);
+            return res;
         }
+        throw new Exception("Unexpected token " ~ to!string(tokenType));
+    } else if (tokenType == MITokenType.str) {
+        string str = tokens[0].str;
+        tokens = tokens[1..$];
+        MIValue res = new MIString(str);
+    } else if (tokenType == MITokenType.curlyOpen) {
+        tokens = tokens[1..$];
+        MIValue[] list = parseMIList(tokens, MITokenType.curlyClose);
+        return new MIMap(list);
+    } else if (tokenType == MITokenType.squareOpen) {
+        tokens = tokens[1..$];
+        MIValue[] list = parseMIList(tokens, MITokenType.squareClose);
+        return new MIList(list);
     }
-    return res;
+    throw new Exception("Invalid token at end of list: " ~ tokenType.to!string);
+}
+
+MIValue[] parseMIList(ref MIToken[] tokens, MITokenType closingToken = MITokenType.eol) {
+    MIValue[] res;
+    for (;;) {
+        MITokenType tokenType = tokens.length > 0 ? tokens[0].type : MITokenType.eol;
+        if (tokenType == MITokenType.eol)
+            return res;
+        if (tokenType == closingToken) {
+            tokens = tokens[1..$];
+            return res;
+        }
+        MIValue value = parseMIValue(tokens);
+        res ~= value;
+        tokenType = tokens.length > 0 ? tokens[0].type : MITokenType.eol;
+        if (tokenType == MITokenType.comma) {
+            tokens = tokens[1..$];
+            continue;
+        }
+        throw new Exception("Unexpected token in list " ~ to!string(tokenType));
+    }
 }
 
 enum MIValueType {
@@ -700,43 +742,79 @@ class MIValue {
         this.type = type;
     }
     @property string str() { return null; }
+    @property int length() { return 1; }
+    MIValue opIndex(int index) { return null; }
+    MIValue opIndex(string key) { return null; }
 }
 
-class MIKeyValue {
-    string key;
-    MIValue value;
+class MIKeyValue : MIValue {
+    private string _key;
+    private MIValue _value;
     this(string key, MIValue value) {
         super(MIValueType.keyValue);
-        this.key = key;
-        this.value = value;
+        _key = key;
+        _value = value;
     }
+    @property string key() { return _key; }
+    @property string str() { return _key; }
+    @property MIValue value() { return _value; }
 }
 
-class MIIdent {
-    string ident;
+class MIIdent : MIValue {
+    private string _ident;
     this(string ident) {
         super(MIValueType.ident);
-        this.ident = ident;
+        _ident = ident;
     }
-    override @property string str() { return ident; }
+    override @property string str() { return _ident; }
 }
 
-class MIString {
-    string str;
+class MIString : MIValue {
+    private string _str;
     this(string str) {
         super(MIValueType.str);
-        this.str = str;
+        _str = str;
     }
-    override @property string str() { return str; }
+    override @property string str() { return _str; }
 }
 
-class MIList {
-    MIValue[] items;
+class MIList : MIValue {
+    private MIValue[] _items;
+    private MIValue[string] _map;
+
+    override @property int length() { return cast(int)_items.length; }
+    override MIValue opIndex(int index) { 
+        if (index < 0 || index >= _items.length)
+            return null;
+        return _items[index];
+    }
+
+    override MIValue opIndex(string key) {
+        if (key in _map) {
+            MIValue res = _map[key];
+            return res;
+        }
+        return null; 
+    }
+
     this(MIValue[] items) {
         super(MIValueType.list);
-        this.items = items;
+        _items = items;
+        // fill map
+        foreach(item; _items) {
+            if (item.type == MIValueType.keyValue) {
+                if (!item.str.empty)
+                    _map[item.str] = (cast(MIKeyValue)item).value;
+            }
+        }
     }
-    override @property string str() { return str; }
+}
+
+class MIMap : MIList {
+    this(MIValue[] items) {
+        super(items);
+        type = MIValueType.map;
+    }
 }
 
 private char nextChar(ref string s) {
