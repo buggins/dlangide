@@ -797,6 +797,10 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     });
                     return true;
                 case IDEActions.FileOpenWorkspace:
+                    if (!a.stringParam.empty) {
+                        openFileOrWorkspace(a.stringParam);
+                        return true;
+                    }
                     UIString caption;
                     caption = "Open Workspace or Project"d;
                     FileDialog dlg = createFileDialog(caption);
@@ -1112,6 +1116,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     askForUnsavedEdits(delegate() {
                     setWorkspace(ws);
                     hideHomeScreen();
+                    _settings.updateRecentWorkspace(filename);
                 });
             } else {
                 window.showMessageBox(UIString("Cannot open workspace"d), UIString("Error occured while opening workspace"d));

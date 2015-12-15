@@ -175,5 +175,31 @@ class IDESettings : SettingsFile {
         return null;
     }
 
+    @property string[] recentWorkspaces() {
+        import std.file;
+        Setting obj = _setting.objectByPath("history", true);
+        string[] list = obj.getStringArray("recentWorkspaces");
+        string[] res;
+        foreach(fn; list) {
+            if (exists(fn) && isFile(fn))
+                res ~= fn;
+        }
+        return res;
+    }
+
+    void updateRecentWorkspace(string ws) {
+        import std.file;
+        string[] list;
+        list ~= ws;
+        string[] existing = recentWorkspaces;
+        foreach(fn; existing) {
+            if (exists(fn) && isFile(fn) && !ws.equal(fn))
+                list ~= fn;
+        }
+        Setting obj = _setting.objectByPath("history", true);
+        obj["recentWorkspaces"] = list;
+        save();
+    }
+
 }
 

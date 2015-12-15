@@ -7,6 +7,8 @@ import dlangui.widgets.controls;
 import dlangide.ui.frame;
 import dlangide.ui.commands;
 
+import std.path;
+
 class HomeScreen : ScrollWidget {
     protected IDEFrame _frame;
     protected HorizontalLayout _content;
@@ -38,7 +40,17 @@ class HomeScreen : ScrollWidget {
         _column1.addChild(_startItems);
         _column1.addChild(new VSpacer());
         _column1.addChild((new TextWidget(null, "Recent:"d)).fontSize(20).textColor(linkColor));
-        _recentItems.addChild((new TextWidget(null, "No recent items"d)));
+        string[] recentWorkspaces = _frame.settings.recentWorkspaces;
+        if (recentWorkspaces.length) {
+            foreach(fn; recentWorkspaces) {
+                Action a = ACTION_FILE_OPEN_WORKSPACE.clone();
+                a.label = UIString(toUTF32(stripExtension(baseName(fn))));
+                a.stringParam = fn;
+                _column1.addChild(new LinkButton(a));
+            }
+        } else {
+            _recentItems.addChild((new TextWidget(null, "No recent items"d)));
+        }
         _column1.addChild(_recentItems);
         _column1.addChild(new VSpacer());
         _column2.addChild((new TextWidget(null, "Useful Links:"d)).fontSize(20).textColor(linkColor));
