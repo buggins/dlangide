@@ -25,13 +25,13 @@ class Breakpoint {
     }
     Breakpoint clone() {
         Breakpoint v = new Breakpoint();
-        id = v.id;
-        file = v.file;
-        fullFilePath = v.fullFilePath;
-        projectFilePath = v.projectFilePath;
-        line = v.line;
-        enabled = v.enabled;
-        projectName = v.projectName;
+        v.id = id;
+        v.file = file;
+        v.fullFilePath = fullFilePath;
+        v.projectFilePath = projectFilePath;
+        v.line = line;
+        v.enabled = enabled;
+        v.projectName = projectName;
         return v;
     }
 }

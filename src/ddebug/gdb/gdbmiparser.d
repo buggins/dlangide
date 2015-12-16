@@ -181,17 +181,31 @@ MIValue parseMI(string s) {
         MIToken[] tokens = tokenizeMI(s, err);
         if (err) {
             // tokenizer error
+            Log.e("Cannot tokenize MI output `" ~ src ~ "`");
             return null;
         }
         MIValue[] items = parseMIList(tokens);
         return new MIList(items);
     } catch (Exception e) {
-        Log.e("Cannot parse MI from " ~ src, e);
+        Log.e("Cannot parse MI output `" ~ src ~ "`", e.msg);
         return null;
     }
 }
 
+string dumpTokens(MIToken[] tokens) {
+    char[] buf;
+    for (int i = 0; i < 10 && i < tokens.length; i++) {
+        if (tokens[i].type == MITokenType.str)
+            buf ~= '\"';
+        buf ~= tokens[i].str;
+        if (tokens[i].type == MITokenType.str)
+            buf ~= '\"';
+    }
+    return buf.dup;
+}
+
 MIValue parseMIValue(ref MIToken[] tokens) {
+    MIToken[] srctokens;
     if (tokens.length == 0)
         return null;
     MITokenType tokenType = tokens.length > 0 ? tokens[0].type : MITokenType.eol;
@@ -210,7 +224,7 @@ MIValue parseMIValue(ref MIToken[] tokens) {
             MIValue res = new MIKeyValue(ident, value);
             return res;
         }
-        throw new Exception("Unexpected token " ~ to!string(tokenType));
+        throw new Exception("parseMIValue: Unexpected token " ~ to!string(tokenType) ~ " near " ~ srctokens.dumpTokens);
     } else if (tokenType == MITokenType.str) {
         string str = tokens[0].str;
         tokens = tokens[1..$];
@@ -224,7 +238,7 @@ MIValue parseMIValue(ref MIToken[] tokens) {
         MIValue[] list = parseMIList(tokens, MITokenType.squareClose);
         return new MIList(list);
     }
-    throw new Exception("Invalid token at end of list: " ~ tokenType.to!string);
+    throw new Exception("parseMIValue: Invalid token at end of list: " ~ tokenType.to!string ~ " near " ~ srctokens.dumpTokens);
 }
 
 MIValue[] parseMIList(ref MIToken[] tokens, MITokenType closingToken = MITokenType.eol) {
@@ -244,7 +258,7 @@ MIValue[] parseMIList(ref MIToken[] tokens, MITokenType closingToken = MITokenTy
             tokens = tokens[1..$];
             continue;
         }
-        throw new Exception("Unexpected token in list " ~ to!string(tokenType));
+        throw new Exception("parseMIList: Unexpected token " ~ to!string(tokenType) ~ " in list near " ~ tokens.dumpTokens);
     }
 }
 
