@@ -2,8 +2,11 @@ module dlangide.ui.debuggerui;
 
 import dlangui.core.logger;
 import dlangui.core.events;
+import dlangide.workspace.project;
+import dlangide.workspace.workspace;
 import dlangide.ui.frame;
 import dlangide.ui.commands;
+import dlangide.ui.dsourceedit;
 import ddebug.common.execution;
 import ddebug.common.debugger;
 
@@ -44,18 +47,39 @@ class DebuggerUIHandler : DebuggerCallback {
         _debugger.execStart();
     }
 
+    void updateLocation(DebugLocation location) {
+        _location = location;
+        ProjectSourceFile sourceFile = currentWorkspace.findSourceFile(location.projectFilePath, location.fullFilePath);
+        if (sourceFile) {
+            _ide.openSourceFile(sourceFile.filename, sourceFile, true);
+        } else {
+            _ide.openSourceFile(location.fullFilePath, null, true);
+        }
+        DSourceEdit[] editors = _ide.allOpenedEditors;
+        foreach(ed; editors) {
+            if (ed.projectSourceFile is sourceFile)
+                ed.executionLine = location.line - 1;
+            else
+                ed.executionLine = -1;
+        }
+    }
+
     /// state changed: running / paused / stopped
     void onDebugState(DebuggingState state, StateChangeReason reason, DebugLocation location, Breakpoint bp) {
         Log.d("onDebugState: ", state, " reason=", reason);
         _state = state;
         if (state == DebuggingState.stopped) {
             _ide.logPanel.logLine("Program is stopped");
+            _ide.statusLine.setStatusText("Stopped"d);
             _debugger.stop();
         } else if (state == DebuggingState.running) {
             _ide.logPanel.logLine("Program is started");
+            _ide.statusLine.setStatusText("Running"d);
+            _ide.window.update();
         } else if (state == DebuggingState.paused) {
-            _location = location;
+            updateLocation(location);
             _ide.logPanel.logLine("Program is paused.");
+            _ide.statusLine.setStatusText("Paused"d);
             _ide.window.update();
         }
     }

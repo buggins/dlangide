@@ -65,6 +65,15 @@ class Workspace : WorkspaceItem {
         _frame = frame;
     }
 
+    ProjectSourceFile findSourceFile(string projectFileName, string fullFileName) {
+        foreach(p; _projects) {
+            ProjectSourceFile res = p.findSourceFile(projectFileName, fullFileName);
+            if (res)
+                return res;
+        }
+        return null;
+    }
+
     @property Project[] projects() {
         return _projects;
     }

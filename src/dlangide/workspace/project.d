@@ -82,6 +82,14 @@ class ProjectItem {
 
     void refresh() {
     }
+
+    ProjectSourceFile findSourceFile(string projectFileName, string fullFileName) {
+        if (fullFileName.equal(_filename))
+            return cast(ProjectSourceFile)this;
+        if (project && projectFileName.equal(project.absoluteToRelativePath(_filename)))
+            return cast(ProjectSourceFile)this;
+        return null;
+    }
 }
 
 /// Project folder
@@ -118,6 +126,14 @@ class ProjectFolder : ProjectItem {
         for (int i = 0; i < _children.count; i++) {
             if (_children[i].name.equal(s))
                 return _children[i];
+        }
+        return null;
+    }
+
+    override ProjectSourceFile findSourceFile(string projectFileName, string fullFileName) {
+        for (int i = 0; i < _children.count; i++) {
+            if (ProjectSourceFile res = _children[i].findSourceFile(projectFileName, fullFileName))
+                return res;
         }
         return null;
     }
@@ -417,6 +433,10 @@ class Project : WorkspaceItem {
             _builderSourcePaths = dmdSourcePaths();
         }
         return _builderSourcePaths; 
+    }
+
+    ProjectSourceFile findSourceFile(string projectFileName, string fullFileName) {
+        return _items ? _items.findSourceFile(projectFileName, fullFileName) : null;
     }
 
     private static void addUnique(ref string[] dst, string[] items) {

@@ -68,13 +68,28 @@ DebugLocation parseFrame(MIValue frame) {
     if (!frame)
         return null;
     DebugLocation location = new DebugLocation();
-    location.file = baseName(frame.getString("file"));
-    location.projectFilePath = frame.getString("file");
-    location.fullFilePath = frame.getString("fullname");
+    location.file = baseName(toNativeDelimiters(frame.getString("file")));
+    location.projectFilePath = toNativeDelimiters(frame.getString("file"));
+    location.fullFilePath = toNativeDelimiters(frame.getString("fullname"));
     location.line = frame.getInt("line");
     location.func = frame.getString("func");
     location.address = frame.getUlong("addr");
     return location;
+}
+
+string toNativeDelimiters(string s) {
+    version(Windows) {
+        char[] buf;
+        foreach(ch; s) {
+            if (ch == '/')
+                buf ~= '\\';
+            else
+                buf ~= ch;
+        }
+        return buf.dup;
+    } else {
+        return s;
+    }
 }
 
 string parseIdent(ref string s) {
@@ -273,7 +288,7 @@ MIValue parseMIValue(ref MIToken[] tokens) {
 }
 
 private MIValue[] parseMIList(ref MIToken[] tokens, MITokenType closingToken = MITokenType.eol) {
-    Log.v("parseMIList: " ~ tokens.dumpTokens);
+    //Log.v("parseMIList: " ~ tokens.dumpTokens);
     MIValue[] res;
     if (!tokens.length)
         return res;

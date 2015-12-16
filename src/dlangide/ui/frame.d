@@ -411,6 +411,18 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         }
     }
 
+    /// returns array of all opened source editors
+    DSourceEdit[] allOpenedEditors() {
+        DSourceEdit[] res;
+        for (int i = _tabs.tabCount - 1; i >= 0; i--) {
+            DSourceEdit ed = cast(DSourceEdit)_tabs.tabBody(i);
+            if (ed) {
+                res ~= ed;
+            }
+        }
+        return res;
+    }
+
     /// close editor tabs for which files are removed from filesystem
     void closeRemovedDocuments() {
         import std.file;

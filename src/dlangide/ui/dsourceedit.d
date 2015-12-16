@@ -2,6 +2,7 @@ module dlangide.ui.dsourceedit;
 
 import dlangui.core.logger;
 import dlangui.core.signals;
+import dlangui.graphics.drawbuf;
 import dlangui.widgets.editors;
 import dlangui.widgets.srcedit;
 import dlangui.widgets.menu;
@@ -123,6 +124,24 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         return menu;
     }
 
+    uint _executionLineHighlightColor = 0x808080FF;
+    int _executionLine = -1;
+    @property int executionLine() { return _executionLine; }
+    @property void executionLine(int line) {
+        if (line == _executionLine)
+            return;
+        _executionLine = line;
+        if (_executionLine >= 0) {
+            setCaretPos(_executionLine, 0, true);
+        }
+        invalidate();
+    }
+    /// override to custom highlight of line background
+    override protected void drawLineBackground(DrawBuf buf, int lineIndex, Rect lineRect, Rect visibleRect) {
+        if (lineIndex == _executionLine) {
+            buf.fillRect(visibleRect, _executionLineHighlightColor);
+        }
+    }
 
     void setSyntaxSupport() {
         if (isDSourceFile) {
