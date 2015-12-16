@@ -10,6 +10,7 @@ import std.utf;
 import std.conv : to;
 import std.array : empty;
 import std.algorithm : startsWith, equal;
+import core.thread;
 
 abstract class ConsoleDebuggerInterface : DebuggerBase, TextWriter {
 	protected ExternalProcess _debuggerProcess;
@@ -202,6 +203,7 @@ class GDBInterface : ConsoleDebuggerInterface {
 		ExternalProcessState state = runDebuggerProcess(_debuggerExecutable, debuggerArgs, _executableWorkingDir);
 		Log.i("Debugger process state:");
 		if (state == ExternalProcessState.Running) {
+            Thread.sleep(dur!"seconds"(1));
             _callback.onProgramLoaded(true, true);
 			//sendCommand("-break-insert main");
 		} else {

@@ -6,6 +6,53 @@ import std.conv : to;
 import std.array : empty;
 import std.algorithm : startsWith, equal;
 
+/// result class
+enum ResultClass {
+    done,
+    running,
+    connected,
+    error,
+    exit,
+    other
+}
+
+/// async message class
+enum AsyncClass {
+    running,
+    stopped,
+    library_loaded,
+    library_unloaded,
+    thread_group_added,
+    thread_group_started,
+    thread_group_exited,
+    thread_created,
+    thread_exited,
+    other
+}
+
+/// Parse GDB MI output string
+MIValue parseMI(string s) {
+    string src = s;
+    try {
+        bool err = false;
+        Log.e("Tokenizing MI output: " ~ src);
+        MIToken[] tokens = tokenizeMI(s, err);
+        if (err) {
+            // tokenizer error
+            Log.e("Cannot tokenize MI output `" ~ src ~ "`");
+            return null;
+        }
+        Log.v("Parsing tokens " ~ tokens.dumpTokens);
+        MIValue[] items = parseMIList(tokens);
+        MIList res = new MIList(items);
+        Log.d("Parse result:\n" ~ res.toString);
+        return res;
+    } catch (Exception e) {
+        Log.e("Cannot parse MI output `" ~ src ~ "`", e.msg);
+        return null;
+    }
+}
+
 string parseIdent(ref string s) {
     string res = null;
     int len = 0;
@@ -44,15 +91,6 @@ ResultClass resultByName(string s) {
     return ResultClass.other;
 }
 
-enum ResultClass {
-    done,
-    running,
-    connected,
-    error,
-    exit,
-    other
-}
-
 AsyncClass asyncByName(string s) {
     if (s.equal("stopped")) return AsyncClass.stopped;
     if (s.equal("running")) return AsyncClass.running;
@@ -64,19 +102,6 @@ AsyncClass asyncByName(string s) {
     if (s.equal("thread-created")) return AsyncClass.thread_created;
     if (s.equal("thread-exited")) return AsyncClass.thread_exited;
     return AsyncClass.other;
-}
-
-enum AsyncClass {
-    running,
-    stopped,
-    library_loaded,
-    library_unloaded,
-    thread_group_added,
-    thread_group_started,
-    thread_group_exited,
-    thread_created,
-    thread_exited,
-    other
 }
 
 enum MITokenType {
@@ -108,6 +133,10 @@ struct MIToken {
     this(MITokenType type, string str = null) {
         this.type = type;
         this.str = str;
+    }
+    string toString() {
+        //return type == MITokenType.str ? to!string(type) ~ ":\"" ~ str ~ "\"": to!string(type) ~ ":" ~ str;
+        return (type == MITokenType.str) ? "\"" ~ str ~ "\"" : "`" ~ str ~ "`";
     }
 }
 
@@ -173,33 +202,11 @@ MIToken[] tokenizeMI(string s, out bool error) {
     return res;
 }
 
-/// Parse GDB MI output string
-MIValue parseMI(string s) {
-    string src = s;
-    try {
-        bool err = false;
-        MIToken[] tokens = tokenizeMI(s, err);
-        if (err) {
-            // tokenizer error
-            Log.e("Cannot tokenize MI output `" ~ src ~ "`");
-            return null;
-        }
-        MIValue[] items = parseMIList(tokens);
-        return new MIList(items);
-    } catch (Exception e) {
-        Log.e("Cannot parse MI output `" ~ src ~ "`", e.msg);
-        return null;
-    }
-}
-
-string dumpTokens(MIToken[] tokens) {
+string dumpTokens(MIToken[] tokens, int maxTokens = 40, int maxChars = 80) {
     char[] buf;
-    for (int i = 0; i < 10 && i < tokens.length; i++) {
-        if (tokens[i].type == MITokenType.str)
-            buf ~= '\"';
-        buf ~= tokens[i].str;
-        if (tokens[i].type == MITokenType.str)
-            buf ~= '\"';
+    for (int i = 0; i < maxTokens && i < tokens.length && buf.length < maxChars; i++) {
+        buf ~= tokens[i].toString;
+        buf ~= ' ';
     }
     return buf.dup;
 }
@@ -207,7 +214,7 @@ string dumpTokens(MIToken[] tokens) {
 MIValue parseMIValue(ref MIToken[] tokens) {
     MIToken[] srctokens;
     if (tokens.length == 0)
-        return null;
+        throw new Exception("parseMIValue: Unexpected end of line when value is expected");
     MITokenType tokenType = tokens.length > 0 ? tokens[0].type : MITokenType.eol;
     MITokenType nextTokenType = tokens.length > 1 ? tokens[1].type : MITokenType.eol;
     if (tokenType == MITokenType.ident) {
@@ -220,15 +227,15 @@ MIValue parseMIValue(ref MIToken[] tokens) {
             tokens = tokens[1..$]; // skip ident
             tokens = tokens[1..$]; // skip =
             MIValue value = parseMIValue(tokens);
-            tokens = tokens[1..$]; // skip value
+            //tokens = tokens[1..$]; // skip value
             MIValue res = new MIKeyValue(ident, value);
             return res;
         }
-        throw new Exception("parseMIValue: Unexpected token " ~ to!string(tokenType) ~ " near " ~ srctokens.dumpTokens);
+        throw new Exception("parseMIValue: Unexpected token " ~ tokens[0].toString ~ " near " ~ srctokens.dumpTokens);
     } else if (tokenType == MITokenType.str) {
         string str = tokens[0].str;
         tokens = tokens[1..$];
-        MIValue res = new MIString(str);
+        return new MIString(str);
     } else if (tokenType == MITokenType.curlyOpen) {
         tokens = tokens[1..$];
         MIValue[] list = parseMIList(tokens, MITokenType.curlyClose);
@@ -238,27 +245,28 @@ MIValue parseMIValue(ref MIToken[] tokens) {
         MIValue[] list = parseMIList(tokens, MITokenType.squareClose);
         return new MIList(list);
     }
-    throw new Exception("parseMIValue: Invalid token at end of list: " ~ tokenType.to!string ~ " near " ~ srctokens.dumpTokens);
+    throw new Exception("parseMIValue: unexpected token " ~ tokens[0].toString ~ " near " ~ srctokens.dumpTokens);
 }
 
 MIValue[] parseMIList(ref MIToken[] tokens, MITokenType closingToken = MITokenType.eol) {
+    Log.v("parseMIList: " ~ tokens.dumpTokens);
     MIValue[] res;
     for (;;) {
         MITokenType tokenType = tokens.length > 0 ? tokens[0].type : MITokenType.eol;
-        if (tokenType == MITokenType.eol)
-            return res;
         if (tokenType == closingToken) {
             tokens = tokens[1..$];
             return res;
         }
+        if (tokenType == MITokenType.eol)
+            throw new Exception("parseMIList: Unexpected eol in list");
+        if (res.length > 0) {
+            // comma required
+            if (tokenType != MITokenType.comma)
+                throw new Exception("parseMIList: comma expected, found " ~ tokens[0].toString ~ " near " ~ tokens.dumpTokens);
+            tokens = tokens[1..$];
+        }
         MIValue value = parseMIValue(tokens);
         res ~= value;
-        tokenType = tokens.length > 0 ? tokens[0].type : MITokenType.eol;
-        if (tokenType == MITokenType.comma) {
-            tokens = tokens[1..$];
-            continue;
-        }
-        throw new Exception("parseMIList: Unexpected token " ~ to!string(tokenType) ~ " in list near " ~ tokens.dumpTokens);
     }
 }
 
@@ -277,6 +285,11 @@ enum MIValueType {
     map,
 }
 
+private void dumpLevel(ref char[] buf, int level) {
+    for (int i = 0; i < level; i++)
+        buf ~= "    ";
+}
+
 class MIValue {
     MIValueType type;
     this(MIValueType type) {
@@ -286,6 +299,15 @@ class MIValue {
     @property int length() { return 1; }
     MIValue opIndex(int index) { return null; }
     MIValue opIndex(string key) { return null; }
+    void dump(ref char[] buf, int level) {
+        dumpLevel(buf, level);
+        buf ~= str;
+    }
+    override string toString() {
+        char[] buf;
+        dump(buf, 0);
+        return buf.dup;
+    }
 }
 
 class MIKeyValue : MIValue {
@@ -299,6 +321,15 @@ class MIKeyValue : MIValue {
     @property string key() { return _key; }
     override @property string str() { return _key; }
     @property MIValue value() { return _value; }
+    override void dump(ref char[] buf, int level) {
+        dumpLevel(buf, level);
+        buf ~= _key;
+        buf ~= "=";
+        if (!value)
+            buf ~= "null";
+        else
+            _value.dump(buf, level + 1);
+    }
 }
 
 class MIIdent : MIValue {
@@ -317,6 +348,12 @@ class MIString : MIValue {
         _str = str;
     }
     override @property string str() { return _str; }
+    override void dump(ref char[] buf, int level) {
+        dumpLevel(buf, level);
+        buf ~= '\"';
+        buf ~= str;
+        buf ~= '\"';
+    }
 }
 
 class MIList : MIValue {
@@ -349,6 +386,20 @@ class MIList : MIValue {
             }
         }
     }
+    override void dump(ref char[] buf, int level) {
+        buf ~= (type == MIValueType.map) ? "{" : "[";
+        if (length) {
+            buf ~= "\n";
+            for (int i = 0; i < length; i++) {
+                _items[i].dump(buf, level + 1);
+                if (i < length - 1)
+                    buf ~= ",";
+            }
+            buf ~= "\n";
+            dumpLevel(buf, level);
+        }
+        buf ~= (type == MIValueType.map) ? "}" : "]";
+    }
 }
 
 class MIMap : MIList {
@@ -372,7 +423,6 @@ string parseCString(ref string s) {
     char ch = nextChar(s);
     if (!ch)
         return null;
-    s = s[1 .. $];
     if (ch != '\"')
         return null;
     for (;;) {
