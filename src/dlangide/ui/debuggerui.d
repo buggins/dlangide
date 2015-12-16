@@ -107,7 +107,9 @@ class DebuggerUIHandler : DebuggerCallback {
                     _debugger.execContinue();
                 return true;
             case IDEActions.DebugStop:
-                _debugger.execStop();
+                //_debugger.execStop();
+                Log.d("Trying to stop debugger");
+                _debugger.stop();
                 return true;
             case IDEActions.DebugStepInto:
                 if (_state == DebuggingState.paused)
@@ -122,7 +124,7 @@ class DebuggerUIHandler : DebuggerCallback {
                     _debugger.execStepOut();
                 return true;
             case IDEActions.DebugRestart:
-                //_debugger.execStepOut();
+                _debugger.execRestart();
                 return true;
             default:
                 return false;

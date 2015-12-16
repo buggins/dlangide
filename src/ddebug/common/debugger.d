@@ -71,6 +71,8 @@ interface Debugger : ProgramExecution {
     void execStepIn();
     /// step out
     void execStepOut();
+    /// restart
+    void execRestart();
 
     /// update list of breakpoints
     void setBreakpoints(Breakpoint[] bp);
@@ -216,6 +218,10 @@ class DebuggerProxy : Debugger, DebuggerCallback {
     /// step out
     void execStepOut() {
         _debugger.postRequest(delegate() { _debugger.execStepOut(); });
+    }
+    /// restart
+    void execRestart() {
+        _debugger.postRequest(delegate() { _debugger.execRestart(); });
     }
     /// update list of breakpoints
     void setBreakpoints(Breakpoint[] breakpoints) {

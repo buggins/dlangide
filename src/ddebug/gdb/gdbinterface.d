@@ -281,6 +281,11 @@ class GDBInterface : ConsoleDebuggerInterface {
     void execStepOut() {
         _stepOutRequestId = sendCommand("-exec-finish");
     }
+    /// restart
+    int _restartRequestId;
+    void execRestart() {
+        //_restartRequestId = sendCommand("-exec-restart");
+    }
 
     private GDBBreakpoint[] _breakpoints;
     private static class GDBBreakpoint {
