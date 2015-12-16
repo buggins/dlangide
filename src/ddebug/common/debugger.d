@@ -298,7 +298,9 @@ abstract class DebuggerBase : Thread, Debugger {
 		_queue.close();
 	}
 
+    bool _threadStarted;
 	protected void onDebuggerThreadStarted() {
+        _threadStarted = true;
 	}
 
 	protected void onDebuggerThreadFinished() {
@@ -317,7 +319,7 @@ abstract class DebuggerBase : Thread, Debugger {
 			    }
 		    }
         } catch (Exception e) {
-		    Log.e("Exception in debugger thread");
+		    Log.e("Exception in debugger thread", e);
         }
 		Log.i("Debugger thread finished");
 		_finished = true;

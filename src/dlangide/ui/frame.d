@@ -151,7 +151,8 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
     }
 
     void debugFinished(ProgramExecution process, ExecutionStatus status, int exitCode) {
-         _execution = null;
+        _execution = null;
+        _debugHandler = null;
         switch(status) {
             case ExecutionStatus.Error:
                 _logPanel.logLine("Cannot run program " ~ process.executableFile);

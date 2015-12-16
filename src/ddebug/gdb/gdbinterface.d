@@ -82,6 +82,11 @@ class GDBInterface : ConsoleDebuggerInterface {
 	protected int commandId;
 
 	int sendCommand(string text) {
+        ExternalProcessState state = _debuggerProcess.poll();
+        if (state != ExternalProcessState.Running) {
+            _stopRequested = true;
+            return 0;
+        }
 		commandId++;
         string cmd = to!string(commandId) ~ text;
         Log.d("GDB command[", commandId, "]> ", text);
@@ -228,19 +233,29 @@ class GDBInterface : ConsoleDebuggerInterface {
 
     bool _threadJoined = false;
 	override void stop() {
-        if (_stopRequested)
+        if (_stopRequested) {
+            Log.w("GDBInterface.stop() - _stopRequested flag already set");
             return;
+        }
+        _stopRequested = true;
         Log.d("GDBInterface.stop()");
         postRequest(delegate() {
+            Log.d("GDBInterface.stop() processing in queue");
             execStop();
         });
-        _stopRequested = true;
+        Thread.sleep(dur!"msecs"(200));
         postRequest(delegate() {
         });
         _queue.close();
         if (!_threadJoined) {
             _threadJoined = true;
-            join();
+            if (_threadStarted) {
+                try {
+                    join();
+                } catch (Exception e) {
+                    Log.e("Exception while trying to join debugger thread");
+                }
+            }
         }
 	}
 

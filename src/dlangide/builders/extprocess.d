@@ -380,6 +380,7 @@ class ExternalProcess {
         try {
             _result = std.process.wait(_pipes.pid);
             _state = ExternalProcessState.Stopped;
+            Log.d("ExternalProcess.wait : waitForReadingCompletion");
             waitForReadingCompletion();
         } catch (Exception e) {
             Log.e("Exception while waiting for process ", _program);
@@ -401,11 +402,10 @@ class ExternalProcess {
     }
 
     bool write(string data) {
-        if(_state == ExternalProcessState.Error || _state == ExternalProcessState.None || _state == ExternalProcessState.Stopped) {
+        if (_state == ExternalProcessState.Error || _state == ExternalProcessState.None || _state == ExternalProcessState.Stopped) {
             return false;
-        }
-        else {
-            Log.d("writing ", data.length, " characters to stdin");
+        } else {
+            //Log.d("writing ", data.length, " characters to stdin");
             _pipes.stdin.write("", data);
 			_pipes.stdin.flush();
             //_pipes.stdin.close();
