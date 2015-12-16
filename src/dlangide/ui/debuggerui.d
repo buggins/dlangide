@@ -25,6 +25,7 @@ class DebuggerUIHandler : DebuggerCallback {
     /// called when program execution is stopped
     void onProgramExecutionStatus(ProgramExecution process, ExecutionStatus status, int exitCode) {
         Log.d("Debugger exit status: ", status, " ", exitCode);
+        updateLocation(null);
         _ide.debugFinished(process, status, exitCode);
 		//_callbackDelegate( delegate() { _callback.onProgramExecutionStatus(this, status, exitCode); } );
     }
@@ -49,15 +50,17 @@ class DebuggerUIHandler : DebuggerCallback {
 
     void updateLocation(DebugLocation location) {
         _location = location;
-        ProjectSourceFile sourceFile = currentWorkspace.findSourceFile(location.projectFilePath, location.fullFilePath);
-        if (sourceFile) {
-            _ide.openSourceFile(sourceFile.filename, sourceFile, true);
-        } else {
-            _ide.openSourceFile(location.fullFilePath, null, true);
+        ProjectSourceFile sourceFile = location ? currentWorkspace.findSourceFile(location.projectFilePath, location.fullFilePath) : null;
+        if (location) {
+            if (sourceFile) {
+                _ide.openSourceFile(sourceFile.filename, sourceFile, true);
+            } else {
+                _ide.openSourceFile(location.fullFilePath, null, true);
+            }
         }
         DSourceEdit[] editors = _ide.allOpenedEditors;
         foreach(ed; editors) {
-            if (ed.projectSourceFile is sourceFile)
+            if (location && ed.projectSourceFile is sourceFile)
                 ed.executionLine = location.line - 1;
             else
                 ed.executionLine = -1;
