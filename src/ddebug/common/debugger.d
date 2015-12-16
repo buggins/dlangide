@@ -12,12 +12,27 @@ enum DebuggingState {
     stopped
 }
 
-class Breakpoint {
-    int id;
+enum StateChangeReason {
+    unknown,
+    breakpointHit,
+    endSteppingRange,
+    exited,
+}
+
+class LocationBase {
     string file;
     string fullFilePath;
     string projectFilePath;
     int line;
+}
+
+class DebugLocation : LocationBase {
+    ulong address;
+    string func;
+}
+
+class Breakpoint : LocationBase {
+    int id;
     bool enabled = true;
     string projectName;
     this() {
@@ -69,7 +84,7 @@ interface DebuggerCallback : ProgramExecutionStatusListener {
     void onProgramLoaded(bool successful, bool debugInfoLoaded);
 
     /// state changed: running / paused / stopped
-    void onDebugState(DebuggingState state, string msg, int param);
+    void onDebugState(DebuggingState state, StateChangeReason reason, DebugLocation location, Breakpoint bp);
 
     void onResponse(ResponseCode code, string msg);
 }
@@ -149,8 +164,8 @@ class DebuggerProxy : Debugger, DebuggerCallback {
     }
 
     /// state changed: running / paused / stopped
-    void onDebugState(DebuggingState state, string msg, int param) {
-		_callbackDelegate( delegate() { _callback.onDebugState(state, msg, param); } );
+    void onDebugState(DebuggingState state, StateChangeReason reason, DebugLocation location, Breakpoint bp) {
+		_callbackDelegate( delegate() { _callback.onDebugState(state, reason, location, bp); } );
     }
 
     void onResponse(ResponseCode code, string msg) {

@@ -583,6 +583,10 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         MenuItem debugItem = new MenuItem(new Action(23, "MENU_DEBUG"));
         debugItem.add(ACTION_DEBUG_START, ACTION_DEBUG_START_NO_DEBUG, 
                       ACTION_DEBUG_CONTINUE, ACTION_DEBUG_STOP, ACTION_DEBUG_PAUSE,
+                      ACTION_DEBUG_RESTART,
+                      ACTION_DEBUG_STEP_INTO,
+                      ACTION_DEBUG_STEP_OVER,
+                      ACTION_DEBUG_STEP_OUT,
                       ACTION_DEBUG_TOGGLE_BREAKPOINT, ACTION_DEBUG_ENABLE_BREAKPOINT, ACTION_DEBUG_DISABLE_BREAKPOINT
                       );
 
@@ -626,6 +630,10 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                 ACTION_PROJECT_SETTINGS, ACTION_WORKSPACE_BUILD, ACTION_WORKSPACE_REBUILD, ACTION_WORKSPACE_CLEAN,
                 ACTION_PROJECT_BUILD, ACTION_PROJECT_REBUILD, ACTION_PROJECT_CLEAN, ACTION_DEBUG_START, 
                 ACTION_DEBUG_START_NO_DEBUG, ACTION_DEBUG_CONTINUE, ACTION_DEBUG_STOP, ACTION_DEBUG_PAUSE, 
+                ACTION_DEBUG_RESTART,
+                ACTION_DEBUG_STEP_INTO,
+                ACTION_DEBUG_STEP_OVER,
+                ACTION_DEBUG_STEP_OUT,
                 ACTION_WINDOW_CLOSE_ALL_DOCUMENTS, ACTION_HELP_ABOUT];
             actions ~= STD_EDITOR_ACTIONS;
             saveShortcutsSettings(actions);
@@ -666,7 +674,12 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         tb.addButtons(ACTION_EDIT_COPY, ACTION_EDIT_PASTE, ACTION_EDIT_CUT, ACTION_SEPARATOR,
                       ACTION_EDIT_UNDO, ACTION_EDIT_REDO, ACTION_EDIT_INDENT, ACTION_EDIT_UNINDENT);
         tb = res.getOrAddToolbar("Debug");
-        tb.addButtons(ACTION_DEBUG_STOP, ACTION_DEBUG_CONTINUE, ACTION_DEBUG_PAUSE);
+        tb.addButtons(ACTION_DEBUG_STOP, ACTION_DEBUG_CONTINUE, ACTION_DEBUG_PAUSE,
+                      ACTION_DEBUG_RESTART,
+                      ACTION_DEBUG_STEP_INTO,
+                      ACTION_DEBUG_STEP_OVER,
+                      ACTION_DEBUG_STEP_OUT,
+                      );
         return res;
     }
 
@@ -718,7 +731,14 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                 return true;
             case IDEActions.DebugContinue:
             case IDEActions.DebugPause:
-                a.state = isExecutionActive && _execution.isDebugger ? ACTION_STATE_ENABLED : ACTION_STATE_DISABLE;
+            case IDEActions.DebugStepInto:
+            case IDEActions.DebugStepOver:
+            case IDEActions.DebugStepOut:
+            case IDEActions.DebugRestart:
+                if (_debugHandler)
+                    return _debugHandler.handleActionStateRequest(a);
+                else
+                    a.state = ACTION_STATE_DISABLE;
                 return true;
             default:
                 return super.handleActionStateRequest(a);
@@ -779,11 +799,25 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                 case IDEActions.DebugStart:
                     buildAndDebugProject(cast(Project)a.objectParam);
                     return true;
+                case IDEActions.DebugPause:
+                case IDEActions.DebugStepInto:
+                case IDEActions.DebugStepOver:
+                case IDEActions.DebugStepOut:
+                case IDEActions.DebugRestart:
+                    if (_debugHandler)
+                        return _debugHandler.handleAction(a);
+                    return true;
                 case IDEActions.DebugContinue:
-                    buildAndRunProject(cast(Project)a.objectParam);
+                    if (_debugHandler)
+                        return _debugHandler.handleAction(a);
+                    else
+                        buildAndRunProject(cast(Project)a.objectParam);
                     return true;
                 case IDEActions.DebugStop:
-                    stopExecution();
+                    if (_debugHandler)
+                        return _debugHandler.handleAction(a);
+                    else
+                        stopExecution();
                     return true;
                 case IDEActions.UpdateProjectDependencies:
                     buildProject(BuildOperation.Upgrade, cast(Project)a.objectParam);

@@ -30,6 +30,7 @@ enum IDEActions : int {
     ProjectSettings,
 
     DebugStart,
+    DebugRestart,
     DebugStartNoDebug,
     DebugContinue,
     DebugStop,
@@ -37,6 +38,9 @@ enum IDEActions : int {
     DebugToggleBreakpoint,
     DebugEnableBreakpoint,
     DebugDisableBreakpoint,
+    DebugStepInto,
+    DebugStepOver,
+    DebugStepOut,
 
     HelpAbout,
     WindowCloseAllDocuments,
@@ -88,11 +92,16 @@ const Action ACTION_PROJECT_SET_STARTUP = new Action(IDEActions.SetStartupProjec
 const Action ACTION_PROJECT_SETTINGS = (new Action(IDEActions.ProjectSettings, "MENU_PROJECT_SETTINGS"c, null)).disableByDefault();
 const Action ACTION_PROJECT_REFRESH = new Action(IDEActions.RefreshProject, "MENU_PROJECT_REFRESH"c);
 const Action ACTION_PROJECT_UPDATE_DEPENDENCIES = new Action(IDEActions.UpdateProjectDependencies, "MENU_PROJECT_UPDATE_DEPENDENCIES"c);
-const Action ACTION_DEBUG_START = new Action(IDEActions.DebugStart, "MENU_DEBUG_START_DEBUGGING"c, "debug-run"c, KeyCode.F5, 0);
+
+const Action ACTION_DEBUG_START = new Action(IDEActions.DebugStart, "MENU_DEBUG_START_DEBUGGING"c, "debug-run"c, KeyCode.F5, KeyFlag.Control | KeyFlag.Shift);
 const Action ACTION_DEBUG_START_NO_DEBUG = new Action(IDEActions.DebugStartNoDebug, "MENU_DEBUG_START_NO_DEBUGGING"c, null, KeyCode.F5, KeyFlag.Control);
 const Action ACTION_DEBUG_CONTINUE = new Action(IDEActions.DebugContinue, "MENU_DEBUG_CONTINUE"c, "debug-run");
 const Action ACTION_DEBUG_STOP = (new Action(IDEActions.DebugStop, "MENU_DEBUG_STOP"c, "debug-stop")).disableByDefault();
 const Action ACTION_DEBUG_PAUSE = (new Action(IDEActions.DebugPause, "MENU_DEBUG_PAUSE"c, "debug-pause")).disableByDefault();
+const Action ACTION_DEBUG_RESTART = new Action(IDEActions.DebugRestart, "MENU_DEBUG_RESTART"c, "debug-restart"c, KeyCode.F5, 0);
+const Action ACTION_DEBUG_STEP_INTO = (new Action(IDEActions.DebugStepInto, "MENU_DEBUG_STEP_INTO"c, "debug-step-into"c, KeyCode.F11, 0)).disableByDefault();
+const Action ACTION_DEBUG_STEP_OVER = (new Action(IDEActions.DebugStepOver, "MENU_DEBUG_STEP_OVER"c, "debug-step-over"c, KeyCode.F10, 0)).disableByDefault();
+const Action ACTION_DEBUG_STEP_OUT = (new Action(IDEActions.DebugStepOut, "MENU_DEBUG_STEP_OUT"c, "debug-step-out"c, KeyCode.F11, KeyFlag.Shift)).disableByDefault();
 
 const Action ACTION_DEBUG_TOGGLE_BREAKPOINT = (new Action(IDEActions.DebugToggleBreakpoint, "MENU_DEBUG_BREAKPOINT_TOGGLE"c, null, KeyCode.F9, 0)).disableByDefault();
 const Action ACTION_DEBUG_ENABLE_BREAKPOINT = (new Action(IDEActions.DebugEnableBreakpoint, "MENU_DEBUG_BREAKPOINT_ENABLE"c, null, KeyCode.F9, KeyFlag.Shift)).disableByDefault();

@@ -33,6 +33,10 @@ res/mdpi/cr3_logo.png
 res/mdpi/debug-run.png
 res/mdpi/debug-pause.png
 res/mdpi/debug-stop.png
+res/mdpi/debug-restart.png
+res/mdpi/debug-step-into.png
+res/mdpi/debug-step-out.png
+res/mdpi/debug-step-over.png
 res/mdpi/dlangui-logo1.png
 res/mdpi/document-close.png
 res/mdpi/document-open-recent.png

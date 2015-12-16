@@ -5,6 +5,7 @@ import std.utf;
 import std.conv : to;
 import std.array : empty;
 import std.algorithm : startsWith, equal;
+import ddebug.common.debugger;
 
 /// result class
 enum ResultClass {
@@ -35,22 +36,45 @@ MIValue parseMI(string s) {
     string src = s;
     try {
         bool err = false;
-        Log.e("Tokenizing MI output: " ~ src);
+        //Log.e("Tokenizing MI output: " ~ src);
         MIToken[] tokens = tokenizeMI(s, err);
         if (err) {
             // tokenizer error
             Log.e("Cannot tokenize MI output `" ~ src ~ "`");
             return null;
         }
-        Log.v("Parsing tokens " ~ tokens.dumpTokens);
+        //Log.v("Parsing tokens " ~ tokens.dumpTokens);
         MIValue[] items = parseMIList(tokens);
-        MIList res = new MIList(items);
-        Log.d("Parse result:\n" ~ res.toString);
-        return res;
+        //Log.v("Found " ~ to!string(items.length) ~ " values in list");
+        return new MIList(items);
     } catch (Exception e) {
         Log.e("Cannot parse MI output `" ~ src ~ "`", e.msg);
         return null;
     }
+}
+
+/*
+    frame = {
+            addr = "0x00000000004015b2",
+            func = "D main",
+            args = [],
+            file = "source\app.d",
+            fullname = "D:\projects\d\dlangide\workspaces\helloworld\helloworld/source\app.d",
+            line = "8"
+    },
+*/
+DebugLocation parseFrame(MIValue frame) {
+    import std.path;
+    if (!frame)
+        return null;
+    DebugLocation location = new DebugLocation();
+    location.file = baseName(frame.getString("file"));
+    location.projectFilePath = frame.getString("file");
+    location.fullFilePath = frame.getString("fullname");
+    location.line = frame.getInt("line");
+    location.func = frame.getString("func");
+    location.address = frame.getUlong("addr");
+    return location;
 }
 
 string parseIdent(ref string s) {
@@ -136,7 +160,7 @@ struct MIToken {
     }
     string toString() {
         //return type == MITokenType.str ? to!string(type) ~ ":\"" ~ str ~ "\"": to!string(type) ~ ":" ~ str;
-        return (type == MITokenType.str) ? "\"" ~ str ~ "\"" : "`" ~ str ~ "`";
+        return (type == MITokenType.str) ? "\"" ~ str ~ "\"" : str;
     }
 }
 
@@ -248,13 +272,16 @@ MIValue parseMIValue(ref MIToken[] tokens) {
     throw new Exception("parseMIValue: unexpected token " ~ tokens[0].toString ~ " near " ~ srctokens.dumpTokens);
 }
 
-MIValue[] parseMIList(ref MIToken[] tokens, MITokenType closingToken = MITokenType.eol) {
+private MIValue[] parseMIList(ref MIToken[] tokens, MITokenType closingToken = MITokenType.eol) {
     Log.v("parseMIList: " ~ tokens.dumpTokens);
     MIValue[] res;
+    if (!tokens.length)
+        return res;
     for (;;) {
         MITokenType tokenType = tokens.length > 0 ? tokens[0].type : MITokenType.eol;
         if (tokenType == closingToken) {
-            tokens = tokens[1..$];
+            if (tokenType != MITokenType.eol)
+                tokens = tokens[1..$];
             return res;
         }
         if (tokenType == MITokenType.eol)
@@ -299,8 +326,43 @@ class MIValue {
     @property int length() { return 1; }
     MIValue opIndex(int index) { return null; }
     MIValue opIndex(string key) { return null; }
+
+    string getString(string name) {
+        MIValue v = opIndex(name);
+        if (!v)
+            return null;
+        return v.str;
+    }
+
+    int getInt(string name, int defValue = 0) {
+        MIValue v = opIndex(name);
+        if (!v)
+            return defValue;
+        string s = v.str;
+        if (s.empty)
+            return defValue;
+        return cast(int)decodeNumber(s, defValue);
+    }
+
+    ulong getUlong(string name, ulong defValue = 0) {
+        MIValue v = opIndex(name);
+        if (!v)
+            return defValue;
+        string s = v.str;
+        if (s.empty)
+            return defValue;
+        return decodeNumber(s, defValue);
+    }
+
+    string getString(int index) {
+        MIValue v = opIndex(index);
+        if (!v)
+            return null;
+        return v.str;
+    }
+
     void dump(ref char[] buf, int level) {
-        dumpLevel(buf, level);
+        //dumpLevel(buf, level);
         buf ~= str;
     }
     override string toString() {
@@ -322,9 +384,9 @@ class MIKeyValue : MIValue {
     override @property string str() { return _key; }
     @property MIValue value() { return _value; }
     override void dump(ref char[] buf, int level) {
-        dumpLevel(buf, level);
+        //dumpLevel(buf, level);
         buf ~= _key;
-        buf ~= "=";
+        buf ~= " = ";
         if (!value)
             buf ~= "null";
         else
@@ -349,7 +411,7 @@ class MIString : MIValue {
     }
     override @property string str() { return _str; }
     override void dump(ref char[] buf, int level) {
-        dumpLevel(buf, level);
+        //dumpLevel(buf, level);
         buf ~= '\"';
         buf ~= str;
         buf ~= '\"';
@@ -391,12 +453,14 @@ class MIList : MIValue {
         if (length) {
             buf ~= "\n";
             for (int i = 0; i < length; i++) {
+                dumpLevel(buf, level + 1);
                 _items[i].dump(buf, level + 1);
                 if (i < length - 1)
                     buf ~= ",";
+                buf ~= "\n";
             }
-            buf ~= "\n";
-            dumpLevel(buf, level);
+            //buf ~= "\n";
+            dumpLevel(buf, level - 1);
         }
         buf ~= (type == MIValueType.map) ? "}" : "]";
     }
@@ -507,3 +571,20 @@ private uint decodeHexDigit(T)(T ch) {
     return uint.max;
 }
 
+private ulong decodeNumber(string s, ulong defValue) {
+    if (s.empty)
+        return defValue;
+    if (s.length > 2 && s.startsWith("0x")) {
+        s = s[2..$];
+        ulong res = 0;
+        foreach(ch; s) {
+            uint digit = decodeHexDigit(ch);
+            if (digit > 15)
+                return defValue;
+            res = res * 16 + digit;
+        }
+        return res;
+    } else {
+        return to!ulong(s);
+    }
+}

@@ -295,6 +295,34 @@ class GDBInterface : ConsoleDebuggerInterface {
         }
         return null;
     }
+    private GDBBreakpoint findBreakpointByRequestToken(int token) {
+        if (token == 0)
+            return null;
+        foreach(gdbbp; _breakpoints) {
+            if (gdbbp.createRequestId == token)
+                return gdbbp;
+        }
+        return null;
+    }
+    private GDBBreakpoint findBreakpointByNumber(string number) {
+        if (number.empty)
+            return null;
+        foreach(gdbbp; _breakpoints) {
+            if (gdbbp.number.equal(number))
+                return gdbbp;
+        }
+        return null;
+    }
+    void handleBreakpointRequestResult(GDBBreakpoint gdbbp, ResultClass resType, MIValue params) {
+        if (resType == ResultClass.done) {
+            if (MIValue bkpt = params["bkpt"]) {
+                string number = bkpt.getString("number");
+                gdbbp.number = number;
+                Log.d("GDB number for breakpoint " ~ gdbbp.bp.id.to!string ~ " assigned is " ~ number);
+            }
+        }
+    }
+
     private void addBreakpoint(Breakpoint bp) {
         GDBBreakpoint gdbbp = new GDBBreakpoint();
         gdbbp.bp = bp;
@@ -390,12 +418,30 @@ class GDBInterface : ConsoleDebuggerInterface {
         AsyncClass msgId = asyncByName(msgType);
         if (msgId == AsyncClass.other)
             Log.d("GDB WARN unknown async class type: ", msgType);
-        Log.v("GDB async *[", token, "] ", msgType, " params: ", s);
+        MIValue params = parseMI(s);
+        if (!params) {
+            Log.e("Failed to parse exec state params");
+            return;
+        }
+        Log.v("GDB async *[", token, "] ", msgType, " params: ", params.toString);
+        string reason = params.getString("reason");
         if (msgId == AsyncClass.running) {
-            _callback.onDebugState(DebuggingState.running, s, 0);
+            _callback.onDebugState(DebuggingState.running, StateChangeReason.unknown, null, null);
         } else if (msgId == AsyncClass.stopped) {
-
-            _callback.onDebugState(DebuggingState.stopped, s, 0);
+            StateChangeReason reasonId = StateChangeReason.unknown;
+            DebugLocation location = parseFrame(params["frame"]);
+            string threadId = params.getString("thread-id");
+            string stoppedThreads = params.getString("all");
+            Breakpoint bp = null;
+            if (reason.equal("end-stepping-range")) {
+                _callback.onDebugState(DebuggingState.paused, StateChangeReason.endSteppingRange, location, bp);
+            } else if (reason.equal("breakpoint-hit")) {
+                if (GDBBreakpoint gdbbp = findBreakpointByNumber(params.getString("bkptno")))
+                    bp = gdbbp.bp;
+                _callback.onDebugState(DebuggingState.paused, StateChangeReason.breakpointHit, location, bp);
+            } else {
+                _callback.onDebugState(DebuggingState.stopped, StateChangeReason.exited, null, null);
+            }
         }
     }
 
@@ -419,12 +465,18 @@ class GDBInterface : ConsoleDebuggerInterface {
 
     // ^resultClass,result
     void handleResultMessage(uint token, string s) {
+        Log.v("GDB result ^[", token, "] ", s);
         string msgType = parseIdentAndSkipComma(s);
         ResultClass msgId = resultByName(msgType);
         if (msgId == ResultClass.other)
             Log.d("GDB WARN unknown result class type: ", msgType);
         MIValue params = parseMI(s);
-        Log.v("GDB result ^[", token, "] ", msgType, " params: ", s);
+        Log.v("GDB result ^[", token, "] ", msgType, " params: ", (params ? params.toString : "unparsed: " ~ s));
+        if (GDBBreakpoint gdbbp = findBreakpointByRequestToken(token)) {
+            // result of breakpoint creation operation
+            handleBreakpointRequestResult(gdbbp, msgId, params);
+            return;
+        }
     }
 
     bool _firstIdle = true;
