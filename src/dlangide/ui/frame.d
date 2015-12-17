@@ -91,6 +91,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         applySettings(_settings);
     }
 
+    @property DockHost dockHost() { return _dockHost; }
     @property OutputPanel logPanel() { return _logPanel; }
 
     /// stop current program execution

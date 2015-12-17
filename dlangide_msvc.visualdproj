@@ -462,6 +462,8 @@
     <File path="src\dlangide\ui\outputpanel.d" />
     <File path="src\dlangide\ui\searchPanel.d" />
     <File path="src\dlangide\ui\settings.d" />
+    <File path="src\dlangide\ui\stackpanel.d" />
+    <File path="src\dlangide\ui\watchpanel.d" />
     <File path="src\dlangide\ui\wspanel.d" />
    </Folder>
    <Folder name="workspace">

@@ -121,6 +121,8 @@
     <Compile Include="src\dlangide\ui\outputpanel.d" />
     <Compile Include="src\dlangide\ui\searchPanel.d" />
     <Compile Include="src\dlangide\ui\settings.d" />
+    <Compile Include="src\dlangide\ui\stackpanel.d" />
+    <Compile Include="src\dlangide\ui\watchpanel.d" />
     <Compile Include="src\dlangide\ui\wspanel.d" />
     <Compile Include="src\dlangide\tools\editortool.d" />
     <Compile Include="src\dlangide\tools\d\dcdinterface.d" />

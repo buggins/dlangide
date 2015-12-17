@@ -4,6 +4,8 @@ import core.thread;
 import dlangui.core.logger;
 import ddebug.common.queue;
 import ddebug.common.execution;
+import std.array : empty;
+import std.algorithm : startsWith, endsWith, equal;
 
 enum DebuggingState {
     loaded,
@@ -29,6 +31,16 @@ class LocationBase {
 class DebugLocation : LocationBase {
     ulong address;
     string func;
+    void fillMissingFields(LocationBase v) {
+        if (file.empty)
+            file = v.file;
+        if (fullFilePath.empty)
+            fullFilePath = v.fullFilePath;
+        if (projectFilePath.empty)
+            projectFilePath = v.projectFilePath;
+        if (!line)
+            line = v.line;
+    }
 }
 
 class Breakpoint : LocationBase {
@@ -272,8 +284,8 @@ abstract class DebuggerBase : Thread, Debugger {
 	}
 
 	~this() {
-		stop();
-		destroy(_queue);
+		//stop();
+		//destroy(_queue);
 		_queue = null;
 	}
 

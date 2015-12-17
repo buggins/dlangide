@@ -9,7 +9,7 @@ import ddebug.gdb.gdbmiparser;
 import std.utf;
 import std.conv : to;
 import std.array : empty;
-import std.algorithm : startsWith, equal;
+import std.algorithm : startsWith, endsWith, equal;
 import core.thread;
 
 abstract class ConsoleDebuggerInterface : DebuggerBase, TextWriter {
@@ -416,6 +416,8 @@ class GDBInterface : ConsoleDebuggerInterface {
     // ~message
     void handleStreamLineCLI(string s) {
         Log.d("GDB CLI: ", s);
+        if (s.length >= 2 && s.startsWith('\"') && s.endsWith('\"'))
+            s = parseCString(s);
         _callback.onDebuggerMessage(s);
     }
 
@@ -456,8 +458,13 @@ class GDBInterface : ConsoleDebuggerInterface {
             if (reason.equal("end-stepping-range")) {
                 _callback.onDebugState(DebuggingState.paused, StateChangeReason.endSteppingRange, location, bp);
             } else if (reason.equal("breakpoint-hit")) {
-                if (GDBBreakpoint gdbbp = findBreakpointByNumber(params.getString("bkptno")))
+                if (GDBBreakpoint gdbbp = findBreakpointByNumber(params.getString("bkptno"))) {
                     bp = gdbbp.bp;
+                    if (!location && bp) {
+                        location = new DebugLocation();
+                        location.fillMissingFields(bp);
+                    }
+                }
                 _callback.onDebugState(DebuggingState.paused, StateChangeReason.breakpointHit, location, bp);
             } else {
                 _callback.onDebugState(DebuggingState.stopped, StateChangeReason.exited, null, null);

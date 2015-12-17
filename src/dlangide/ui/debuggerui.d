@@ -2,11 +2,14 @@ module dlangide.ui.debuggerui;
 
 import dlangui.core.logger;
 import dlangui.core.events;
+import dlangui.widgets.docks;
 import dlangide.workspace.project;
 import dlangide.workspace.workspace;
 import dlangide.ui.frame;
 import dlangide.ui.commands;
 import dlangide.ui.dsourceedit;
+import dlangide.ui.stackpanel;
+import dlangide.ui.watchpanel;
 import ddebug.common.execution;
 import ddebug.common.debugger;
 
@@ -26,6 +29,7 @@ class DebuggerUIHandler : DebuggerCallback {
     void onProgramExecutionStatus(ProgramExecution process, ExecutionStatus status, int exitCode) {
         Log.d("Debugger exit status: ", status, " ", exitCode);
         updateLocation(null);
+        switchToDevelopPerspective();
         _ide.debugFinished(process, status, exitCode);
 		//_callbackDelegate( delegate() { _callback.onProgramExecutionStatus(this, status, exitCode); } );
     }
@@ -42,6 +46,7 @@ class DebuggerUIHandler : DebuggerCallback {
     /// debugger is started and loaded program, you can set breakpoints at this time
     void onProgramLoaded(bool successful, bool debugInfoLoaded) {
         _ide.logPanel.logLine("Program is loaded");
+        switchToDebugPerspective();
         // TODO: check succes status and debug info
         if (_breakpoints.length)
             _debugger.setBreakpoints(_breakpoints);
@@ -159,5 +164,31 @@ class DebuggerUIHandler : DebuggerCallback {
             default:
                 return true;
         }
+    }
+
+
+    private WatchPanel _watchPanel;
+    private StackPanel _stackPanel;
+
+    void switchToDebugPerspective() {
+        _ide.dockHost.layoutPriority = [DockAlignment.Bottom, DockAlignment.Top, DockAlignment.Left, DockAlignment.Right];
+        _watchPanel = new WatchPanel("watch");
+        _watchPanel.dockAlignment = DockAlignment.Bottom;
+        _ide.dockHost.addDockedWindow(_watchPanel);
+        _stackPanel = new StackPanel("stack");
+        _stackPanel.dockAlignment = DockAlignment.Right;
+        _ide.dockHost.addDockedWindow(_stackPanel);
+    }
+
+    void switchToDevelopPerspective() {
+        _ide.dockHost.layoutPriority = [DockAlignment.Top, DockAlignment.Left, DockAlignment.Right, DockAlignment.Bottom];
+        _watchPanel = null;
+        auto w = _ide.dockHost.removeDockedWindow("watch");
+        if (w)
+            destroy(w);
+        _stackPanel = null;
+        w = _ide.dockHost.removeDockedWindow("stack");
+        if (w)
+            destroy(w);
     }
 }
