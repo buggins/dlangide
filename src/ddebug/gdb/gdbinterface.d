@@ -451,25 +451,37 @@ class GDBInterface : ConsoleDebuggerInterface {
             _callback.onDebugState(DebuggingState.running, StateChangeReason.unknown, null, null);
         } else if (msgId == AsyncClass.stopped) {
             StateChangeReason reasonId = StateChangeReason.unknown;
-            DebugLocation location = parseFrame(params["frame"]);
+            DebugFrame location = parseFrame(params["frame"]);
             string threadId = params.getString("thread-id");
             string stoppedThreads = params.getString("all");
             Breakpoint bp = null;
             if (reason.equal("end-stepping-range")) {
+                updateState();
                 _callback.onDebugState(DebuggingState.paused, StateChangeReason.endSteppingRange, location, bp);
             } else if (reason.equal("breakpoint-hit")) {
                 if (GDBBreakpoint gdbbp = findBreakpointByNumber(params.getString("bkptno"))) {
                     bp = gdbbp.bp;
                     if (!location && bp) {
-                        location = new DebugLocation();
+                        location = new DebugFrame();
                         location.fillMissingFields(bp);
                     }
                 }
+                updateState();
                 _callback.onDebugState(DebuggingState.paused, StateChangeReason.breakpointHit, location, bp);
             } else {
                 _callback.onDebugState(DebuggingState.stopped, StateChangeReason.exited, null, null);
             }
         }
+    }
+
+    int _threadInfoRequest;
+    int _stackListFramesRequest;
+    int _stackListLocalsRequest;
+    DebugThreadList _currentState;
+    void updateState() {
+        _currentState = null;
+        _threadInfoRequest = sendCommand("-thread-info");
+        _stackListFramesRequest = sendCommand("-stack-list-frames");
     }
 
     // +asyncclass,result
@@ -503,6 +515,60 @@ class GDBInterface : ConsoleDebuggerInterface {
             // result of breakpoint creation operation
             handleBreakpointRequestResult(gdbbp, msgId, params);
             return;
+        } else if (token == _threadInfoRequest) {
+            handleThreadInfoRequestResult(msgId, params);
+        } else if (token == _stackListFramesRequest) {
+            handleStackListFramesRequest(msgId, params);
+        } else if (token == _stackListLocalsRequest) {
+            handleLocalVariableListRequestResult(msgId, params);
+        }
+    }
+
+    void handleStackListFramesRequest(ResultClass msgId, MIValue params) {
+        if (msgId == ResultClass.done) {
+            DebugStack stack = parseStack(params);
+            if (stack) {
+                // TODO
+                Log.d("Stack frames list is parsed: " ~ to!string(stack));
+                if (_currentState) {
+                    if (DebugThread currentThread = _currentState.currentThread) {
+                        currentThread.stack = stack;
+                        Log.d("Setting stack frames for current thread");
+                    }
+                }
+            }
+        } else {
+        }
+    }
+
+    void handleThreadInfoRequestResult(ResultClass msgId, MIValue params) {
+        if (msgId == ResultClass.done) {
+            _currentState = parseThreadList(params);
+            if (_currentState) {
+                // TODO
+                Log.d("Thread list is parsed");
+                _stackListLocalsRequest = sendCommand("-stack-list-locals --thread " ~ to!string(_currentState.currentThreadId) ~ " --frame 0 --all-values");
+            }
+        } else {
+        }
+    }
+
+    void handleLocalVariableListRequestResult(ResultClass msgId, MIValue params) {
+        if (msgId == ResultClass.done) {
+            DebugVariableList variables = parseVariableList(params);
+            if (variables) {
+                // TODO
+                Log.d("Variable list is parsed: " ~ to!string(variables));
+                if (_currentState) {
+                    if (DebugThread currentThread = _currentState.currentThread) {
+                        if (currentThread.stack.length > 0) {
+                            currentThread.stack[0].locals = variables;
+                            Log.d("Setting variables for current thread top frame");
+                        }
+                    }
+                }
+            }
+        } else {
         }
     }
 

@@ -63,18 +63,94 @@ MIValue parseMI(string s) {
             line = "8"
     },
 */
-DebugLocation parseFrame(MIValue frame) {
+DebugFrame parseFrame(MIValue frame) {
     import std.path;
     if (!frame)
         return null;
-    DebugLocation location = new DebugLocation();
+    DebugFrame location = new DebugFrame();
     location.file = baseName(toNativeDelimiters(frame.getString("file")));
     location.projectFilePath = toNativeDelimiters(frame.getString("file"));
     location.fullFilePath = toNativeDelimiters(frame.getString("fullname"));
     location.line = frame.getInt("line");
     location.func = frame.getString("func");
     location.address = frame.getUlong("addr");
+    location.level = frame.getInt("level");
     return location;
+}
+
+DebugVariableList parseVariableList(MIValue params) {
+    if (!params)
+        return null;
+    DebugVariableList res = new DebugVariableList();
+    MIValue list = params["locals"];
+    if (list && list.isList) {
+        for(int i = 0; i < list.length; i++) {
+            if (DebugVariable t = parseVariable(list[i]))
+                res.variables ~= t;
+        }
+    }
+    return res;
+}
+
+DebugVariable parseVariable(MIValue params) {
+    if (!params)
+        return null;
+    DebugVariable res = new DebugVariable();
+    res.name = params.getString("name");
+    res.value = params.getString("value");
+    res.type = params.getString("type");
+    return res;
+}
+
+DebugThreadList parseThreadList(MIValue params) {
+    if (!params)
+        return null;
+    DebugThreadList res = new DebugThreadList();
+    res.currentThreadId = params.getUlong("current-thread-id");
+    MIValue threads = params["threads"];
+    if (threads && threads.isList) {
+        for(int i = 0; i < threads.length; i++) {
+            if (DebugThread t = parseThread(threads[i]))
+                res.threads ~= t;
+        }
+    }
+    return res;
+}
+
+DebugThread parseThread(MIValue params) {
+    if (!params)
+        return null;
+    DebugThread res = new DebugThread();
+    res.id = params.getUlong("id");
+    res.name = params.getString("target-id");
+    string stateName = params.getString("state");
+    if (stateName == "stopped")
+        res.state = DebuggingState.paused;
+    else if (stateName == "running")
+        res.state = DebuggingState.running;
+    else
+        res.state = DebuggingState.stopped;
+    res.frame = parseFrame(params["frame"]);
+    return res;
+}
+
+DebugStack parseStack(MIValue params) {
+    if (!params)
+        return null;
+    MIValue stack = params["stack"];
+    if (!stack)
+        return null;
+    DebugStack res = new DebugStack();
+    for (int i = 0; i < stack.length; i++) {
+        MIValue item = stack[i];
+        if (item && item.isKeyValue && item.key.equal("frame")) {
+            DebugFrame location = parseFrame(item.value);
+            if (location) {
+                res.frames ~= location;
+            }
+        }
+    }
+    return res;
 }
 
 string toNativeDelimiters(string s) {
@@ -338,9 +414,16 @@ class MIValue {
         this.type = type;
     }
     @property string str() { return null; }
-    @property int length() { return 1; }
+    @property int length() { return 0; }
     MIValue opIndex(int index) { return null; }
     MIValue opIndex(string key) { return null; }
+    @property bool isIdent() { return type == MIValueType.list; }
+    @property bool isString() { return type == MIValueType.str; }
+    @property bool isKeyValue() { return type == MIValueType.keyValue; }
+    @property bool isMap() { return type == MIValueType.map; }
+    @property bool isList() { return type == MIValueType.list; }
+    @property string key() { return str; }
+    @property MIValue value() { return this; }
 
     string getString(string name) {
         MIValue v = opIndex(name);
@@ -395,9 +478,9 @@ class MIKeyValue : MIValue {
         _key = key;
         _value = value;
     }
-    @property string key() { return _key; }
+    override @property string key() { return _key; }
+    override @property MIValue value() { return _value; }
     override @property string str() { return _key; }
-    @property MIValue value() { return _value; }
     override void dump(ref char[] buf, int level) {
         //dumpLevel(buf, level);
         buf ~= _key;

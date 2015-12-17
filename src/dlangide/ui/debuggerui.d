@@ -17,7 +17,7 @@ class DebuggerUIHandler : DebuggerCallback {
     IDEFrame _ide;
     Debugger _debugger;
     DebuggingState _state = DebuggingState.loaded;
-    DebugLocation _location;
+    DebugFrame _location;
 
     this(IDEFrame ide, Debugger debugger) {
         _ide = ide;
@@ -53,7 +53,7 @@ class DebuggerUIHandler : DebuggerCallback {
         _debugger.execStart();
     }
 
-    void updateLocation(DebugLocation location) {
+    void updateLocation(DebugFrame location) {
         _location = location;
         ProjectSourceFile sourceFile = location ? currentWorkspace.findSourceFile(location.projectFilePath, location.fullFilePath) : null;
         if (location) {
@@ -73,7 +73,7 @@ class DebuggerUIHandler : DebuggerCallback {
     }
 
     /// state changed: running / paused / stopped
-    void onDebugState(DebuggingState state, StateChangeReason reason, DebugLocation location, Breakpoint bp) {
+    void onDebugState(DebuggingState state, StateChangeReason reason, DebugFrame location, Breakpoint bp) {
         Log.d("onDebugState: ", state, " reason=", reason);
         _state = state;
         if (state == DebuggingState.stopped) {

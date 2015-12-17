@@ -28,9 +28,11 @@ class LocationBase {
     int line;
 }
 
-class DebugLocation : LocationBase {
+class DebugFrame : LocationBase {
     ulong address;
     string func;
+    int level;
+    DebugVariableList locals;
     void fillMissingFields(LocationBase v) {
         if (file.empty)
             file = v.file;
@@ -61,6 +63,46 @@ class Breakpoint : LocationBase {
         v.projectName = projectName;
         return v;
     }
+}
+
+class DebugThread {
+    ulong id;
+    string name;
+    DebugFrame frame;
+    DebuggingState state;
+    DebugStack stack;
+}
+
+class DebugThreadList {
+    DebugThread[] threads;
+    ulong currentThreadId;
+    @property DebugThread currentThread() {
+        return findThread(currentThreadId);
+    }
+    DebugThread findThread(ulong id) {
+        foreach(t; threads)
+            if (t.id == id)
+                return t;
+        return null;
+    }
+    @property int length() { return threads.length; }
+    DebugThread opIndex(int index) { return threads[index]; }
+}
+
+class DebugStack {
+    DebugFrame[] frames;
+    @property int length() { return frames.length; }
+    DebugFrame opIndex(int index) { return frames[index]; }
+}
+
+class DebugVariable {
+    string name;
+    string type;
+    string value;
+}
+
+class DebugVariableList {
+    DebugVariable[] variables;
 }
 
 static __gshared _nextBreakpointId = 1;
@@ -98,7 +140,7 @@ interface DebuggerCallback : ProgramExecutionStatusListener {
     void onProgramLoaded(bool successful, bool debugInfoLoaded);
 
     /// state changed: running / paused / stopped
-    void onDebugState(DebuggingState state, StateChangeReason reason, DebugLocation location, Breakpoint bp);
+    void onDebugState(DebuggingState state, StateChangeReason reason, DebugFrame location, Breakpoint bp);
 
     void onResponse(ResponseCode code, string msg);
 }
@@ -178,7 +220,7 @@ class DebuggerProxy : Debugger, DebuggerCallback {
     }
 
     /// state changed: running / paused / stopped
-    void onDebugState(DebuggingState state, StateChangeReason reason, DebugLocation location, Breakpoint bp) {
+    void onDebugState(DebuggingState state, StateChangeReason reason, DebugFrame location, Breakpoint bp) {
 		_callbackDelegate( delegate() { _callback.onDebugState(state, reason, location, bp); } );
     }
 
