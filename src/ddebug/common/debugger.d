@@ -71,6 +71,8 @@ class DebugThread {
     DebugFrame frame;
     DebuggingState state;
     DebugStack stack;
+    @property int length() { return stack ? stack.length : 0; }
+    DebugFrame opIndex(int index) { return stack ? stack[index] : null; }
 }
 
 class DebugThreadList {
@@ -85,13 +87,13 @@ class DebugThreadList {
                 return t;
         return null;
     }
-    @property int length() { return threads.length; }
+    @property int length() { return cast(int)threads.length; }
     DebugThread opIndex(int index) { return threads[index]; }
 }
 
 class DebugStack {
     DebugFrame[] frames;
-    @property int length() { return frames.length; }
+    @property int length() { return cast(int)frames.length; }
     DebugFrame opIndex(int index) { return frames[index]; }
 }
 
@@ -381,3 +383,29 @@ abstract class DebuggerBase : Thread, Debugger {
 	}
 
 }
+
+/// helper for removing class array item by ref
+T removeItem(T)(ref T[]array, T item) {
+    for (int i = cast(int)array.length - 1; i >= 0; i--) {
+        if (array[i] is item) {
+            for (int j = i; j < array.length - 1; j++)
+                array[j] = array[j + 1];
+            array.length = array.length - 1;
+            return item;
+        }
+    }
+    return null;
+}
+
+/// helper for removing array item by index
+T removeItem(T)(ref T[]array, ulong index) {
+    if (index >= 0 && index < array.length) {
+        T res = array[index];
+        for (int j = cast(int)index; j < array.length - 1; j++)
+            array[j] = array[j + 1];
+        array.length = array.length - 1;
+        return res;
+    }
+    return null;
+}
+

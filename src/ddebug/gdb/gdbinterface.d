@@ -76,8 +76,17 @@ abstract class ConsoleDebuggerInterface : DebuggerBase, TextWriter {
 
 }
 
+interface TextCommandTarget {
+    /// send command as a text string
+    int sendCommand(string text);
+}
+
 import std.process;
-class GDBInterface : ConsoleDebuggerInterface {
+class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
+
+    this() {
+        _requests.setTarget(this);
+    }
 
 	protected int commandId;
 
@@ -315,15 +324,7 @@ class GDBInterface : ConsoleDebuggerInterface {
         }
         return null;
     }
-    private GDBBreakpoint findBreakpointByRequestToken(int token) {
-        if (token == 0)
-            return null;
-        foreach(gdbbp; _breakpoints) {
-            if (gdbbp.createRequestId == token)
-                return gdbbp;
-        }
-        return null;
-    }
+
     private GDBBreakpoint findBreakpointByNumber(string number) {
         if (number.empty)
             return null;
@@ -333,28 +334,30 @@ class GDBInterface : ConsoleDebuggerInterface {
         }
         return null;
     }
-    void handleBreakpointRequestResult(GDBBreakpoint gdbbp, ResultClass resType, MIValue params) {
-        if (resType == ResultClass.done) {
+
+    class AddBreakpointRequest : GDBRequest {
+        GDBBreakpoint gdbbp;
+        this(Breakpoint bp) { 
+            gdbbp = new GDBBreakpoint();
+            gdbbp.bp = bp;
+            char[] cmd;
+            cmd ~= "-break-insert ";
+            if (!bp.enabled)
+                cmd ~= "-d "; // create disabled
+            cmd ~= bp.fullFilePath;
+            cmd ~= ":";
+            cmd ~= to!string(bp.line);
+            command = cmd.dup; 
+            _breakpoints ~= gdbbp;
+        }
+
+        override void onResult() {
             if (MIValue bkpt = params["bkpt"]) {
                 string number = bkpt.getString("number");
                 gdbbp.number = number;
                 Log.d("GDB number for breakpoint " ~ gdbbp.bp.id.to!string ~ " assigned is " ~ number);
             }
         }
-    }
-
-    private void addBreakpoint(Breakpoint bp) {
-        GDBBreakpoint gdbbp = new GDBBreakpoint();
-        gdbbp.bp = bp;
-        char[] cmd;
-        cmd ~= "-break-insert ";
-        if (!bp.enabled)
-            cmd ~= "-d "; // create disabled
-        cmd ~= bp.fullFilePath;
-        cmd ~= ":";
-        cmd ~= to!string(bp.line);
-        gdbbp.createRequestId = sendCommand(cmd.dup);
-        _breakpoints ~= gdbbp;
     }
 
     /// update list of breakpoints
@@ -383,7 +386,7 @@ class GDBInterface : ConsoleDebuggerInterface {
         foreach(bp; breakpoints) {
             GDBBreakpoint existing = findBreakpoint(bp);
             if (!existing) {
-                addBreakpoint(bp);
+                submitRequest(new AddBreakpointRequest(bp));
             } else {
                 if (bp.enabled && !existing.bp.enabled) {
                     if (breakpointsToEnable.length)
@@ -474,14 +477,11 @@ class GDBInterface : ConsoleDebuggerInterface {
         }
     }
 
-    int _threadInfoRequest;
-    int _stackListFramesRequest;
     int _stackListLocalsRequest;
     DebugThreadList _currentState;
     void updateState() {
         _currentState = null;
-        _threadInfoRequest = sendCommand("-thread-info");
-        _stackListFramesRequest = sendCommand("-stack-list-frames");
+        submitRequest(new ThreadInfoRequest(), new StackListFramesRequest());
     }
 
     // +asyncclass,result
@@ -511,21 +511,35 @@ class GDBInterface : ConsoleDebuggerInterface {
             Log.d("GDB WARN unknown result class type: ", msgType);
         MIValue params = parseMI(s);
         Log.v("GDB result ^[", token, "] ", msgType, " params: ", (params ? params.toString : "unparsed: " ~ s));
-        if (GDBBreakpoint gdbbp = findBreakpointByRequestToken(token)) {
-            // result of breakpoint creation operation
-            handleBreakpointRequestResult(gdbbp, msgId, params);
-            return;
-        } else if (token == _threadInfoRequest) {
-            handleThreadInfoRequestResult(msgId, params);
-        } else if (token == _stackListFramesRequest) {
-            handleStackListFramesRequest(msgId, params);
-        } else if (token == _stackListLocalsRequest) {
-            handleLocalVariableListRequestResult(msgId, params);
+        if (_requests.handleResult(token, msgId, params)) {
+            // handled using result list
+        } else {
+            Log.w("received results for unknown request");
         }
     }
 
-    void handleStackListFramesRequest(ResultClass msgId, MIValue params) {
-        if (msgId == ResultClass.done) {
+    GDBRequestList _requests;
+    /// submit single request or request chain
+    void submitRequest(GDBRequest[] requests ... ) {
+        for (int i = 0; i + 1 < requests.length; i++)
+            requests[i].chain(requests[i + 1]);
+        _requests.submit(requests[0]);
+    }
+
+    class ThreadInfoRequest : GDBRequest {
+        this() { command = "-thread-info"; }
+        override void onResult() {
+            _currentState = parseThreadList(params);
+            if (_currentState) {
+                // TODO
+                Log.d("Thread list is parsed");
+            }
+        }
+    }
+
+    class StackListFramesRequest : GDBRequest {
+        this() { command = "-stack-list-frames"; }
+        override void onResult() {
             DebugStack stack = parseStack(params);
             if (stack) {
                 // TODO
@@ -535,40 +549,30 @@ class GDBInterface : ConsoleDebuggerInterface {
                         currentThread.stack = stack;
                         Log.d("Setting stack frames for current thread");
                     }
+                    submitRequest(new LocalVariableListRequest(_currentState.currentThreadId, 0));
                 }
             }
-        } else {
         }
     }
 
-    void handleThreadInfoRequestResult(ResultClass msgId, MIValue params) {
-        if (msgId == ResultClass.done) {
-            _currentState = parseThreadList(params);
-            if (_currentState) {
-                // TODO
-                Log.d("Thread list is parsed");
-                _stackListLocalsRequest = sendCommand("-stack-list-locals --thread " ~ to!string(_currentState.currentThreadId) ~ " --frame 0 --all-values");
-            }
-        } else {
+    class LocalVariableListRequest : GDBRequest {
+        this(ulong threadId, int frameId) {
+            command = "-stack-list-locals --thread " ~ to!string(threadId) ~ " --frame " ~ to!string(frameId) ~ " --simple-values"; 
         }
-    }
-
-    void handleLocalVariableListRequestResult(ResultClass msgId, MIValue params) {
-        if (msgId == ResultClass.done) {
+        override void onResult() {
             DebugVariableList variables = parseVariableList(params);
             if (variables) {
                 // TODO
                 Log.d("Variable list is parsed: " ~ to!string(variables));
                 if (_currentState) {
                     if (DebugThread currentThread = _currentState.currentThread) {
-                        if (currentThread.stack.length > 0) {
-                            currentThread.stack[0].locals = variables;
+                        if (currentThread.length > 0) {
+                            currentThread[0].locals = variables;
                             Log.d("Setting variables for current thread top frame");
                         }
                     }
                 }
             }
-        } else {
         }
     }
 
@@ -631,3 +635,63 @@ class GDBInterface : ConsoleDebuggerInterface {
 
 }
 
+
+class GDBRequest {
+    int id;
+    string command;
+    ResultClass resultClass;
+    MIValue params;
+    GDBRequest next;
+
+    /// called if resultClass is done
+    void onResult() {
+    }
+    /// called if resultClass is error
+    void onError() {
+    }
+    /// called on other result types
+    void onOtherResult() {
+    }
+
+    /// chain additional request, for case when previous finished ok
+    GDBRequest chain(GDBRequest next) {
+        this.next = next;
+        return this;
+    }
+}
+
+struct GDBRequestList {
+
+    private TextCommandTarget _target;
+    private GDBRequest[int] _activeRequests;
+
+    void setTarget(TextCommandTarget target) {
+        _target = target;
+    }
+    
+    void submit(GDBRequest request) {
+        request.id = _target.sendCommand(request.command);
+        if (request.id)
+            _activeRequests[request.id] = request;
+    }
+
+    bool handleResult(int token, ResultClass resultClass, MIValue params) {
+        if (token in _activeRequests) {
+            GDBRequest r = _activeRequests[token];
+            _activeRequests.remove(token);
+            r.resultClass = resultClass;
+            r.params = params;
+            if (resultClass == ResultClass.done) {
+                r.onResult();
+                if (r.next)
+                    submit(r.next);
+            } else if (resultClass == ResultClass.error) {
+                r.onError();
+            } else {
+                r.onOtherResult();
+            }
+            return true;
+        }
+        return false;
+    }
+}
