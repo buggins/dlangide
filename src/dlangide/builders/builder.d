@@ -66,7 +66,6 @@ class Builder : BackgroundOperationWatcher {
         ExternalProcessState state = _extprocess.state;
         if (state == ExternalProcessState.None) {
             _log.clear();
-            _box.writeText("Running dub\n"d);
             char[] program = "dub".dup;
             char[][] params;
             char[] dir = _project.dir.dup;
@@ -116,6 +115,8 @@ class Builder : BackgroundOperationWatcher {
             if (_verbose)
                 params ~= "-v".dup;
 
+            auto text = "Running (in " ~ dir ~ "): " ~ program ~ " " ~ params.join(' ') ~ "\n";
+            _box.writeText(to!dstring(text));
             state = _extprocess.run(program, params, dir, _box, null);
             if (state != ExternalProcessState.Running) {
                 _box.writeText("Failed to run builder tool\n"d);
