@@ -26,6 +26,13 @@ class LocationBase {
     string fullFilePath;
     string projectFilePath;
     int line;
+    this() {}
+    this(LocationBase v) {
+        file = v.file;
+        fullFilePath = v.fullFilePath;
+        projectFilePath = v.projectFilePath;
+        line = v.line;
+    }
 }
 
 class DebugFrame : LocationBase {
@@ -33,6 +40,16 @@ class DebugFrame : LocationBase {
     string func;
     int level;
     DebugVariableList locals;
+
+    this() {}
+    this(DebugFrame v) {
+        super(v);
+        address = v.address;
+        func = v.func;
+        level = v.level;
+        locals = new DebugVariableList(locals);
+    }
+
     void fillMissingFields(LocationBase v) {
         if (file.empty)
             file = v.file;
@@ -52,16 +69,14 @@ class Breakpoint : LocationBase {
     this() {
         id = _nextBreakpointId++;
     }
+    this(Breakpoint v) {
+        super(v);
+        id = v.id;
+        enabled = v.enabled;
+        projectName = v.projectName;
+    }
     Breakpoint clone() {
-        Breakpoint v = new Breakpoint();
-        v.id = id;
-        v.file = file;
-        v.fullFilePath = fullFilePath;
-        v.projectFilePath = projectFilePath;
-        v.line = line;
-        v.enabled = enabled;
-        v.projectName = projectName;
-        return v;
+        return new Breakpoint(this);
     }
 }
 
@@ -71,6 +86,17 @@ class DebugThread {
     DebugFrame frame;
     DebuggingState state;
     DebugStack stack;
+
+    this() {
+    }
+    this(DebugThread v) {
+        id = v.id;
+        name = v.name;
+        frame = new DebugFrame(v.frame);
+        state = v.state;
+        stack = new DebugStack(v.stack);
+    }
+
     @property int length() { return stack ? stack.length : 0; }
     DebugFrame opIndex(int index) { return stack ? stack[index] : null; }
 }
@@ -78,6 +104,13 @@ class DebugThread {
 class DebugThreadList {
     DebugThread[] threads;
     ulong currentThreadId;
+    this() {}
+    this(DebugThreadList v) {
+        currentThreadId = v.currentThreadId;
+        foreach(t; v.threads)
+            threads ~= new DebugThread(t);
+    }
+
     @property DebugThread currentThread() {
         return findThread(currentThreadId);
     }
@@ -93,6 +126,13 @@ class DebugThreadList {
 
 class DebugStack {
     DebugFrame[] frames;
+
+    this() {}
+    this(DebugStack v) {
+        foreach(t; v.frames)
+            frames ~= new DebugFrame(t);
+    }
+
     @property int length() { return cast(int)frames.length; }
     DebugFrame opIndex(int index) { return frames[index]; }
 }
@@ -101,10 +141,21 @@ class DebugVariable {
     string name;
     string type;
     string value;
+    this() {}
+    this(DebugVariable v) {
+        name = v.name;
+        type = v.type;
+        value = v.value;
+    }
 }
 
 class DebugVariableList {
     DebugVariable[] variables;
+    this() {}
+    this(DebugVariableList v) {
+        foreach(t; v.variables)
+            variables ~= new DebugVariable(t);
+    }
 }
 
 static __gshared _nextBreakpointId = 1;
