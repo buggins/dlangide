@@ -25,9 +25,9 @@ class VariablesWindow : StringGridWidget {
 class WatchPanel : DockWindow {
 
     this(string id) {
+        _showCloseButton = false;
+        dockAlignment = DockAlignment.Bottom;
         super(id);
-        _caption.text = "Watch"d;
-		_showCloseButton = false;
     }
 
     protected TabWidget _tabs;
@@ -52,7 +52,8 @@ class WatchPanel : DockWindow {
 	override protected void init() {
 		//styleId = STYLE_DOCK_WINDOW;
         styleId = null;
-		_bodyWidget = createBodyWidget();
+        //_caption.text = "Watch"d;
+        _bodyWidget = createBodyWidget();
 		//_bodyWidget.styleId = STYLE_DOCK_WINDOW_BODY;
 		addChild(_bodyWidget);
 	}
