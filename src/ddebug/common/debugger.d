@@ -33,6 +33,7 @@ class LocationBase {
         projectFilePath = v.projectFilePath;
         line = v.line;
     }
+    LocationBase clone() { return new LocationBase(this); }
 }
 
 class DebugFrame : LocationBase {
@@ -47,8 +48,10 @@ class DebugFrame : LocationBase {
         address = v.address;
         func = v.func;
         level = v.level;
-        locals = new DebugVariableList(locals);
+        if (v.locals)
+            locals = new DebugVariableList(v.locals);
     }
+    override DebugFrame clone() { return new DebugFrame(this); }
 
     void fillMissingFields(LocationBase v) {
         if (file.empty)
@@ -75,7 +78,7 @@ class Breakpoint : LocationBase {
         enabled = v.enabled;
         projectName = v.projectName;
     }
-    Breakpoint clone() {
+    override Breakpoint clone() {
         return new Breakpoint(this);
     }
 }
@@ -92,10 +95,13 @@ class DebugThread {
     this(DebugThread v) {
         id = v.id;
         name = v.name;
-        frame = new DebugFrame(v.frame);
+        if (v.frame)
+            frame = new DebugFrame(v.frame);
         state = v.state;
-        stack = new DebugStack(v.stack);
+        if (v.stack)
+            stack = new DebugStack(v.stack);
     }
+    DebugThread clone() { return new DebugThread(this); }
 
     @property int length() { return stack ? stack.length : 0; }
     DebugFrame opIndex(int index) { return stack ? stack[index] : null; }
@@ -110,6 +116,7 @@ class DebugThreadList {
         foreach(t; v.threads)
             threads ~= new DebugThread(t);
     }
+    DebugThreadList clone() { return new DebugThreadList(this); }
 
     @property DebugThread currentThread() {
         return findThread(currentThreadId);
@@ -196,6 +203,9 @@ interface DebuggerCallback : ProgramExecutionStatusListener {
     void onDebugState(DebuggingState state, StateChangeReason reason, DebugFrame location, Breakpoint bp);
 
     void onResponse(ResponseCode code, string msg);
+
+    /// send debug context (threads, stack frames, local vars...)
+    void onDebugContextInfo(DebugThreadList info);
 }
 
 enum ResponseCode : int {
@@ -275,6 +285,11 @@ class DebuggerProxy : Debugger, DebuggerCallback {
     /// state changed: running / paused / stopped
     void onDebugState(DebuggingState state, StateChangeReason reason, DebugFrame location, Breakpoint bp) {
 		_callbackDelegate( delegate() { _callback.onDebugState(state, reason, location, bp); } );
+    }
+
+    /// send debug context (threads, stack frames, local vars...)
+    void onDebugContextInfo(DebugThreadList info) {
+		_callbackDelegate( delegate() { _callback.onDebugContextInfo(info); } );
     }
 
     void onResponse(ResponseCode code, string msg) {

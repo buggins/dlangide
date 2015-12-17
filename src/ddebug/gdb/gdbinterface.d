@@ -569,6 +569,7 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
                         if (currentThread.length > 0) {
                             currentThread[0].locals = variables;
                             Log.d("Setting variables for current thread top frame");
+                            _callback.onDebugContextInfo(_currentState.clone());
                         }
                     }
                 }

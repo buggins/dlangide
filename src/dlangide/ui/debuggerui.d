@@ -34,6 +34,11 @@ class DebuggerUIHandler : DebuggerCallback {
 		//_callbackDelegate( delegate() { _callback.onProgramExecutionStatus(this, status, exitCode); } );
     }
 
+    /// send debug context (threads, stack frames, local vars...)
+    void onDebugContextInfo(DebugThreadList info) {
+        Log.d("Debugger context received");
+    }
+
     void onResponse(ResponseCode code, string msg) {
         Log.d("Debugger response: ", code, " ", msg);
 		//_callbackDelegate( delegate() { _callback.onResponse(code, msg); } );
