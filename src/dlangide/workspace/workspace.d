@@ -58,7 +58,7 @@ class Workspace : WorkspaceItem {
     protected BuildConfiguration _buildConfiguration;
     protected ProjectConfiguration _projectConfiguration = ProjectConfiguration.DEFAULT;
     
-    this(IDEFrame frame, string fname = null) {
+    this(IDEFrame frame, string fname = WORKSPACE_EXTENSION) {
         super(fname);
         _workspaceFile = new SettingsFile(fname);
         _settings = new WorkspaceSettings(fname ? fname ~ WORKSPACE_SETTINGS_EXTENSION : null);
