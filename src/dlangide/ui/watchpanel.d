@@ -6,9 +6,10 @@ import std.string : format;
 import ddebug.common.debugger;
 
 class VariablesWindow : StringGridWidget {
+    DebugFrame _frame;
     this(string ID = null) {
         super(ID);
-        resize(3, 20);
+        resize(3, 0);
         showColHeaders = true;
         showRowHeaders = false;
         layoutHeight = FILL_PARENT;
@@ -16,12 +17,23 @@ class VariablesWindow : StringGridWidget {
         setColTitle(0, "Variable"d);
         setColTitle(1, "Value"d);
         setColTitle(2, "Type"d);
-        setCellText(0, 0, "a"d);
-        setCellText(1, 0, "1"d);
-        setCellText(2, 0, "int"d);
-        setCellText(0, 1, "b"d);
-        setCellText(1, 1, "42"d);
-        setCellText(2, 1, "ulong"d);
+        autoFit();
+    }
+    void setFrame(DebugFrame frame) {
+        _frame = frame;
+        if (frame && frame.locals) {
+            resize(3, frame.locals.length);
+            for (int i = 0; i < frame.locals.length; i++) {
+                DebugVariable var = frame.locals[i];
+                setCellText(0, i, var.name.toUTF32);
+                setCellText(1, i, var.value.toUTF32);
+                setCellText(2, i, var.type.toUTF32);
+            }
+            autoFit();
+        } else {
+            resize(3, 0);
+            autoFit();
+        }
     }
 }
 
@@ -38,6 +50,8 @@ class WatchPanel : DockWindow {
     protected VariablesWindow _autos;
 
     override protected Widget createBodyWidget() {
+        layoutWidth = FILL_PARENT;
+        layoutHeight = FILL_PARENT;
         _tabs = new TabWidget("WatchPanelTabs", Align.Bottom);
         _tabs.setStyles(null, STYLE_TAB_DOWN_DARK, STYLE_TAB_DOWN_BUTTON_DARK, STYLE_TAB_UP_BUTTON_DARK_TEXT);
         _tabs.layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT);
@@ -98,8 +112,9 @@ class WatchPanel : DockWindow {
                     }
                 }
             }
-        } else {
         }
+        _locals.setFrame(_frame);
+        _autos.setFrame(_frame);
     }
 }
 

@@ -5,7 +5,13 @@ import dlangui;
 import std.string : format;
 import ddebug.common.debugger;
 
-class StackPanel : DockWindow {
+interface StackFrameSelectedHandler {
+    void onStackFrameSelected(ulong threadId, int frame);
+}
+
+class StackPanel : DockWindow, OnItemSelectedHandler, CellActivatedHandler {
+
+    Signal!StackFrameSelectedHandler stackFrameSelected;
 
     this(string id) {
         super(id);
@@ -21,15 +27,16 @@ class StackPanel : DockWindow {
         _comboBox = new ComboBox("threadComboBox", ["Thread1"d]);
         _comboBox.layoutWidth = FILL_PARENT;
         _comboBox.selectedItemIndex = 0;
+        _comboBox.itemClick = this;
         _grid = new StringGridWidget("stackGrid");
-        _grid.resize(2, 20);
+        _grid.cellActivated = this;
+        _grid.resize(2, 0);
         _grid.showColHeaders = true;
         _grid.showRowHeaders = false;
         _grid.layoutHeight = FILL_PARENT;
         _grid.layoutWidth = FILL_PARENT;
         _grid.setColTitle(0, "Function"d);
         _grid.setColTitle(1, "Address"d);
-        _grid.setCellText(0, 0, "main()"d);
         _grid.layoutWidth = FILL_PARENT;
         _grid.layoutHeight = FILL_PARENT;
         root.addChild(_comboBox);
@@ -82,6 +89,22 @@ class StackPanel : DockWindow {
         }
     }
 
+    void onCellActivated(GridWidgetBase source, int col, int row) {
+        if (_debugInfo && _selectedThread && row < _selectedThread.length) {
+            if (stackFrameSelected.assigned)
+                stackFrameSelected(_currentThreadId, row);
+        }
+    }
+
+    bool onItemSelected(Widget source, int itemIndex) {
+        if (_debugInfo && itemIndex < _debugInfo.length && _currentThreadId != _debugInfo[itemIndex].id) {
+            _grid.selectCell(0, 0, true, null, false);
+            if (stackFrameSelected.assigned)
+                stackFrameSelected(_debugInfo[itemIndex].id, 0);
+        }
+        return true;
+    }
+
     protected void onPopupMenuItem(MenuItem item) {
         if (item.action)
             handleAction(item.action);
@@ -90,6 +113,19 @@ class StackPanel : DockWindow {
     /// override to handle specific actions
 	override bool handleAction(const Action a) {
         return super.handleAction(a);
+    }
+
+    override void layout(Rect rc) {
+        if (visibility == Visibility.Gone) {
+            return;
+        }
+        super.layout(rc);
+        _grid.autoFitColumnWidth(2);
+        int w = _grid.clientRect.width - _grid.colWidth(2);
+        if (w < _grid.clientRect.width * 2 / 3)
+            w = _grid.clientRect.width * 2 / 3;
+        _grid.setColWidth(1, w);
+        _grid.layout(_grid.pos);
     }
 }
 

@@ -177,6 +177,14 @@ class DebugVariableList {
         foreach(t; v.variables)
             variables ~= new DebugVariable(t);
     }
+
+    @property int length() { return variables ? cast(int)variables.length : 0; }
+
+    DebugVariable opIndex(int index) { 
+        if (!variables || index < 0 || index > variables.length)
+            return null;
+        return variables[index];
+    }
 }
 
 static __gshared _nextBreakpointId = 1;
@@ -204,6 +212,9 @@ interface Debugger : ProgramExecution {
 
     /// update list of breakpoints
     void setBreakpoints(Breakpoint[] bp);
+
+    /// request stack trace and local vars for thread and frame
+    void requestDebugContextInfo(ulong threadId, int frame);
 }
 
 interface DebuggerCallback : ProgramExecutionStatusListener {
@@ -219,7 +230,7 @@ interface DebuggerCallback : ProgramExecutionStatusListener {
     void onResponse(ResponseCode code, string msg);
 
     /// send debug context (threads, stack frames, local vars...)
-    void onDebugContextInfo(DebugThreadList info);
+    void onDebugContextInfo(DebugThreadList info, ulong threadId, int frame);
 }
 
 enum ResponseCode : int {
@@ -302,8 +313,8 @@ class DebuggerProxy : Debugger, DebuggerCallback {
     }
 
     /// send debug context (threads, stack frames, local vars...)
-    void onDebugContextInfo(DebugThreadList info) {
-		_callbackDelegate( delegate() { _callback.onDebugContextInfo(info); } );
+    void onDebugContextInfo(DebugThreadList info, ulong threadId, int frame) {
+		_callbackDelegate( delegate() { _callback.onDebugContextInfo(info, threadId, frame); } );
     }
 
     void onResponse(ResponseCode code, string msg) {
@@ -358,6 +369,10 @@ class DebuggerProxy : Debugger, DebuggerCallback {
     /// restart
     void execRestart() {
         _debugger.postRequest(delegate() { _debugger.execRestart(); });
+    }
+    /// request stack trace and local vars for thread and frame
+    void requestDebugContextInfo(ulong threadId, int frame) {
+        _debugger.postRequest(delegate() { _debugger.requestDebugContextInfo(threadId, frame); });
     }
     /// update list of breakpoints
     void setBreakpoints(Breakpoint[] breakpoints) {

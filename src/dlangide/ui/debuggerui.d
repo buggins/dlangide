@@ -13,7 +13,7 @@ import dlangide.ui.watchpanel;
 import ddebug.common.execution;
 import ddebug.common.debugger;
 
-class DebuggerUIHandler : DebuggerCallback {
+class DebuggerUIHandler : DebuggerCallback, StackFrameSelectedHandler {
 
     private IDEFrame _ide;
     private Debugger _debugger;
@@ -21,6 +21,7 @@ class DebuggerUIHandler : DebuggerCallback {
     private DebugFrame _location;
     private WatchPanel _watchPanel;
     private StackPanel _stackPanel;
+    private DebugThreadList _debugInfo;
 
     this(IDEFrame ide, Debugger debugger) {
         _ide = ide;
@@ -38,10 +39,22 @@ class DebuggerUIHandler : DebuggerCallback {
     }
 
     /// send debug context (threads, stack frames, local vars...)
-    void onDebugContextInfo(DebugThreadList info) {
+    void onDebugContextInfo(DebugThreadList info, ulong threadId, int frameId) {
         Log.d("Debugger context received");
-        _stackPanel.updateDebugInfo(info, info.currentThreadId, 0);
-        _watchPanel.updateDebugInfo(info, info.currentThreadId, 0);
+        _debugInfo = info;
+        _stackPanel.updateDebugInfo(info, threadId, frameId);
+        _watchPanel.updateDebugInfo(info, threadId, frameId);
+    }
+
+    void onStackFrameSelected(ulong threadId, int frame) {
+        if (_debugInfo) {
+            if (DebugThread t = _debugInfo.findThread(threadId)) {
+                if (frame < t.length)
+                    updateLocation(t[frame]);
+                else
+                    updateLocation(t.frame);
+            }
+        }
     }
 
     void onResponse(ResponseCode code, string msg) {
@@ -186,6 +199,7 @@ class DebuggerUIHandler : DebuggerCallback {
         _stackPanel = new StackPanel("stack");
         _stackPanel.dockAlignment = DockAlignment.Right;
         _ide.dockHost.addDockedWindow(_stackPanel);
+        _stackPanel.stackFrameSelected = this;
     }
 
     void switchToDevelopPerspective() {

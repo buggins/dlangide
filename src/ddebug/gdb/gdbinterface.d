@@ -481,7 +481,7 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
     DebugThreadList _currentState;
     void updateState() {
         _currentState = null;
-        submitRequest(new ThreadInfoRequest(), new StackListFramesRequest());
+        submitRequest(new ThreadInfoRequest());
     }
 
     // +asyncclass,result
@@ -526,6 +526,12 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
         _requests.submit(requests[0]);
     }
 
+    /// request stack trace and local vars for thread and frame
+    void requestDebugContextInfo(ulong threadId, int frame) {
+        Log.d("requestDebugContextInfo threadId=", threadId, " frame=", frame);
+        submitRequest(new StackListFramesRequest(threadId, frame));
+    }
+
     class ThreadInfoRequest : GDBRequest {
         this() { command = "-thread-info"; }
         override void onResult() {
@@ -533,30 +539,43 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
             if (_currentState) {
                 // TODO
                 Log.d("Thread list is parsed");
+                submitRequest(new StackListFramesRequest(_currentState.currentThreadId, 0));
             }
         }
     }
 
     class StackListFramesRequest : GDBRequest {
-        this() { command = "-stack-list-frames"; }
+        private ulong _threadId;
+        private int _frameId;
+        this(ulong threadId, int frameId) {
+            _threadId = threadId;
+            _frameId = frameId;
+            if (!_threadId)
+                _threadId = _currentState ? _currentState.currentThreadId : 0;
+            command = "-stack-list-frames --thread " ~ to!string(_threadId); 
+        }
         override void onResult() {
             DebugStack stack = parseStack(params);
             if (stack) {
                 // TODO
                 Log.d("Stack frames list is parsed: " ~ to!string(stack));
                 if (_currentState) {
-                    if (DebugThread currentThread = _currentState.currentThread) {
+                    if (DebugThread currentThread = _currentState.findThread(_threadId)) {
                         currentThread.stack = stack;
                         Log.d("Setting stack frames for current thread");
                     }
-                    submitRequest(new LocalVariableListRequest(_currentState.currentThreadId, 0));
+                    submitRequest(new LocalVariableListRequest(_threadId, _frameId));
                 }
             }
         }
     }
 
     class LocalVariableListRequest : GDBRequest {
+        ulong _threadId;
+        int _frameId;
         this(ulong threadId, int frameId) {
+            _threadId = threadId;
+            _frameId = frameId;
             command = "-stack-list-locals --thread " ~ to!string(threadId) ~ " --frame " ~ to!string(frameId) ~ " --simple-values"; 
         }
         override void onResult() {
@@ -569,7 +588,7 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
                         if (currentThread.length > 0) {
                             currentThread[0].locals = variables;
                             Log.d("Setting variables for current thread top frame");
-                            _callback.onDebugContextInfo(_currentState.clone());
+                            _callback.onDebugContextInfo(_currentState.clone(), _threadId, _frameId);
                         }
                     }
                 }
