@@ -274,6 +274,10 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
         _startRequestId = sendCommand("-exec-run");
     }
 
+    void execAbort() {
+        _startRequestId = sendCommand("-exec-abort");
+    }
+
     /// start program execution, can be called after program is loaded
     int _continueRequestId;
     void execContinue() {
@@ -471,7 +475,22 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
                 }
                 updateState();
                 _callback.onDebugState(DebuggingState.paused, StateChangeReason.breakpointHit, location, bp);
+            } else if (reason.equal("exited-normally")) {
+                _exitCode = 0;
+                Log.i("Program exited. Exit code ", _exitCode);
+                _callback.onDebugState(DebuggingState.stopped, StateChangeReason.exited, null, null);
+            } else if (reason.equal("exited")) {
+                _exitCode = params.getInt("exit-code");
+                Log.i("Program exited. Exit code ", _exitCode);
+                _callback.onDebugState(DebuggingState.stopped, StateChangeReason.exited, null, null);
+            } else if (reason.equal("exited-signalled")) {
+                _exitCode = -2; //params.getInt("exit-code");
+                string signalName = params.getString("signal-name");
+                string signalMeaning = params.getString("signal-meaning");
+                Log.i("Program exited by signal. Signal code: ", signalName, " Signal meaning: ", signalMeaning);
+                _callback.onDebugState(DebuggingState.stopped, StateChangeReason.exited, null, null);
             } else {
+                _exitCode = -1;
                 _callback.onDebugState(DebuggingState.stopped, StateChangeReason.exited, null, null);
             }
         }
@@ -576,7 +595,7 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
         this(ulong threadId, int frameId) {
             _threadId = threadId;
             _frameId = frameId;
-            command = "-stack-list-locals --thread " ~ to!string(threadId) ~ " --frame " ~ to!string(frameId) ~ " --simple-values"; 
+            command = "-stack-list-variables --thread " ~ to!string(_threadId) ~ " --frame " ~ to!string(_frameId) ~ " --simple-values"; 
         }
         override void onResult() {
             DebugVariableList variables = parseVariableList(params);
@@ -584,9 +603,12 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
                 // TODO
                 Log.d("Variable list is parsed: " ~ to!string(variables));
                 if (_currentState) {
-                    if (DebugThread currentThread = _currentState.currentThread) {
+                    if (DebugThread currentThread = _currentState.findThread(_threadId)) {
                         if (currentThread.length > 0) {
-                            currentThread[0].locals = variables;
+                            if (_frameId > currentThread.length)
+                                _frameId = 0;
+                            if (_frameId < currentThread.length)
+                                currentThread[_frameId].locals = variables;
                             Log.d("Setting variables for current thread top frame");
                             _callback.onDebugContextInfo(_currentState.clone(), _threadId, _frameId);
                         }

@@ -79,11 +79,11 @@ DebugFrame parseFrame(MIValue frame) {
     return location;
 }
 
-DebugVariableList parseVariableList(MIValue params) {
+DebugVariableList parseVariableList(MIValue params, string paramName = "variables") {
     if (!params)
         return null;
     DebugVariableList res = new DebugVariableList();
-    MIValue list = params["locals"];
+    MIValue list = params[paramName];
     if (list && list.isList) {
         for(int i = 0; i < list.length; i++) {
             if (DebugVariable t = parseVariable(list[i]))

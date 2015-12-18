@@ -141,6 +141,7 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         if (lineIndex == _executionLine) {
             buf.fillRect(visibleRect, _executionLineHighlightColor);
         }
+        super.drawLineBackground(buf, lineIndex, lineRect, visibleRect);
     }
 
     void setSyntaxSupport() {

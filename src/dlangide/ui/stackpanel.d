@@ -77,7 +77,7 @@ class StackPanel : DockWindow, OnItemSelectedHandler, CellActivatedHandler {
                 _grid.resize(2, _selectedThread.length);
                 for (int i = 0; i < _selectedThread.length; i++) {
                     _grid.setCellText(0, i, _selectedThread[i].func.toUTF32);
-                    _grid.setCellText(1, i, ""d);
+                    _grid.setCellText(1, i, _selectedThread[i].formattedAddress.toUTF32);
                 }
             } else {
                 _grid.resize(2, 1);

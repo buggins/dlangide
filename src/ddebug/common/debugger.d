@@ -6,6 +6,7 @@ import ddebug.common.queue;
 import ddebug.common.execution;
 import std.array : empty;
 import std.algorithm : startsWith, endsWith, equal;
+import std.string : format;
 
 enum DebuggingState {
     loaded,
@@ -59,6 +60,14 @@ class DebugFrame : LocationBase {
     string func;
     int level;
     DebugVariableList locals;
+
+    @property string formattedAddress() {
+        if (address < 0x100000000) {
+            return "%08x".format(address);
+        } else {
+            return "%016x".format(address);
+        }
+    }
 
     this() {}
     this(DebugFrame v) {
