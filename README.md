@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/buggins/dlangide.svg?branch=master)](https://travis-ci.org/buggins/dlangide)
+
 Dlang IDE
 =========
 
