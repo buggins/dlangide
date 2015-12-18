@@ -13,6 +13,11 @@ Currently supported features:
 * DUB dependencies update
 * DUB package configuration selection (contributed by NCrashed)
 * Dependency projects are shown in workspace tree
+* New project wizard
+* Toolchain settings for DMD, LDC, GDC
+* Project specific settings
+* Basic debugger support using GDB (work in progress)
+
 
 Source editor features:
 

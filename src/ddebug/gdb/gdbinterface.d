@@ -127,7 +127,7 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
             ];
             Log.d("Terminal command line: ", args);
 			terminalPid = spawnProcess(args);
-			for (int i = 0; i < 40; i++) {
+			for (int i = 0; i < 80; i++) {
 				Thread.sleep(dur!"msecs"(100));
 				if (!isTerminalActive) {
 					Log.e("Failed to get terminal TTY");
