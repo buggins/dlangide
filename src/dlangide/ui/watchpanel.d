@@ -35,6 +35,18 @@ class VariablesWindow : StringGridWidget {
             autoFit();
         }
     }
+
+    override void layout(Rect rc) {
+        if (visibility == Visibility.Gone) {
+            return;
+        }
+        super.layout(rc);
+        int cw = clientRect.width;
+        setColWidth(1, cw * 40 / 100);
+        setColWidth(2, cw * 45 / 100);
+        setColWidth(3, cw * 25 / 100);
+        super.layout(_pos);
+    }
 }
 
 class WatchPanel : DockWindow {

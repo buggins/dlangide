@@ -31,7 +31,7 @@ extern (C) int UIAppMain(string[] args) {
 	version (USE_OPENGL) {
 		// you can turn on subpixel font rendering (ClearType) here
 		FontManager.subpixelRenderingMode = SubpixelRenderingMode.None; //
-		FontManager.fontGamma = 0.8;
+		FontManager.fontGamma = 0.9;
 		FontManager.hintingMode = HintingMode.AutoHint;
 	} else {
         version (USE_FREETYPE) {
@@ -42,20 +42,6 @@ extern (C) int UIAppMain(string[] args) {
         }
 	}
 
-    //import ddc.lexer.tokenizer;
-    //runTokenizerTest();
-    //debug(DebugInfo) {
-    //    version(USE_MAGO) {
-    //        import ddebug.windows.mago;
-    //        testMago();
-    //    }
-    //    version(Windows) {
-    //        import ddebug.windows.debuginfo;
-    //        import std.file;
-    //        //debugInfoTest(thisExePath);
-    //    }
-    //}
-
     //version(USE_WIN_DEBUG) {
     //    debuggerTest();
     //}
@@ -64,7 +50,7 @@ extern (C) int UIAppMain(string[] args) {
     //}
 
     // create window
-    Window window = Platform.instance.createWindow("Dlang IDE", null, WindowFlag.Resizable, 800, 600);
+    Window window = Platform.instance.createWindow("Dlang IDE", null, WindowFlag.Resizable, 1000, 800);
     // set window icon
     window.windowIcon = drawableCache.getImage("dlangui-logo1");
 	

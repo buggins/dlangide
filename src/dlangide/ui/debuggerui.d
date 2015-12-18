@@ -49,10 +49,9 @@ class DebuggerUIHandler : DebuggerCallback, StackFrameSelectedHandler {
     void onStackFrameSelected(ulong threadId, int frame) {
         if (_debugInfo) {
             if (DebugThread t = _debugInfo.findThread(threadId)) {
-                if (frame < t.length)
-                    updateLocation(t[frame]);
-                else
-                    updateLocation(t.frame);
+                DebugFrame f = (frame < t.length) ? t[frame] : t.frame;
+                updateLocation(f);
+                _debugger.requestDebugContextInfo(threadId, frame);
             }
         }
     }
