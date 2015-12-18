@@ -14,10 +14,13 @@ import ddebug.common.execution;
 import ddebug.common.debugger;
 
 class DebuggerUIHandler : DebuggerCallback {
-    IDEFrame _ide;
-    Debugger _debugger;
-    DebuggingState _state = DebuggingState.loaded;
-    DebugFrame _location;
+
+    private IDEFrame _ide;
+    private Debugger _debugger;
+    private DebuggingState _state = DebuggingState.loaded;
+    private DebugFrame _location;
+    private WatchPanel _watchPanel;
+    private StackPanel _stackPanel;
 
     this(IDEFrame ide, Debugger debugger) {
         _ide = ide;
@@ -37,6 +40,8 @@ class DebuggerUIHandler : DebuggerCallback {
     /// send debug context (threads, stack frames, local vars...)
     void onDebugContextInfo(DebugThreadList info) {
         Log.d("Debugger context received");
+        _stackPanel.updateDebugInfo(info, info.currentThreadId, 0);
+        _watchPanel.updateDebugInfo(info, info.currentThreadId, 0);
     }
 
     void onResponse(ResponseCode code, string msg) {
@@ -172,8 +177,6 @@ class DebuggerUIHandler : DebuggerCallback {
     }
 
 
-    private WatchPanel _watchPanel;
-    private StackPanel _stackPanel;
 
     void switchToDebugPerspective() {
         _ide.dockHost.layoutPriority = [DockAlignment.Bottom, DockAlignment.Top, DockAlignment.Left, DockAlignment.Right];

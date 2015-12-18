@@ -36,6 +36,24 @@ class LocationBase {
     LocationBase clone() { return new LocationBase(this); }
 }
 
+class Breakpoint : LocationBase {
+    int id;
+    bool enabled = true;
+    string projectName;
+    this() {
+        id = _nextBreakpointId++;
+    }
+    this(Breakpoint v) {
+        super(v);
+        id = v.id;
+        enabled = v.enabled;
+        projectName = v.projectName;
+    }
+    override Breakpoint clone() {
+        return new Breakpoint(this);
+    }
+}
+
 class DebugFrame : LocationBase {
     ulong address;
     string func;
@@ -65,24 +83,6 @@ class DebugFrame : LocationBase {
     }
 }
 
-class Breakpoint : LocationBase {
-    int id;
-    bool enabled = true;
-    string projectName;
-    this() {
-        id = _nextBreakpointId++;
-    }
-    this(Breakpoint v) {
-        super(v);
-        id = v.id;
-        enabled = v.enabled;
-        projectName = v.projectName;
-    }
-    override Breakpoint clone() {
-        return new Breakpoint(this);
-    }
-}
-
 class DebugThread {
     ulong id;
     string name;
@@ -103,8 +103,22 @@ class DebugThread {
     }
     DebugThread clone() { return new DebugThread(this); }
 
-    @property int length() { return stack ? stack.length : 0; }
-    DebugFrame opIndex(int index) { return stack ? stack[index] : null; }
+    @property int length() { 
+        if (stack && stack.length > 0)
+            return stack.length;
+        if (frame)
+            return 1;
+        return 0; 
+    }
+    DebugFrame opIndex(int index) { 
+        if (index < 0 || index > length)
+            return null;
+        if (stack && stack.length > 0)
+            return stack[index];
+        if (frame && index == 0)
+            return frame;
+        return null; 
+    }
 }
 
 class DebugThreadList {

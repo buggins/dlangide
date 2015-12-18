@@ -2,6 +2,9 @@ module dlangide.ui.watchpanel;
 
 import dlangui;
 
+import std.string : format;
+import ddebug.common.debugger;
+
 class VariablesWindow : StringGridWidget {
     this(string ID = null) {
         super(ID);
@@ -66,6 +69,37 @@ class WatchPanel : DockWindow {
     /// override to handle specific actions
 	override bool handleAction(const Action a) {
         return super.handleAction(a);
+    }
+
+    DebugThreadList _debugInfo;
+    DebugThread _selectedThread;
+    DebugFrame _frame;
+    ulong _currentThreadId;
+    int _currentThreadIndex;
+    int _currentFrame;
+    void updateDebugInfo(DebugThreadList data, ulong currentThreadId, int currentFrame) {
+        _debugInfo = data;
+        if (currentThreadId == 0)
+            currentThreadId = data.currentThreadId;
+        _currentThreadId = currentThreadId;
+        _currentThreadIndex = -1;
+        _currentFrame = 0;
+        _selectedThread = null;
+        _frame = null;
+
+        if (_debugInfo) {
+            for (int i = 0; i < _debugInfo.length; i++) {
+                if (_debugInfo[i].id == _currentThreadId) {
+                    _currentThreadIndex = i;
+                    _selectedThread = _debugInfo[i];
+                    if (currentFrame <= _selectedThread.length) {
+                        _currentFrame = currentFrame;
+                        _frame = _selectedThread[_currentFrame];
+                    }
+                }
+            }
+        } else {
+        }
     }
 }
 

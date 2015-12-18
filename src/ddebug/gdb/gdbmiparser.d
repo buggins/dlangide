@@ -5,6 +5,7 @@ import std.utf;
 import std.conv : to;
 import std.array : empty;
 import std.algorithm : startsWith, equal;
+import std.string : format;
 import ddebug.common.debugger;
 
 /// result class
@@ -123,6 +124,8 @@ DebugThread parseThread(MIValue params) {
     DebugThread res = new DebugThread();
     res.id = params.getUlong("id");
     res.name = params.getString("target-id");
+    if (res.name.empty)
+        res.name = "Thread%d".format(res.id);
     string stateName = params.getString("state");
     if (stateName == "stopped")
         res.state = DebuggingState.paused;
