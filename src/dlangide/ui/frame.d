@@ -69,8 +69,8 @@ class BackgroundOperationWatcherTest : BackgroundOperationWatcher {
 /// DIDE app frame
 class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeListener, BookmarkListChangeListener {
 
-	private ToolBarComboBox projectConfigurationCombo;
-	
+    private ToolBarComboBox projectConfigurationCombo;
+    
     MenuItem mainMenuItems;
     WorkspacePanel _wsPanel;
     OutputPanel _logPanel;
@@ -286,18 +286,18 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
     /// returns global IDE settings
     @property IDESettings settings() { return _settings; }
 
-	///
-	bool onCompilerLogIssueClick(dstring filename, int line, int column)
-	{
-		Log.d("onCompilerLogIssueClick ", filename);
+    ///
+    bool onCompilerLogIssueClick(dstring filename, int line, int column)
+    {
+        Log.d("onCompilerLogIssueClick ", filename);
 
-		import std.conv:to;
-		openSourceFile(to!string(filename));
+        import std.conv:to;
+        openSourceFile(to!string(filename));
 
-		currentEditor().setCaretPos(line-1,column);
+        currentEditor().setCaretPos(line-1,column);
 
-		return true;
-	}
+        return true;
+    }
 
     void onModifiedStateChange(Widget source, bool modified) {
         //
@@ -315,14 +315,14 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         if (!file)
             file = _wsPanel.findSourceFileItem(filename, false);
 
-		//if(!file)
-		//	return false;
+        //if(!file)
+        //    return false;
 
         if (file)
-		    filename = file.filename;
+            filename = file.filename;
 
-		Log.d("openSourceFile ", filename);
-		int index = _tabs.tabIndex(filename);
+        Log.d("openSourceFile ", filename);
+        int index = _tabs.tabIndex(filename);
         if (index >= 0) {
             // file is already opened in tab
             _tabs.selectTab(index, true);
@@ -542,7 +542,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         _dockHost.addDockedWindow(_wsPanel);
 
         _logPanel = new OutputPanel("output");
-		_logPanel.compilerLogIssueClickHandler = &onCompilerLogIssueClick;
+        _logPanel.compilerLogIssueClickHandler = &onCompilerLogIssueClick;
         _logPanel.appendText(null, "DlangIDE is started\nHINT: Try to open some DUB project\n"d);
         string dubPath = findExecutablePath("dub");
         string dmdPath = findExecutablePath("dmd");
@@ -576,13 +576,13 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                      ACTION_FILE_SAVE, ACTION_FILE_SAVE_AS, ACTION_FILE_SAVE_ALL, ACTION_FILE_WORKSPACE_CLOSE, ACTION_FILE_EXIT);
 
         MenuItem editItem = new MenuItem(new Action(2, "MENU_EDIT"));
-		editItem.add(ACTION_EDIT_COPY, ACTION_EDIT_PASTE, 
+        editItem.add(ACTION_EDIT_COPY, ACTION_EDIT_PASTE, 
                      ACTION_EDIT_CUT, ACTION_EDIT_UNDO, ACTION_EDIT_REDO, ACTION_FIND_TEXT, ACTION_EDITOR_TOGGLE_BOOKMARK);
         MenuItem editItemAdvanced = new MenuItem(new Action(221, "MENU_EDIT_ADVANCED"));
-		editItemAdvanced.add(ACTION_EDIT_INDENT, ACTION_EDIT_UNINDENT, ACTION_EDIT_TOGGLE_LINE_COMMENT, ACTION_EDIT_TOGGLE_BLOCK_COMMENT, ACTION_GO_TO_DEFINITION, ACTION_GET_COMPLETIONS);
-		editItem.add(editItemAdvanced);
+        editItemAdvanced.add(ACTION_EDIT_INDENT, ACTION_EDIT_UNINDENT, ACTION_EDIT_TOGGLE_LINE_COMMENT, ACTION_EDIT_TOGGLE_BLOCK_COMMENT, ACTION_GO_TO_DEFINITION, ACTION_GET_COMPLETIONS);
+        editItem.add(editItemAdvanced);
 
-		editItem.add(ACTION_EDIT_PREFERENCES);
+        editItem.add(ACTION_EDIT_PREFERENCES);
 
         MenuItem navItem = new MenuItem(new Action(21, "MENU_NAVIGATE"));
         navItem.add(ACTION_GO_TO_DEFINITION, ACTION_GET_COMPLETIONS, ACTION_EDITOR_GOTO_PREVIOUS_BOOKMARK, ACTION_EDITOR_GOTO_NEXT_BOOKMARK);
@@ -605,7 +605,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                       );
 
 
-		MenuItem windowItem = new MenuItem(new Action(3, "MENU_WINDOW"c));
+        MenuItem windowItem = new MenuItem(new Action(3, "MENU_WINDOW"c));
         windowItem.add(new Action(30, "MENU_WINDOW_PREFERENCES"));
         windowItem.add(ACTION_WINDOW_CLOSE_ALL_DOCUMENTS);
         MenuItem helpItem = new MenuItem(new Action(4, "MENU_HELP"c));
@@ -617,8 +617,8 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         mainMenuItems.add(navItem);
         mainMenuItems.add(buildItem);
         mainMenuItems.add(debugItem);
-		//mainMenuItems.add(viewItem);
-		mainMenuItems.add(windowItem);
+        //mainMenuItems.add(viewItem);
+        mainMenuItems.add(windowItem);
         mainMenuItems.add(helpItem);
 
         MainMenu mainMenu = new MainMenu(mainMenuItems);
@@ -697,8 +697,8 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         return res;
     }
 
-	/// override to handle specific actions state (e.g. change enabled state for supported actions)
-	override bool handleActionStateRequest(const Action a) {
+    /// override to handle specific actions state (e.g. change enabled state for supported actions)
+    override bool handleActionStateRequest(const Action a) {
         switch (a.id) {
             case IDEActions.EditPreferences:
                 return true;
@@ -725,8 +725,8 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             case IDEActions.CleanWorkspace:
             case IDEActions.UpdateProjectDependencies:
             case IDEActions.RefreshProject:
-			case IDEActions.SetStartupProject:
-			case IDEActions.ProjectSettings:
+            case IDEActions.SetStartupProject:
+            case IDEActions.ProjectSettings:
                 // enable when project exists
                 if (currentWorkspace && currentWorkspace.startupProject && !_currentBackgroundOperation)
                     a.state = ACTION_STATE_ENABLED;
@@ -757,7 +757,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             default:
                 return super.handleActionStateRequest(a);
         }
-	}
+    }
 
     FileDialog createFileDialog(UIString caption) {
         FileDialog dlg = new FileDialog(caption, window, null);
@@ -769,7 +769,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
     }
 
     /// override to handle specific actions
-	override bool handleAction(const Action a) {
+    override bool handleAction(const Action a) {
         if (a) {
             switch (a.id) {
                 case IDEActions.FileExit:
@@ -790,7 +790,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     dlg.addFilter(FileFilterEntry(UIString("Source files"d), "*.d;*.dd;*.ddoc;*.di;*.dh;*.json;*.xml;*.ini"));
                     dlg.addFilter(FileFilterEntry(UIString("All files"d), "*.*"));
                     dlg.dialogResult = delegate(Dialog dlg, const Action result) {
-						if (result.id == ACTION_OPEN.id) {
+                        if (result.id == ACTION_OPEN.id) {
                             string filename = result.stringParam;
                             openSourceFile(filename);
                         }
@@ -854,7 +854,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     FileDialog dlg = createFileDialog(caption);
                     dlg.addFilter(FileFilterEntry(UIString("Workspace and project files"d), "*.dlangidews;dub.json;package.json"));
                     dlg.dialogResult = delegate(Dialog dlg, const Action result) {
-						if (result.id == ACTION_OPEN.id) {
+                        if (result.id == ACTION_OPEN.id) {
                             string filename = result.stringParam;
                             if (filename.length)
                                 openFileOrWorkspace(filename);
@@ -877,12 +877,12 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                 case IDEActions.ProjectSettings:
                     showProjectSettings(cast(Project)a.objectParam);
                     return true;
-    			case IDEActions.SetStartupProject:
+                case IDEActions.SetStartupProject:
                     setStartupProject(cast(Project)a.objectParam);
                     return true;
                 case IDEActions.FindText:
                     Log.d("Opening Search Field");
-               		import dlangide.ui.searchPanel;
+                       import dlangide.ui.searchPanel;
                     int searchPanelIndex = _logPanel.getTabs.tabIndex("search");
                     SearchWidget searchPanel = null;
                     if(searchPanelIndex == -1) {
@@ -897,12 +897,12 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                         searchPanel.focus();
                     }
                     return true;
-				case IDEActions.FileNewWorkspace:
-					createNewProject(true);
-					return true;
-				case IDEActions.FileNewProject:
-					createNewProject(false);
-					return true;
+                case IDEActions.FileNewWorkspace:
+                    createNewProject(true);
+                    return true;
+                case IDEActions.FileNewProject:
+                    createNewProject(false);
+                    return true;
                 case IDEActions.FileNew:
                     addProjectItem(a.objectParam);
                     return true;
@@ -915,12 +915,12 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                 case IDEActions.CloseWorkspace:
                     closeWorkspace();
                     return true;
-				default:
+                default:
                     return super.handleAction(a);
             }
         }
-		return false;
-	}
+        return false;
+    }
 
     @property ProjectSourceFile currentEditorSourceFile() {
         TabItem tab = _tabs.selectedTab;
@@ -1040,9 +1040,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             }
         }
         if (project && folder && project.workspace is currentWorkspace) {
-    		NewFileDlg dlg = new NewFileDlg(this, project, folder);
-    		dlg.dialogResult = delegate(Dialog dlg, const Action result) {
-			    if (result.id == ACTION_FILE_NEW_SOURCE_FILE.id) {
+            NewFileDlg dlg = new NewFileDlg(this, project, folder);
+            dlg.dialogResult = delegate(Dialog dlg, const Action result) {
+                if (result.id == ACTION_FILE_NEW_SOURCE_FILE.id) {
                     FileCreationResult res = cast(FileCreationResult)result.objectParam;
                     if (res) {
                         //res.project.reload();
@@ -1052,19 +1052,19 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                             openSourceFile(res.filename, null, true);
                         }
                     }
-			    }
-		    };
-		    dlg.show();
+                }
+            };
+            dlg.show();
         }
     }
 
-	void createNewProject(bool newWorkspace) {
+    void createNewProject(bool newWorkspace) {
         if (currentWorkspace is null)
             newWorkspace = true;
-		NewProjectDlg dlg = new NewProjectDlg(this, newWorkspace, currentWorkspace);
-		dlg.dialogResult = delegate(Dialog dlg, const Action result) {
-			if (result.id == ACTION_FILE_NEW_PROJECT.id || result.id == ACTION_FILE_NEW_WORKSPACE.id) {
-				//Log.d("settings after edit:\n", s.toJSON(true));
+        NewProjectDlg dlg = new NewProjectDlg(this, newWorkspace, currentWorkspace);
+        dlg.dialogResult = delegate(Dialog dlg, const Action result) {
+            if (result.id == ACTION_FILE_NEW_PROJECT.id || result.id == ACTION_FILE_NEW_WORKSPACE.id) {
+                //Log.d("settings after edit:\n", s.toJSON(true));
                 ProjectCreationResult res = cast(ProjectCreationResult)result.objectParam;
                 if (res) {
                     // open workspace/project
@@ -1080,10 +1080,10 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                         hideHomeScreen();
                     }
                 }
-			}
-		};
-		dlg.show();
-	}
+            }
+        };
+        dlg.show();
+    }
 
     void showPreferences() {
         //Log.d("settings before copy:\n", _settings.setting.toJSON(true));
@@ -1091,7 +1091,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         //Log.d("settings after copy:\n", s.toJSON(true));
         SettingsDialog dlg = new SettingsDialog(UIString("DlangIDE settings"d), window, s, createSettingsPages());
         dlg.dialogResult = delegate(Dialog dlg, const Action result) {
-			if (result.id == ACTION_APPLY.id) {
+            if (result.id == ACTION_APPLY.id) {
                 //Log.d("settings after edit:\n", s.toJSON(true));
                 _settings.applySettings(s);
                 applySettings(_settings);
@@ -1119,7 +1119,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         Setting s = project.settings.copySettings();
         SettingsDialog dlg = new SettingsDialog(UIString(project.name ~ " settings"d), window, s, createProjectSettingsPages());
         dlg.dialogResult = delegate(Dialog dlg, const Action result) {
-			if (result.id == ACTION_APPLY.id) {
+            if (result.id == ACTION_APPLY.id) {
                 //Log.d("settings after edit:\n", s.toJSON(true));
                 project.settings.applySettings(s);
                 project.settings.save();
@@ -1138,8 +1138,8 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         FontManager.fontGamma = settings.fontGamma;
         FontManager.hintingMode = settings.hintingMode;
         FontManager.minAnitialiasedFontSize = settings.minAntialiasedFontSize;
-	    Platform.instance.uiLanguage = settings.uiLanguage;
-	    Platform.instance.uiTheme = settings.uiTheme;
+        Platform.instance.uiLanguage = settings.uiLanguage;
+        Platform.instance.uiTheme = settings.uiTheme;
         requestLayout();
     }
 
