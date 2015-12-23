@@ -168,3 +168,4 @@ OSX: open solution file with Mono-D
 
 Choose dlangide as startap project.
 
+Coding style: [https://github.com/buggins/dlangide/blob/master/README.md](https://github.com/buggins/dlangide/blob/master/README.md)
