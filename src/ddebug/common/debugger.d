@@ -243,39 +243,39 @@ interface DebuggerCallback : ProgramExecutionStatusListener {
 }
 
 enum ResponseCode : int {
-	/// Operation finished successfully
-	Ok = 0,
+    /// Operation finished successfully
+    Ok = 0,
 
-	// more success codes here
+    // more success codes here
 
-	/// General purpose failure code
-	Fail = 1000,
-	/// method is not implemented
-	NotImplemented,
-	/// error running debugger
-	CannotRunDebugger,
+    /// General purpose failure code
+    Fail = 1000,
+    /// method is not implemented
+    NotImplemented,
+    /// error running debugger
+    CannotRunDebugger,
 
-	// more error codes here
+    // more error codes here
 }
 
 alias Runnable = void delegate();
 
 //interface Debugger {
-//	/// start debugging
-//	void startDebugging(string debuggerExecutable, string executable, string[] args, string workingDir, DebuggerResponse response);
+//    /// start debugging
+//    void startDebugging(string debuggerExecutable, string executable, string[] args, string workingDir, DebuggerResponse response);
 //}
 
 
 
 /// proxy for debugger interface implementing async calls
 class DebuggerProxy : Debugger, DebuggerCallback {
-	private DebuggerBase _debugger;
-	private void delegate(void delegate() runnable) _callbackDelegate;
+    private DebuggerBase _debugger;
+    private void delegate(void delegate() runnable) _callbackDelegate;
 
-	this(DebuggerBase debugger, void delegate(void delegate() runnable) callbackDelegate) {
-		_debugger = debugger;
-		_callbackDelegate = callbackDelegate;
-	}
+    this(DebuggerBase debugger, void delegate(void delegate() runnable) callbackDelegate) {
+        _debugger = debugger;
+        _callbackDelegate = callbackDelegate;
+    }
 
     /// returns true if it's debugger
     @property bool isDebugger() { return true; }
@@ -308,43 +308,43 @@ class DebuggerProxy : Debugger, DebuggerCallback {
     /// called when program execution is stopped
     void onProgramExecutionStatus(ProgramExecution process, ExecutionStatus status, int exitCode) {
         DebuggerProxy proxy = this;
-		_callbackDelegate( delegate() { _callback.onProgramExecutionStatus(proxy, status, exitCode); } );
+        _callbackDelegate( delegate() { _callback.onProgramExecutionStatus(proxy, status, exitCode); } );
     }
 
     /// debugger is started and loaded program, you can set breakpoints at this time
     void onProgramLoaded(bool successful, bool debugInfoLoaded) {
-		_callbackDelegate( delegate() { _callback.onProgramLoaded(successful, debugInfoLoaded); } );
+        _callbackDelegate( delegate() { _callback.onProgramLoaded(successful, debugInfoLoaded); } );
     }
 
     /// state changed: running / paused / stopped
     void onDebugState(DebuggingState state, StateChangeReason reason, DebugFrame location, Breakpoint bp) {
-		_callbackDelegate( delegate() { _callback.onDebugState(state, reason, location, bp); } );
+        _callbackDelegate( delegate() { _callback.onDebugState(state, reason, location, bp); } );
     }
 
     /// send debug context (threads, stack frames, local vars...)
     void onDebugContextInfo(DebugThreadList info, ulong threadId, int frame) {
-		_callbackDelegate( delegate() { _callback.onDebugContextInfo(info, threadId, frame); } );
+        _callbackDelegate( delegate() { _callback.onDebugContextInfo(info, threadId, frame); } );
     }
 
     void onResponse(ResponseCode code, string msg) {
-		_callbackDelegate( delegate() { _callback.onResponse(code, msg); } );
+        _callbackDelegate( delegate() { _callback.onResponse(code, msg); } );
     }
 
     void onDebuggerMessage(string msg) {
-		_callbackDelegate( delegate() { _callback.onDebuggerMessage(msg); } );
+        _callbackDelegate( delegate() { _callback.onDebuggerMessage(msg); } );
     }
 
     /// start execution
     void run() {
         Log.d("DebuggerProxy.run()");
         _debugger.run();
-		//_debugger.postRequest(delegate() { _debugger.run();	});
+        //_debugger.postRequest(delegate() { _debugger.run();    });
     }
     /// stop execution
     void stop() {
         Log.d("DebuggerProxy.stop()");
         _debugger.stop();
-		//_debugger.postRequest(delegate() { _debugger.stop(); });
+        //_debugger.postRequest(delegate() { _debugger.stop(); });
     }
 
     /// start execution, can be called after program is loaded
@@ -394,9 +394,9 @@ class DebuggerProxy : Debugger, DebuggerCallback {
 
 abstract class DebuggerBase : Thread, Debugger {
     protected bool _runRequested;
-	protected bool _stopRequested;
-	private bool _finished;
-	protected BlockingQueue!Runnable _queue;
+    protected bool _stopRequested;
+    private bool _finished;
+    protected BlockingQueue!Runnable _queue;
 
     protected ExecutionStatus _status = ExecutionStatus.NotStarted;
     protected int _exitCode = 0;
@@ -422,20 +422,20 @@ abstract class DebuggerBase : Thread, Debugger {
         return _executableFile;
     }
 
-	void postRequest(Runnable request) {
-		_queue.put(request);
-	}
+    void postRequest(Runnable request) {
+        _queue.put(request);
+    }
 
-	this() {
-		super(&threadFunc);
-		_queue = new BlockingQueue!Runnable();
-	}
+    this() {
+        super(&threadFunc);
+        _queue = new BlockingQueue!Runnable();
+    }
 
-	~this() {
-		//stop();
-		//destroy(_queue);
-		_queue = null;
-	}
+    ~this() {
+        //stop();
+        //destroy(_queue);
+        _queue = null;
+    }
 
     // call from GUI thread
     void run() {
@@ -450,41 +450,41 @@ abstract class DebuggerBase : Thread, Debugger {
         // override to implement
     }
 
-	void stop() {
-		Log.i("Debugger.stop()");
+    void stop() {
+        Log.i("Debugger.stop()");
         if (_stopRequested)
             return;
-		_stopRequested = true;
-		_queue.close();
-	}
+        _stopRequested = true;
+        _queue.close();
+    }
 
     bool _threadStarted;
-	protected void onDebuggerThreadStarted() {
+    protected void onDebuggerThreadStarted() {
         _threadStarted = true;
-	}
+    }
 
-	protected void onDebuggerThreadFinished() {
+    protected void onDebuggerThreadFinished() {
         _callback.onProgramExecutionStatus(this, _status, _exitCode);
-	}
-	
-	/// thread func: execute all tasks from queue
-	private void threadFunc() {
-		onDebuggerThreadStarted();
-		Log.i("Debugger thread started");
+    }
+    
+    /// thread func: execute all tasks from queue
+    private void threadFunc() {
+        onDebuggerThreadStarted();
+        Log.i("Debugger thread started");
         try {
-		    while (!_stopRequested) {
-			    Runnable task;
-			    if (_queue.get(task, 0)) {
-				    task();
-			    }
-		    }
+            while (!_stopRequested) {
+                Runnable task;
+                if (_queue.get(task, 0)) {
+                    task();
+                }
+            }
         } catch (Exception e) {
-		    Log.e("Exception in debugger thread", e);
+            Log.e("Exception in debugger thread", e);
         }
-		Log.i("Debugger thread finished");
-		_finished = true;
-		onDebuggerThreadFinished();
-	}
+        Log.i("Debugger thread finished");
+        _finished = true;
+        onDebuggerThreadFinished();
+    }
 
 }
 

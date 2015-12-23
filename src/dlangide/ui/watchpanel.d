@@ -73,19 +73,19 @@ class WatchPanel : DockWindow {
         _autos = new VariablesWindow("watchAutos");
         _tabs.addTab(_locals, "Locals"d);
         _tabs.addTab(_autos, "Autos"d);
-		_tabs.selectTab("watchAutos");
+        _tabs.selectTab("watchAutos");
 
         return _tabs;
     }
 
-	override protected void init() {
-		//styleId = STYLE_DOCK_WINDOW;
+    override protected void init() {
+        //styleId = STYLE_DOCK_WINDOW;
         styleId = null;
         //_caption.text = "Watch"d;
         _bodyWidget = createBodyWidget();
-		//_bodyWidget.styleId = STYLE_DOCK_WINDOW_BODY;
-		addChild(_bodyWidget);
-	}
+        //_bodyWidget.styleId = STYLE_DOCK_WINDOW_BODY;
+        addChild(_bodyWidget);
+    }
 
     protected void onPopupMenuItem(MenuItem item) {
         if (item.action)
@@ -93,7 +93,7 @@ class WatchPanel : DockWindow {
     }
 
     /// override to handle specific actions
-	override bool handleAction(const Action a) {
+    override bool handleAction(const Action a) {
         return super.handleAction(a);
     }
 

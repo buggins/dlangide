@@ -339,7 +339,7 @@ struct ProjectConfiguration {
         ProjectConfiguration[string] res = [DEFAULT_NAME: DEFAULT];
         Setting configs = s.objectByPath("configurations");
         if(configs is null || configs.type != SettingType.ARRAY) 
-        	return res;
+            return res;
         
         foreach(conf; configs) {
             if(!conf.isObject) continue;
@@ -568,7 +568,7 @@ class Project : WorkspaceItem {
     }
 
     /// tries to find source file in project, returns found project source file item, or null if not found
-	ProjectSourceFile findSourceFileItem(ProjectItem dir, string filename, bool fullFileName=true) {
+    ProjectSourceFile findSourceFileItem(ProjectItem dir, string filename, bool fullFileName=true) {
         for (int i = 0; i < dir.childCount; i++) {
             ProjectItem item = dir.child(i);
             if (item.isFolder) {
@@ -577,20 +577,20 @@ class Project : WorkspaceItem {
                     return res;
             } else {
                 ProjectSourceFile res = cast(ProjectSourceFile)item;
-				if(res)
-				{
-					if(fullFileName && res.filename.equal(filename))
-						return res;
-					else if (!fullFileName && res.filename.endsWith(filename))
-                    	return res;
-				}
+                if(res)
+                {
+                    if(fullFileName && res.filename.equal(filename))
+                        return res;
+                    else if (!fullFileName && res.filename.endsWith(filename))
+                        return res;
+                }
             }
         }
         return null;
     }
 
-	ProjectSourceFile findSourceFileItem(string filename, bool fullFileName=true) {
-		return findSourceFileItem(_items, filename, fullFileName);
+    ProjectSourceFile findSourceFileItem(string filename, bool fullFileName=true) {
+        return findSourceFileItem(_items, filename, fullFileName);
     }
 
     override bool load(string fname = null) {

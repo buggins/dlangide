@@ -38,18 +38,18 @@ class DllInfo : ModuleInfo {
 }
 
 class ProcessInfo : ModuleInfo {
-	HANDLE hProcess;
+    HANDLE hProcess;
     uint processId;
-	HANDLE hThread;
-	ulong threadLocalBase;
-	ulong startAddress; //LPTHREAD_START_ROUTINE
+    HANDLE hThread;
+    ulong threadLocalBase;
+    ulong startAddress; //LPTHREAD_START_ROUTINE
 
     this(ref DEBUG_EVENT di) {
-	    hFile = di.CreateProcessInfo.hFile;
-	    hProcess = di.CreateProcessInfo.hProcess;
+        hFile = di.CreateProcessInfo.hFile;
+        hProcess = di.CreateProcessInfo.hProcess;
         processId = di.dwProcessId;
-	    hThread = di.CreateProcessInfo.hThread;
-	    LPVOID lpBaseOfImage;
+        hThread = di.CreateProcessInfo.hThread;
+        LPVOID lpBaseOfImage;
         baseOfImage = cast(ulong)di.CreateProcessInfo.lpBaseOfImage;
         debugInfoFileOffset = di.CreateProcessInfo.dwDebugInfoFileOffset;
         debugInfoSize = di.CreateProcessInfo.nDebugInfoSize;

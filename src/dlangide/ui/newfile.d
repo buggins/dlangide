@@ -38,7 +38,7 @@ class NewFileDlg : Dialog {
     ProjectFolder _folder;
     string[] _sourcePaths;
     this(IDEFrame parent, Project currentProject, ProjectFolder folder) {
-		super(UIString("New source file"d), parent.window, 
+        super(UIString("New source file"d), parent.window, 
               DialogFlag.Modal | DialogFlag.Resizable | DialogFlag.Popup, 500, 400);
         _ide = parent;
         _icon = "dlangui-logo1";
@@ -51,11 +51,11 @@ class NewFileDlg : Dialog {
         if (folder)
             _location = folder.filename;
     }
-	/// override to implement creation of dialog controls
-	override void init() {
+    /// override to implement creation of dialog controls
+    override void init() {
         super.init();
         initTemplates();
-		Widget content;
+        Widget content;
         try {
             content = parseML(q{
                     VerticalLayout {
@@ -153,7 +153,7 @@ class NewFileDlg : Dialog {
         addChild(content);
         addChild(createButtonsPanel([ACTION_FILE_NEW_SOURCE_FILE, ACTION_CANCEL], 0, 0));
 
-	}
+    }
 
     StringListWidget _projectTemplateList;
     EditBox _templateDescription;

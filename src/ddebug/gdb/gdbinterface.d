@@ -13,66 +13,66 @@ import std.algorithm : startsWith, endsWith, equal;
 import core.thread;
 
 abstract class ConsoleDebuggerInterface : DebuggerBase, TextWriter {
-	protected ExternalProcess _debuggerProcess;
+    protected ExternalProcess _debuggerProcess;
 
-	protected ExternalProcessState runDebuggerProcess(string executable, string[]args, string dir) {
-		_debuggerProcess = new ExternalProcess();
-		ExternalProcessState state = _debuggerProcess.run(executable, args, dir, this);
-		return state;
-	}
+    protected ExternalProcessState runDebuggerProcess(string executable, string[]args, string dir) {
+        _debuggerProcess = new ExternalProcess();
+        ExternalProcessState state = _debuggerProcess.run(executable, args, dir, this);
+        return state;
+    }
 
-	private string[] _stdoutLines;
-	private char[] _stdoutBuf;
-	/// return true to clear lines list
-	protected bool onDebuggerStdoutLines(string[] lines) {
+    private string[] _stdoutLines;
+    private char[] _stdoutBuf;
+    /// return true to clear lines list
+    protected bool onDebuggerStdoutLines(string[] lines) {
         foreach(line; lines) {
             onDebuggerStdoutLine(line);
         }
-		return true;
-	}
-	protected void onDebuggerStdoutLine(string line) {
+        return true;
     }
-	private void onStdoutText(string text) {
-		_stdoutBuf ~= text;
-		// pass full lines
-		int startPos = 0;
-		bool fullLinesFound = false;
-		for (int i = 0; i < _stdoutBuf.length; i++) {
-			if (_stdoutBuf[i] == '\n' || _stdoutBuf[i] == '\r') {
-				if (i <= startPos)
-					_stdoutLines ~= "";
-				else
-					_stdoutLines ~= _stdoutBuf[startPos .. i].dup;
-				fullLinesFound = true;
-				if (i + 1 < _stdoutBuf.length) {
-					if ((_stdoutBuf[i] == '\n' && _stdoutBuf[i + 1] == '\r')
-							|| (_stdoutBuf[i] == '\r' && _stdoutBuf[i + 1] == '\n'))
-						i++;
-				}
-				startPos = i + 1;
-			}
-		}
-		if (fullLinesFound) {
-			for (int i = 0; i + startPos < _stdoutBuf.length; i++)
-				_stdoutBuf[i] = _stdoutBuf[i + startPos];
-			_stdoutBuf.length = _stdoutBuf.length - startPos;
-			if (onDebuggerStdoutLines(_stdoutLines)) {
-				_stdoutLines.length = 0;
-			}
-		}
-	}
+    protected void onDebuggerStdoutLine(string line) {
+    }
+    private void onStdoutText(string text) {
+        _stdoutBuf ~= text;
+        // pass full lines
+        int startPos = 0;
+        bool fullLinesFound = false;
+        for (int i = 0; i < _stdoutBuf.length; i++) {
+            if (_stdoutBuf[i] == '\n' || _stdoutBuf[i] == '\r') {
+                if (i <= startPos)
+                    _stdoutLines ~= "";
+                else
+                    _stdoutLines ~= _stdoutBuf[startPos .. i].dup;
+                fullLinesFound = true;
+                if (i + 1 < _stdoutBuf.length) {
+                    if ((_stdoutBuf[i] == '\n' && _stdoutBuf[i + 1] == '\r')
+                            || (_stdoutBuf[i] == '\r' && _stdoutBuf[i + 1] == '\n'))
+                        i++;
+                }
+                startPos = i + 1;
+            }
+        }
+        if (fullLinesFound) {
+            for (int i = 0; i + startPos < _stdoutBuf.length; i++)
+                _stdoutBuf[i] = _stdoutBuf[i + startPos];
+            _stdoutBuf.length = _stdoutBuf.length - startPos;
+            if (onDebuggerStdoutLines(_stdoutLines)) {
+                _stdoutLines.length = 0;
+            }
+        }
+    }
 
-	bool sendLine(string text) {
-		return _debuggerProcess.write(text ~ "\n");
-	}
+    bool sendLine(string text) {
+        return _debuggerProcess.write(text ~ "\n");
+    }
 
-	/// log lines
-	override void writeText(dstring text) {
-		string text8 = toUTF8(text);
-		postRequest(delegate() {
-				onStdoutText(text8);
-		});
-	}
+    /// log lines
+    override void writeText(dstring text) {
+        string text8 = toUTF8(text);
+        postRequest(delegate() {
+                onStdoutText(text8);
+        });
+    }
 
 }
 
@@ -88,36 +88,36 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
         _requests.setTarget(this);
     }
 
-	protected int commandId;
+    protected int commandId;
 
-	int sendCommand(string text) {
+    int sendCommand(string text) {
         ExternalProcessState state = _debuggerProcess.poll();
         if (state != ExternalProcessState.Running) {
             _stopRequested = true;
             return 0;
         }
-		commandId++;
+        commandId++;
         string cmd = to!string(commandId) ~ text;
         Log.d("GDB command[", commandId, "]> ", text);
-		sendLine(cmd);
-		return commandId;
-	}
+        sendLine(cmd);
+        return commandId;
+    }
 
-	Pid terminalPid;
-	string terminalTty;
+    Pid terminalPid;
+    string terminalTty;
 
-	string startTerminal() {
-		Log.d("Starting terminal ", _terminalExecutable);
-		import std.random;
-		import std.file;
-		import std.path;
-		import std.string;
-		import core.thread;
-		uint n = uniform(0, 0x10000000, rndGen());
-		terminalTty = null;
-		string termfile = buildPath(tempDir, format("dlangide-term-name-%07x.tmp", n));
-		Log.d("temp file for tty name: ", termfile);
-		try {
+    string startTerminal() {
+        Log.d("Starting terminal ", _terminalExecutable);
+        import std.random;
+        import std.file;
+        import std.path;
+        import std.string;
+        import core.thread;
+        uint n = uniform(0, 0x10000000, rndGen());
+        terminalTty = null;
+        string termfile = buildPath(tempDir, format("dlangide-term-name-%07x.tmp", n));
+        Log.d("temp file for tty name: ", termfile);
+        try {
             string[] args = [
                 _terminalExecutable,
                 "-title",
@@ -126,105 +126,105 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
                 "echo 'DlangIDE External Console' && tty > " ~ termfile ~ " && sleep 1000000"
             ];
             Log.d("Terminal command line: ", args);
-			terminalPid = spawnProcess(args);
-			for (int i = 0; i < 80; i++) {
-				Thread.sleep(dur!"msecs"(100));
-				if (!isTerminalActive) {
-					Log.e("Failed to get terminal TTY");
-					return null;
-				}
-				if (exists(termfile)) {
-					Thread.sleep(dur!"msecs"(20));
-					break;
-				}
-			}
-			// read TTY from file
-			if (exists(termfile)) {
-				terminalTty = readText(termfile);
-				if (terminalTty.endsWith("\n"))
-					terminalTty = terminalTty[0 .. $-1];
-				// delete file
-				remove(termfile);
+            terminalPid = spawnProcess(args);
+            for (int i = 0; i < 80; i++) {
+                Thread.sleep(dur!"msecs"(100));
+                if (!isTerminalActive) {
+                    Log.e("Failed to get terminal TTY");
+                    return null;
+                }
+                if (exists(termfile)) {
+                    Thread.sleep(dur!"msecs"(20));
+                    break;
+                }
+            }
+            // read TTY from file
+            if (exists(termfile)) {
+                terminalTty = readText(termfile);
+                if (terminalTty.endsWith("\n"))
+                    terminalTty = terminalTty[0 .. $-1];
+                // delete file
+                remove(termfile);
                 Log.d("Terminal tty: ", terminalTty);
-			}
-		} catch (Exception e) {
-			Log.e("Failed to start terminal ", e);
-			killTerminal();
-		}
-		if (terminalTty.length == 0) {
-			Log.i("Cannot start terminal");
-			killTerminal();
-		} else {
-			Log.i("Terminal: ", terminalTty);
-		}
-		return terminalTty;
-	}
+            }
+        } catch (Exception e) {
+            Log.e("Failed to start terminal ", e);
+            killTerminal();
+        }
+        if (terminalTty.length == 0) {
+            Log.i("Cannot start terminal");
+            killTerminal();
+        } else {
+            Log.i("Terminal: ", terminalTty);
+        }
+        return terminalTty;
+    }
 
-	bool isTerminalActive() {
+    bool isTerminalActive() {
         if (_terminalExecutable.empty)
             return true;
-		if (terminalPid is null)
-			return false;
-		auto res = tryWait(terminalPid);
-		if (res.terminated) {
-			Log.d("isTerminalActive: Terminal is stopped");
-			wait(terminalPid);
-			terminalPid = Pid.init;
-			return false;
-		} else {
-			return true;
-		}
-	}
+        if (terminalPid is null)
+            return false;
+        auto res = tryWait(terminalPid);
+        if (res.terminated) {
+            Log.d("isTerminalActive: Terminal is stopped");
+            wait(terminalPid);
+            terminalPid = Pid.init;
+            return false;
+        } else {
+            return true;
+        }
+    }
 
-	void killTerminal() {
+    void killTerminal() {
         if (_terminalExecutable.empty)
             return;
-		if (terminalPid is null)
-			return;
-		try {
-			Log.d("Trying to kill terminal");
-			kill(terminalPid, 9);
-			Log.d("Waiting for terminal process termination");
-			wait(terminalPid);
-			terminalPid = Pid.init;
-			Log.d("Killed");
-		} catch (Exception e) {
-			Log.d("Exception while killing terminal", e);
-			terminalPid = Pid.init;
-		}
-	}
+        if (terminalPid is null)
+            return;
+        try {
+            Log.d("Trying to kill terminal");
+            kill(terminalPid, 9);
+            Log.d("Waiting for terminal process termination");
+            wait(terminalPid);
+            terminalPid = Pid.init;
+            Log.d("Killed");
+        } catch (Exception e) {
+            Log.d("Exception while killing terminal", e);
+            terminalPid = Pid.init;
+        }
+    }
 
     override void startDebugging() {
         Log.d("GDBInterface.startDebugging()");
-		string[] debuggerArgs;
+        string[] debuggerArgs;
         if (!_terminalExecutable.empty) {
-		    terminalTty = startTerminal();
-		    if (terminalTty.length == 0) {
-			    //_callback.onResponse(ResponseCode.CannotRunDebugger, "Cannot start terminal");
+            terminalTty = startTerminal();
+            if (terminalTty.length == 0) {
+                //_callback.onResponse(ResponseCode.CannotRunDebugger, "Cannot start terminal");
                 _status = ExecutionStatus.Error;
                 _stopRequested = true;
                 return;
-		    }
-		    debuggerArgs ~= "-tty";
-		    debuggerArgs ~= terminalTty;
+            }
+            debuggerArgs ~= "-tty";
+            debuggerArgs ~= terminalTty;
         }
-		debuggerArgs ~= "--interpreter=mi";
-		debuggerArgs ~= "--silent";
-		debuggerArgs ~= "--args";
-		debuggerArgs ~= _executableFile;
-		foreach(arg; _executableArgs)
-			debuggerArgs ~= arg;
-		ExternalProcessState state = runDebuggerProcess(_debuggerExecutable, debuggerArgs, _executableWorkingDir);
-		Log.i("Debugger process state:");
-		if (state == ExternalProcessState.Running) {
+        debuggerArgs ~= "--interpreter=mi";
+        debuggerArgs ~= "--silent";
+        debuggerArgs ~= "--args";
+        debuggerArgs ~= _executableFile;
+        foreach(arg; _executableArgs)
+            debuggerArgs ~= arg;
+        ExternalProcessState state = runDebuggerProcess(_debuggerExecutable, debuggerArgs, _executableWorkingDir);
+        Log.i("Debugger process state:");
+        if (state == ExternalProcessState.Running) {
             Thread.sleep(dur!"seconds"(1));
             _callback.onProgramLoaded(true, true);
-			//sendCommand("-break-insert main");
-		} else {
+            //sendCommand("-break-insert main");
+        } else {
             _status = ExecutionStatus.Error;
             _stopRequested = true;
-			return;
-		}
+            return;
+        }
     }
 
     override protected void onDebuggerThreadFinished() {
@@ -241,7 +241,7 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
     }
 
     bool _threadJoined = false;
-	override void stop() {
+    override void stop() {
         if (_stopRequested) {
             Log.w("GDBInterface.stop() - _stopRequested flag already set");
             return;
@@ -266,7 +266,7 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
                 }
             }
         }
-	}
+    }
 
     /// start program execution, can be called after program is loaded
     int _startRequestId;
@@ -628,8 +628,8 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
         }
     }
 
-	override protected void onDebuggerStdoutLine(string gdbLine) {
-		//Log.d("GDB stdout: '", line, "'");
+    override protected void onDebuggerStdoutLine(string gdbLine) {
+        //Log.d("GDB stdout: '", line, "'");
         string line = gdbLine;
         if (line.empty)
             return;

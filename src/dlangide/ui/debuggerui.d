@@ -35,7 +35,7 @@ class DebuggerUIHandler : DebuggerCallback, StackFrameSelectedHandler {
         updateLocation(null);
         switchToDevelopPerspective();
         _ide.debugFinished(process, status, exitCode);
-		//_callbackDelegate( delegate() { _callback.onProgramExecutionStatus(this, status, exitCode); } );
+        //_callbackDelegate( delegate() { _callback.onProgramExecutionStatus(this, status, exitCode); } );
     }
 
     /// send debug context (threads, stack frames, local vars...)
@@ -58,7 +58,7 @@ class DebuggerUIHandler : DebuggerCallback, StackFrameSelectedHandler {
 
     void onResponse(ResponseCode code, string msg) {
         Log.d("Debugger response: ", code, " ", msg);
-		//_callbackDelegate( delegate() { _callback.onResponse(code, msg); } );
+        //_callbackDelegate( delegate() { _callback.onResponse(code, msg); } );
     }
 
     void onDebuggerMessage(string msg) {
@@ -126,7 +126,7 @@ class DebuggerUIHandler : DebuggerCallback, StackFrameSelectedHandler {
         _debugger.run();
     }
 
-	bool handleAction(const Action a) {
+    bool handleAction(const Action a) {
         switch(a.id) {
             case IDEActions.DebugPause:
                 if (_state == DebuggingState.running)
@@ -161,8 +161,8 @@ class DebuggerUIHandler : DebuggerCallback, StackFrameSelectedHandler {
         }
     }
 
-	/// override to handle specific actions state (e.g. change enabled state for supported actions)
-	bool handleActionStateRequest(const Action a) {
+    /// override to handle specific actions state (e.g. change enabled state for supported actions)
+    bool handleActionStateRequest(const Action a) {
         switch (a.id) {
             case IDEActions.DebugStop:
             case IDEActions.DebugPause:

@@ -70,7 +70,7 @@ class WorkspacePanel : DockWindow {
         _tree = new TreeWidget("wstree");
         _tree.layoutHeight(FILL_PARENT).layoutHeight(FILL_PARENT);
         _tree.selectionChange = &onTreeItemSelected;
-		_tree.fontSize = 16;
+        _tree.fontSize = 16;
         _tree.noCollapseForSingleTopLevelItem = true;
         _tree.popupMenu = &onTreeItemPopupMenu;
 
@@ -150,7 +150,7 @@ class WorkspacePanel : DockWindow {
 
     ProjectSourceFile findSourceFileItem(string filename, bool fullFileName=true) {
         if (_workspace)
-			return _workspace.findSourceFileItem(filename, fullFileName);
+            return _workspace.findSourceFileItem(filename, fullFileName);
         return null;
     }
 
@@ -205,7 +205,7 @@ class WorkspacePanel : DockWindow {
     }
 
     /// override to handle specific actions
-	override bool handleAction(const Action a) {
+    override bool handleAction(const Action a) {
         if (workspaceActionListener.assigned)
             return workspaceActionListener(a);
         return false;

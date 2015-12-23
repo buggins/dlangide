@@ -21,31 +21,31 @@ SettingsPage createSettingsPages() {
     texted.addCheckbox("editors/textEditor/smartIndents", UIString("Smart indents"d));
     texted.addCheckbox("editors/textEditor/smartIndentsAfterPaste", UIString("Smart indent after paste"d));
 
-	SettingsPage dlang = res.addChild("dlang", UIString("D"d));
-	SettingsPage dub = dlang.addChild("dlang/dub", UIString("DUB"d));
-	dub.addExecutableFileNameEdit("dlang/dub/executable", UIString("DUB executable"d), "dub");
-	dub.addStringEdit("dlang/dub/additional_params", UIString("DUB additional params"d), "");
-	SettingsPage ddebug = dlang.addChild("dlang/debugger", UIString("Debugger"d));
-	ddebug.addExecutableFileNameEdit("dlang/debugger/executable", UIString("Debugger executable"d), "gdb");
-	SettingsPage terminal = dlang.addChild("dlang/terminal", UIString("Terminal"d));
-	terminal.addExecutableFileNameEdit("dlang/terminal/executable", UIString("Terminal executable"d), "xterm");
+    SettingsPage dlang = res.addChild("dlang", UIString("D"d));
+    SettingsPage dub = dlang.addChild("dlang/dub", UIString("DUB"d));
+    dub.addExecutableFileNameEdit("dlang/dub/executable", UIString("DUB executable"d), "dub");
+    dub.addStringEdit("dlang/dub/additional_params", UIString("DUB additional params"d), "");
+    SettingsPage ddebug = dlang.addChild("dlang/debugger", UIString("Debugger"d));
+    ddebug.addExecutableFileNameEdit("dlang/debugger/executable", UIString("Debugger executable"d), "gdb");
+    SettingsPage terminal = dlang.addChild("dlang/terminal", UIString("Terminal"d));
+    terminal.addExecutableFileNameEdit("dlang/terminal/executable", UIString("Terminal executable"d), "xterm");
 
-	SettingsPage toolchains = dlang.addChild("dlang/toolchains", UIString("Toolchains"d));
-	SettingsPage dmdtoolchain = toolchains.addChild("dlang/toolchains/dmd", UIString("DMD"d));
-	dmdtoolchain.addExecutableFileNameEdit("dlang/toolchains/dmd/executable", UIString("DMD executable"d), "dmd");
-	SettingsPage ldctoolchain = toolchains.addChild("dlang/toolchains/ldc", UIString("LDC"d));
-	ldctoolchain.addExecutableFileNameEdit("dlang/toolchains/ldc/executable", UIString("LDC2 executable"d), "ldc2");
-	SettingsPage gdctoolchain = toolchains.addChild("dlang/toolchains/gdc", UIString("GDC"d));
-	gdctoolchain.addExecutableFileNameEdit("dlang/toolchains/gdc/executable", UIString("GDC executable"d), "gdc");
+    SettingsPage toolchains = dlang.addChild("dlang/toolchains", UIString("Toolchains"d));
+    SettingsPage dmdtoolchain = toolchains.addChild("dlang/toolchains/dmd", UIString("DMD"d));
+    dmdtoolchain.addExecutableFileNameEdit("dlang/toolchains/dmd/executable", UIString("DMD executable"d), "dmd");
+    SettingsPage ldctoolchain = toolchains.addChild("dlang/toolchains/ldc", UIString("LDC"d));
+    ldctoolchain.addExecutableFileNameEdit("dlang/toolchains/ldc/executable", UIString("LDC2 executable"d), "ldc2");
+    SettingsPage gdctoolchain = toolchains.addChild("dlang/toolchains/gdc", UIString("GDC"d));
+    gdctoolchain.addExecutableFileNameEdit("dlang/toolchains/gdc/executable", UIString("GDC executable"d), "gdc");
 
-	SettingsPage ui = res.addChild("interface", UIString("Interface"d));
+    SettingsPage ui = res.addChild("interface", UIString("Interface"d));
     ui.addStringComboBox("interface/theme", UIString("Theme"d), [
             StringListValue("ide_theme_default", "Default"d), 
             StringListValue("ide_theme_dark", "Dark"d)]);
-	ui.addStringComboBox("interface/language", UIString("Language"d), [
-			StringListValue("en", "English"d), 
-			StringListValue("ru", "Russian"d), 
-			StringListValue("es", "Spanish"d)]);
+    ui.addStringComboBox("interface/language", UIString("Language"d), [
+            StringListValue("en", "English"d), 
+            StringListValue("ru", "Russian"d), 
+            StringListValue("es", "Spanish"d)]);
     ui.addIntComboBox("interface/hintingMode", UIString("Font hinting mode"d), [StringListValue(0, "Normal"d), StringListValue(1, "Force Auto Hint"d), 
                 StringListValue(2, "Disabled"d), StringListValue(3, "Light"d)]);
     ui.addIntComboBox("interface/minAntialiasedFontSize", UIString("Minimum font size for antialiasing"d), 
@@ -86,20 +86,20 @@ SettingsPage createProjectSettingsPages() {
     SettingsPage res = new SettingsPage("", UIString(""d));
 
     SettingsPage build = res.addChild("build", UIString("Build"d));
-	build.addStringComboBox("build/toolchain", UIString("Toolchain"d), [
-			StringListValue("default", "Default"d), 
-			StringListValue("dmd", "DMD"d), 
-			StringListValue("ldc", "LDC"d), 
-			StringListValue("gdc", "GDC"d)]);
-	build.addStringComboBox("build/arch", UIString("Architecture"d), [
-			StringListValue("default", "Default"d), 
-			StringListValue("x86", "x86"d), 
-			StringListValue("x86_64", "x86_64"d)]);
+    build.addStringComboBox("build/toolchain", UIString("Toolchain"d), [
+            StringListValue("default", "Default"d), 
+            StringListValue("dmd", "DMD"d), 
+            StringListValue("ldc", "LDC"d), 
+            StringListValue("gdc", "GDC"d)]);
+    build.addStringComboBox("build/arch", UIString("Architecture"d), [
+            StringListValue("default", "Default"d), 
+            StringListValue("x86", "x86"d), 
+            StringListValue("x86_64", "x86_64"d)]);
     build.addCheckbox("build/verbose", UIString("Verbose"d), true);
 
     SettingsPage dbg = res.addChild("debug", UIString("Run and Debug"d));
-	dbg.addStringEdit("debug/run_args", UIString("Command line args"d), "");
-	dbg.addDirNameEdit("debug/working_dir", UIString("Working directory"d), "");
+    dbg.addStringEdit("debug/run_args", UIString("Command line args"d), "");
+    dbg.addDirNameEdit("debug/working_dir", UIString("Working directory"d), "");
     dbg.addCheckbox("debug/external_console", UIString("Run in external console"d), true);
 
     return res;

@@ -59,7 +59,7 @@ class ComObject : IUnknown
 
 class DebugCallback : ComObject, IDebugEventCallback2 {
 
-	override HRESULT Event(
+    override HRESULT Event(
             /+[in]+/ IDebugEngine2 pEngine,
             /+[in]+/ IDebugProcess2 pProcess,
             /+[in]+/ IDebugProgram2 pProgram,
@@ -108,7 +108,7 @@ IDebugPortSupplier2 createPortSupplier() {
 
 class DebugPortRequest : ComObject, IDebugPortRequest2 {
     static const wchar[] portName = "magoDebuggerPort\0";
-	HRESULT GetPortName(/+[out]+/ BSTR* pbstrPortName) {
+    HRESULT GetPortName(/+[out]+/ BSTR* pbstrPortName) {
         pbstrPortName = cast(BSTR*)portName.ptr;
         return S_OK;
     }
@@ -136,8 +136,8 @@ void testMago() {
     }
     IDebugPort2 debugPort = null;
     DebugPortRequest debugPortRequest = new DebugPortRequest();
-	// Add a port
-	hr = portSupplier.AddPort(
+    // Add a port
+    hr = portSupplier.AddPort(
                     /+[in]+/ debugPortRequest,
                     /+[out]+/ &debugPort);
     if (FAILED(hr) || !debugPort) {

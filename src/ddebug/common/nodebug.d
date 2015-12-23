@@ -20,7 +20,7 @@ class ProgramExecutionNoDebug : Thread, ProgramExecution {
     }
 
     // status
-	protected Pid _pid;
+    protected Pid _pid;
     protected ExecutionStatus _status = ExecutionStatus.NotStarted;
     protected int _exitCode = 0;
 
@@ -33,35 +33,35 @@ class ProgramExecutionNoDebug : Thread, ProgramExecution {
         stop();
     }
 
-	private bool isProcessActive() {
-		if (_pid is null)
-			return false;
-		auto res = tryWait(_pid);
-		if (res.terminated) {
-			Log.d("Process ", _executableFile, " is stopped");
-			_exitCode = wait(_pid);
-			_pid = Pid.init;
-			return false;
-		} else {
-			return true;
-		}
-	}
+    private bool isProcessActive() {
+        if (_pid is null)
+            return false;
+        auto res = tryWait(_pid);
+        if (res.terminated) {
+            Log.d("Process ", _executableFile, " is stopped");
+            _exitCode = wait(_pid);
+            _pid = Pid.init;
+            return false;
+        } else {
+            return true;
+        }
+    }
 
-	private void killProcess() {
-		if (_pid is null)
-			return;
-		try {
-			Log.d("Trying to kill process", _executableFile);
-			kill(_pid, 9);
-			Log.d("Waiting for process termination");
-			_exitCode = wait(_pid);
-			_pid = Pid.init;
-			Log.d("Killed");
-		} catch (Exception e) {
-			Log.d("Exception while killing process " ~ _executableFile, e);
-			_pid = Pid.init;
-		}
-	}
+    private void killProcess() {
+        if (_pid is null)
+            return;
+        try {
+            Log.d("Trying to kill process", _executableFile);
+            kill(_pid, 9);
+            Log.d("Waiting for process termination");
+            _exitCode = wait(_pid);
+            _pid = Pid.init;
+            Log.d("Killed");
+        } catch (Exception e) {
+            Log.d("Exception while killing process " ~ _executableFile, e);
+            _pid = Pid.init;
+        }
+    }
 
     private void threadFunc() {
         import std.stdio;
@@ -91,7 +91,7 @@ class ProgramExecutionNoDebug : Thread, ProgramExecution {
             newstderr = stderr;
         }
         try {
-		    _pid = spawnProcess(params, newstdin, newstdout, newstderr, null, Config.none, _executableWorkingDir);
+            _pid = spawnProcess(params, newstdin, newstdout, newstderr, null, Config.none, _executableWorkingDir);
         } catch (Exception e) {
             Log.e("ProgramExecutionNoDebug: Failed to spawn process: ", e);
             killProcess();
@@ -101,7 +101,7 @@ class ProgramExecutionNoDebug : Thread, ProgramExecution {
         if (_status != ExecutionStatus.Error) {
             // thread loop: poll process status
             while (!_stopRequested) {
-		        Thread.sleep(dur!"msecs"(50));
+                Thread.sleep(dur!"msecs"(50));
                 if (!isProcessActive()) {
                     _status = ExecutionStatus.Finished;
                     break;

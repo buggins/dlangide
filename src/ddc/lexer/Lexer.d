@@ -5,17 +5,17 @@ import ddc.lexer.tokenizer;
 
 /** Lexem type constants */
 enum LexemType : ushort {
-	UNKNOWN,
-	// types
-	TYPE,
-	TYPE_CTORS,
-	TYPE_CTOR,
-	BASIC_TYPE,
-	BASIC_TYPE_X,
-	BASIC_TYPE_2,
-	IDENTIFIER_LIST,
-	IDENTIFIER,
-	TYPEOF,
+    UNKNOWN,
+    // types
+    TYPE,
+    TYPE_CTORS,
+    TYPE_CTOR,
+    BASIC_TYPE,
+    BASIC_TYPE_X,
+    BASIC_TYPE_2,
+    IDENTIFIER_LIST,
+    IDENTIFIER,
+    TYPEOF,
     // templates
     TEMPLATE_INSTANCE,
     EXPRESSION,
@@ -23,7 +23,7 @@ enum LexemType : ushort {
 }
 
 class Lexem {
-	public @property LexemType type() { return LexemType.UNKNOWN; }
+    public @property LexemType type() { return LexemType.UNKNOWN; }
 }
 
 /** 
@@ -31,31 +31,31 @@ class Lexem {
         char, wchar, dchar, float, double, real, ifloat, idouble, ireal, cfloat, cdouble, creal, void 
 */
 bool isBasicTypeXToken(Token token) {
-	if (token.type != TokenType.KEYWORD)
-		return false;
-	Keyword id = token.keyword;
-	return id == Keyword.BOOL
-		|| id == Keyword.BYTE
-		|| id == Keyword.UBYTE
-		|| id == Keyword.SHORT
-		|| id == Keyword.USHORT
-		|| id == Keyword.INT
-		|| id == Keyword.UINT
-		|| id == Keyword.LONG
-		|| id == Keyword.ULONG
-		|| id == Keyword.CHAR
-		|| id == Keyword.WCHAR
-		|| id == Keyword.DCHAR
-		|| id == Keyword.FLOAT
-		|| id == Keyword.DOUBLE
-		|| id == Keyword.REAL
-		|| id == Keyword.IFLOAT
-		|| id == Keyword.IDOUBLE
-		|| id == Keyword.IREAL
-		|| id == Keyword.CFLOAT
-		|| id == Keyword.CDOUBLE
-		|| id == Keyword.CREAL
-		|| id == Keyword.VOID;
+    if (token.type != TokenType.KEYWORD)
+        return false;
+    Keyword id = token.keyword;
+    return id == Keyword.BOOL
+        || id == Keyword.BYTE
+        || id == Keyword.UBYTE
+        || id == Keyword.SHORT
+        || id == Keyword.USHORT
+        || id == Keyword.INT
+        || id == Keyword.UINT
+        || id == Keyword.LONG
+        || id == Keyword.ULONG
+        || id == Keyword.CHAR
+        || id == Keyword.WCHAR
+        || id == Keyword.DCHAR
+        || id == Keyword.FLOAT
+        || id == Keyword.DOUBLE
+        || id == Keyword.REAL
+        || id == Keyword.IFLOAT
+        || id == Keyword.IDOUBLE
+        || id == Keyword.IREAL
+        || id == Keyword.CFLOAT
+        || id == Keyword.CDOUBLE
+        || id == Keyword.CREAL
+        || id == Keyword.VOID;
 }
 
 /** 
@@ -63,65 +63,65 @@ bool isBasicTypeXToken(Token token) {
   char, wchar, dchar, float, double, real, ifloat, idouble, ireal, cfloat, cdouble, creal, void
 */
 class BasicTypeX : Lexem {
-	public Token _token;
-	public override @property LexemType type() { return LexemType.BASIC_TYPE_X; }
-	public this(Token token) 
-	in {
-		assert(isBasicTypeXToken(token));
-	}
-	body {
-		_token = token;
-	}
+    public Token _token;
+    public override @property LexemType type() { return LexemType.BASIC_TYPE_X; }
+    public this(Token token) 
+    in {
+        assert(isBasicTypeXToken(token));
+    }
+    body {
+        _token = token;
+    }
 }
 
 /** 
     Returns true for  one of keywords: const, immutable, inout, shared 
 */
 bool isTypeCtorToken(Token token) {
-	if (token.type != TokenType.KEYWORD)
-		return false;
-	Keyword id = token.keyword;
-	return id == Keyword.CONST
-		|| id == Keyword.IMMUTABLE
-		|| id == Keyword.INOUT
-		|| id == Keyword.SHARED;
+    if (token.type != TokenType.KEYWORD)
+        return false;
+    Keyword id = token.keyword;
+    return id == Keyword.CONST
+        || id == Keyword.IMMUTABLE
+        || id == Keyword.INOUT
+        || id == Keyword.SHARED;
 }
 
 /** 
     Single token, one of keywords: const, immutable, inout, shared 
 */
 class TypeCtor : Lexem {
-	public Token _token;
-	public override @property LexemType type() { return LexemType.TYPE_CTOR; }
-	public this(Token token)
-	in {
-		assert(isTypeCtorToken(token));
-	}
-	body {
-		_token = token;
-	}
+    public Token _token;
+    public override @property LexemType type() { return LexemType.TYPE_CTOR; }
+    public this(Token token)
+    in {
+        assert(isTypeCtorToken(token));
+    }
+    body {
+        _token = token;
+    }
 }
 
 /** 
     Zero, one or several keywords: const, immutable, inout, shared 
 */
 class TypeCtors : Lexem {
-	public TypeCtor[] _list;
-	public override @property LexemType type() { return LexemType.TYPE_CTORS; }
-	public this(Token token)
-	in {
-		assert(isTypeCtorToken(token));
-	}
-	body {
-		_list ~= new TypeCtor(token);
-	}
-	public void append(Token token)
-	in {
-		assert(isTypeCtorToken(token));
-	}
-	body {
-		_list ~= new TypeCtor(token);
-	}
+    public TypeCtor[] _list;
+    public override @property LexemType type() { return LexemType.TYPE_CTORS; }
+    public this(Token token)
+    in {
+        assert(isTypeCtorToken(token));
+    }
+    body {
+        _list ~= new TypeCtor(token);
+    }
+    public void append(Token token)
+    in {
+        assert(isTypeCtorToken(token));
+    }
+    body {
+        _list ~= new TypeCtor(token);
+    }
 }
 
 /**
@@ -129,14 +129,14 @@ class TypeCtors : Lexem {
 */
 class Identifier : Lexem {
     IdentToken _token;
-	public override @property LexemType type() { return LexemType.IDENTIFIER; }
-	public this(Token identifier)
-	in {
+    public override @property LexemType type() { return LexemType.IDENTIFIER; }
+    public this(Token identifier)
+    in {
         assert(identifier.type == TokenType.IDENTIFIER);
-	}
-	body {
+    }
+    body {
         _token = cast(IdentToken)identifier;
-	}
+    }
 }
 
 /**
@@ -152,22 +152,22 @@ class IdentifierList : Lexem {
     public Identifier _identifier;
     public IdentifierList _identifierList;
     public TemplateInstance _templateInstance;
-	public override @property LexemType type() { return LexemType.IDENTIFIER_LIST; }
-	public this(Token ident, IdentifierList identifierList = null)
-	in {
+    public override @property LexemType type() { return LexemType.IDENTIFIER_LIST; }
+    public this(Token ident, IdentifierList identifierList = null)
+    in {
         assert(ident.type == TokenType.IDENTIFIER);
-	}
-	body {
+    }
+    body {
         _identifier = new Identifier(ident);
         _identifierList = identifierList;
-	}
-	public this(TemplateInstance templateInstance, IdentifierList identifierList = null)
-	in {
-	}
-	body {
+    }
+    public this(TemplateInstance templateInstance, IdentifierList identifierList = null)
+    in {
+    }
+    body {
         _templateInstance = templateInstance;
         _identifierList = identifierList;
-	}
+    }
 }
 
 /**
@@ -177,12 +177,12 @@ class IdentifierList : Lexem {
         Identifier TemplateArguments
 */
 class TemplateInstance : Lexem {
-	public override @property LexemType type() { return LexemType.TEMPLATE_INSTANCE; }
-	public this()
-	in {
-	}
-	body {
-	}
+    public override @property LexemType type() { return LexemType.TEMPLATE_INSTANCE; }
+    public this()
+    in {
+    }
+    body {
+    }
 }
 
 /**
@@ -203,12 +203,12 @@ class BasicType : Lexem {
     public TypeCtor _typeCtor;
     public Type _typeCtorType;
     public bool _dotBeforeIdentifierList;
-	public override @property LexemType type() { return LexemType.BASIC_TYPE; }
-	public this()
-	in {
-	}
-	body {
-	}
+    public override @property LexemType type() { return LexemType.BASIC_TYPE; }
+    public this()
+    in {
+    }
+    body {
+    }
 }
 
 
@@ -224,13 +224,13 @@ class BasicType : Lexem {
 */
 class Typeof : Lexem {
     public Expression _expression;
-	public override @property LexemType type() { return LexemType.TYPEOF; }
-	public this(Expression expression)
-	in {
-	}
-	body {
+    public override @property LexemType type() { return LexemType.TYPEOF; }
+    public this(Expression expression)
+    in {
+    }
+    body {
         _expression = expression;
-	}
+    }
 }
 
 /**
@@ -241,12 +241,12 @@ class Type : Lexem {
     public TypeCtors _typeCtors;
     public BasicType _basicType;
     public AltDeclarator _altDeclarator;
-	public override @property LexemType type() { return LexemType.TYPE; }
-	public this()
-	in {
-	}
-	body {
-	}
+    public override @property LexemType type() { return LexemType.TYPE; }
+    public this()
+    in {
+    }
+    body {
+    }
 }
 
 /**
@@ -255,12 +255,12 @@ class Type : Lexem {
     Expression:
 */
 class Expression : Lexem {
-	public override @property LexemType type() { return LexemType.EXPRESSION; }
-	public this()
-	in {
-	}
-	body {
-	}
+    public override @property LexemType type() { return LexemType.EXPRESSION; }
+    public this()
+    in {
+    }
+    body {
+    }
 }
 
 /**
@@ -269,12 +269,12 @@ class Expression : Lexem {
     AltDeclarator:
 */
 class AltDeclarator : Lexem {
-	public override @property LexemType type() { return LexemType.ALT_DECLARATOR; }
-	public this()
-	in {
-	}
-	body {
-	}
+    public override @property LexemType type() { return LexemType.ALT_DECLARATOR; }
+    public this()
+    in {
+    }
+    body {
+    }
 }
 
 class Lexer

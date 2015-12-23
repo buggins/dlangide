@@ -21,11 +21,11 @@ class SearchLogWidget : LogWidget {
     //Sends which line was clicked.
     Signal!SearchResultClickHandler searchResultClickHandler;
 
-	this(string ID){
-		super(ID);
+    this(string ID){
+        super(ID);
         scrollLock = false;
         onThemeChanged();
-	}
+    }
 
     protected dstring _textToHighlight;
     @property dstring textToHighlight() { return _textToHighlight; }
@@ -46,42 +46,42 @@ class SearchLogWidget : LogWidget {
     }
 
     override protected CustomCharProps[] handleCustomLineHighlight(int line, dstring txt, ref CustomCharProps[] buf) {
-		uint defColor = textColor;
-		uint flags = 0;
-		if (buf.length < txt.length)
-			buf.length = txt.length;
+        uint defColor = textColor;
+        uint flags = 0;
+        if (buf.length < txt.length)
+            buf.length = txt.length;
             
         //Highlights the filename
-		if(txt.startsWith("Matches in ")) {
-			CustomCharProps[] colors = buf[0..txt.length];
-	    	uint cl = defColor;
-	    	flags = 0;
-	    	for (int i = 0; i < txt.length; i++) {
-	        	dstring rest = txt[i..$];
-	        	if(i == 11) {
-					cl = _filenameColor;
+        if(txt.startsWith("Matches in ")) {
+            CustomCharProps[] colors = buf[0..txt.length];
+            uint cl = defColor;
+            flags = 0;
+            for (int i = 0; i < txt.length; i++) {
+                dstring rest = txt[i..$];
+                if(i == 11) {
+                    cl = _filenameColor;
                     flags = TextFlag.Underline;
-	        	}
-	        	colors[i].color = cl;
+                }
+                colors[i].color = cl;
                 colors[i].textFlags = flags;
             }
             return colors;
-		} else { //Highlight line and column
-		    CustomCharProps[] colors = buf[0..txt.length];
-		    uint cl = _filenameColor;
-		    flags = 0;
+        } else { //Highlight line and column
+            CustomCharProps[] colors = buf[0..txt.length];
+            uint cl = _filenameColor;
+            flags = 0;
             int foundHighlightStart = 0;
             int foundHighlightEnd = 0;
             bool textStarted = false;
-		    for (int i = 0; i < txt.length; i++) {
-		        dstring rest = txt[i..$];
-		        if (rest.startsWith(" -->"d)) {
-		            cl = _warningColor;
-		            flags = 0;
-		        }
-		        if(i == 4) {
-		        	cl = _errorColor;
-		        }
+            for (int i = 0; i < txt.length; i++) {
+                dstring rest = txt[i..$];
+                if (rest.startsWith(" -->"d)) {
+                    cl = _warningColor;
+                    flags = 0;
+                }
+                if(i == 4) {
+                    cl = _errorColor;
+                }
 
                 if (textStarted && _textToHighlight.length > 0) {
                     if (rest.startsWith(_textToHighlight)) {
@@ -97,23 +97,23 @@ class SearchLogWidget : LogWidget {
                     }
                 }
 
-		        colors[i].color = cl;
-		        colors[i].textFlags = flags;
+                colors[i].color = cl;
+                colors[i].textFlags = flags;
 
-		        //Colors to apply in following iterations of the loop.
-		        if(!textStarted && rest.startsWith("]")) {
-		        	cl = defColor;
-		        	flags = 0;
+                //Colors to apply in following iterations of the loop.
+                if(!textStarted && rest.startsWith("]")) {
+                    cl = defColor;
+                    flags = 0;
                     textStarted = true;
-		        }
-		    }
-		    return colors;
-		}
-	}
+                }
+            }
+            return colors;
+        }
+    }
     
-	override bool onMouseEvent(MouseEvent event) {
+    override bool onMouseEvent(MouseEvent event) {
         bool res = super.onMouseEvent(event);
-		if (event.action == MouseAction.ButtonDown && event.button == MouseButton.Left) {
+        if (event.action == MouseAction.ButtonDown && event.button == MouseButton.Left) {
             int line = _caretPos.line;
             if (searchResultClickHandler.assigned) {
                 searchResultClickHandler(line);
@@ -137,9 +137,9 @@ class SearchLogWidget : LogWidget {
 
 
 struct SearchMatch {
-	int line;
-	long col;
-	dstring lineContent;
+    int line;
+    long col;
+    dstring lineContent;
 }
 
 struct SearchMatchList {
@@ -148,13 +148,13 @@ struct SearchMatchList {
 }
 
 class SearchWidget : TabWidget {
-	HorizontalLayout _layout;
-	EditLine _findText;
-	SearchLogWidget _resultLog;
+    HorizontalLayout _layout;
+    EditLine _findText;
+    SearchLogWidget _resultLog;
     int _resultLogMatchIndex;
     ComboBox _searchScope;
 
-	protected IDEFrame _frame;
+    protected IDEFrame _frame;
     protected SearchMatchList[] _matchedList;
 
     //Sets focus on result;
@@ -168,57 +168,57 @@ class SearchWidget : TabWidget {
             findText(txt);
             _resultLog.setFocus();
         }
-		return true;
+        return true;
     }
 
-	protected bool onEditorAction(const Action action) {
-		if (action.id == EditorActions.InsertNewLine) {
-			return onFindButtonPressed(this);
-		}
-		return false;
-	}
+    protected bool onEditorAction(const Action action) {
+        if (action.id == EditorActions.InsertNewLine) {
+            return onFindButtonPressed(this);
+        }
+        return false;
+    }
 
-	this(string ID, IDEFrame frame) {
-		super(ID);
-		_frame = frame;
+    this(string ID, IDEFrame frame) {
+        super(ID);
+        _frame = frame;
         
         layoutHeight(FILL_PARENT);
         
-		//Remove title, more button
-		removeAllChildren();
-		
-		_layout = new HorizontalLayout();
-		_layout.addChild(new TextWidget("FindLabel", "Find: "d));
-		
-		_findText = new EditLine();
-		_findText.padding(Rect(5,4,50,4));
-		_findText.layoutWidth(400);
-		_findText.editorAction = &onEditorAction; // to handle Enter key press in editor
-		_layout.addChild(_findText);
-		
-		auto goButton = new ImageButton("findTextButton", "edit-find");
-		goButton.click = &onFindButtonPressed;
-		_layout.addChild(goButton);
+        //Remove title, more button
+        removeAllChildren();
+        
+        _layout = new HorizontalLayout();
+        _layout.addChild(new TextWidget("FindLabel", "Find: "d));
+        
+        _findText = new EditLine();
+        _findText.padding(Rect(5,4,50,4));
+        _findText.layoutWidth(400);
+        _findText.editorAction = &onEditorAction; // to handle Enter key press in editor
+        _layout.addChild(_findText);
+        
+        auto goButton = new ImageButton("findTextButton", "edit-find");
+        goButton.click = &onFindButtonPressed;
+        _layout.addChild(goButton);
         
         _searchScope = new ComboBox("searchScope", ["File"d, "Project"d, "Dependencies"d, "Everywhere"d]);
         _searchScope.selectedItemIndex = 0;
         _layout.addChild(_searchScope);
-		addChild(_layout);
+        addChild(_layout);
 
-		_resultLog = new SearchLogWidget("SearchLogWidget");
+        _resultLog = new SearchLogWidget("SearchLogWidget");
         _resultLog.searchResultClickHandler = &onMatchClick;
-		_resultLog.layoutHeight(FILL_PARENT);
+        _resultLog.layoutHeight(FILL_PARENT);
         addChild(_resultLog);
-	}
+    }
     
     //Recursively search for text in projectItem
     void searchInProject(ProjectItem project, dstring text) {
         if (project.isFolder == true) {
-        	ProjectFolder projFolder = cast(ProjectFolder) project;
-        	import std.parallelism;
-	        for (int i = 0; i < projFolder.childCount; i++) {
+            ProjectFolder projFolder = cast(ProjectFolder) project;
+            import std.parallelism;
+            for (int i = 0; i < projFolder.childCount; i++) {
                     taskPool.put(task(&searchInProject, projFolder.child(i), text));   
-	        }
+            }
         }
         else {
             Log.d("Searching in: " ~ project.filename);
@@ -231,8 +231,8 @@ class SearchWidget : TabWidget {
             }
         }
     }
-	
-	bool findText(dstring source) {
+    
+    bool findText(dstring source) {
         Log.d("Finding " ~ source);
         
         _resultLog.textToHighlight = ""d;
@@ -269,8 +269,8 @@ class SearchWidget : TabWidget {
                 assert(0);
         }
         _resultLog.textToHighlight = source;
-		return true;
-	}
+        return true;
+    }
     
     override void onDraw(DrawBuf buf) {
         //Check if there are new matches to display
@@ -278,10 +278,10 @@ class SearchWidget : TabWidget {
             for(; _resultLogMatchIndex < _matchedList.length; _resultLogMatchIndex++) {
                 SearchMatchList matchList = _matchedList[_resultLogMatchIndex];
                 _resultLog.appendText("Matches in "d ~ to!dstring(matchList.filename) ~ '\n');
-    			foreach(SearchMatch match; matchList.matches) {
+                foreach(SearchMatch match; matchList.matches) {
                     _resultLog.appendText(" --> ["d ~ to!dstring(match.line+1) ~ ":"d ~ to!dstring(match.col) ~ "]" ~ match.lineContent ~"\n"d);
-    			}
-    		}
+                }
+            }
         }
         super.onDraw(buf);
     }
@@ -290,20 +290,20 @@ class SearchWidget : TabWidget {
     bool onMatchClick(int line) {
         line++;
         foreach(matchList; _matchedList){
-        	line--;
-        	if (line == 0) {
-        		_frame.openSourceFile(matchList.filename);
-        		_frame.currentEditor.setFocus();
-        		return true;
-        	}
+            line--;
+            if (line == 0) {
+                _frame.openSourceFile(matchList.filename);
+                _frame.currentEditor.setFocus();
+                return true;
+            }
             foreach(match; matchList.matches) {
-            	line--;
-            	if (line == 0) {
-            		_frame.openSourceFile(matchList.filename);
-            		_frame.currentEditor.setCaretPos(match.line, to!int(match.col));
-            		_frame.currentEditor.setFocus();
-            		return true;
-            	}
+                line--;
+                if (line == 0) {
+                    _frame.openSourceFile(matchList.filename);
+                    _frame.currentEditor.setCaretPos(match.line, to!int(match.col));
+                    _frame.currentEditor.setFocus();
+                    return true;
+                }
             }
         }
         return false;
@@ -317,11 +317,11 @@ SearchMatchList findMatches(in string filename, in dstring searchString) {
     match.filename = filename;
 
     foreach(int lineIndex, dstring line; content.lines) {
-		auto colIndex = line.indexOf(searchString);
+        auto colIndex = line.indexOf(searchString);
         
-		if (colIndex != -1) {
-			match.matches ~= SearchMatch(lineIndex, colIndex, line);
-		}
-	}
+        if (colIndex != -1) {
+            match.matches ~= SearchMatch(lineIndex, colIndex, line);
+        }
+    }
     return match;  
 }

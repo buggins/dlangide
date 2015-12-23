@@ -10,8 +10,8 @@ import dlangide.tools.d.dcdinterface;
 
 /// encapsulates running DCD server access
 class DCDServer {
-	private ExternalProcess dcdProcess;
-	private ProtectedTextStorage stdoutTarget;
+    private ExternalProcess dcdProcess;
+    private ProtectedTextStorage stdoutTarget;
     private int _port;
     private bool _running;
     private bool _error;
@@ -47,15 +47,15 @@ class DCDServer {
         }
 
         string[] srcPaths = dmdSourcePaths();
-		string[] arguments;
+        string[] arguments;
         foreach(p; srcPaths)
             arguments ~= "-I" ~ p;
         if (_port != DCD_DEFAULT_PORT)
             arguments ~= "-p" ~ to!string(_port);
         Log.i("starting dcd-server: executable path is ", dcdServerExecutable, " args: ", arguments);
         dcdProcess = new ExternalProcess();
-		stdoutTarget = new ProtectedTextStorage();
-		ExternalProcessState state = dcdProcess.run(dcdServerExecutable, arguments, null, stdoutTarget);
+        stdoutTarget = new ProtectedTextStorage();
+        ExternalProcessState state = dcdProcess.run(dcdServerExecutable, arguments, null, stdoutTarget);
         if (state != ExternalProcessState.Running) {
             Log.e("Error while starting DCD: process state reported is ", state);
             _error = true;

@@ -111,7 +111,7 @@ class StackPanel : DockWindow, OnItemSelectedHandler, CellActivatedHandler {
     }
 
     /// override to handle specific actions
-	override bool handleAction(const Action a) {
+    override bool handleAction(const Action a) {
         return super.handleAction(a);
     }
 

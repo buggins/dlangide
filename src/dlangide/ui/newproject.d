@@ -37,7 +37,7 @@ class NewProjectDlg : Dialog {
     IDEFrame _ide;
 
     this(IDEFrame parent, bool newWorkspace, Workspace currentWorkspace) {
-		super(newWorkspace ? UIString("New Workspace"d) : UIString("New Project"d), parent.window, 
+        super(newWorkspace ? UIString("New Workspace"d) : UIString("New Project"d), parent.window, 
               DialogFlag.Modal | DialogFlag.Resizable | DialogFlag.Popup, 500, 400);
         _ide = parent;
         _icon = "dlangui-logo1";
@@ -46,11 +46,11 @@ class NewProjectDlg : Dialog {
         _location = currentWorkspace !is null ? currentWorkspace.dir : currentDir;
     }
 
-	/// override to implement creation of dialog controls
-	override void init() {
+    /// override to implement creation of dialog controls
+    override void init() {
         super.init();
         initTemplates();
-		Widget content;
+        Widget content;
         try {
             content = parseML(q{
                     VerticalLayout {
@@ -203,9 +203,9 @@ class NewProjectDlg : Dialog {
 
         addChild(content);
         addChild(createButtonsPanel([_newWorkspace ? ACTION_FILE_NEW_WORKSPACE : ACTION_FILE_NEW_PROJECT, ACTION_CANCEL], 0, 0));
-	}
+    }
 
-	bool _newWorkspace;
+    bool _newWorkspace;
     StringListWidget _projectTypeList;
     StringListWidget _projectTemplateList;
     EditBox _templateDescription;
@@ -461,9 +461,9 @@ extern (C) int UIAppMain(string[] args) {
 
 immutable string DUB_JSON_DLANGUI_HELLOWORLD = q{
 {
-	"dependencies": {
-	    "dlangui": "~master"
-	}
+    "dependencies": {
+        "dlangui": "~master"
+    }
 }
 };
 

@@ -17,7 +17,7 @@ extern (C) int UIAppMain(string[] args) {
     // embed non-standard resources listed in views/resources.list into executable
     embeddedResourceList.addResources(embedResourcesFromList!("resources.list")());
 
- 	Platform.instance.uiTheme = "ide_theme_default";
+     Platform.instance.uiTheme = "ide_theme_default";
 
     // you can override default hinting mode here
     //FontManager.hintingMode = HintingMode.Light;
@@ -28,19 +28,19 @@ extern (C) int UIAppMain(string[] args) {
     FontManager.minAnitialiasedFontSize = 0;
     /// set font gamma (1.0 is neutral, < 1.0 makes glyphs lighter, >1.0 makes glyphs bolder)
     FontManager.fontGamma = 0.8;
-	version (USE_OPENGL) {
-		// you can turn on subpixel font rendering (ClearType) here
-		FontManager.subpixelRenderingMode = SubpixelRenderingMode.None; //
-		FontManager.fontGamma = 0.9;
-		FontManager.hintingMode = HintingMode.AutoHint;
-	} else {
+    version (USE_OPENGL) {
+        // you can turn on subpixel font rendering (ClearType) here
+        FontManager.subpixelRenderingMode = SubpixelRenderingMode.None; //
+        FontManager.fontGamma = 0.9;
+        FontManager.hintingMode = HintingMode.AutoHint;
+    } else {
         version (USE_FREETYPE) {
             // you can turn on subpixel font rendering (ClearType) here
             FontManager.fontGamma = 0.8;
-		    //FontManager.subpixelRenderingMode = SubpixelRenderingMode.BGR; //SubpixelRenderingMode.None; //
+            //FontManager.subpixelRenderingMode = SubpixelRenderingMode.BGR; //SubpixelRenderingMode.None; //
             FontManager.hintingMode = HintingMode.AutoHint;
         }
-	}
+    }
 
     //version(USE_WIN_DEBUG) {
     //    debuggerTest();
@@ -53,7 +53,7 @@ extern (C) int UIAppMain(string[] args) {
     Window window = Platform.instance.createWindow("Dlang IDE", null, WindowFlag.Resizable, 1000, 800);
     // set window icon
     window.windowIcon = drawableCache.getImage("dlangui-logo1");
-	
+    
     //Widget w = new Widget();
     //pragma(msg, w.click.return_t, "", w.click.params_t);
 
@@ -84,37 +84,37 @@ version(USE_WIN_DEBUG) {
 }
 
 version(USE_GDB_DEBUG) {
-	void debuggerTestGDB() {
-		import ddebug.gdb.gdbinterface;
-		import core.thread;
-		Log.d("Testing GDB debugger");
-		DebuggerBase debugger = new DebuggerBase();
-		debugger.startDebugging("gdb", "test", [], "", delegate(ResponseCode code, string msg) {
-				Log.d("startDebugging result: ", code, " : ", msg);
-				//assert(code == ResponseCode.NotImplemented);
-			});
-		debugger.stop();
-		destroy(debugger);
+    void debuggerTestGDB() {
+        import ddebug.gdb.gdbinterface;
+        import core.thread;
+        Log.d("Testing GDB debugger");
+        DebuggerBase debugger = new DebuggerBase();
+        debugger.startDebugging("gdb", "test", [], "", delegate(ResponseCode code, string msg) {
+                Log.d("startDebugging result: ", code, " : ", msg);
+                //assert(code == ResponseCode.NotImplemented);
+            });
+        debugger.stop();
+        destroy(debugger);
 
-		// async
+        // async
 
-		debugger = new GDBInterface();
-		DebuggerProxy proxy = new DebuggerProxy(debugger, delegate(Runnable runnable) {
-				runnable();
-			});
-		Log.d("calling debugger.start()");
-		debugger.start();
-		Log.d("calling proxy.startDebugging()");
-		proxy.startDebugging("gdb", "/home/lve/src/d/dlangide/test/gdbtest", ["param1", "param2"], "/home/lve/src/d/dlangide/test", delegate(ResponseCode code, string msg) {
-				Log.d("startDebugging result: ", code, " : ", msg);
-				//assert(code == ResponseCode.NotImplemented);
-			});
-		Thread.sleep(dur!"msecs"(200000));
-		debugger.stop();
-		Thread.sleep(dur!"msecs"(200000));
-		destroy(debugger);
-		Log.d("Testing of GDB debugger is finished");
-	}
+        debugger = new GDBInterface();
+        DebuggerProxy proxy = new DebuggerProxy(debugger, delegate(Runnable runnable) {
+                runnable();
+            });
+        Log.d("calling debugger.start()");
+        debugger.start();
+        Log.d("calling proxy.startDebugging()");
+        proxy.startDebugging("gdb", "/home/lve/src/d/dlangide/test/gdbtest", ["param1", "param2"], "/home/lve/src/d/dlangide/test", delegate(ResponseCode code, string msg) {
+                Log.d("startDebugging result: ", code, " : ", msg);
+                //assert(code == ResponseCode.NotImplemented);
+            });
+        Thread.sleep(dur!"msecs"(200000));
+        debugger.stop();
+        Thread.sleep(dur!"msecs"(200000));
+        destroy(debugger);
+        Log.d("Testing of GDB debugger is finished");
+    }
 }
 */
 

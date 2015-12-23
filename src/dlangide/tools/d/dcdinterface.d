@@ -13,10 +13,10 @@ const DCD_SERVER_PORT_FOR_DLANGIDE = 9167;
 const DCD_DEFAULT_PORT = 9166;
 
 enum DCDResult : int {
-	DCD_NOT_RUNNING = 0,
-	SUCCESS,
-	NO_RESULT,
-	FAIL,
+    DCD_NOT_RUNNING = 0,
+    SUCCESS,
+    NO_RESULT,
+    FAIL,
 }
 alias ResultSet = Tuple!(DCDResult, "result", dstring[], "output");
 
@@ -28,11 +28,11 @@ class DCDInterface {
     private int _port;
     //ExternalProcess dcdProcess;
     //ProtectedTextStorage stdoutTarget;
-	this(int port = DCD_SERVER_PORT_FOR_DLANGIDE) {
+    this(int port = DCD_SERVER_PORT_FOR_DLANGIDE) {
         _port = port;
         //dcdProcess = new ExternalProcess();
         //stdoutTarget = new ProtectedTextStorage();
-	}
+    }
 
     protected string dumpContext(string content, int pos) {
         if (pos >= 0 && pos <= content.length) {
@@ -49,32 +49,32 @@ class DCDInterface {
 
     protected dstring[] invokeDcd(string[] arguments, string content, out bool success) {
         success = false;
-		ExternalProcess dcdProcess = new ExternalProcess();
+        ExternalProcess dcdProcess = new ExternalProcess();
 
-		ProtectedTextStorage stdoutTarget = new ProtectedTextStorage();
+        ProtectedTextStorage stdoutTarget = new ProtectedTextStorage();
 
-		version(Windows) {
-			string dcd_client_name = "dcd-client.exe";
-			string dcd_client_dir = null;
-		} else {
-			string dcd_client_name = "dcd-client";
-			string dcd_client_dir = "/usr/bin";
-		}
-		dcdProcess.run(dcd_client_name, arguments, dcd_client_dir, stdoutTarget);
+        version(Windows) {
+            string dcd_client_name = "dcd-client.exe";
+            string dcd_client_dir = null;
+        } else {
+            string dcd_client_name = "dcd-client";
+            string dcd_client_dir = "/usr/bin";
+        }
+        dcdProcess.run(dcd_client_name, arguments, dcd_client_dir, stdoutTarget);
         
-		dcdProcess.write(content);
-		dcdProcess.wait();
+        dcdProcess.write(content);
+        dcdProcess.wait();
 
-		dstring[] output =  stdoutTarget.readText.splitLines();
+        dstring[] output =  stdoutTarget.readText.splitLines();
 
-		if(dcdProcess.poll() == ExternalProcessState.Stopped) {
-			success = true;
-		}
+        if(dcdProcess.poll() == ExternalProcessState.Stopped) {
+            success = true;
+        }
         return output;
     }
 
-	ResultSet goToDefinition(in string[] importPaths, in string filename, in string content, int index) {
-		ResultSet result;
+    ResultSet goToDefinition(in string[] importPaths, in string filename, in string content, int index) {
+        ResultSet result;
 
         version(USE_LIBDPARSE) {
             import dlangide.tools.d.dparser;
@@ -84,8 +84,8 @@ class DCDInterface {
         
         debug(DCD) Log.d("DCD Context: ", dumpContext(content, index));
 
-		string[] arguments = ["-l", "-c"];
-		arguments ~= [to!string(index)];
+        string[] arguments = ["-l", "-c"];
+        arguments ~= [to!string(index)];
 
         foreach(p; importPaths) {
             arguments ~= "-I" ~ p;
@@ -94,23 +94,23 @@ class DCDInterface {
             arguments ~= "-p" ~ to!string(_port);
 
         bool success = false;
-		dstring[] output =  invokeDcd(arguments, content, success);
+        dstring[] output =  invokeDcd(arguments, content, success);
 
-		if (success) {
-			result.result = DCDResult.SUCCESS;
-		} else {
-			result.result = DCDResult.FAIL;
-			return result;
-		}
+        if (success) {
+            result.result = DCDResult.SUCCESS;
+        } else {
+            result.result = DCDResult.FAIL;
+            return result;
+        }
 
         debug(DCD) Log.d("DCD output:\n", output);
 
-		if(output.length > 0) {
+        if(output.length > 0) {
             dstring firstLine = output[0];
-			if(firstLine.startsWith("Not Found") || firstLine.startsWith("Not found")) {
-				result.result = DCDResult.NO_RESULT;
-				return result;
-			}
+            if(firstLine.startsWith("Not Found") || firstLine.startsWith("Not found")) {
+                result.result = DCDResult.NO_RESULT;
+                return result;
+            }
             auto split = firstLine.indexOf("\t");
             if(split == -1) {
                 Log.d("DCD output format error.");
@@ -120,22 +120,22 @@ class DCDInterface {
 
             result.output ~= output[0][0 .. split];
             result.output ~= output[0][split+1 .. $];
-		} else {
+        } else {
             result.result = DCDResult.NO_RESULT;
             //result.result = DCDResult.FAIL;
         }
 
-		return result;
-	}
+        return result;
+    }
 
-	ResultSet getCompletions(in string[] importPaths, in string filename, in string content, int index) {
+    ResultSet getCompletions(in string[] importPaths, in string filename, in string content, int index) {
 
         debug(DCD) Log.d("DCD Context: ", dumpContext(content, index));
 
-		ResultSet result;
+        ResultSet result;
 
-		string[] arguments = ["-c"];
-		arguments ~= [to!string(index)];
+        string[] arguments = ["-c"];
+        arguments ~= [to!string(index)];
 
         foreach(p; importPaths) {
             arguments ~= "-I" ~ p;
@@ -144,40 +144,40 @@ class DCDInterface {
             arguments ~= "-p" ~ to!string(_port);
 
         bool success = false;
-		dstring[] output =  invokeDcd(arguments, content, success);
+        dstring[] output =  invokeDcd(arguments, content, success);
 
-		if (success) {
-			result.result = DCDResult.SUCCESS;
-		} else {
-			result.result = DCDResult.FAIL;
-			return result;
-		}
+        if (success) {
+            result.result = DCDResult.SUCCESS;
+        } else {
+            result.result = DCDResult.FAIL;
+            return result;
+        }
         debug(DCD) Log.d("DCD output:\n", output);
 
-		if (output.length == 0) {
-			result.result = DCDResult.NO_RESULT;
-			return result;
-		}
+        if (output.length == 0) {
+            result.result = DCDResult.NO_RESULT;
+            return result;
+        }
 
-		enum State : int {None = 0, Identifiers, Calltips}
-		State state = State.None;
-		foreach(dstring outputLine ; output) {
-			if(outputLine == "identifiers") {
-				state = State.Identifiers;
-			}
-			else if(outputLine == "calltips") {
-				state = State.Calltips;
-			}
-			else {
-				auto split = outputLine.indexOf("\t");
-				if(split < 0) {
-					break;
-				}
-				if(state == State.Identifiers) {
-					result.output ~= outputLine[0 .. split];
-				}
-			}
-		}
-		return result;
-	}
+        enum State : int {None = 0, Identifiers, Calltips}
+        State state = State.None;
+        foreach(dstring outputLine ; output) {
+            if(outputLine == "identifiers") {
+                state = State.Identifiers;
+            }
+            else if(outputLine == "calltips") {
+                state = State.Calltips;
+            }
+            else {
+                auto split = outputLine.indexOf("\t");
+                if(split < 0) {
+                    break;
+                }
+                if(state == State.Identifiers) {
+                    result.output ~= outputLine[0 .. split];
+                }
+            }
+        }
+        return result;
+    }
 }

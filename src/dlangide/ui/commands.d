@@ -45,7 +45,7 @@ enum IDEActions : int {
     HelpAbout,
     WindowCloseAllDocuments,
     CreateNewWorkspace,
-	AddToCurrentWorkspace,
+    AddToCurrentWorkspace,
     //ProjectFolderAddItem,
     ProjectFolderRemoveItem,
     ProjectFolderOpenItem,

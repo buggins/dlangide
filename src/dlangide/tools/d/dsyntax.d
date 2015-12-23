@@ -561,10 +561,10 @@ class SimpleDSyntaxSupport : SyntaxSupport {
                     int start = i > tokenLine ? 0 : tokenPos;
                     int end = i < newLine ? cast(int)lines[i].length : newPos;
                     for (int j = start; j < end; j++) {
-						if (j < _props[i].length) {
-							_props[i][j] = category;
-						}
-					}
+                        if (j < _props[i].length) {
+                            _props[i][j] = category;
+                        }
+                    }
                 }
 
                 // handle token - convert to category
@@ -633,9 +633,9 @@ class SimpleDSyntaxSupport : SyntaxSupport {
         }
         _lines.close();
         _props = null;
-		long elapsed = currentTimeMillis() - ms0;
-		if (elapsed > 20)
-			Log.d("updateHighlight took ", elapsed, "ms");
+        long elapsed = currentTimeMillis() - ms0;
+        if (elapsed > 20)
+            Log.d("updateHighlight took ", elapsed, "ms");
     }
 
 

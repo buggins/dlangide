@@ -12,21 +12,21 @@ import std.string;
 
 /// event listener to navigate by error/warning position
 interface CompilerLogIssueClickHandler {
-	bool onCompilerLogIssueClick(dstring filename, int line, int column);
+    bool onCompilerLogIssueClick(dstring filename, int line, int column);
 }
 
 
 /// Log widget with parsing of compiler output
 class CompilerLogWidget : LogWidget {
 
-	Signal!CompilerLogIssueClickHandler compilerLogIssueClickHandler;
+    Signal!CompilerLogIssueClickHandler compilerLogIssueClickHandler;
 
-	auto ctr = ctRegex!(r"(.+)\((\d+)\): (Error|Warning|Deprecation): (.+)"d);
+    auto ctr = ctRegex!(r"(.+)\((\d+)\): (Error|Warning|Deprecation): (.+)"d);
 
-	/// forward to super c'tor
-	this(string ID) {
-		super(ID);
-	}
+    /// forward to super c'tor
+    this(string ID) {
+        super(ID);
+    }
 
     protected uint _filenameColor = 0x0000C0;
     protected uint _errorColor = 0xFF0000;
@@ -93,48 +93,48 @@ class CompilerLogWidget : LogWidget {
         return null;
     }
 
-	///
-	override bool onMouseEvent(MouseEvent event) {
+    ///
+    override bool onMouseEvent(MouseEvent event) {
 
-		if (event.action == MouseAction.ButtonDown && event.button == MouseButton.Left) {
-			super.onMouseEvent(event);
+        if (event.action == MouseAction.ButtonDown && event.button == MouseButton.Left) {
+            super.onMouseEvent(event);
 
-			auto logLine = this.content.line(this._caretPos.line);
+            auto logLine = this.content.line(this._caretPos.line);
 
-			//src\tetris.d(49): Error: found 'return' when expecting ';' following statement
+            //src\tetris.d(49): Error: found 'return' when expecting ';' following statement
 
-			auto match = matchFirst(logLine, ctr);
+            auto match = matchFirst(logLine, ctr);
 
-			if(!match.empty) {
-				if (compilerLogIssueClickHandler.assigned) {
-					import std.conv:to;
-					compilerLogIssueClickHandler(match[1], to!int(match[2]), 0);
-				}
-			}
+            if(!match.empty) {
+                if (compilerLogIssueClickHandler.assigned) {
+                    import std.conv:to;
+                    compilerLogIssueClickHandler(match[1], to!int(match[2]), 0);
+                }
+            }
 
-			return true;
-		}
+            return true;
+        }
 
-		return super.onMouseEvent(event);
-	}
+        return super.onMouseEvent(event);
+    }
 }
 
 ///
 class OutputPanel : DockWindow {
 
-	Signal!CompilerLogIssueClickHandler compilerLogIssueClickHandler;
+    Signal!CompilerLogIssueClickHandler compilerLogIssueClickHandler;
 
-	protected CompilerLogWidget _logWidget;
+    protected CompilerLogWidget _logWidget;
 
     TabWidget _tabs;
 
-	@property TabWidget getTabs() { return _tabs;}
+    @property TabWidget getTabs() { return _tabs;}
 
     this(string id) {
-		_showCloseButton = false;
-		dockAlignment = DockAlignment.Bottom;
+        _showCloseButton = false;
+        dockAlignment = DockAlignment.Bottom;
         super(id);
-	}
+    }
 
     override protected Widget createBodyWidget() {
         layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT);
@@ -144,26 +144,26 @@ class OutputPanel : DockWindow {
         _tabs.layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT);
         _tabs.tabHost.layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT);
 
-		_logWidget = new CompilerLogWidget("logwidget");
+        _logWidget = new CompilerLogWidget("logwidget");
         _logWidget.readOnly = true;
         _logWidget.layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT);
-		_logWidget.compilerLogIssueClickHandler = &onIssueClick;
+        _logWidget.compilerLogIssueClickHandler = &onIssueClick;
 
         //_tabs.tabHost.styleId = STYLE_DOCK_WINDOW_BODY;
         _tabs.addTab(_logWidget, "Compiler Log"d);
-		_tabs.selectTab("logwidget");
+        _tabs.selectTab("logwidget");
 
         return _tabs;
     }
 
-	override protected void init() {
-		
-		//styleId = STYLE_DOCK_WINDOW;
+    override protected void init() {
+        
+        //styleId = STYLE_DOCK_WINDOW;
         styleId = null;
-		_bodyWidget = createBodyWidget();
-		//_bodyWidget.styleId = STYLE_DOCK_WINDOW_BODY;
-		addChild(_bodyWidget);
-	}
+        _bodyWidget = createBodyWidget();
+        //_bodyWidget.styleId = STYLE_DOCK_WINDOW_BODY;
+        addChild(_bodyWidget);
+    }
 
     //TODO: Refactor OutputPanel to expose CompilerLogWidget
 
@@ -187,16 +187,16 @@ class OutputPanel : DockWindow {
         logLine(null, msg);
     }
 
-	void clear(string category = null) {
-		_logWidget.text = ""d;
-	}
+    void clear(string category = null) {
+        _logWidget.text = ""d;
+    }
 
-	private bool onIssueClick(dstring fn, int line, int column)
-	{
-		if (compilerLogIssueClickHandler.assigned) {
-			compilerLogIssueClickHandler(fn, line, column);
-		}
+    private bool onIssueClick(dstring fn, int line, int column)
+    {
+        if (compilerLogIssueClickHandler.assigned) {
+            compilerLogIssueClickHandler(fn, line, column);
+        }
 
-		return true;
-	}
+        return true;
+    }
 }

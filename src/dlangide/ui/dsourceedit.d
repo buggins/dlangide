@@ -33,14 +33,14 @@ interface BookmarkListChangeListener {
 
 /// DIDE source file editor
 class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
-	this(string ID) {
-		super(ID);
-		styleId = null;
-		backgroundColor = style.customColor("edit_background");
+    this(string ID) {
+        super(ID);
+        styleId = null;
+        backgroundColor = style.customColor("edit_background");
         onThemeChanged();
         //setTokenHightlightColor(TokenCategory.Identifier, 0x206000);  // no colors
-		MenuItem editPopupItem = new MenuItem(null);
-		editPopupItem.add(ACTION_EDIT_COPY, ACTION_EDIT_PASTE, ACTION_EDIT_CUT, ACTION_EDIT_UNDO, 
+        MenuItem editPopupItem = new MenuItem(null);
+        editPopupItem.add(ACTION_EDIT_COPY, ACTION_EDIT_PASTE, ACTION_EDIT_CUT, ACTION_EDIT_UNDO, 
                           ACTION_EDIT_REDO, ACTION_EDIT_INDENT, ACTION_EDIT_UNINDENT, ACTION_EDIT_TOGGLE_LINE_COMMENT, ACTION_GET_COMPLETIONS, 
                           ACTION_GO_TO_DEFINITION, ACTION_DEBUG_TOGGLE_BREAKPOINT);
         //ACTION_GO_TO_DEFINITION, ACTION_GET_COMPLETIONS
@@ -48,18 +48,18 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         showIcons = true;
         showFolding = true;
         content.marksChanged = this;
-	}
+    }
 
-	this() {
-		this("SRCEDIT");
-	}
+    this() {
+        this("SRCEDIT");
+    }
 
     Signal!BreakpointListChangeListener breakpointListChanged;
     Signal!BookmarkListChangeListener bookmarkListChanged;
 
     /// handle theme change: e.g. reload some themed resources
     override void onThemeChanged() {
-		backgroundColor = style.customColor("edit_background");
+        backgroundColor = style.customColor("edit_background");
         setTokenHightlightColor(TokenCategory.Comment, style.customColor("syntax_highlight_comment")); // green
         setTokenHightlightColor(TokenCategory.Keyword, style.customColor("syntax_highlight_keyword")); // blue
         setTokenHightlightColor(TokenCategory.String, style.customColor("syntax_highlight_string"));  // brown
@@ -196,7 +196,7 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
     }
 
     /// override to handle specific actions
-	override bool handleAction(const Action a) {
+    override bool handleAction(const Action a) {
         import ddc.lexer.tokenizer;
         if (a) {
             switch (a.id) {
@@ -211,7 +211,7 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
                 case IDEActions.DebugDisableBreakpoint:
                     handleBreakpointAction(a);
                     return true;
-    			case EditorActions.ToggleBookmark:
+                case EditorActions.ToggleBookmark:
                     super.handleAction(a);
                     notifyBookmarkListChanged();
                     return true;
@@ -363,11 +363,11 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         }
     }
 
-	/// override to handle specific actions state (e.g. change enabled state for supported actions)
-	override bool handleActionStateRequest(const Action a) {
-		switch (a.id) {
-			case IDEActions.GoToDefinition:
-			case IDEActions.GetCompletionSuggestions:
+    /// override to handle specific actions state (e.g. change enabled state for supported actions)
+    override bool handleActionStateRequest(const Action a) {
+        switch (a.id) {
+            case IDEActions.GoToDefinition:
+            case IDEActions.GetCompletionSuggestions:
             case IDEActions.DebugToggleBreakpoint:
             case IDEActions.DebugEnableBreakpoint:
             case IDEActions.DebugDisableBreakpoint:
@@ -376,10 +376,10 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
                 else
                     a.state = ACTION_STATE_DISABLE;
                 return true;
-			default:
-				return super.handleActionStateRequest(a);
-		}
-	}
+            default:
+                return super.handleActionStateRequest(a);
+        }
+    }
 
     void showCompletionPopup(dstring[] suggestions) {
 
