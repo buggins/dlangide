@@ -82,7 +82,12 @@ class DebuggerUIHandler : DebuggerCallback, StackFrameSelectedHandler {
             if (sourceFile) {
                 _ide.openSourceFile(sourceFile.filename, sourceFile, true);
             } else {
-                _ide.openSourceFile(location.fullFilePath, null, true);
+	        import std.file;
+		if (exists(location.fullFilePath)) {
+	             _ide.openSourceFile(location.fullFilePath, null, true);
+		} else {
+		     Log.d("can not update location sourcefile does not exists:" ~ location.fullFilePath);
+		}
             }
         }
         DSourceEdit[] editors = _ide.allOpenedEditors;
