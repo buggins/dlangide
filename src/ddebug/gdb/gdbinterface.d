@@ -271,6 +271,8 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
     /// start program execution, can be called after program is loaded
     int _startRequestId;
     void execStart() {
+        sendCommand("handle SIGUSR1 nostop noprint");
+        sendCommand("handle SIGUSR2 nostop noprint");
         _startRequestId = sendCommand("-exec-run");
     }
 
