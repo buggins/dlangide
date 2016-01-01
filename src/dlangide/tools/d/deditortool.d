@@ -20,41 +20,38 @@ class DEditorTool : EditorTool
 
 
     this(IDEFrame frame) {
-        _dcd = new DCDInterface(DCD_SERVER_PORT_FOR_DLANGIDE);
+        _dcd = new DCDInterface();
         super(frame);
     }
 
     override bool goToDefinition(DSourceEdit editor, TextPosition caretPosition) {
         string[] importPaths = editor.importPaths();
+        _frame.moduleCache.addImportPaths(importPaths);
+
         string content = toUTF8(editor.text);
         auto byteOffset = caretPositionToByteOffset(content, caretPosition);
-        ResultSet output = _dcd.goToDefinition(importPaths, editor.filename, content, byteOffset);
+        FindDeclarationResultSet output = _dcd.goToDefinition(importPaths, editor.filename, content, byteOffset, _frame.moduleCache);
 
 
         switch(output.result) {
             //TODO: Show dialog
             case DCDResult.FAIL:
-            case DCDResult.DCD_NOT_RUNNING:
             case DCDResult.NO_RESULT:
                 editor.setFocus();
                 return false;
             case DCDResult.SUCCESS:
-                auto target = to!int(output.output[1]);
-                if(output.output[0].indexOf("stdin".dup) != -1) {
+		        auto fileName = output.fileName;
+                if(fileName.indexOf("stdin") == 0) {
                     Log.d("Declaration is in current file. Jumping to it.");
-                    auto destPos = byteOffsetToCaret(content, target);
-                    editor.setCaretPos(destPos.line,destPos.pos);
-                    editor.setFocus();
-                }
-                else {
+                } else {
                     //Must open file first to get the content for finding the correct caret position.
-                    _frame.openSourceFile(to!string(output.output[0]));
-                    string txt;
-                    txt = toUTF8(_frame.currentEditor.text);
-                    auto destPos = byteOffsetToCaret(txt, target);
-                    _frame.currentEditor.setCaretPos(destPos.line,destPos.pos);
-                    _frame.currentEditor.setFocus();
+                    _frame.openSourceFile(to!string(fileName));
+                    content = toUTF8(_frame.currentEditor.text);
                 }
+                auto target = to!int(output.offset);
+                auto destPos = byteOffsetToCaret(content, target);
+                _frame.currentEditor.setCaretPos(destPos.line,destPos.pos);
+                _frame.currentEditor.setFocus();
                 return true;
             default:
                 return false;
@@ -63,14 +60,14 @@ class DEditorTool : EditorTool
 
     override dstring[] getCompletions(DSourceEdit editor, TextPosition caretPosition) {
         string[] importPaths = editor.importPaths();
+        _frame.moduleCache.addImportPaths(importPaths);
 
         string content = toUTF8(editor.text);
         auto byteOffset = caretPositionToByteOffset(content, caretPosition);
-        ResultSet output = _dcd.getCompletions(importPaths, editor.filename, content, byteOffset);
+        ResultSet output = _dcd.getCompletions(importPaths, editor.filename, content, byteOffset, _frame.moduleCache);
         switch(output.result) {
             //TODO: Show dialog
             case DCDResult.FAIL:
-            case DCDResult.DCD_NOT_RUNNING:
             case DCDResult.NO_RESULT:
             case DCDResult.SUCCESS:
             default:

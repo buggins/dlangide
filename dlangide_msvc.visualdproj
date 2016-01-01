@@ -444,7 +444,6 @@
    <Folder name="tools">
     <Folder name="d">
      <File path="src\dlangide\tools\d\dcdinterface.d" />
-     <File path="src\dlangide\tools\d\dcdserver.d" />
      <File path="src\dlangide\tools\d\deditortool.d" />
      <File path="src\dlangide\tools\d\dparser.d" />
      <File path="src\dlangide\tools\d\dsyntax.d" />
