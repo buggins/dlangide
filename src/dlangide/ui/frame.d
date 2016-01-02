@@ -26,7 +26,7 @@ import dlangide.ui.dsourceedit;
 import dlangide.ui.homescreen;
 import dlangide.ui.settings;
 import dlangide.ui.debuggerui;
-import dlangide.tools.d.dcdserver;
+
 import dlangide.workspace.workspace;
 import dlangide.workspace.project;
 import dlangide.builders.builder;
@@ -76,7 +76,11 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
     OutputPanel _logPanel;
     DockHost _dockHost;
     TabWidget _tabs;
-    DCDServer _dcdServer;
+
+    ///Cache for parsed D files for autocomplete and symbol finding
+    import dsymbol.modulecache;
+    ModuleCache _moduleCache = ModuleCache(new ASTAllocator);
+
     IDESettings _settings;
     ProgramExecution _execution;
 
@@ -91,6 +95,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         applySettings(_settings);
     }
 
+    @property ref ModuleCache moduleCache() { return _moduleCache; }
     @property DockHost dockHost() { return _dockHost; }
     @property OutputPanel logPanel() { return _logPanel; }
 
@@ -260,7 +265,6 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
     override protected void init() {
         _appName = "dlangide";
         //_editorTool = new DEditorTool(this);
-        _dcdServer = new DCDServer();
         _settings = new IDESettings(buildNormalizedPath(settingsDir, "settings.json"));
         _settings.load();
         _settings.updateDefaults();
@@ -552,12 +556,6 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         _logPanel.appendText(null, dmdPath ? ("dmd path: "d ~ toUTF32(dmdPath) ~ "\n"d) : ("dmd compiler is not found!\n"d));
         _logPanel.appendText(null, ldcPath ? ("ldc path: "d ~ toUTF32(ldcPath) ~ "\n"d) : ("ldc compiler is not found!\n"d));
         _logPanel.appendText(null, gdcPath ? ("gdc path: "d ~ toUTF32(gdcPath) ~ "\n"d) : ("gdc compiler is not found!\n"d));
-
-        if (_dcdServer.start()) {
-            _logPanel.appendText(null, "dcd-server is started on port "d ~ to!dstring(_dcdServer.port) ~ "\n"d);
-        } else {
-            _logPanel.appendText(null, "cannot start dcd-server: code completion for D code will not work"d);
-        }
 
         _dockHost.addDockedWindow(_logPanel);
 
@@ -1299,12 +1297,6 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
     void onWindowClose() {
         Log.i("onWindowClose()");
         stopExecution();
-        if (_dcdServer) {
-            if (_dcdServer.isRunning)
-                _dcdServer.stop();
-            destroy(_dcdServer);
-            _dcdServer = null;
-        }
     }
 }
 

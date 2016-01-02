@@ -199,7 +199,6 @@
     <Compile Include="src\dlangide\builders\extprocess.d" />
     <Compile Include="src\dlangide\tools\editortool.d" />
     <Compile Include="src\dlangide\tools\d\dcdinterface.d" />
-    <Compile Include="src\dlangide\tools\d\dcdserver.d" />
     <Compile Include="src\dlangide\tools\d\deditortool.d" />
     <Compile Include="src\dlangide\tools\d\dparser.d" />
     <Compile Include="src\dlangide\tools\d\dsyntax.d" />

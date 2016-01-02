@@ -11,11 +11,9 @@
 
     "stringImportPaths": ["views", "views/res", "views/res/i18n", "views/res/mdpi", "views/res/hdpi"],
 
-    "copyFiles-windows": ["lib/win32/dcd-server.exe", "lib/win32/dcd-client.exe"],
-
     "dependencies": {
-        "dlangui": "~>0.7.30",
-        "libdparse": "==0.2.0"
+        "dlangui": "~>0.7.31",
+        "dcd": "~>0.7.4"
     },
 
     "versions": ["EmbedStandardResources"],
