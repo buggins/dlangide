@@ -154,6 +154,14 @@ Clone dependency libraries to dlangui/deps directory
         git clone https://github.com/Hackerpilot/libdparse.git
         git clone https://github.com/nomad-software/x11.git
 
+        cd ../..
+        git clone https://github.com/keywan-ghadami/DCD.git
+        git clone https://github.com/keywan-ghadami/dsymbol.git
+        git clone https://github.com/keywan-ghadami/libdparse.git
+        git clone https://github.com/keywan-ghadami/experimental_allocator.git
+        git clone https://github.com/keywan-ghadami/containers.git
+
+
 Windows: open solution file with Visual-D
 
         dlangui/dlangui-msvc.sln
