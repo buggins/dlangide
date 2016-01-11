@@ -6,13 +6,26 @@ import std.conv;
 import dlangide.ui.frame;
 import dlangide.ui.commands;
 import dlangide.workspace.workspace;
-
+import std.experimental.logger;
 
 mixin APP_ENTRY_POINT;
 
 /// entry point for dlangui based application
 extern (C) int UIAppMain(string[] args) {
 
+    version(Windows) {
+        debug {
+            sharedLog = new FileLogger("dcd.log");
+        } else {
+            sharedLog = new NullLogger();
+        }
+    } else {
+        debug {
+            //sharedLog = new FileLogger("dcd.log");
+        } else {
+            sharedLog = new NullLogger();
+        }
+    }
 
     // embed non-standard resources listed in views/resources.list into executable
     embeddedResourceList.addResources(embedResourcesFromList!("resources.list")());
