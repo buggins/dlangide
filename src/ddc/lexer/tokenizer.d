@@ -1571,10 +1571,10 @@ class Tokenizer
     }
 
     this(SourceLines lineStream) {
-        init(lineStream);
+        initialize(lineStream);
     }
 
-    void init(SourceLines lineStream, int pos = 0) {
+    void initialize(SourceLines lineStream, int pos = 0) {
         _lineStream = lineStream;
         SourceFile file = _lineStream.file;
         _sharedWhiteSpaceToken.setFile(file);

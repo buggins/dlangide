@@ -156,7 +156,7 @@ class OutputPanel : DockWindow {
         return _tabs;
     }
 
-    override protected void init() {
+    override protected void initialize() {
         
         //styleId = STYLE_DOCK_WINDOW;
         styleId = null;

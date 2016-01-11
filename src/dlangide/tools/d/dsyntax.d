@@ -280,8 +280,8 @@ class SimpleDSyntaxSupport : SyntaxSupport {
     protected Token _lastToken;
     protected bool initTokenizer(TextPosition startPos) {
         const dstring[] lines = content.lines;
-        _lines.init(cast(dstring[])(lines[startPos.line .. $]), _file, startPos.line);
-        _tokenizer.init(_lines, startPos.pos);
+        _lines.initialize(cast(dstring[])(lines[startPos.line .. $]), _file, startPos.line);
+        _tokenizer.initialize(_lines, startPos.pos);
         _lastTokenStart = startPos;
         _lastToken = null;
         nextToken();
@@ -536,8 +536,8 @@ class SimpleDSyntaxSupport : SyntaxSupport {
         _props = props;
         changeStartLine = 0;
         changeEndLine = cast(int)lines.length;
-        _lines.init(lines[changeStartLine..$], _file, changeStartLine);
-        _tokenizer.init(_lines);
+        _lines.initialize(lines[changeStartLine..$], _file, changeStartLine);
+        _tokenizer.initialize(_lines);
         int tokenPos = 0;
         int tokenLine = 0;
         ubyte category = 0;

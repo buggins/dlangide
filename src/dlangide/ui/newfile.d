@@ -52,8 +52,8 @@ class NewFileDlg : Dialog {
             _location = folder.filename;
     }
     /// override to implement creation of dialog controls
-    override void init() {
-        super.init();
+    override void initialize() {
+        super.initialize();
         initTemplates();
         Widget content;
         try {

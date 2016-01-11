@@ -262,14 +262,14 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         return true;
     }
 
-    override protected void init() {
+    override protected void initialize() {
         _appName = "dlangide";
         //_editorTool = new DEditorTool(this);
         _settings = new IDESettings(buildNormalizedPath(settingsDir, "settings.json"));
         _settings.load();
         _settings.updateDefaults();
         _settings.save();
-        super.init();
+        super.initialize();
     }
 
     /// move focus to editor in currently selected tab

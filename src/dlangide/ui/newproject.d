@@ -47,8 +47,8 @@ class NewProjectDlg : Dialog {
     }
 
     /// override to implement creation of dialog controls
-    override void init() {
-        super.init();
+    override void initialize() {
+        super.initialize();
         initTemplates();
         Widget content;
         try {

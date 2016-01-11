@@ -78,7 +78,7 @@ class WatchPanel : DockWindow {
         return _tabs;
     }
 
-    override protected void init() {
+    override protected void initialize() {
         //styleId = STYLE_DOCK_WINDOW;
         styleId = null;
         //_caption.text = "Watch"d;
