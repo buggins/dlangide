@@ -222,6 +222,19 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         return super.handleAction(a);
     }
 
+    /// left button click on icons panel: toggle breakpoint
+    override protected bool handleLeftPaneIconsMouseClick(MouseEvent event, Rect rc, int line) {
+        if (event.button == MouseButton.Left) {
+            LineIcon icon = content.lineIcons.findByLineAndType(line, LineIconType.breakpoint);
+            if (icon)
+                removeBreakpoint(line, icon);
+            else
+                addBreakpoint(line);
+            return true;
+        }
+        return super.handleLeftPaneIconsMouseClick(event, rc, line);
+    }
+
     protected void addBreakpoint(int line) {
         import std.path;
         Breakpoint bp = new Breakpoint();
