@@ -704,6 +704,13 @@ class DubPackageFinder {
             fn = buildNormalizedPath(pathName, "package.json");
             if (fn.exists && fn.isFile)
                 return fn;
+            // new DUB support - with package subdirectory
+            fn = buildNormalizedPath(pathName, packageName, "dub.json");
+            if (fn.exists && fn.isFile)
+                return fn;
+            fn = buildNormalizedPath(pathName, packageName, "package.json");
+            if (fn.exists && fn.isFile)
+                return fn;
         }
         return null;
     }

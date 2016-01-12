@@ -91,6 +91,14 @@ class Builder : BackgroundOperationWatcher {
             } else if (_buildOp == BuildOperation.Upgrade) {
                 params ~= "upgrade".dup;
                 params ~= "--force-remove".dup;
+                import std.path;
+                import std.file;
+                string projectFile = project.filename;
+                string selectionsFile = projectFile.stripExtension ~ ".selections.json";
+                if (selectionsFile.exists && selectionsFile.isFile) {
+                    Log.i("Removing file ", selectionsFile);
+                    remove(selectionsFile);
+                }
             }
 
             if (_buildOp != BuildOperation.Clean && _buildOp != BuildOperation.Upgrade) {

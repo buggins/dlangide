@@ -1246,6 +1246,10 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         }
     }
 
+    void refreshProject(Project project) {
+        // TODO
+    }
+
     void buildProject(BuildOperation buildOp, Project project, BuildResultListener listener = null) {
         if (!currentWorkspace) {
             _logPanel.logLine("No workspace is opened");
@@ -1256,6 +1260,16 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         if (!project) {
             _logPanel.logLine("No project is opened");
             return;
+        }
+        if (!listener) {
+            if (buildOp == BuildOperation.Upgrade || buildOp == BuildOperation.Build || buildOp == BuildOperation.Rebuild) {
+                listener = delegate(int result) {
+                    if (!result) {
+                        // success: update workspace
+                        refreshProject(project);
+                    }
+                };
+            }
         }
         ProjectSettings projectSettings = project.settings;
         string toolchain = projectSettings.getToolchain(_settings);
