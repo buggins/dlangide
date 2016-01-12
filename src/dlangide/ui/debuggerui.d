@@ -40,13 +40,14 @@ class DebuggerUIHandler : DebuggerCallback, StackFrameSelectedHandler {
 
     /// send debug context (threads, stack frames, local vars...)
     void onDebugContextInfo(DebugThreadList info, ulong threadId, int frameId) {
-        Log.d("Debugger context received");
+        Log.d("Debugger context received threadId=", threadId, " frameId=", frameId);
         _debugInfo = info;
         _stackPanel.updateDebugInfo(info, threadId, frameId);
         _watchPanel.updateDebugInfo(info, threadId, frameId);
     }
 
     void onStackFrameSelected(ulong threadId, int frame) {
+        Log.d("Stack frame selected threadId=", threadId, " frameId=", frame);
         if (_debugInfo) {
             if (DebugThread t = _debugInfo.findThread(threadId)) {
                 DebugFrame f = (frame < t.length) ? t[frame] : t.frame;
