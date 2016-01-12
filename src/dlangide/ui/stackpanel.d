@@ -63,7 +63,7 @@ class StackPanel : DockWindow, OnItemSelectedHandler, CellActivatedHandler {
             _comboBox.enabled = true;
             dstring[] threadNames;
             for (int i = 0; i < _debugInfo.length; i++) {
-                threadNames ~= _debugInfo[i].name.toUTF32;
+                threadNames ~= _debugInfo[i].displayName.toUTF32;
                 if (_debugInfo[i].id == _currentThreadId) {
                     _currentThreadIndex = i;
                     _selectedThread = _debugInfo[i];

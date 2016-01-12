@@ -112,6 +112,10 @@ class DebugThread {
     }
     DebugThread clone() { return new DebugThread(this); }
 
+    @property string displayName() {
+        return "%u: %s".format(id, name);
+    }
+
     @property int length() { 
         if (stack && stack.length > 0)
             return stack.length;
@@ -217,11 +221,11 @@ interface Debugger : ProgramExecution {
     /// interrupt execution
     void execPause();
     /// step over
-    void execStepOver();
+    void execStepOver(ulong threadId);
     /// step in
-    void execStepIn();
+    void execStepIn(ulong threadId);
     /// step out
-    void execStepOut();
+    void execStepOut(ulong threadId);
     /// restart
     void execRestart();
 
@@ -370,16 +374,16 @@ class DebuggerProxy : Debugger, DebuggerCallback {
         _debugger.postRequest(delegate() { _debugger.execPause(); });
     }
     /// step over
-    void execStepOver() {
-        _debugger.postRequest(delegate() { _debugger.execStepOver(); });
+    void execStepOver(ulong threadId) {
+        _debugger.postRequest(delegate() { _debugger.execStepOver(threadId); });
     }
     /// step in
-    void execStepIn() {
-        _debugger.postRequest(delegate() { _debugger.execStepIn(); });
+    void execStepIn(ulong threadId) {
+        _debugger.postRequest(delegate() { _debugger.execStepIn(threadId); });
     }
     /// step out
-    void execStepOut() {
-        _debugger.postRequest(delegate() { _debugger.execStepOut(); });
+    void execStepOut(ulong threadId) {
+        _debugger.postRequest(delegate() { _debugger.execStepOut(threadId); });
     }
     /// restart
     void execRestart() {

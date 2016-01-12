@@ -22,6 +22,7 @@ class DebuggerUIHandler : DebuggerCallback, StackFrameSelectedHandler {
     private WatchPanel _watchPanel;
     private StackPanel _stackPanel;
     private DebugThreadList _debugInfo;
+    private ulong _currentThreadId;
 
     this(IDEFrame ide, Debugger debugger) {
         _ide = ide;
@@ -42,6 +43,7 @@ class DebuggerUIHandler : DebuggerCallback, StackFrameSelectedHandler {
     void onDebugContextInfo(DebugThreadList info, ulong threadId, int frameId) {
         Log.d("Debugger context received threadId=", threadId, " frameId=", frameId);
         _debugInfo = info;
+        _currentThreadId = threadId;
         _stackPanel.updateDebugInfo(info, threadId, frameId);
         _watchPanel.updateDebugInfo(info, threadId, frameId);
     }
@@ -132,34 +134,51 @@ class DebuggerUIHandler : DebuggerCallback, StackFrameSelectedHandler {
         _debugger.run();
     }
 
+    @property ulong currentThreadId() {
+        if (_currentThreadId)
+            return _currentThreadId;
+        return _debugInfo ? _debugInfo.currentThreadId : 0;
+    }
     bool handleAction(const Action a) {
         switch(a.id) {
             case IDEActions.DebugPause:
-                if (_state == DebuggingState.running)
+                if (_state == DebuggingState.running) {
+                    _currentThreadId = 0;
                     _debugger.execPause();
+                }
                 return true;
             case IDEActions.DebugContinue:
-                if (_state == DebuggingState.paused)
+                if (_state == DebuggingState.paused) {
+                    _currentThreadId = 0;
                     _debugger.execContinue();
+                }
                 return true;
             case IDEActions.DebugStop:
                 //_debugger.execStop();
                 Log.d("Trying to stop debugger");
+                _currentThreadId = 0;
                 _debugger.stop();
                 return true;
             case IDEActions.DebugStepInto:
-                if (_state == DebuggingState.paused)
-                    _debugger.execStepIn();
+                if (_state == DebuggingState.paused) {
+                    Log.d("DebugStepInto threadId=", currentThreadId);
+                    _debugger.execStepIn(currentThreadId);
+                }
                 return true;
             case IDEActions.DebugStepOver:
-                if (_state == DebuggingState.paused)
-                    _debugger.execStepOver();
+                if (_state == DebuggingState.paused) {
+                    Log.d("DebugStepOver threadId=", currentThreadId);
+                    _debugger.execStepOver(currentThreadId);
+                }
                 return true;
             case IDEActions.DebugStepOut:
-                if (_state == DebuggingState.paused)
-                    _debugger.execStepOut();
+                if (_state == DebuggingState.paused) {
+                    Log.d("DebugStepOut threadId=", currentThreadId);
+                    _debugger.execStepOut(currentThreadId);
+                }
                 return true;
             case IDEActions.DebugRestart:
+                _currentThreadId = 0;
                 _debugger.execRestart();
                 return true;
             default:

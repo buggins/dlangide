@@ -296,20 +296,21 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
     void execPause() {
         _pauseRequestId = sendCommand("-exec-interrupt");
     }
+
     /// step over
     int _stepOverRequestId;
-    void execStepOver() {
-        _stepOverRequestId = sendCommand("-exec-next");
+    void execStepOver(ulong threadId) {
+        _stepOverRequestId = sendCommand("-exec-next".appendThreadParam(threadId));
     }
     /// step in
     int _stepInRequestId;
-    void execStepIn() {
-        _stepInRequestId = sendCommand("-exec-step");
+    void execStepIn(ulong threadId) {
+        _stepInRequestId = sendCommand("-exec-step".appendThreadParam(threadId));
     }
     /// step out
     int _stepOutRequestId;
-    void execStepOut() {
-        _stepOutRequestId = sendCommand("-exec-finish");
+    void execStepOut(ulong threadId) {
+        _stepOutRequestId = sendCommand("-exec-finish".appendThreadParam(threadId));
     }
     /// restart
     int _restartRequestId;
@@ -738,4 +739,11 @@ struct GDBRequestList {
         }
         return false;
     }
+}
+
+/// appends --thread parameter to command text if threadId != 0
+string appendThreadParam(string src, ulong threadId) {
+    if (!threadId)
+        return src;
+    return src ~= " --thread " ~ to!string(threadId);
 }
