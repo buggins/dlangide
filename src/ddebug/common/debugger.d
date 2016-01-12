@@ -171,11 +171,17 @@ class DebugVariable {
     string name;
     string type;
     string value;
+    DebugVariable[] children;
+
     this() {}
+    /// deep copy
     this(DebugVariable v) {
         name = v.name;
         type = v.type;
         value = v.value;
+        // deep copy of child vars
+        foreach(item; v.children)
+            children ~= new DebugVariable(item);
     }
 }
 
