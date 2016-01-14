@@ -648,6 +648,7 @@ class Project : WorkspaceItem {
         _dependencies ~= dep;
         return true;
     }
+
     bool loadSelections() {
         _dependencies.length = 0;
         DubPackageFinder finder = new DubPackageFinder();
