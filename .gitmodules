@@ -1,0 +1,3 @@
+[submodule "deps/DCD"]
+	path = deps/DCD
+	url = https://github.com/Hackerpilot/DCD.git
