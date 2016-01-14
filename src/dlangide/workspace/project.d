@@ -642,37 +642,53 @@ class Project : WorkspaceItem {
 
     protected Project[] _dependencies;
     @property Project[] dependencies() { return _dependencies; }
-    protected bool addDependency(Project dep) {
-        if (_workspace)
-            _workspace.addDependencyProject(dep);
-        _dependencies ~= dep;
-        return true;
+
+    Project findDependencyProject(string filename) {
+        foreach(dep; _dependencies) {
+            if (dep.filename.equal(filename))
+                return dep;
+        }
+        return null;
     }
 
     bool loadSelections() {
+        Project[] newdeps;
         _dependencies.length = 0;
         DubPackageFinder finder = new DubPackageFinder();
         scope(exit) destroy(finder);
         SettingsFile selectionsFile = new SettingsFile(buildNormalizedPath(_dir, "dub.selections.json"));
-        if (!selectionsFile.load())
+        if (!selectionsFile.load()) {
+            _dependencies = newdeps;
             return false;
+        }
         Setting versions = selectionsFile.objectByPath("versions");
-        if (!versions.isObject)
+        if (!versions.isObject) {
+            _dependencies = newdeps;
             return false;
+        }
         string[string] versionMap = versions.strMap;
         foreach(packageName, packageVersion; versionMap) {
             string fn = finder.findPackage(packageName, packageVersion);
             Log.d("dependency ", packageName, " ", packageVersion, " : ", fn ? fn : "NOT FOUND");
             if (fn) {
-                Project p = new Project(_workspace, fn, packageVersion);
+                Project p = findDependencyProject(fn);
+                if (p) {
+                    Log.d("Found existing dependency project ", fn);
+                    newdeps ~= p;
+                    continue;
+                }
+                p = new Project(_workspace, fn, packageVersion);
                 if (p.load()) {
-                    addDependency(p);
+                    newdeps ~= p;
+                    if (_workspace)
+                        _workspace.addDependencyProject(p);
                 } else {
                     Log.e("cannot load dependency package ", packageName, " ", packageVersion, " from file ", fn);
                     destroy(p);
                 }
             }
         }
+        _dependencies = newdeps;
         return true;
     }
 }

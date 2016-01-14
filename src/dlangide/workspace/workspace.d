@@ -194,6 +194,31 @@ class Workspace : WorkspaceItem {
         fillStartupProject();
     }
 
+    Project removeProject(int index) {
+        if (index < 0 || index > _projects.length)
+            return null;
+        Project res = _projects[index];
+        for (int j = index; j + 1 < _projects.length; j++)
+            _projects[j] = _projects[j + 1];
+        return res;
+    }
+
+    bool isDependencyProjectUsed(string filename) {
+        foreach(p; _projects)
+            if (!p.isDependency && p.findDependencyProject(filename))
+                return true;
+        return false;
+    }
+
+    void cleanupUnusedDependencies() {
+        for (int i = cast(int)_projects.length - 1; i >= 0; i--) {
+            if (_projects[i].isDependency) {
+                if (!isDependencyProjectUsed(_projects[i].filename))
+                    removeProject(i);
+            }
+        }
+    }
+
     bool addDependencyProject(Project p) {
         for (int i = 0; i < _projects.length; i++) {
             if (_projects[i].filename.equal(p.filename)) {

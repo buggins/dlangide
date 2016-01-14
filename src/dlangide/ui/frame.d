@@ -1247,7 +1247,10 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
     }
 
     void refreshProject(Project project) {
-        // TODO
+        if (currentWorkspace && project.loadSelections()) {
+            currentWorkspace.cleanupUnusedDependencies();
+            refreshWorkspace();
+        }
     }
 
     void buildProject(BuildOperation buildOp, Project project, BuildResultListener listener = null) {
