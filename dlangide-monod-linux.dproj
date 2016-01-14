@@ -226,187 +226,187 @@
     <Compile Include="src\ddebug\common\nodebug.d" />
     <Compile Include="src\ddebug\gdb\gdbinterface.d" />
     <Compile Include="src\ddebug\gdb\gdbmiparser.d" />
-    <Compile Include="..\DCD\src\server\autocomplete.d">
+    <Compile Include="deps\DCD\src\server\autocomplete.d">
       <Link>3rdparty\dcd\autocomplete.d</Link>
     </Compile>
-    <Compile Include="..\DCD\src\common\constants.d">
+    <Compile Include="deps\DCD\src\common\constants.d">
       <Link>3rdparty\dcd\constants.d</Link>
     </Compile>
-    <Compile Include="..\DCD\src\common\dcd_version.d">
+    <Compile Include="deps\DCD\src\common\dcd_version.d">
       <Link>3rdparty\dcd\dcd_version.d</Link>
     </Compile>
-    <Compile Include="..\DCD\src\common\messages.d">
+    <Compile Include="deps\DCD\src\common\messages.d">
       <Link>3rdparty\dcd\messages.d</Link>
     </Compile>
-    <Compile Include="..\libdparse\src\dparse\ast.d">
+    <Compile Include="deps\DCD\libdparse\src\dparse\ast.d">
       <Link>3rdparty\libdparse\ast.d</Link>
     </Compile>
-    <Compile Include="..\libdparse\src\dparse\entities.d">
+    <Compile Include="deps\DCD\libdparse\src\dparse\entities.d">
       <Link>3rdparty\libdparse\entities.d</Link>
     </Compile>
-    <Compile Include="..\libdparse\src\dparse\formatter.d">
+    <Compile Include="deps\DCD\libdparse\src\dparse\formatter.d">
       <Link>3rdparty\libdparse\formatter.d</Link>
     </Compile>
-    <Compile Include="..\libdparse\src\dparse\lexer.d">
+    <Compile Include="deps\DCD\libdparse\src\dparse\lexer.d">
       <Link>3rdparty\libdparse\lexer.d</Link>
     </Compile>
-    <Compile Include="..\libdparse\src\dparse\parser.d">
+    <Compile Include="deps\DCD\libdparse\src\dparse\parser.d">
       <Link>3rdparty\libdparse\parser.d</Link>
     </Compile>
-    <Compile Include="..\libdparse\src\std\experimental\lexer.d">
+    <Compile Include="deps\DCD\libdparse\src\std\experimental\lexer.d">
       <Link>3rdparty\std_experimental_lexer\lexer.d</Link>
     </Compile>
-    <Compile Include="..\containers\src\containers\dynamicarray.d">
+    <Compile Include="deps\DCD\containers\src\containers\dynamicarray.d">
       <Link>3rdparty\containers\dynamicarray.d</Link>
     </Compile>
-    <Compile Include="..\containers\src\containers\hashmap.d">
+    <Compile Include="deps\DCD\containers\src\containers\hashmap.d">
       <Link>3rdparty\containers\hashmap.d</Link>
     </Compile>
-    <Compile Include="..\containers\src\containers\hashset.d">
+    <Compile Include="deps\DCD\containers\src\containers\hashset.d">
       <Link>3rdparty\containers\hashset.d</Link>
     </Compile>
-    <Compile Include="..\containers\src\containers\immutablehashset.d">
+    <Compile Include="deps\DCD\containers\src\containers\immutablehashset.d">
       <Link>3rdparty\containers\immutablehashset.d</Link>
     </Compile>
-    <Compile Include="..\containers\src\containers\openhashset.d">
+    <Compile Include="deps\DCD\containers\src\containers\openhashset.d">
       <Link>3rdparty\containers\openhashset.d</Link>
     </Compile>
-    <Compile Include="..\containers\src\containers\package.d">
+    <Compile Include="deps\DCD\containers\src\containers\package.d">
       <Link>3rdparty\containers\package.d</Link>
     </Compile>
-    <Compile Include="..\containers\src\containers\simdset.d">
+    <Compile Include="deps\DCD\containers\src\containers\simdset.d">
       <Link>3rdparty\containers\simdset.d</Link>
     </Compile>
-    <Compile Include="..\containers\src\containers\slist.d">
+    <Compile Include="deps\DCD\containers\src\containers\slist.d">
       <Link>3rdparty\containers\slist.d</Link>
     </Compile>
-    <Compile Include="..\containers\src\containers\treemap.d">
+    <Compile Include="deps\DCD\containers\src\containers\treemap.d">
       <Link>3rdparty\containers\treemap.d</Link>
     </Compile>
-    <Compile Include="..\containers\src\containers\ttree.d">
+    <Compile Include="deps\DCD\containers\src\containers\ttree.d">
       <Link>3rdparty\containers\ttree.d</Link>
     </Compile>
-    <Compile Include="..\containers\src\containers\unrolledlist.d">
+    <Compile Include="deps\DCD\containers\src\containers\unrolledlist.d">
       <Link>3rdparty\containers\unrolledlist.d</Link>
     </Compile>
-    <Compile Include="..\containers\src\containers\internal\element_type.d">
+    <Compile Include="deps\DCD\containers\src\containers\internal\element_type.d">
       <Link>3rdparty\containers\element_type.d</Link>
     </Compile>
-    <Compile Include="..\containers\src\containers\internal\hash.d">
+    <Compile Include="deps\DCD\containers\src\containers\internal\hash.d">
       <Link>3rdparty\containers\hash.d</Link>
     </Compile>
-    <Compile Include="..\containers\src\containers\internal\mixins.d">
+    <Compile Include="deps\DCD\containers\src\containers\internal\mixins.d">
       <Link>3rdparty\containers\mixins.d</Link>
     </Compile>
-    <Compile Include="..\containers\src\containers\internal\node.d">
+    <Compile Include="deps\DCD\containers\src\containers\internal\node.d">
       <Link>3rdparty\containers\node.d</Link>
     </Compile>
-    <Compile Include="..\containers\src\containers\internal\storage_type.d">
+    <Compile Include="deps\DCD\containers\src\containers\internal\storage_type.d">
       <Link>3rdparty\containers\storage_type.d</Link>
     </Compile>
-    <Compile Include="..\experimental_allocator\src\std\experimental\allocator\common.d">
+    <Compile Include="deps\DCD\experimental_allocator\src\std\experimental\allocator\common.d">
       <Link>3rdparty\experimental_allocator\common.d</Link>
     </Compile>
-    <Compile Include="..\experimental_allocator\src\std\experimental\allocator\gc_allocator.d">
+    <Compile Include="deps\DCD\experimental_allocator\src\std\experimental\allocator\gc_allocator.d">
       <Link>3rdparty\experimental_allocator\gc_allocator.d</Link>
     </Compile>
-    <Compile Include="..\experimental_allocator\src\std\experimental\allocator\mallocator.d">
+    <Compile Include="deps\DCD\experimental_allocator\src\std\experimental\allocator\mallocator.d">
       <Link>3rdparty\experimental_allocator\mallocator.d</Link>
     </Compile>
-    <Compile Include="..\experimental_allocator\src\std\experimental\allocator\mmap_allocator.d">
+    <Compile Include="deps\DCD\experimental_allocator\src\std\experimental\allocator\mmap_allocator.d">
       <Link>3rdparty\experimental_allocator\mmap_allocator.d</Link>
     </Compile>
-    <Compile Include="..\experimental_allocator\src\std\experimental\allocator\package.d">
+    <Compile Include="deps\DCD\experimental_allocator\src\std\experimental\allocator\package.d">
       <Link>3rdparty\experimental_allocator\package.d</Link>
     </Compile>
-    <Compile Include="..\experimental_allocator\src\std\experimental\allocator\showcase.d">
+    <Compile Include="deps\DCD\experimental_allocator\src\std\experimental\allocator\showcase.d">
       <Link>3rdparty\experimental_allocator\showcase.d</Link>
     </Compile>
-    <Compile Include="..\experimental_allocator\src\std\experimental\allocator\typed.d">
+    <Compile Include="deps\DCD\experimental_allocator\src\std\experimental\allocator\typed.d">
       <Link>3rdparty\experimental_allocator\typed.d</Link>
     </Compile>
-    <Compile Include="..\experimental_allocator\src\std\experimental\allocator\building_blocks\affix_allocator.d">
+    <Compile Include="deps\DCD\experimental_allocator\src\std\experimental\allocator\building_blocks\affix_allocator.d">
       <Link>3rdparty\experimental_allocator\affix_allocator.d</Link>
     </Compile>
-    <Compile Include="..\experimental_allocator\src\std\experimental\allocator\building_blocks\allocator_list.d">
+    <Compile Include="deps\DCD\experimental_allocator\src\std\experimental\allocator\building_blocks\allocator_list.d">
       <Link>3rdparty\experimental_allocator\allocator_list.d</Link>
     </Compile>
-    <Compile Include="..\experimental_allocator\src\std\experimental\allocator\building_blocks\bitmapped_block.d">
+    <Compile Include="deps\DCD\experimental_allocator\src\std\experimental\allocator\building_blocks\bitmapped_block.d">
       <Link>3rdparty\experimental_allocator\bitmapped_block.d</Link>
     </Compile>
-    <Compile Include="..\experimental_allocator\src\std\experimental\allocator\building_blocks\bucketizer.d">
+    <Compile Include="deps\DCD\experimental_allocator\src\std\experimental\allocator\building_blocks\bucketizer.d">
       <Link>3rdparty\experimental_allocator\bucketizer.d</Link>
     </Compile>
-    <Compile Include="..\experimental_allocator\src\std\experimental\allocator\building_blocks\fallback_allocator.d">
+    <Compile Include="deps\DCD\experimental_allocator\src\std\experimental\allocator\building_blocks\fallback_allocator.d">
       <Link>3rdparty\experimental_allocator\fallback_allocator.d</Link>
     </Compile>
-    <Compile Include="..\experimental_allocator\src\std\experimental\allocator\building_blocks\free_list.d">
+    <Compile Include="deps\DCD\experimental_allocator\src\std\experimental\allocator\building_blocks\free_list.d">
       <Link>3rdparty\experimental_allocator\free_list.d</Link>
     </Compile>
-    <Compile Include="..\experimental_allocator\src\std\experimental\allocator\building_blocks\free_tree.d">
+    <Compile Include="deps\DCD\experimental_allocator\src\std\experimental\allocator\building_blocks\free_tree.d">
       <Link>3rdparty\experimental_allocator\free_tree.d</Link>
     </Compile>
-    <Compile Include="..\experimental_allocator\src\std\experimental\allocator\building_blocks\kernighan_ritchie.d">
+    <Compile Include="deps\DCD\experimental_allocator\src\std\experimental\allocator\building_blocks\kernighan_ritchie.d">
       <Link>3rdparty\experimental_allocator\kernighan_ritchie.d</Link>
     </Compile>
-    <Compile Include="..\experimental_allocator\src\std\experimental\allocator\building_blocks\null_allocator.d">
+    <Compile Include="deps\DCD\experimental_allocator\src\std\experimental\allocator\building_blocks\null_allocator.d">
       <Link>3rdparty\experimental_allocator\null_allocator.d</Link>
     </Compile>
-    <Compile Include="..\experimental_allocator\src\std\experimental\allocator\building_blocks\quantizer.d">
+    <Compile Include="deps\DCD\experimental_allocator\src\std\experimental\allocator\building_blocks\quantizer.d">
       <Link>3rdparty\experimental_allocator\quantizer.d</Link>
     </Compile>
-    <Compile Include="..\experimental_allocator\src\std\experimental\allocator\building_blocks\region.d">
+    <Compile Include="deps\DCD\experimental_allocator\src\std\experimental\allocator\building_blocks\region.d">
       <Link>3rdparty\experimental_allocator\region.d</Link>
     </Compile>
-    <Compile Include="..\experimental_allocator\src\std\experimental\allocator\building_blocks\scoped_allocator.d">
+    <Compile Include="deps\DCD\experimental_allocator\src\std\experimental\allocator\building_blocks\scoped_allocator.d">
       <Link>3rdparty\experimental_allocator\scoped_allocator.d</Link>
     </Compile>
-    <Compile Include="..\experimental_allocator\src\std\experimental\allocator\building_blocks\segregator.d">
+    <Compile Include="deps\DCD\experimental_allocator\src\std\experimental\allocator\building_blocks\segregator.d">
       <Link>3rdparty\experimental_allocator\segregator.d</Link>
     </Compile>
-    <Compile Include="..\experimental_allocator\src\std\experimental\allocator\building_blocks\stats_collector.d">
+    <Compile Include="deps\DCD\experimental_allocator\src\std\experimental\allocator\building_blocks\stats_collector.d">
       <Link>3rdparty\experimental_allocator\stats_collector.d</Link>
     </Compile>
-    <Compile Include="..\dsymbol\src\dsymbol\cache_entry.d">
+    <Compile Include="deps\DCD\dsymbol\src\dsymbol\cache_entry.d">
       <Link>3rdparty\dsymbol\cache_entry.d</Link>
     </Compile>
-    <Compile Include="..\dsymbol\src\dsymbol\deferred.d">
+    <Compile Include="deps\DCD\dsymbol\src\dsymbol\deferred.d">
       <Link>3rdparty\dsymbol\deferred.d</Link>
     </Compile>
-    <Compile Include="..\dsymbol\src\dsymbol\import_.d">
+    <Compile Include="deps\DCD\dsymbol\src\dsymbol\import_.d">
       <Link>3rdparty\dsymbol\import_.d</Link>
     </Compile>
-    <Compile Include="..\dsymbol\src\dsymbol\modulecache.d">
+    <Compile Include="deps\DCD\dsymbol\src\dsymbol\modulecache.d">
       <Link>3rdparty\dsymbol\modulecache.d</Link>
     </Compile>
-    <Compile Include="..\dsymbol\src\dsymbol\scope_.d">
+    <Compile Include="deps\DCD\dsymbol\src\dsymbol\scope_.d">
       <Link>3rdparty\dsymbol\scope_.d</Link>
     </Compile>
-    <Compile Include="..\dsymbol\src\dsymbol\semantic.d">
+    <Compile Include="deps\DCD\dsymbol\src\dsymbol\semantic.d">
       <Link>3rdparty\dsymbol\semantic.d</Link>
     </Compile>
-    <Compile Include="..\dsymbol\src\dsymbol\string_interning.d">
+    <Compile Include="deps\DCD\dsymbol\src\dsymbol\string_interning.d">
       <Link>3rdparty\dsymbol\string_interning.d</Link>
     </Compile>
-    <Compile Include="..\dsymbol\src\dsymbol\symbol.d">
+    <Compile Include="deps\DCD\dsymbol\src\dsymbol\symbol.d">
       <Link>3rdparty\dsymbol\symbol.d</Link>
     </Compile>
-    <Compile Include="..\dsymbol\src\dsymbol\type_lookup.d">
+    <Compile Include="deps\DCD\dsymbol\src\dsymbol\type_lookup.d">
       <Link>3rdparty\dsymbol\type_lookup.d</Link>
     </Compile>
-    <Compile Include="..\dsymbol\src\dsymbol\conversion\first.d">
+    <Compile Include="deps\DCD\dsymbol\src\dsymbol\conversion\first.d">
       <Link>3rdparty\dsymbol\first.d</Link>
     </Compile>
-    <Compile Include="..\dsymbol\src\dsymbol\conversion\package.d">
+    <Compile Include="deps\DCD\dsymbol\src\dsymbol\conversion\package.d">
       <Link>3rdparty\dsymbol\package.d</Link>
     </Compile>
-    <Compile Include="..\dsymbol\src\dsymbol\conversion\second.d">
+    <Compile Include="deps\DCD\dsymbol\src\dsymbol\conversion\second.d">
       <Link>3rdparty\dsymbol\second.d</Link>
     </Compile>
-    <Compile Include="..\dsymbol\src\dsymbol\builtin\names.d">
+    <Compile Include="deps\DCD\dsymbol\src\dsymbol\builtin\names.d">
       <Link>3rdparty\dsymbol\names.d</Link>
     </Compile>
-    <Compile Include="..\dsymbol\src\dsymbol\builtin\symbols.d">
+    <Compile Include="deps\DCD\dsymbol\src\dsymbol\builtin\symbols.d">
       <Link>3rdparty\dsymbol\symbols.d</Link>
     </Compile>
   </ItemGroup>

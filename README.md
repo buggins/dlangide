@@ -135,7 +135,7 @@ Create some folder to place sources, e.g. ~/src/d/
 Clone DlangUI and DlangIDE repositories into source folder
 
         git clone https://github.com/buggins/dlangui.git
-        git clone https://github.com/buggins/dlangide.git
+        git clone --recursive https://github.com/buggins/dlangide.git
 
 Enter dlangui directory
 
@@ -151,14 +151,6 @@ Clone dependency libraries to dlangui/deps directory
         git clone https://github.com/DerelictOrg/DerelictSDL2.git
         git clone https://github.com/Hackerpilot/libdparse.git
         git clone https://github.com/nomad-software/x11.git
-
-        cd ../..
-        git clone https://github.com/keywan-ghadami/DCD.git
-        git clone https://github.com/keywan-ghadami/dsymbol.git
-        git clone https://github.com/keywan-ghadami/libdparse.git
-        git clone https://github.com/keywan-ghadami/experimental_allocator.git
-        git clone https://github.com/keywan-ghadami/containers.git
-
 
 Windows: open solution file with Visual-D
 
