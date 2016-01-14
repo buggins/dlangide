@@ -43,11 +43,8 @@ DlangUI project GitHub page: [https://github.com/buggins/dlangui](https://github
 DCD integration
 ===============
 
-Hans-Albert Maritz (Freakazo) recently implementated DCD integration.
-For using of Autocompletion and Go To Definition, you need to install DCD.
-(For Win32, built dcd-server.exe and dcd-client.exe are included, and will be copied by DUB during build).
-dcd-client and dcd-server must be in the same directory as dlangide executable or in one of PATH dirs.
-DlangIDE starts its own copy of DCD daemon on port 9167.
+Hans-Albert Maritz (Freakazo) implementated DCD integration using DCD client/server.
+Keywan Ghadami improved it to use DCD as a library.
 
 
 Building DlangIDE
@@ -127,30 +124,15 @@ Install GIT, DUB, DMD.
 
 For Linux and OSX, install MonoDevelop + Mono-D plugin.
 
-For Linux / OSX, install libSDL2 and X11 development packages.
+For Linux / OSX, additionally install libSDL2 and X11 development packages.
 
 
 Create some folder to place sources, e.g. ~/src/d/
 
 Clone DlangUI and DlangIDE repositories into source folder
 
-        git clone https://github.com/buggins/dlangui.git
+        git clone --recursive https://github.com/buggins/dlangui.git
         git clone --recursive https://github.com/buggins/dlangide.git
-
-Enter dlangui directory
-
-        cd dlangui
-
-Clone dependency libraries to dlangui/deps directory
-
-        mkdir deps
-        cd deps
-        git clone https://github.com/DerelictOrg/DerelictUtil.git
-        git clone https://github.com/DerelictOrg/DerelictGL3.git
-        git clone https://github.com/DerelictOrg/DerelictFT.git
-        git clone https://github.com/DerelictOrg/DerelictSDL2.git
-        git clone https://github.com/Hackerpilot/libdparse.git
-        git clone https://github.com/nomad-software/x11.git
 
 Windows: open solution file with Visual-D
 
