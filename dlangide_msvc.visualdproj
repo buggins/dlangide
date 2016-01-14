@@ -409,6 +409,79 @@
   <filesToClean>*.obj;*.cmd;*.build;*.json;*.dep</filesToClean>
  </Config>
  <Folder name="dlangide">
+  <Folder name="3rdparty">
+   <Folder name="containers">
+    <File path="deps\DCD\containers\src\containers\dynamicarray.d" />
+    <File path="deps\DCD\containers\src\containers\internal\element_type.d" />
+    <File path="deps\DCD\containers\src\containers\internal\hash.d" />
+    <File path="deps\DCD\containers\src\containers\hashmap.d" />
+    <File path="deps\DCD\containers\src\containers\hashset.d" />
+    <File path="deps\DCD\containers\src\containers\immutablehashset.d" />
+    <File path="deps\DCD\containers\src\containers\internal\mixins.d" />
+    <File path="deps\DCD\containers\src\containers\internal\node.d" />
+    <File path="deps\DCD\containers\src\containers\openhashset.d" />
+    <File path="deps\DCD\containers\src\containers\package.d" />
+    <File path="deps\DCD\containers\src\containers\simdset.d" />
+    <File path="deps\DCD\containers\src\containers\slist.d" />
+    <File path="deps\DCD\containers\src\containers\internal\storage_type.d" />
+    <File path="deps\DCD\containers\src\containers\treemap.d" />
+    <File path="deps\DCD\containers\src\containers\ttree.d" />
+    <File path="deps\DCD\containers\src\containers\unrolledlist.d" />
+   </Folder>
+   <Folder name="dcd">
+    <File path="deps\DCD\src\server\autocomplete.d" />
+    <File path="deps\DCD\src\common\constants.d" />
+    <File path="deps\DCD\src\common\dcd_version.d" />
+    <File path="deps\DCD\src\common\messages.d" />
+   </Folder>
+   <Folder name="dsymbol">
+    <File path="deps\DCD\dsymbol\src\dsymbol\cache_entry.d" />
+    <File path="deps\DCD\dsymbol\src\dsymbol\deferred.d" />
+    <File path="deps\DCD\dsymbol\src\dsymbol\conversion\first.d" />
+    <File path="deps\DCD\dsymbol\src\dsymbol\import_.d" />
+    <File path="deps\DCD\dsymbol\src\dsymbol\modulecache.d" />
+    <File path="deps\DCD\dsymbol\src\dsymbol\builtin\names.d" />
+    <File path="deps\DCD\dsymbol\src\dsymbol\conversion\package.d" />
+    <File path="deps\DCD\dsymbol\src\dsymbol\scope_.d" />
+    <File path="deps\DCD\dsymbol\src\dsymbol\conversion\second.d" />
+    <File path="deps\DCD\dsymbol\src\dsymbol\semantic.d" />
+    <File path="deps\DCD\dsymbol\src\dsymbol\string_interning.d" />
+    <File path="deps\DCD\dsymbol\src\dsymbol\symbol.d" />
+    <File path="deps\DCD\dsymbol\src\dsymbol\builtin\symbols.d" />
+    <File path="deps\DCD\dsymbol\src\dsymbol\type_lookup.d" />
+   </Folder>
+   <Folder name="experimental_allocator">
+    <File path="deps\DCD\libdparse\experimental_allocator\src\std\experimental\allocator\building_blocks\allocator_list.d" />
+    <File path="deps\DCD\libdparse\experimental_allocator\src\std\experimental\allocator\building_blocks\bitmapped_block.d" />
+    <File path="deps\DCD\libdparse\experimental_allocator\src\std\experimental\allocator\building_blocks\bucketizer.d" />
+    <File path="deps\DCD\libdparse\experimental_allocator\src\std\experimental\allocator\common.d" />
+    <File path="deps\DCD\libdparse\experimental_allocator\src\std\experimental\allocator\building_blocks\fallback_allocator.d" />
+    <File path="deps\DCD\libdparse\experimental_allocator\src\std\experimental\allocator\building_blocks\free_list.d" />
+    <File path="deps\DCD\libdparse\experimental_allocator\src\std\experimental\allocator\building_blocks\free_tree.d" />
+    <File path="deps\DCD\libdparse\experimental_allocator\src\std\experimental\allocator\gc_allocator.d" />
+    <File path="deps\DCD\libdparse\experimental_allocator\src\std\experimental\allocator\building_blocks\kernighan_ritchie.d" />
+    <File path="deps\DCD\libdparse\experimental_allocator\src\std\experimental\allocator\mallocator.d" />
+    <File path="deps\DCD\libdparse\experimental_allocator\src\std\experimental\allocator\mmap_allocator.d" />
+    <File path="deps\DCD\libdparse\experimental_allocator\src\std\experimental\allocator\building_blocks\null_allocator.d" />
+    <File path="deps\DCD\libdparse\experimental_allocator\src\std\experimental\allocator\package.d" />
+    <File path="deps\DCD\libdparse\experimental_allocator\src\std\experimental\allocator\building_blocks\package.d" />
+    <File path="deps\DCD\libdparse\experimental_allocator\src\std\experimental\allocator\building_blocks\quantizer.d" />
+    <File path="deps\DCD\libdparse\experimental_allocator\src\std\experimental\allocator\building_blocks\region.d" />
+    <File path="deps\DCD\libdparse\experimental_allocator\src\std\experimental\allocator\building_blocks\scoped_allocator.d" />
+    <File path="deps\DCD\libdparse\experimental_allocator\src\std\experimental\allocator\building_blocks\segregator.d" />
+    <File path="deps\DCD\libdparse\experimental_allocator\src\std\experimental\allocator\showcase.d" />
+    <File path="deps\DCD\libdparse\experimental_allocator\src\std\experimental\allocator\building_blocks\stats_collector.d" />
+    <File path="deps\DCD\libdparse\experimental_allocator\src\std\experimental\allocator\typed.d" />
+   </Folder>
+   <Folder name="libdparse">
+    <File path="deps\DCD\libdparse\src\dparse\ast.d" />
+    <File path="deps\DCD\libdparse\src\dparse\entities.d" />
+    <File path="deps\DCD\libdparse\src\dparse\formatter.d" />
+    <File path="deps\DCD\libdparse\src\std\experimental\lexer.d" />
+    <File path="deps\DCD\libdparse\src\dparse\lexer.d" />
+    <File path="deps\DCD\libdparse\src\dparse\parser.d" />
+   </Folder>
+  </Folder>
   <Folder name="ddc">
    <Folder name="lexer">
     <File path="src\ddc\lexer\exceptions.d" />
@@ -471,80 +544,6 @@
     <File path="src\dlangide\workspace\projectsettings.d" />
     <File path="src\dlangide\workspace\workspace.d" />
     <File path="src\dlangide\workspace\workspacesettings.d" />
-   </Folder>
-  </Folder>
-  <Folder name="3rdparty">
-   <Folder name="dcd">
-    <File path="deps\DCD\src\server\autocomplete.d" />
-    <File path="deps\DCD\src\common\constants.d" />
-    <File path="deps\DCD\src\common\dcd_version.d" />
-    <File path="deps\DCD\src\common\messages.d" />
-   </Folder>
-   <Folder name="dsymbol">
-    <File path="deps\DCD\dsymbol\src\dsymbol\cache_entry.d" />
-    <File path="deps\DCD\dsymbol\src\dsymbol\deferred.d" />
-    <File path="deps\DCD\dsymbol\src\dsymbol\conversion\first.d" />
-    <File path="deps\DCD\dsymbol\src\dsymbol\import_.d" />
-    <File path="deps\DCD\dsymbol\src\dsymbol\modulecache.d" />
-    <File path="deps\DCD\dsymbol\src\dsymbol\builtin\names.d" />
-    <File path="deps\DCD\dsymbol\src\dsymbol\conversion\package.d" />
-    <File path="deps\DCD\dsymbol\src\dsymbol\scope_.d" />
-    <File path="deps\DCD\dsymbol\src\dsymbol\conversion\second.d" />
-    <File path="deps\DCD\dsymbol\src\dsymbol\semantic.d" />
-    <File path="deps\DCD\dsymbol\src\dsymbol\string_interning.d" />
-    <File path="deps\DCD\dsymbol\src\dsymbol\symbol.d" />
-    <File path="deps\DCD\dsymbol\src\dsymbol\builtin\symbols.d" />
-    <File path="deps\DCD\dsymbol\src\dsymbol\type_lookup.d" />
-   </Folder>
-   <Folder name="libdparse">
-    <File path="deps\DCD\libdparse\src\dparse\ast.d" />
-    <File path="deps\DCD\libdparse\src\dparse\entities.d" />
-    <File path="deps\DCD\libdparse\src\dparse\formatter.d" />
-    <File path="deps\DCD\libdparse\src\std\experimental\lexer.d" />
-    <File path="deps\DCD\libdparse\src\dparse\lexer.d" />
-    <File path="deps\DCD\libdparse\src\dparse\parser.d" />
-   </Folder>
-   <Folder name="containers">
-    <File path="deps\DCD\containers\src\containers\dynamicarray.d" />
-    <File path="deps\DCD\containers\src\containers\internal\element_type.d" />
-    <File path="deps\DCD\containers\src\containers\internal\hash.d" />
-    <File path="deps\DCD\containers\src\containers\hashmap.d" />
-    <File path="deps\DCD\containers\src\containers\hashset.d" />
-    <File path="deps\DCD\containers\src\containers\immutablehashset.d" />
-    <File path="deps\DCD\containers\src\containers\internal\mixins.d" />
-    <File path="deps\DCD\containers\src\containers\internal\node.d" />
-    <File path="deps\DCD\containers\src\containers\openhashset.d" />
-    <File path="deps\DCD\containers\src\containers\package.d" />
-    <File path="deps\DCD\containers\src\containers\simdset.d" />
-    <File path="deps\DCD\containers\src\containers\slist.d" />
-    <File path="deps\DCD\containers\src\containers\internal\storage_type.d" />
-    <File path="deps\DCD\containers\src\containers\treemap.d" />
-    <File path="deps\DCD\containers\src\containers\ttree.d" />
-    <File path="deps\DCD\containers\src\containers\unrolledlist.d" />
-   </Folder>
-   <Folder name="experimental_allocator">
-    <File path="deps\DCD\experimental_allocator\src\std\experimental\allocator\building_blocks\affix_allocator.d" />
-    <File path="deps\DCD\experimental_allocator\src\std\experimental\allocator\building_blocks\allocator_list.d" />
-    <File path="deps\DCD\experimental_allocator\src\std\experimental\allocator\building_blocks\bitmapped_block.d" />
-    <File path="deps\DCD\experimental_allocator\src\std\experimental\allocator\building_blocks\bucketizer.d" />
-    <File path="deps\DCD\experimental_allocator\src\std\experimental\allocator\common.d" />
-    <File path="deps\DCD\experimental_allocator\src\std\experimental\allocator\building_blocks\fallback_allocator.d" />
-    <File path="deps\DCD\experimental_allocator\src\std\experimental\allocator\building_blocks\free_list.d" />
-    <File path="deps\DCD\experimental_allocator\src\std\experimental\allocator\building_blocks\free_tree.d" />
-    <File path="deps\DCD\experimental_allocator\src\std\experimental\allocator\gc_allocator.d" />
-    <File path="deps\DCD\experimental_allocator\src\std\experimental\allocator\building_blocks\kernighan_ritchie.d" />
-    <File path="deps\DCD\experimental_allocator\src\std\experimental\allocator\mallocator.d" />
-    <File path="deps\DCD\experimental_allocator\src\std\experimental\allocator\mmap_allocator.d" />
-    <File path="deps\DCD\experimental_allocator\src\std\experimental\allocator\building_blocks\null_allocator.d" />
-    <File path="deps\DCD\experimental_allocator\src\std\experimental\allocator\package.d" />
-    <File path="deps\DCD\experimental_allocator\src\std\experimental\allocator\building_blocks\package.d" />
-    <File path="deps\DCD\experimental_allocator\src\std\experimental\allocator\building_blocks\quantizer.d" />
-    <File path="deps\DCD\experimental_allocator\src\std\experimental\allocator\building_blocks\region.d" />
-    <File path="deps\DCD\experimental_allocator\src\std\experimental\allocator\building_blocks\scoped_allocator.d" />
-    <File path="deps\DCD\experimental_allocator\src\std\experimental\allocator\building_blocks\segregator.d" />
-    <File path="deps\DCD\experimental_allocator\src\std\experimental\allocator\showcase.d" />
-    <File path="deps\DCD\experimental_allocator\src\std\experimental\allocator\building_blocks\stats_collector.d" />
-    <File path="deps\DCD\experimental_allocator\src\std\experimental\allocator\typed.d" />
    </Folder>
   </Folder>
   <File path="src\dlangide.d" />
