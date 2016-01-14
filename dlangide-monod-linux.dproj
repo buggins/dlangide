@@ -232,9 +232,6 @@
     <Compile Include="deps\DCD\src\common\constants.d">
       <Link>3rdparty\dcd\constants.d</Link>
     </Compile>
-    <Compile Include="deps\DCD\src\common\dcd_version.d">
-      <Link>3rdparty\dcd\dcd_version.d</Link>
-    </Compile>
     <Compile Include="deps\DCD\src\common\messages.d">
       <Link>3rdparty\dcd\messages.d</Link>
     </Compile>
