@@ -36,6 +36,8 @@ Source editor features:
 
 GitHub page: [https://github.com/buggins/dlangide](https://github.com/buggins/dlangide)
 
+Wiki: [https://github.com/buggins/dlangide/wiki](https://github.com/buggins/dlangide/wiki)
+
 DlangUI project GitHub page: [https://github.com/buggins/dlangui](https://github.com/buggins/dlangui)
 
 
