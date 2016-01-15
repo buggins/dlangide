@@ -13,7 +13,7 @@
 
     "dependencies": {
         "dlangui": "~>0.7.39",
-        "dcd": "~>0.7.4"
+        "dcd": "~>0.7.5"
     },
 
     "versions": ["EmbedStandardResources"]
