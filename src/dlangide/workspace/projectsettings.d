@@ -5,6 +5,9 @@ import dlangui.core.i18n;
 
 import dlangide.workspace.idesettings;
 
+import std.string;
+import std.array;
+
 const AVAILABLE_TOOLCHAINS = ["default", "dmd", "ldc", "gdc"];
 const AVAILABLE_ARCH = ["default", "x86", "x86_64"];
 
@@ -24,6 +27,7 @@ class ProjectSettings : SettingsFile {
         build.setStringDef("toolchain", "default");
         build.setStringDef("arch", "default");
         build.setBooleanDef("verbose", false);
+        build.setStringDef("dub_additional_params", "");
         Setting dbg = debugSettings();
         dbg.setBooleanDef("external_console", true);
     }
@@ -44,7 +48,16 @@ class ProjectSettings : SettingsFile {
 
     string getToolchain(IDESettings idesettings) {
         string cfg = buildSettings.getString("toolchain");
-        return idesettings.getToolchainSettings(cfg);
+        return idesettings.getToolchainCompilerExecutable(cfg);
+    }
+
+    string getDubAdditionalParams(IDESettings idesettings) {
+        string cfg = buildSettings.getString("toolchain");
+        string globalparams = idesettings.dubAdditionalParams;
+        string globaltoolchainparams = idesettings.getToolchainAdditionalDubParams(cfg);
+        string projectparams = buildSettings.getString("dub_additional_params", "");
+        string verbosity = buildVerbose ? "-v" : null;
+        return joinParams(globalparams, globaltoolchainparams, projectparams, verbosity);
     }
 
     string getArch(IDESettings idesettings) {
@@ -55,3 +68,18 @@ class ProjectSettings : SettingsFile {
     }
 }
 
+/// join parameter lists separating with space
+string joinParams(string[] params...) {
+    char[] res;
+    foreach(param; params) {
+        string s = param.strip;
+        if (!s.empty) {
+            if (!res.empty)
+                res ~= " ";
+            res ~= s;
+        }
+    }
+    if (res.empty)
+        return null;
+    return res.dup;
+}

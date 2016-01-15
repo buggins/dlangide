@@ -22,7 +22,8 @@ class Builder : BackgroundOperationWatcher {
     protected ProjectConfiguration _projectConfig;
     protected BuildConfiguration _buildConfig;
     protected BuildOperation _buildOp;
-    protected bool _verbose;
+    protected string _dubExecutable;
+    protected string _dubAdditionalParams;
     protected BuildResultListener _listener;
     protected int _exitCode = int.min;
     protected string _toolchain;
@@ -32,7 +33,9 @@ class Builder : BackgroundOperationWatcher {
     @property void project(Project p) { _project = p; }
 
     this(AppFrame frame, Project project, OutputPanel log, ProjectConfiguration projectConfig, BuildConfiguration buildConfig, 
-             BuildOperation buildOp, bool verbose, 
+             BuildOperation buildOp, 
+             string dubExecutable,
+             string dubAdditionalParams,
              string toolchain = null,
              string arch = null,
              BuildResultListener listener = null) {
@@ -41,7 +44,8 @@ class Builder : BackgroundOperationWatcher {
         _projectConfig = projectConfig;
         _buildConfig = buildConfig;
         _buildOp = buildOp;
-        _verbose = verbose;
+        _dubExecutable = dubExecutable.empty ? "dub" : dubExecutable;
+        _dubAdditionalParams = dubAdditionalParams;
         _project = project;
         _log = log;
         _toolchain = toolchain;
@@ -66,7 +70,7 @@ class Builder : BackgroundOperationWatcher {
         ExternalProcessState state = _extprocess.state;
         if (state == ExternalProcessState.None) {
             _log.clear();
-            char[] program = "dub".dup;
+            char[] program = _dubExecutable.dup;
             char[][] params;
             char[] dir = _project.dir.dup;
 
@@ -114,15 +118,14 @@ class Builder : BackgroundOperationWatcher {
                         params ~= "--build=unittest".dup;
                         break;
                 }
+                if (!_dubAdditionalParams.empty)
+                    params ~= _dubAdditionalParams.dup;
             }
 
             if(_projectConfig.name != ProjectConfiguration.DEFAULT_NAME) {
                 params ~= "--config=".dup ~ _projectConfig.name;
             }
             
-            if (_verbose)
-                params ~= "-v".dup;
-
             auto text = "Running (in " ~ dir ~ "): " ~ program ~ " " ~ params.join(' ') ~ "\n";
             _box.writeText(to!dstring(text));
             state = _extprocess.run(program, params, dir, _box, null);

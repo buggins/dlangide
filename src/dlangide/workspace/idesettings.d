@@ -30,8 +30,13 @@ class IDESettings : SettingsFile {
         dubSettings.setStringDef("executable", "dub");
         dubSettings.setStringDef("additional_params", "");
         dmdToolchainSettings.setStringDef("executable", "dmd");
+        dmdToolchainSettings.setStringDef("dub_additional_params", "");
         ldcToolchainSettings.setStringDef("executable", "ldc2");
+        ldcToolchainSettings.setStringDef("dub_additional_params", "");
+        ldmdToolchainSettings.setStringDef("executable", "ldmd2");
+        ldmdToolchainSettings.setStringDef("dub_additional_params", "");
         gdcToolchainSettings.setStringDef("executable", "gdc");
+        gdcToolchainSettings.setStringDef("dub_additional_params", "");
     }
 
     /// override to do something after loading - e.g. set defaults
@@ -70,6 +75,11 @@ class IDESettings : SettingsFile {
 
     @property Setting ldcToolchainSettings() {
         Setting res = _setting.objectByPath("dlang/toolchains/ldc", true);
+        return res;
+    }
+
+    @property Setting ldmdToolchainSettings() {
+        Setting res = _setting.objectByPath("dlang/toolchains/ldmd", true);
         return res;
     }
 
@@ -165,13 +175,27 @@ class IDESettings : SettingsFile {
         return dubSettings.getString("additional_params", "");
     }
 
-    string getToolchainSettings(string toolchainName) {
+    string getToolchainCompilerExecutable(string toolchainName) {
         if (toolchainName.equal("dmd"))
             return dmdToolchainSettings.getString("executable", "dmd");
         if (toolchainName.equal("gdc"))
             return gdcToolchainSettings.getString("executable", "gdc");
         if (toolchainName.equal("ldc"))
             return ldcToolchainSettings.getString("executable", "ldc2");
+        if (toolchainName.equal("ldmd"))
+            return ldmdToolchainSettings.getString("executable", "ldmd2");
+        return null;
+    }
+
+    string getToolchainAdditionalDubParams(string toolchainName) {
+        if (toolchainName.equal("dmd"))
+            return dmdToolchainSettings.getString("dub_additional_params", "");
+        if (toolchainName.equal("gdc"))
+            return gdcToolchainSettings.getString("dub_additional_params", "");
+        if (toolchainName.equal("ldc"))
+            return ldcToolchainSettings.getString("dub_additional_params", "");
+        if (toolchainName.equal("ldmd"))
+            return ldmdToolchainSettings.getString("dub_additional_params", "");
         return null;
     }
 

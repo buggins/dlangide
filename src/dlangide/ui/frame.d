@@ -1277,9 +1277,10 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         ProjectSettings projectSettings = project.settings;
         string toolchain = projectSettings.getToolchain(_settings);
         string arch = projectSettings.getArch(_settings);
-        bool verbose = projectSettings.buildVerbose;
+        string dubExecutable = _settings.dubExecutable;
+        string dubAdditionalParams = projectSettings.getDubAdditionalParams(_settings);
         Builder op = new Builder(this, project, _logPanel, currentWorkspace.projectConfiguration, currentWorkspace.buildConfiguration, buildOp, 
-                                 verbose, 
+                                 dubExecutable, dubAdditionalParams,
                                  toolchain,
                                  arch,
                                  listener);

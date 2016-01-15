@@ -33,10 +33,16 @@ SettingsPage createSettingsPages() {
     SettingsPage toolchains = dlang.addChild("dlang/toolchains", UIString("Toolchains"d));
     SettingsPage dmdtoolchain = toolchains.addChild("dlang/toolchains/dmd", UIString("DMD"d));
     dmdtoolchain.addExecutableFileNameEdit("dlang/toolchains/dmd/executable", UIString("DMD executable"d), "dmd");
+    dmdtoolchain.addStringEdit("dlang/toolchains/dmd/dub_additional_params", UIString("DUB additional params"d), "");
     SettingsPage ldctoolchain = toolchains.addChild("dlang/toolchains/ldc", UIString("LDC"d));
     ldctoolchain.addExecutableFileNameEdit("dlang/toolchains/ldc/executable", UIString("LDC2 executable"d), "ldc2");
+    ldctoolchain.addStringEdit("dlang/toolchains/ldc/dub_additional_params", UIString("DUB additional params"d), "");
+    SettingsPage ldmdtoolchain = toolchains.addChild("dlang/toolchains/ldmd", UIString("LDMD"d));
+    ldmdtoolchain.addExecutableFileNameEdit("dlang/toolchains/ldmd/executable", UIString("LDMD2 executable"d), "ldmd2");
+    ldmdtoolchain.addStringEdit("dlang/toolchains/ldmd/dub_additional_params", UIString("DUB additional params"d), "");
     SettingsPage gdctoolchain = toolchains.addChild("dlang/toolchains/gdc", UIString("GDC"d));
     gdctoolchain.addExecutableFileNameEdit("dlang/toolchains/gdc/executable", UIString("GDC executable"d), "gdc");
+    gdctoolchain.addStringEdit("dlang/toolchains/gdc/dub_additional_params", UIString("DUB additional params"d), "");
 
     SettingsPage ui = res.addChild("interface", UIString("Interface"d));
     ui.addStringComboBox("interface/theme", UIString("Theme"d), [
@@ -90,12 +96,14 @@ SettingsPage createProjectSettingsPages() {
             StringListValue("default", "Default"d), 
             StringListValue("dmd", "DMD"d), 
             StringListValue("ldc", "LDC"d), 
+            StringListValue("ldmd", "LDMD"d), 
             StringListValue("gdc", "GDC"d)]);
     build.addStringComboBox("build/arch", UIString("Architecture"d), [
             StringListValue("default", "Default"d), 
             StringListValue("x86", "x86"d), 
             StringListValue("x86_64", "x86_64"d)]);
     build.addCheckbox("build/verbose", UIString("Verbose"d), true);
+    build.addStringEdit("build/dub_additional_params", UIString("DUB additional params"d), "");
 
     SettingsPage dbg = res.addChild("debug", UIString("Run and Debug"d));
     dbg.addStringEdit("debug/run_args", UIString("Command line args"d), "");
