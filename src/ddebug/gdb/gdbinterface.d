@@ -383,10 +383,10 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
             if (!found) {
                 for (int j = i; j < _breakpoints.length - 1; j++)
                     _breakpoints[j] = _breakpoints[j + 1];
-                _breakpoints.length = _breakpoints.length - 1;
                 if (breakpointsToDelete.length)
                     breakpointsToDelete ~= ",";
                 breakpointsToDelete ~= _breakpoints[i].number;
+                _breakpoints.length = _breakpoints.length - 1;
             }
         }
         // checking for added or updated breakpoints
