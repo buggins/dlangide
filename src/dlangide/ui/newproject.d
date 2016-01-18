@@ -61,7 +61,7 @@ class NewProjectDlg : Dialog {
                             layoutWidth: fill; layoutHeight: fill
                             VerticalLayout {
                                 margins: 5
-                                layoutWidth: wrap; layoutHeight: fill
+                                layoutWidth: 25%; layoutHeight: fill
                                 TextWidget { text: "Project template" }
                                 StringListWidget { 
                                     id: projectTemplateList 
@@ -70,7 +70,7 @@ class NewProjectDlg : Dialog {
                             }
                             VerticalLayout {
                                 margins: 5
-                                layoutWidth: fill; layoutHeight: fill
+                                layoutWidth: 40%; layoutHeight: fill
                                 TextWidget { text: "Template description" }
                                 EditBox { 
                                     id: templateDescription; readOnly: true 
@@ -78,7 +78,7 @@ class NewProjectDlg : Dialog {
                                 }
                             }
                             VerticalLayout {
-                                layoutWidth: fill; layoutHeight: fill
+                                layoutWidth: 35%; layoutHeight: fill
                                 margins: 5
                                 TextWidget { text: "Directory layout" }
                                 EditBox { 
