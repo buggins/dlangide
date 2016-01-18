@@ -808,6 +808,8 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     buildProject(BuildOperation.Clean, cast(Project)a.objectParam);
                     return true;
                 case IDEActions.DebugStartNoDebug:
+                    buildAndRunProject(cast(Project)a.objectParam);
+                    return true;
                 case IDEActions.DebugStart:
                     buildAndDebugProject(cast(Project)a.objectParam);
                     return true;
