@@ -1107,6 +1107,8 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         if (!project)
             return;
         currentWorkspace.startupProject = project;
+        if (_wsPanel)
+            _wsPanel.updateDefault();
     }
 
     void showProjectSettings(Project project) {

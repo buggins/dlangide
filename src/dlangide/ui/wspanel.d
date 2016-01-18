@@ -170,17 +170,33 @@ class WorkspacePanel : DockWindow {
         }
     }
 
+    void updateDefault() {
+        TreeItem defaultItem = null;
+        if (_workspace && _tree.items.childCount && _workspace.startupProject) {
+            for (int i = 0; i < _tree.items.child(0).childCount; i++) {
+                TreeItem p = _tree.items.child(0).child(i);
+                if (p.objectParam is _workspace.startupProject)
+                    defaultItem = p;
+            }
+        }
+        _tree.items.setDefaultItem(defaultItem);
+    }
+
     void reloadItems() {
         _tree.clearAllItems();
         if (_workspace) {
+            TreeItem defaultItem = null;
             TreeItem root = _tree.items.newChild(_workspace.filename, _workspace.name, "project-development");
             root.intParam = ProjectItemType.Workspace;
             foreach(project; _workspace.projects) {
                 TreeItem p = root.newChild(project.filename, project.name, project.isDependency ? "project-d-dependency" : "project-d");
                 p.intParam = ProjectItemType.Project;
                 p.objectParam = project;
+                if (project && _workspace.startupProject is project)
+                    defaultItem = p;
                 addProjectItems(p, project.items);
             }
+            _tree.items.setDefaultItem(defaultItem);
         } else {
             _tree.items.newChild("none", "No workspace"d, "project-development");
         }
@@ -197,6 +213,7 @@ class WorkspacePanel : DockWindow {
                 }
             }
         }
+        updateDefault();
     }
 
     @property void workspace(Workspace w) {
