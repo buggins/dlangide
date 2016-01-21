@@ -9,7 +9,7 @@ import std.string;
 import std.array;
 
 const AVAILABLE_TOOLCHAINS = ["default", "dmd", "ldc", "gdc"];
-const AVAILABLE_ARCH = ["default", "x86", "x86_64"];
+const AVAILABLE_ARCH = ["default", "x86", "x86_64", "arm", "arm64"];
 
 /// local settings for project (not supposed to put under source control)
 class ProjectSettings : SettingsFile {

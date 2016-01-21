@@ -101,7 +101,10 @@ SettingsPage createProjectSettingsPages() {
     build.addStringComboBox("build/arch", UIString("Architecture"d), [
             StringListValue("default", "Default"d), 
             StringListValue("x86", "x86"d), 
-            StringListValue("x86_64", "x86_64"d)]);
+            StringListValue("x86_64", "x86_64"d),
+            StringListValue("arm", "arm"d),
+            StringListValue("arm64", "arm64"d),
+    ]);
     build.addCheckbox("build/verbose", UIString("Verbose"d), true);
     build.addStringEdit("build/dub_additional_params", UIString("DUB additional params"d), "");
 
