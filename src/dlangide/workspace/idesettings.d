@@ -19,6 +19,7 @@ class IDESettings : SettingsFile {
         ed.setIntegerDef("tabSize", 4);
         ed.setBooleanDef("smartIndents", true);
         ed.setBooleanDef("smartIndentsAfterPaste", true);
+        ed.setBooleanDef("showWhiteSpaceMarks", true);
         Setting ui = uiSettings();
         ui.setStringDef("theme", "ide_theme_default");
         ui.setStringDef("language", "en");
@@ -132,6 +133,11 @@ class IDESettings : SettingsFile {
     @property bool smartIndents() { return editorSettings.getBoolean("smartIndents", true); }
     /// set smart indents enabled flag
     @property IDESettings smartIndents(bool enabled) { editorSettings.setBoolean("smartIndents", enabled); return this; }
+
+    /// true if smart indents are enabled
+    @property bool showWhiteSpaceMarks() { return editorSettings.getBoolean("showWhiteSpaceMarks", true); }
+    /// set smart indents enabled flag
+    @property IDESettings showWhiteSpaceMarks(bool enabled) { editorSettings.setBoolean("showWhiteSpaceMarks", enabled); return this; }
 
     /// true if smart indents are enabled
     @property bool smartIndentsAfterPaste() { return editorSettings.getBoolean("smartIndentsAfterPaste", true); }

@@ -46,7 +46,8 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         //ACTION_GO_TO_DEFINITION, ACTION_GET_COMPLETIONS
         popupMenu = editPopupItem;
         showIcons = true;
-        showFolding = true;
+        //showFolding = true;
+        showWhiteSpaceMarks = true;
         content.marksChanged = this;
     }
 
@@ -85,6 +86,7 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         useSpacesForTabs = _settings.useSpacesForTabs;
         smartIndents = _settings.smartIndents;
         smartIndentsAfterPaste = _settings.smartIndentsAfterPaste;
+        showWhiteSpaceMarks = _settings.showWhiteSpaceMarks;
     }
 
     protected EditorTool _editorTool;

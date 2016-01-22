@@ -60,6 +60,7 @@ Build and run with DUB:
 
 If you see build errors, try to upgrade dependencies:
 
+        dub clean-caches
 	dub upgrade --force-remove
 	dub build --force
 

@@ -20,6 +20,7 @@ SettingsPage createSettingsPages() {
     texted.addCheckbox("editors/textEditor/useSpacesForTabs", UIString("Use spaces for tabs"d));
     texted.addCheckbox("editors/textEditor/smartIndents", UIString("Smart indents"d));
     texted.addCheckbox("editors/textEditor/smartIndentsAfterPaste", UIString("Smart indent after paste"d));
+    texted.addCheckbox("editors/textEditor/showWhiteSpaceMarks", UIString("Show white space marks"d));
 
     SettingsPage dlang = res.addChild("dlang", UIString("D"d));
     SettingsPage dub = dlang.addChild("dlang/dub", UIString("DUB"d));
