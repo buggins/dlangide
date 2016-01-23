@@ -270,6 +270,22 @@ class NewProjectDlg : Dialog {
     override void close(const Action action) {
         Action newaction = action.clone();
         if (action.id == IDEActions.FileNewWorkspace || action.id == IDEActions.FileNewProject) {
+            if (!exists(_location)) {
+                // show message box with OK and CANCEL buttons, cancel by default, and handle its result
+                window.showMessageBox(UIString("Cannot create project"d), UIString("The target location does not exist.\nDo you want to create the target directory?"), [ACTION_YES, ACTION_CANCEL], 1, delegate(const Action a) {
+                    if (a.id == StandardAction.Yes) {
+                        try {
+                            mkdirRecurse(_location);
+                            close(action);
+                        } catch (Exception e) {
+                            setError("Cannot create target location");
+                            window.showMessageBox(UIString("Cannot create project"d), UIString(getError()));
+                        }
+                    }
+                    return true;
+                });
+                return;
+            }
             if (!validate()) {
                 window.showMessageBox(UIString("Cannot create project"d), UIString(getError()));
                 return;
