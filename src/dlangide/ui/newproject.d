@@ -371,10 +371,10 @@ class NewProjectDlg : Dialog {
         ws.addProject(project);
         if (ws.startupProject is null)
             ws.startupProject = project;
+        string srcdir = buildNormalizedPath(pdir, "source");
+        if (!exists(srcdir))
+            mkdir(srcdir);
         if (!_currentTemplate.srcfile.empty && !_currentTemplate.srccode.empty) {
-            string srcdir = buildNormalizedPath(pdir, "source");
-            if (!exists(srcdir))
-                mkdir(srcdir);
             string srcfile = buildNormalizedPath(srcdir, _currentTemplate.srcfile);
             write(srcfile, _currentTemplate.srccode);
         }
