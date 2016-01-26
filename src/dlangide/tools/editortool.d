@@ -40,4 +40,6 @@ class DefaultEditorTool : EditorTool
     override string[] getDocComments(DSourceEdit editor, TextPosition caretPosition) {
         assert(0);
     }
+
+
 }

@@ -389,6 +389,8 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         switch (a.id) {
             case IDEActions.GoToDefinition:
             case IDEActions.GetCompletionSuggestions:
+            case IDEActions.GetDocComments:
+            case IDEActions.GetParenCompletion:
             case IDEActions.DebugToggleBreakpoint:
             case IDEActions.DebugEnableBreakpoint:
             case IDEActions.DebugDisableBreakpoint:

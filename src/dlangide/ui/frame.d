@@ -583,7 +583,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         editItem.add(ACTION_EDIT_PREFERENCES);
 
         MenuItem navItem = new MenuItem(new Action(21, "MENU_NAVIGATE"));
-        navItem.add(ACTION_GO_TO_DEFINITION, ACTION_GET_COMPLETIONS, ACTION_EDITOR_GOTO_PREVIOUS_BOOKMARK, ACTION_EDITOR_GOTO_NEXT_BOOKMARK);
+        navItem.add(ACTION_GO_TO_DEFINITION, ACTION_GET_COMPLETIONS, ACTION_GET_DOC_COMMENTS, ACTION_GET_PAREN_COMPLETION, ACTION_EDITOR_GOTO_PREVIOUS_BOOKMARK, ACTION_EDITOR_GOTO_NEXT_BOOKMARK);
 
         MenuItem projectItem = new MenuItem(new Action(21, "MENU_PROJECT"));
         projectItem.add(ACTION_PROJECT_SET_STARTUP, ACTION_PROJECT_REFRESH, ACTION_PROJECT_UPDATE_DEPENDENCIES, ACTION_PROJECT_SETTINGS);
@@ -865,6 +865,14 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                 case IDEActions.GoToDefinition:
                     Log.d("Trying to go to definition.");
                     currentEditor.editorTool.goToDefinition(currentEditor(), currentEditor.caretPos);
+                    return true;
+                case IDEActions.GetDocComments:
+                    Log.d("Trying to get doc comments.");
+                    auto results = currentEditor.editorTool.getDocComments(currentEditor, currentEditor.caretPos);
+                    return true;
+                case IDEActions.GetParenCompletion:
+                    Log.d("Trying to get paren completion.");
+                    //auto results = currentEditor.editorTool.getParenCompletion(currentEditor, currentEditor.caretPos);
                     return true;
                 case IDEActions.GetCompletionSuggestions:
                     Log.d("Getting auto completion suggestions.");
