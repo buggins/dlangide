@@ -17,6 +17,7 @@ class EditorTool
     //Since files might be unsaved, we must send all the text content.
     abstract bool goToDefinition(DSourceEdit editor, TextPosition caretPosition);
     abstract dstring[] getCompletions(DSourceEdit editor, TextPosition caretPosition);
+    abstract string[] getDocComments(DSourceEdit editor, TextPosition caretPosition);
 
     protected IDEFrame _frame;
     
@@ -33,6 +34,10 @@ class DefaultEditorTool : EditorTool
     }
     
     override dstring[] getCompletions(DSourceEdit editor, TextPosition caretPosition) {
+        assert(0);
+    }
+
+    override string[] getDocComments(DSourceEdit editor, TextPosition caretPosition) {
         assert(0);
     }
 }

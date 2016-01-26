@@ -13,6 +13,7 @@ enum DCDResult : int {
     FAIL,
 }
 
+alias DocCommentsResultSet = Tuple!(DCDResult, "result", string[], "docComments");
 alias FindDeclarationResultSet = Tuple!(DCDResult, "result", string, "fileName", ulong, "offset");
 alias ResultSet = Tuple!(DCDResult, "result", dstring[], "output");
 
@@ -37,13 +38,28 @@ class DCDInterface {
         return "";
     }
 
+    DocCommentsResultSet getDocComments(in string[] importPaths, in string filename, in string content, int index, ref ModuleCache moduleCache) {
+        AutocompleteRequest request;
+        request.sourceCode = cast(ubyte[])content;
+        request.fileName = filename;
+        request.cursorPosition = index; 
+
+        AutocompleteResponse response = getDoc(request,moduleCache);
+
+        DocCommentsResultSet result;
+        result.docComments = response.docComments;
+        result.result = DCDResult.SUCCESS;
+
+        debug(DCD) Log.d("DCD doc comments:\n", result.docComments);
+
+        if (result.docComments is null) {
+            result.result = DCDResult.NO_RESULT;
+        }
+        return result;
+    }
+
     FindDeclarationResultSet goToDefinition(in string[] importPaths, in string filename, in string content, int index, ref ModuleCache moduleCache) {
 
-        version(USE_LIBDPARSE) {
-            import dlangide.tools.d.dparser;
-            DParsingService.instance.addImportPaths(importPaths);
-            DParsedModule m = DParsingService.instance.findDeclaration(cast(ubyte[])content, filename, index);
-        }
         debug(DCD) Log.d("DCD Context: ", dumpContext(content, index));
 	
         AutocompleteRequest request;

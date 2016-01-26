@@ -24,6 +24,29 @@ class DEditorTool : EditorTool
         super(frame);
     }
 
+    override string[] getDocComments(DSourceEdit editor, TextPosition caretPosition) {
+        string[] importPaths = editor.importPaths();
+        _frame.moduleCache.addImportPaths(importPaths);
+
+        string content = toUTF8(editor.text);
+        auto byteOffset = caretPositionToByteOffset(content, caretPosition);
+        DocCommentsResultSet output = _dcd.getDocComments(importPaths, editor.filename, content, byteOffset, _frame.moduleCache);
+
+        switch(output.result) {
+            //TODO: Show dialog
+            case DCDResult.FAIL:
+            case DCDResult.NO_RESULT:
+                editor.setFocus();
+                return null;
+            case DCDResult.SUCCESS:
+                auto doc = output.docComments;
+                Log.d("Doc comments: ", doc);
+                return doc;
+            default:
+                return null;
+        }
+    }
+
     override bool goToDefinition(DSourceEdit editor, TextPosition caretPosition) {
         string[] importPaths = editor.importPaths();
         _frame.moduleCache.addImportPaths(importPaths);
