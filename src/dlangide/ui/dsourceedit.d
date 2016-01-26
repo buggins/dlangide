@@ -7,6 +7,8 @@ import dlangui.widgets.editors;
 import dlangui.widgets.srcedit;
 import dlangui.widgets.menu;
 import dlangui.widgets.popup;
+import dlangui.widgets.controls;
+import dlangui.widgets.scroll;
 
 import ddc.lexer.textsource;
 import ddc.lexer.exceptions;
@@ -402,6 +404,81 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
             default:
                 return super.handleActionStateRequest(a);
         }
+    }
+
+    /// override to handle mouse hover timeout in text
+    override protected void onHoverTimeout(Point pt, TextPosition pos) {
+        // override to do something useful on hover timeout
+        Log.d("onHoverTimeout ", pos);
+        if (!isDSourceFile)
+            return;
+        auto results = editorTool.getDocComments(this, pos);
+        showDocCommentsPopup(results, pt);
+    }
+
+    PopupWidget _docsPopup;
+    void showDocCommentsPopup(string[] comments, Point pt = Point(-1, -1)) {
+        if (comments.length == 0)
+            return;
+        if (pt.x < 0 || pt.y < 0) {
+            pt = textPosToClient(_caretPos).topLeft;
+            pt.x += left + _leftPaneWidth;
+            pt.y += top;
+        }
+        dchar[] text;
+        int lineCount = 0;
+        foreach(s; comments) {
+            int lineStart = 0;
+            for (int i = 0; i <= s.length; i++) {
+                if (i == s.length || (i < s.length - 1 && s[i] == '\\' && s[i + 1] == 'n')) {
+                    if (i > lineStart) {
+                        if (text.length)
+                            text ~= "\n"d;
+                        text ~= toUTF32(s[lineStart .. i]);
+                        lineCount++;
+                    }
+                    if (i < s.length)
+                        i++;
+                    lineStart = i + 1;
+                }
+            }
+        }
+        if (lineCount > _numVisibleLines / 4)
+            lineCount = _numVisibleLines / 4;
+        if (lineCount < 1)
+            lineCount = 1;
+        // TODO
+        EditBox widget = new EditBox("docComments");
+        widget.readOnly = true;
+        //TextWidget widget = new TextWidget("docComments");
+        //widget.maxLines = lineCount * 2;
+        //widget.text = "Test popup"d; //text.dup;
+        widget.text = text.dup;
+        //widget.layoutHeight = lineCount * widget.fontSize;
+        widget.minHeight = (lineCount + 1) * widget.fontSize;
+        widget.maxWidth = width / 2;
+        widget.minWidth = width / 8;
+       // widget.layoutWidth = width / 3;
+        widget.styleId = "POPUP_MENU";
+        widget.hscrollbarMode = ScrollBarMode.Invisible;
+        widget.vscrollbarMode = ScrollBarMode.Invisible;
+        uint pos = PopupAlign.Above;
+        if (pt.y < top + height / 4)
+            pos = PopupAlign.Below;
+        if (_docsPopup) {
+            _docsPopup.close();
+            _docsPopup = null;
+        }
+        _docsPopup = window.showPopup(widget, this, PopupAlign.Point | pos, pt.x, pt.y);
+        //popup.setFocus();
+        _docsPopup.popupClosed = delegate(PopupWidget source) {
+            Log.d("Closed Docs popup");
+            _docsPopup = null;
+            //setFocus(); 
+        };
+        _docsPopup.flags = PopupFlags.CloseOnClickOutside | PopupFlags.CloseOnMouseMoveOutside;
+        invalidate();
+        window.update();
     }
 
     void showCompletionPopup(dstring[] suggestions) {

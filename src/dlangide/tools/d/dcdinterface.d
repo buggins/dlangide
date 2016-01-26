@@ -39,6 +39,7 @@ class DCDInterface {
     }
 
     DocCommentsResultSet getDocComments(in string[] importPaths, in string filename, in string content, int index, ref ModuleCache moduleCache) {
+        debug(DCD) Log.d("getDocComments: ", dumpContext(content, index));
         AutocompleteRequest request;
         request.sourceCode = cast(ubyte[])content;
         request.fileName = filename;
