@@ -224,6 +224,12 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         return super.handleAction(a);
     }
 
+    /// Handle Ctrl + Left mouse click on text
+    override protected void onControlClick() {
+        window.dispatchAction(ACTION_GO_TO_DEFINITION);
+    }
+
+
     /// left button click on icons panel: toggle breakpoint
     override protected bool handleLeftPaneIconsMouseClick(MouseEvent event, Rect rc, int line) {
         if (event.button == MouseButton.Left) {

@@ -53,7 +53,7 @@ class DEditorTool : EditorTool
                 }
                 auto target = to!int(output.offset);
                 auto destPos = byteOffsetToCaret(content, target);
-                _frame.currentEditor.setCaretPos(destPos.line,destPos.pos);
+                _frame.currentEditor.setCaretPos(destPos.line,destPos.pos, true, true);
                 _frame.currentEditor.setFocus();
                 return true;
             default:
