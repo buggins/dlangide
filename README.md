@@ -28,6 +28,7 @@ Source editor features:
 * Toggle line or block comments by Ctrl+/ and Ctrl+Shift+/
 * D source code autocompletion by Ctrl+Space or Ctrl+Shift+G (using DCD)
 * D source code Go To Definition by Ctrl+G or F12 (using DCD)
+* D source Doc comments display on mouse hover (using DCD)
 * D source code Smart Indents
 * Select word by mouse double click
 
