@@ -45,7 +45,10 @@ class DEditorTool : EditorTool
                     Log.d("Declaration is in current file. Jumping to it.");
                 } else {
                     //Must open file first to get the content for finding the correct caret position.
-                    _frame.openSourceFile(to!string(fileName));
+                    if (!_frame.openSourceFile(to!string(fileName)))
+                        return false;
+                    if (_frame.currentEditor.parent)
+                        _frame.currentEditor.parent.layout(_frame.currentEditor.parent.pos);
                     content = toUTF8(_frame.currentEditor.text);
                 }
                 auto target = to!int(output.offset);
