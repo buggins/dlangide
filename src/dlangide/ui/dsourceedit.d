@@ -456,12 +456,12 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         widget.text = text.dup;
         //widget.layoutHeight = lineCount * widget.fontSize;
         widget.minHeight = (lineCount + 1) * widget.fontSize;
-        widget.maxWidth = width / 2;
+        widget.maxWidth = width * 3 / 4;
         widget.minWidth = width / 8;
        // widget.layoutWidth = width / 3;
         widget.styleId = "POPUP_MENU";
-        widget.hscrollbarMode = ScrollBarMode.Invisible;
-        widget.vscrollbarMode = ScrollBarMode.Invisible;
+        widget.hscrollbarMode = ScrollBarMode.Auto;
+        widget.vscrollbarMode = ScrollBarMode.Auto;
         uint pos = PopupAlign.Above;
         if (pt.y < top + height / 4)
             pos = PopupAlign.Below;
