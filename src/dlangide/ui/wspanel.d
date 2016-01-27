@@ -163,7 +163,14 @@ class WorkspacePanel : DockWindow {
                 p.objectParam = child;
                 addProjectItems(p, child);
             } else {
-                TreeItem p = root.newChild(child.filename, child.name, "text-d");
+                string icon = "text-other";
+                if (child.isDSourceFile)
+                    icon = "text-d";
+                if (child.isJsonFile)
+                    icon = "text-json";
+                if (child.isDMLFile)
+                    icon = "text-dml";
+                TreeItem p = root.newChild(child.filename, child.name, icon);
                 p.intParam = ProjectItemType.SourceFile;
                 p.objectParam = child;
             }

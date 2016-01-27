@@ -90,6 +90,30 @@ class ProjectItem {
             return cast(ProjectSourceFile)this;
         return null;
     }
+
+    @property bool isDSourceFile() {
+        if (isFolder)
+            return false;
+        return filename.endsWith(".d") || filename.endsWith(".dd") || filename.endsWith(".dd")  || filename.endsWith(".di") || filename.endsWith(".dh") || filename.endsWith(".ddoc");
+    }
+
+    @property bool isJsonFile() {
+        if (isFolder)
+            return false;
+        return filename.endsWith(".json") || filename.endsWith(".JSON");
+    }
+
+    @property bool isDMLFile() {
+        if (isFolder)
+            return false;
+        return filename.endsWith(".dml") || filename.endsWith(".DML");
+    }
+
+    @property bool isXMLFile() {
+        if (isFolder)
+            return false;
+        return filename.endsWith(".xml") || filename.endsWith(".XML");
+    }
 }
 
 /// Project folder

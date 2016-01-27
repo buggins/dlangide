@@ -9,6 +9,7 @@ import dlangui.widgets.menu;
 import dlangui.widgets.popup;
 import dlangui.widgets.controls;
 import dlangui.widgets.scroll;
+import dlangui.dml.dmlhighlight;
 
 import ddc.lexer.textsource;
 import ddc.lexer.exceptions;
@@ -106,7 +107,19 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
     }
 
     @property bool isDSourceFile() {
-        return filename.endsWith(".d") || filename.endsWith(".dd") || filename.endsWith(".dh") || filename.endsWith(".ddoc");
+        return filename.endsWith(".d") || filename.endsWith(".dd") || filename.endsWith(".dd")  || filename.endsWith(".di") || filename.endsWith(".dh") || filename.endsWith(".ddoc");
+    }
+
+    @property bool isJsonFile() {
+        return filename.endsWith(".json") || filename.endsWith(".JSON");
+    }
+
+    @property bool isDMLFile() {
+        return filename.endsWith(".dml") || filename.endsWith(".DML");
+    }
+
+    @property bool isXMLFile() {
+        return filename.endsWith(".xml") || filename.endsWith(".XML");
     }
 
     override protected MenuItem getLeftPaneIconsPopupMenu(int line) {
@@ -151,6 +164,10 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
     void setSyntaxSupport() {
         if (isDSourceFile) {
             content.syntaxSupport = new SimpleDSyntaxSupport(filename);
+        } else if (isJsonFile) {
+            content.syntaxSupport = new DMLSyntaxSupport(filename);
+        } else if (isDMLFile) {
+            content.syntaxSupport = new DMLSyntaxSupport(filename);
         } else {
             content.syntaxSupport = null;
         }

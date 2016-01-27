@@ -29,6 +29,9 @@ res/hdpi/hdpi_run-build-clean.png
 res/hdpi/hdpi_run-build-configure.png
 res/hdpi/hdpi_run-build.png
 res/hdpi/hdpi_text-d.png
+res/hdpi/hdpi_text-dml.png
+res/hdpi/hdpi_text-json.png
+res/hdpi/hdpi_text-other.png
 res/mdpi/cr3_logo.png
 res/mdpi/debug-run.png
 res/mdpi/debug-pause.png
@@ -60,4 +63,7 @@ res/mdpi/run-build.png
 res/mdpi/run-build-clean.png
 res/mdpi/run-build-configure.png
 res/mdpi/text-d.png
+res/mdpi/text-dml.png
+res/mdpi/text-json.png
+res/mdpi/text-other.png
 res/mdpi/tx_fabric.jpg
