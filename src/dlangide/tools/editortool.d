@@ -15,7 +15,10 @@ class EditorTool
         _frame = frame;
     }
     //Since files might be unsaved, we must send all the text content.
-    abstract bool goToDefinition(DSourceEdit editor, TextPosition caretPosition);
+    abstract void goToDefinition(DSourceEdit editor, TextPosition caretPosition);
+    void cancelGoToDefinition() {
+        // override it
+    }
     abstract dstring[] getCompletions(DSourceEdit editor, TextPosition caretPosition);
     abstract string[] getDocComments(DSourceEdit editor, TextPosition caretPosition);
 
@@ -29,7 +32,7 @@ class DefaultEditorTool : EditorTool
         super(frame);
     }
     
-    override bool goToDefinition(DSourceEdit editor, TextPosition caretPosition) {
+    override void goToDefinition(DSourceEdit editor, TextPosition caretPosition) {
         assert(0); //Go To Definition should not be called for normal files.
     }
     

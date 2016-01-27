@@ -61,6 +61,13 @@ class DCDInterface : Thread {
         _queue = null;
     }
 
+    protected ModuleCache * getModuleCache(in string[] importPaths) {
+        // TODO: clear cache if import paths removed or changed
+        // hold several module cache instances - make cache of caches
+        _moduleCache.addImportPaths(importPaths);
+        return &_moduleCache;
+    }
+
     void threadFunc() {
         Log.d("Starting DCD tasks thread");
         while (!_queue.closed()) {
@@ -93,13 +100,12 @@ class DCDInterface : Thread {
 
     DocCommentsResultSet getDocComments(in string[] importPaths, in string filename, in string content, int index) {
         debug(DCD) Log.d("getDocComments: ", dumpContext(content, index));
-        _moduleCache.addImportPaths(importPaths);
         AutocompleteRequest request;
         request.sourceCode = cast(ubyte[])content;
         request.fileName = filename;
         request.cursorPosition = index; 
 
-        AutocompleteResponse response = getDoc(request, _moduleCache);
+        AutocompleteResponse response = getDoc(request, *getModuleCache(importPaths));
 
         DocCommentsResultSet result;
         result.docComments = response.docComments;
@@ -113,16 +119,15 @@ class DCDInterface : Thread {
         return result;
     }
 
-    FindDeclarationResultSet goToDefinition(in string[] importPaths, in string filename, in string content, int index) {
+    void goToDefinition(in string[] importPaths, in string filename, in string content, int index, void delegate(FindDeclarationResultSet res) callback) {
 
         debug(DCD) Log.d("DCD Context: ", dumpContext(content, index));
-        _moduleCache.addImportPaths(importPaths);
         AutocompleteRequest request;
         request.sourceCode = cast(ubyte[])content;
         request.fileName = filename;
         request.cursorPosition = index; 
 
-        AutocompleteResponse response = findDeclaration(request, _moduleCache);
+        AutocompleteResponse response = findDeclaration(request, *getModuleCache(importPaths));
         
         FindDeclarationResultSet result;
         result.fileName = response.symbolFilePath;
@@ -134,20 +139,19 @@ class DCDInterface : Thread {
         if (result.fileName is null) {
             result.result = DCDResult.NO_RESULT;
         }
-        return result;
+        callback(result);
     }
 
     ResultSet getCompletions(in string[] importPaths, in string filename, in string content, int index) {
 
         debug(DCD) Log.d("DCD Context: ", dumpContext(content, index));
-        _moduleCache.addImportPaths(importPaths);
         ResultSet result;
         AutocompleteRequest request;
         request.sourceCode = cast(ubyte[])content;
         request.fileName = filename;
         request.cursorPosition = index; 
 
-        AutocompleteResponse response = complete(request, _moduleCache);
+        AutocompleteResponse response = complete(request, *getModuleCache(importPaths));
         if(response.completions is null || response.completions.length == 0){
             result.result = DCDResult.NO_RESULT;
             return result;
@@ -167,21 +171,25 @@ class DCDInterface : Thread {
 
     /// DCD doc comments task
     class DocCommentsTask : DCDTask {
-        this(string[] importPaths, in string filename, in string content, int index) {
+
+        protected void delegate(DocCommentsResultSet output) _callback;
+        protected DocCommentsResultSet result;
+
+        this(string[] importPaths, in string filename, in string content, int index, void delegate(DocCommentsResultSet output) callback) {
             super(importPaths, filename, content, index);
+            _callback = callback;
         }
+
         override void execute() {
             if (_cancelled)
                 return;
-            _moduleCache.addImportPaths(_importPaths);
             AutocompleteRequest request;
             request.sourceCode = cast(ubyte[])_content;
             request.fileName = _filename;
             request.cursorPosition = _index; 
 
-            AutocompleteResponse response = getDoc(request, _moduleCache);
+            AutocompleteResponse response = getDoc(request, *getModuleCache(_importPaths));
 
-            DocCommentsResultSet result;
             result.docComments = response.docComments;
             result.result = DCDResult.SUCCESS;
 
@@ -190,6 +198,9 @@ class DCDInterface : Thread {
             if (result.docComments is null) {
                 result.result = DCDResult.NO_RESULT;
             }
+
+            if (!_cancelled)
+                _callback(result);
         }
     }
 }
