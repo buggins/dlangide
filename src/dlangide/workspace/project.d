@@ -630,6 +630,7 @@ class Project : WorkspaceItem {
             Log.e("Cannot read project file", e);
             return false;
         }
+        _items.loadFile(filename);
         return true;
     }
 
