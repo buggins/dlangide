@@ -78,8 +78,13 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
     TabWidget _tabs;
 
     ///Cache for parsed D files for autocomplete and symbol finding
-    import dsymbol.modulecache;
-    ModuleCache _moduleCache = ModuleCache(new ASTAllocator);
+    import dlangide.tools.d.dcdinterface;
+    private DCDInterface _dcdInterface;
+    @property DCDInterface dcdInterface() {
+        if (!_dcdInterface)
+            _dcdInterface = new DCDInterface();
+        return _dcdInterface; 
+    }
 
     IDESettings _settings;
     ProgramExecution _execution;
@@ -95,7 +100,13 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         applySettings(_settings);
     }
 
-    @property ref ModuleCache moduleCache() { return _moduleCache; }
+    ~this() {
+        if (_dcdInterface) {
+            destroy(_dcdInterface);
+            _dcdInterface = null;
+        }
+    }
+
     @property DockHost dockHost() { return _dockHost; }
     @property OutputPanel logPanel() { return _logPanel; }
 

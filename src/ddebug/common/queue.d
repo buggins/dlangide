@@ -39,6 +39,11 @@ class BlockingQueue(T) {
         }
     }
 
+    /// returns true if queue is closed
+    @property bool closed() {
+        return _closed;
+    }
+
     ~this() {
         // TODO: destroy mutex?
         close();
@@ -86,7 +91,7 @@ class BlockingQueue(T) {
         }
     }
     
-    bool get(ref T value, int timeoutMillis) {
+    bool get(ref T value, int timeoutMillis = 0) {
         if (_closed)
             return false;
         synchronized(_mutex) {
@@ -96,10 +101,14 @@ class BlockingQueue(T) {
                 value = _buffer[_readPos++];
                 return true;
             }
-            if (timeoutMillis <= 0)
-                _condition.wait(); // no timeout
-            else if (!_condition.wait(dur!"msecs"(timeoutMillis)))
-                return false; // timeout
+            try {
+                if (timeoutMillis <= 0)
+                    _condition.wait(); // no timeout
+                else if (!_condition.wait(dur!"msecs"(timeoutMillis)))
+                    return false; // timeout
+            } catch (Exception e) {
+                // ignore
+            }
             if (_readPos < _writePos) {
                 value = _buffer[_readPos++];
                 return true;

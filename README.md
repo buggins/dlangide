@@ -23,7 +23,7 @@ Currently supported features:
 
 Source editor features:
 
-* D language source code syntax highlight (basic)
+* D language source code, json, dml syntax highlight
 * Indent / unindent text with Tab and Shift+Tab or Ctrl+\[ and Ctrl+\]
 * Toggle line or block comments by Ctrl+/ and Ctrl+Shift+/
 * D source code autocompletion by Ctrl+Space or Ctrl+Shift+G (using DCD)

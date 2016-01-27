@@ -17,20 +17,16 @@ import std.conv;
 
 class DEditorTool : EditorTool 
 {
-
-
     this(IDEFrame frame) {
-        _dcd = new DCDInterface();
         super(frame);
     }
 
     override string[] getDocComments(DSourceEdit editor, TextPosition caretPosition) {
         string[] importPaths = editor.importPaths();
-        _frame.moduleCache.addImportPaths(importPaths);
 
         string content = toUTF8(editor.text);
         auto byteOffset = caretPositionToByteOffset(content, caretPosition);
-        DocCommentsResultSet output = _dcd.getDocComments(importPaths, editor.filename, content, byteOffset, _frame.moduleCache);
+        DocCommentsResultSet output = _frame.dcdInterface.getDocComments(importPaths, editor.filename, content, byteOffset);
 
         switch(output.result) {
             //TODO: Show dialog
@@ -49,11 +45,10 @@ class DEditorTool : EditorTool
 
     override bool goToDefinition(DSourceEdit editor, TextPosition caretPosition) {
         string[] importPaths = editor.importPaths();
-        _frame.moduleCache.addImportPaths(importPaths);
 
         string content = toUTF8(editor.text);
         auto byteOffset = caretPositionToByteOffset(content, caretPosition);
-        FindDeclarationResultSet output = _dcd.goToDefinition(importPaths, editor.filename, content, byteOffset, _frame.moduleCache);
+        FindDeclarationResultSet output = _frame.dcdInterface.goToDefinition(importPaths, editor.filename, content, byteOffset);
 
 
         switch(output.result) {
@@ -86,11 +81,10 @@ class DEditorTool : EditorTool
 
     override dstring[] getCompletions(DSourceEdit editor, TextPosition caretPosition) {
         string[] importPaths = editor.importPaths();
-        _frame.moduleCache.addImportPaths(importPaths);
 
         string content = toUTF8(editor.text);
         auto byteOffset = caretPositionToByteOffset(content, caretPosition);
-        ResultSet output = _dcd.getCompletions(importPaths, editor.filename, content, byteOffset, _frame.moduleCache);
+        ResultSet output = _frame.dcdInterface.getCompletions(importPaths, editor.filename, content, byteOffset);
         switch(output.result) {
             //TODO: Show dialog
             case DCDResult.FAIL:
@@ -102,7 +96,6 @@ class DEditorTool : EditorTool
     }
 
 private:
-    DCDInterface _dcd;
 
     int caretPositionToByteOffset(string content, TextPosition caretPosition) {
         auto line = 0;
