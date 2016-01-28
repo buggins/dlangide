@@ -392,6 +392,8 @@ class NewProjectDlg : Dialog {
                     SOURCE_CODE_HELLOWORLD, false);
         _templates ~= new ProjectTemplate("DlangUI: hello world app"d, "Hello world application\nbased on DlangUI library"d, "app.d",
                     SOURCE_CODE_DLANGUI_HELLOWORLD, false, DUB_JSON_DLANGUI_HELLOWORLD);
+        _templates ~= new ProjectTemplate("vibe.d: Hello world app"d, "Hello world application\nbased on vibe.d framework"d, "app.d",
+                    SOURCE_CODE_VIBED_HELLOWORLD, false, DUB_JSON_VIBED_HELLOWORLD);
         _templates ~= new ProjectTemplate("Empty app project"d, "Empty application project.\nNo source files."d, null, null, false);
         _templates ~= new ProjectTemplate("Empty library project"d, "Empty library project.\nNo Source files."d, null, null, true);
     }
@@ -403,6 +405,34 @@ void main(string[] args) {
     writeln("Hello World!");
     writeln("Press enter...");
     readln();
+}
+};
+
+immutable string SOURCE_CODE_VIBED_HELLOWORLD = q{
+import vibe.d;
+
+shared static this()
+{
+    auto settings = new HTTPServerSettings;
+    settings.port = 8080;
+
+    listenHTTP(settings, &handleRequest);
+}
+
+void handleRequest(HTTPServerRequest req,
+                    HTTPServerResponse res)
+{
+    if (req.path == "/")
+        res.writeBody("Hello, World!", "text/plain");
+}
+};
+
+immutable string DUB_JSON_VIBED_HELLOWORLD = q{
+{
+    "dependencies": {
+        "vibe-d": "~>0.7.26"
+    },
+    "versions": ["VibeDefaultMain"]
 }
 };
 
