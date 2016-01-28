@@ -2,6 +2,7 @@ module dlangide.tools.d.dcdinterface;
 
 import dlangui.core.logger;
 import dlangui.core.files;
+import dlangui.platforms.common.platform;
 import ddebug.common.queue;
 
 import core.thread;
@@ -20,13 +21,19 @@ alias DocCommentsResultSet = Tuple!(DCDResult, "result", string[], "docComments"
 alias FindDeclarationResultSet = Tuple!(DCDResult, "result", string, "fileName", ulong, "offset");
 alias ResultSet = Tuple!(DCDResult, "result", dstring[], "output");
 
+import server.autocomplete;
+import common.messages;
+
 class DCDTask {
     protected bool _cancelled;
+    protected CustomEventTarget _guiExecutor;
     protected string[] _importPaths;
     protected string _filename;
     protected string _content;
     protected int _index;
-    this(string[] importPaths, in string filename, in string content, int index) {
+    protected AutocompleteRequest request;
+    this(CustomEventTarget guiExecutor, string[] importPaths, in string filename, in string content, int index) {
+        _guiExecutor = guiExecutor;
         _importPaths = importPaths;
         _filename = filename;
         _content = content;
@@ -34,14 +41,35 @@ class DCDTask {
     }
     @property bool cancelled() { return _cancelled; }
     void cancel() {
-        _cancelled = true;
+        synchronized(this) {
+            _cancelled = true;
+        }
+    }
+    void createRequest() {
+        request.sourceCode = cast(ubyte[])_content;
+        request.fileName = _filename;
+        request.cursorPosition = _index; 
+    }
+    void performRequest() {
+        // override
+    }
+    void postResults() {
+        // override
     }
     void execute() {
-        // override
+        if (_cancelled)
+            return;
+        createRequest();
+        performRequest();
+        synchronized(this) {
+            if (_cancelled)
+                return;
+            _guiExecutor.executeInUiThread(&postResults);
+        }
     }
 }
 
-/// Interface to DCD
+/// Async interface to DCD
 class DCDInterface : Thread {
 
     import dsymbol.modulecache;
@@ -51,6 +79,7 @@ class DCDInterface : Thread {
     this() {
         super(&threadFunc);
         _queue = new BlockingQueue!DCDTask();
+        name = "DCDthread";
         start();
     }
 
@@ -74,14 +103,14 @@ class DCDInterface : Thread {
             DCDTask task;
             if (!_queue.get(task))
                 break;
-            if (task && !task.cancelled)
+            if (task && !task.cancelled) {
+                Log.d("Execute DCD task");
                 task.execute();
+                Log.d("DCD task execution finished");
+            }
         }
         Log.d("Exiting DCD tasks thread");
     }
-
-    import server.autocomplete;
-    import common.messages;
 
     import dsymbol.modulecache;
 
@@ -98,7 +127,7 @@ class DCDInterface : Thread {
         return "";
     }
 
-    DocCommentsResultSet getDocComments(in string[] importPaths, in string filename, in string content, int index) {
+    DocCommentsResultSet getDocComments(CustomEventTarget guiExecutor, in string[] importPaths, in string filename, in string content, int index) {
         debug(DCD) Log.d("getDocComments: ", dumpContext(content, index));
         AutocompleteRequest request;
         request.sourceCode = cast(ubyte[])content;
@@ -119,30 +148,44 @@ class DCDInterface : Thread {
         return result;
     }
 
-    void goToDefinition(in string[] importPaths, in string filename, in string content, int index, void delegate(FindDeclarationResultSet res) callback) {
+    /// DCD go to definition task
+    class GoToDefinitionTask : DCDTask {
 
-        debug(DCD) Log.d("DCD Context: ", dumpContext(content, index));
-        AutocompleteRequest request;
-        request.sourceCode = cast(ubyte[])content;
-        request.fileName = filename;
-        request.cursorPosition = index; 
+        protected void delegate(FindDeclarationResultSet output) _callback;
+        protected FindDeclarationResultSet result;
 
-        AutocompleteResponse response = findDeclaration(request, *getModuleCache(importPaths));
-        
-        FindDeclarationResultSet result;
-        result.fileName = response.symbolFilePath;
-        result.offset = response.symbolLocation;
-        result.result = DCDResult.SUCCESS;
-
-        debug(DCD) Log.d("DCD fileName:\n", result.fileName);
-
-        if (result.fileName is null) {
-            result.result = DCDResult.NO_RESULT;
+        this(CustomEventTarget guiExecutor, string[] importPaths, in string filename, in string content, int index, void delegate(FindDeclarationResultSet output) callback) {
+            super(guiExecutor, importPaths, filename, content, index);
+            _callback = callback;
         }
-        callback(result);
+
+        override void performRequest() {
+            AutocompleteResponse response = findDeclaration(request, *getModuleCache(_importPaths));
+
+            result.fileName = response.symbolFilePath;
+            result.offset = response.symbolLocation;
+            result.result = DCDResult.SUCCESS;
+
+            debug(DCD) Log.d("DCD fileName:\n", result.fileName);
+
+            if (result.fileName is null) {
+                result.result = DCDResult.NO_RESULT;
+            }
+        }
+        override void postResults() {
+            _callback(result);
+        }
     }
 
-    ResultSet getCompletions(in string[] importPaths, in string filename, in string content, int index) {
+    DCDTask goToDefinition(CustomEventTarget guiExecutor, string[] importPaths, in string filename, in string content, int index, void delegate(FindDeclarationResultSet res) callback) {
+
+        debug(DCD) Log.d("DCD Context: ", dumpContext(content, index));
+        GoToDefinitionTask task = new GoToDefinitionTask(guiExecutor, importPaths, filename, content, index, callback);
+        _queue.put(task);
+        return task;
+    }
+
+    ResultSet getCompletions(CustomEventTarget guiExecutor, in string[] importPaths, in string filename, in string content, int index) {
 
         debug(DCD) Log.d("DCD Context: ", dumpContext(content, index));
         ResultSet result;
@@ -175,14 +218,12 @@ class DCDInterface : Thread {
         protected void delegate(DocCommentsResultSet output) _callback;
         protected DocCommentsResultSet result;
 
-        this(string[] importPaths, in string filename, in string content, int index, void delegate(DocCommentsResultSet output) callback) {
-            super(importPaths, filename, content, index);
+        this(CustomEventTarget guiExecutor, string[] importPaths, in string filename, in string content, int index, void delegate(DocCommentsResultSet output) callback) {
+            super(guiExecutor, importPaths, filename, content, index);
             _callback = callback;
         }
 
-        override void execute() {
-            if (_cancelled)
-                return;
+        override void performRequest() {
             AutocompleteRequest request;
             request.sourceCode = cast(ubyte[])_content;
             request.fileName = _filename;
@@ -198,9 +239,10 @@ class DCDInterface : Thread {
             if (result.docComments is null) {
                 result.result = DCDResult.NO_RESULT;
             }
-
-            if (!_cancelled)
-                _callback(result);
+        }
+        override void postResults() {
+            _callback(result);
         }
     }
+
 }

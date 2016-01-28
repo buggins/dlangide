@@ -21,12 +21,16 @@ class DEditorTool : EditorTool
         super(frame);
     }
 
+    ~this() {
+        cancelGoToDefinition();
+    }
+
     override string[] getDocComments(DSourceEdit editor, TextPosition caretPosition) {
         string[] importPaths = editor.importPaths();
 
         string content = toUTF8(editor.text);
         auto byteOffset = caretPositionToByteOffset(content, caretPosition);
-        DocCommentsResultSet output = _frame.dcdInterface.getDocComments(importPaths, editor.filename, content, byteOffset);
+        DocCommentsResultSet output = _frame.dcdInterface.getDocComments(editor.window, importPaths, editor.filename, content, byteOffset);
 
         switch(output.result) {
             //TODO: Show dialog
@@ -45,14 +49,21 @@ class DEditorTool : EditorTool
 
     override void cancelGoToDefinition() {
         // override it
+        if (_goToDefinitionTask) {
+            _goToDefinitionTask.cancel();
+            _goToDefinitionTask = null;
+        }
     }
 
+    DCDTask _goToDefinitionTask;
     override void goToDefinition(DSourceEdit editor, TextPosition caretPosition) {
+        cancelGoToDefinition();
         string[] importPaths = editor.importPaths();
-
         string content = toUTF8(editor.text);
         auto byteOffset = caretPositionToByteOffset(content, caretPosition);
-        _frame.dcdInterface.goToDefinition(importPaths, editor.filename, content, byteOffset, delegate(FindDeclarationResultSet output) {
+
+
+        _goToDefinitionTask = _frame.dcdInterface.goToDefinition(editor.window, importPaths, editor.filename, content, byteOffset, delegate(FindDeclarationResultSet output) {
             // handle result
             switch(output.result) {
                 //TODO: Show dialog
@@ -80,6 +91,7 @@ class DEditorTool : EditorTool
                 default:
                     break;
             }
+            _goToDefinitionTask = null;
         });
 
     }
@@ -89,7 +101,7 @@ class DEditorTool : EditorTool
 
         string content = toUTF8(editor.text);
         auto byteOffset = caretPositionToByteOffset(content, caretPosition);
-        ResultSet output = _frame.dcdInterface.getCompletions(importPaths, editor.filename, content, byteOffset);
+        ResultSet output = _frame.dcdInterface.getCompletions(editor.window, importPaths, editor.filename, content, byteOffset);
         switch(output.result) {
             //TODO: Show dialog
             case DCDResult.FAIL:
@@ -102,49 +114,52 @@ class DEditorTool : EditorTool
 
 private:
 
-    static int caretPositionToByteOffset(string content, TextPosition caretPosition) {
-        auto line = 0;
-        auto pos = 0;
-        auto bytes = 0;
-        foreach(c; content) {
-            if(line == caretPosition.line) {
-                if(pos == caretPosition.pos)
-                    break;
-                pos++;
-            } else if (line > caretPosition.line) {
-                break;
-            }
-            bytes++;
-            if(c == '\n') {
-                line++;
-                pos = 0;
-            }
-        }
-        return bytes;
-    }
+}
 
-    static TextPosition byteOffsetToCaret(string content, int byteOffset) {
-        int bytes = 0;
-        int line = 0;
-        int pos = 0;
-        TextPosition textPos;
-        foreach(c; content) {
-            if(bytes == byteOffset) {
-                //We all good.
-                textPos.line = line;
-                textPos.pos = pos;
-                return textPos;
-            }
-            bytes++;
-            if(c == '\n')
-            {
-                line++;
-                pos = 0;
-            }
-            else {
-                pos++;
-            }
+/// convert caret position to byte offset in utf8 content
+int caretPositionToByteOffset(string content, TextPosition caretPosition) {
+    auto line = 0;
+    auto pos = 0;
+    auto bytes = 0;
+    foreach(c; content) {
+        if(line == caretPosition.line) {
+            if(pos == caretPosition.pos)
+                break;
+            pos++;
+        } else if (line > caretPosition.line) {
+            break;
         }
-        return textPos;
+        bytes++;
+        if(c == '\n') {
+            line++;
+            pos = 0;
+        }
     }
+    return bytes;
+}
+
+/// convert byte offset in utf8 content to caret position
+TextPosition byteOffsetToCaret(string content, int byteOffset) {
+    int bytes = 0;
+    int line = 0;
+    int pos = 0;
+    TextPosition textPos;
+    foreach(c; content) {
+        if(bytes == byteOffset) {
+            //We all good.
+            textPos.line = line;
+            textPos.pos = pos;
+            return textPos;
+        }
+        bytes++;
+        if(c == '\n')
+        {
+            line++;
+            pos = 0;
+        }
+        else {
+            pos++;
+        }
+    }
+    return textPos;
 }
