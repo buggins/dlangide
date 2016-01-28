@@ -16,11 +16,11 @@ class EditorTool
     }
     //Since files might be unsaved, we must send all the text content.
     abstract void goToDefinition(DSourceEdit editor, TextPosition caretPosition);
-    void cancelGoToDefinition() {
-        // override it
-    }
+    abstract void getDocComments(DSourceEdit editor, TextPosition caretPosition, void delegate(string[]) callback);
     abstract dstring[] getCompletions(DSourceEdit editor, TextPosition caretPosition);
-    abstract string[] getDocComments(DSourceEdit editor, TextPosition caretPosition);
+
+    void cancelGoToDefinition() {}
+    void cancelGetDocComments() {}
 
     protected IDEFrame _frame;
     
@@ -40,9 +40,7 @@ class DefaultEditorTool : EditorTool
         assert(0);
     }
 
-    override string[] getDocComments(DSourceEdit editor, TextPosition caretPosition) {
+    override void getDocComments(DSourceEdit editor, TextPosition caretPosition, void delegate(string[]) callback) {
         assert(0);
     }
-
-
 }

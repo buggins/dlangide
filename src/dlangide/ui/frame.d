@@ -884,9 +884,10 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     return true;
                 case IDEActions.GetDocComments:
                     Log.d("Trying to get doc comments.");
-                    auto results = currentEditor.editorTool.getDocComments(currentEditor, currentEditor.caretPos);
-                    if (results.length)
-                        currentEditor.showDocCommentsPopup(results);
+                    currentEditor.editorTool.getDocComments(currentEditor, currentEditor.caretPos, delegate(string[] results) {
+                        if (results.length)
+                            currentEditor.showDocCommentsPopup(results);
+                    });
                     return true;
                 case IDEActions.GetParenCompletion:
                     Log.d("Trying to get paren completion.");

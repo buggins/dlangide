@@ -23,29 +23,34 @@ class DEditorTool : EditorTool
 
     ~this() {
         cancelGoToDefinition();
+        cancelGetDocComments();
     }
 
-    override string[] getDocComments(DSourceEdit editor, TextPosition caretPosition) {
+    DCDTask _getDocCommentsTask;
+    override void getDocComments(DSourceEdit editor, TextPosition caretPosition, void delegate(string[]) callback) {
+        cancelGetDocComments();
         string[] importPaths = editor.importPaths();
-
         string content = toUTF8(editor.text);
         auto byteOffset = caretPositionToByteOffset(content, caretPosition);
-        DocCommentsResultSet output = _frame.dcdInterface.getDocComments(editor.window, importPaths, editor.filename, content, byteOffset);
-
-        switch(output.result) {
-            //TODO: Show dialog
-            case DCDResult.FAIL:
-            case DCDResult.NO_RESULT:
-                editor.setFocus();
-                return null;
-            case DCDResult.SUCCESS:
+        _getDocCommentsTask = _frame.dcdInterface.getDocComments(editor.window, importPaths, editor.filename, content, byteOffset, delegate(DocCommentsResultSet output) {
+            if(output.result == DCDResult.SUCCESS) {
                 auto doc = output.docComments;
                 Log.d("Doc comments: ", doc);
-                return doc;
-            default:
-                return null;
+                if (doc.length)
+                    callback(doc);
+                _getDocCommentsTask = null;
+            }
+        });
+    }
+
+    override void cancelGetDocComments() {
+        // override it
+        if (_getDocCommentsTask) {
+            _getDocCommentsTask.cancel();
+            _getDocCommentsTask = null;
         }
     }
+
 
     override void cancelGoToDefinition() {
         // override it

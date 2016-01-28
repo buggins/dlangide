@@ -127,25 +127,39 @@ class DCDInterface : Thread {
         return "";
     }
 
-    DocCommentsResultSet getDocComments(CustomEventTarget guiExecutor, in string[] importPaths, in string filename, in string content, int index) {
-        debug(DCD) Log.d("getDocComments: ", dumpContext(content, index));
-        AutocompleteRequest request;
-        request.sourceCode = cast(ubyte[])content;
-        request.fileName = filename;
-        request.cursorPosition = index; 
+    /// DCD doc comments task
+    class DocCommentsTask : DCDTask {
 
-        AutocompleteResponse response = getDoc(request, *getModuleCache(importPaths));
+        protected void delegate(DocCommentsResultSet output) _callback;
+        protected DocCommentsResultSet result;
 
-        DocCommentsResultSet result;
-        result.docComments = response.docComments;
-        result.result = DCDResult.SUCCESS;
-
-        debug(DCD) Log.d("DCD doc comments:\n", result.docComments);
-
-        if (result.docComments is null) {
-            result.result = DCDResult.NO_RESULT;
+        this(CustomEventTarget guiExecutor, string[] importPaths, in string filename, in string content, int index, void delegate(DocCommentsResultSet output) callback) {
+            super(guiExecutor, importPaths, filename, content, index);
+            _callback = callback;
         }
-        return result;
+
+        override void performRequest() {
+            AutocompleteResponse response = getDoc(request, *getModuleCache(_importPaths));
+
+            result.docComments = response.docComments;
+            result.result = DCDResult.SUCCESS;
+
+            debug(DCD) Log.d("DCD doc comments:\n", result.docComments);
+
+            if (result.docComments is null) {
+                result.result = DCDResult.NO_RESULT;
+            }
+        }
+        override void postResults() {
+            _callback(result);
+        }
+    }
+
+    DCDTask getDocComments(CustomEventTarget guiExecutor, string[] importPaths, string filename, string content, int index, void delegate(DocCommentsResultSet output) callback) {
+        debug(DCD) Log.d("getDocComments: ", dumpContext(content, index));
+        DocCommentsTask task = new DocCommentsTask(guiExecutor, importPaths, filename, content, index, callback);
+        _queue.put(task);
+        return task;
     }
 
     /// DCD go to definition task
@@ -212,37 +226,5 @@ class DCDInterface : Thread {
     }
 
 
-    /// DCD doc comments task
-    class DocCommentsTask : DCDTask {
-
-        protected void delegate(DocCommentsResultSet output) _callback;
-        protected DocCommentsResultSet result;
-
-        this(CustomEventTarget guiExecutor, string[] importPaths, in string filename, in string content, int index, void delegate(DocCommentsResultSet output) callback) {
-            super(guiExecutor, importPaths, filename, content, index);
-            _callback = callback;
-        }
-
-        override void performRequest() {
-            AutocompleteRequest request;
-            request.sourceCode = cast(ubyte[])_content;
-            request.fileName = _filename;
-            request.cursorPosition = _index; 
-
-            AutocompleteResponse response = getDoc(request, *getModuleCache(_importPaths));
-
-            result.docComments = response.docComments;
-            result.result = DCDResult.SUCCESS;
-
-            debug(DCD) Log.d("DCD doc comments:\n", result.docComments);
-
-            if (result.docComments is null) {
-                result.result = DCDResult.NO_RESULT;
-            }
-        }
-        override void postResults() {
-            _callback(result);
-        }
-    }
 
 }

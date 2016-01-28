@@ -429,8 +429,9 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         Log.d("onHoverTimeout ", pos);
         if (!isDSourceFile)
             return;
-        auto results = editorTool.getDocComments(this, pos);
-        showDocCommentsPopup(results, pt);
+        editorTool.getDocComments(this, pos, delegate(string[]results) {
+            showDocCommentsPopup(results, pt);
+        });
     }
 
     PopupWidget _docsPopup;

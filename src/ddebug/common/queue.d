@@ -19,16 +19,8 @@ class BlockingQueue(T) {
         _writePos = 0;
     }
 
-    void close() {
-        if (_mutex && !_closed) {
-            synchronized(_mutex) {
-                _closed = true;
-                if (_condition !is null)
-                    _condition.notifyAll();
-            }
-        } else {
-            _closed = true;
-        }
+    ~this() {
+        close();
         if (_condition) {
             destroy(_condition);
             _condition = null;
@@ -39,14 +31,21 @@ class BlockingQueue(T) {
         }
     }
 
+    void close() {
+        if (_mutex && !_closed) {
+            synchronized(_mutex) {
+                _closed = true;
+                if (_condition !is null)
+                    _condition.notifyAll();
+            }
+        } else {
+            _closed = true;
+        }
+    }
+
     /// returns true if queue is closed
     @property bool closed() {
         return _closed;
-    }
-
-    ~this() {
-        // TODO: destroy mutex?
-        close();
     }
 
     private void move() {
