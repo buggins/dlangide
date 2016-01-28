@@ -24,6 +24,7 @@ class DEditorTool : EditorTool
     ~this() {
         cancelGoToDefinition();
         cancelGetDocComments();
+        cancelGetCompletions();
     }
 
     DCDTask _getDocCommentsTask;
@@ -44,19 +45,23 @@ class DEditorTool : EditorTool
     }
 
     override void cancelGetDocComments() {
-        // override it
         if (_getDocCommentsTask) {
             _getDocCommentsTask.cancel();
             _getDocCommentsTask = null;
         }
     }
 
-
     override void cancelGoToDefinition() {
-        // override it
         if (_goToDefinitionTask) {
             _goToDefinitionTask.cancel();
             _goToDefinitionTask = null;
+        }
+    }
+
+    override void cancelGetCompletions() {
+        if (_getCompletionsTask) {
+            _getCompletionsTask.cancel();
+            _getCompletionsTask = null;
         }
     }
 
@@ -101,20 +106,16 @@ class DEditorTool : EditorTool
 
     }
 
-    override dstring[] getCompletions(DSourceEdit editor, TextPosition caretPosition) {
+    DCDTask _getCompletionsTask;
+    override void getCompletions(DSourceEdit editor, TextPosition caretPosition, void delegate(dstring[]) callback) {
         string[] importPaths = editor.importPaths();
 
         string content = toUTF8(editor.text);
         auto byteOffset = caretPositionToByteOffset(content, caretPosition);
-        ResultSet output = _frame.dcdInterface.getCompletions(editor.window, importPaths, editor.filename, content, byteOffset);
-        switch(output.result) {
-            //TODO: Show dialog
-            case DCDResult.FAIL:
-            case DCDResult.NO_RESULT:
-            case DCDResult.SUCCESS:
-            default:
-                return output.output;
-        }
+        _getCompletionsTask = _frame.dcdInterface.getCompletions(editor.window, importPaths, editor.filename, content, byteOffset, delegate(CompletionResultSet output) {
+             callback(output.output);
+            _getCompletionsTask = null;
+        });
     }
 
 private:

@@ -895,8 +895,10 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     return true;
                 case IDEActions.GetCompletionSuggestions:
                     Log.d("Getting auto completion suggestions.");
-                    auto results = currentEditor.editorTool.getCompletions(currentEditor, currentEditor.caretPos);
-                    currentEditor.showCompletionPopup(results);
+                    currentEditor.editorTool.getCompletions(currentEditor, currentEditor.caretPos, delegate(dstring[] results) {
+                        if (currentEditor)
+                            currentEditor.showCompletionPopup(results);
+                    });
                     return true;
                 case IDEActions.EditPreferences:
                     showPreferences();

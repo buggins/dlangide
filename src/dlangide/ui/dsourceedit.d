@@ -530,6 +530,7 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         popup.flags = PopupFlags.CloseOnClickOutside;
 
         Log.d("Showing popup at ", textPosToClient(_caretPos).left, " ", textPosToClient(_caretPos).top);
+        window.update();
     }
 
 }

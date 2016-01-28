@@ -19,7 +19,7 @@ enum DCDResult : int {
 
 alias DocCommentsResultSet = Tuple!(DCDResult, "result", string[], "docComments");
 alias FindDeclarationResultSet = Tuple!(DCDResult, "result", string, "fileName", ulong, "offset");
-alias ResultSet = Tuple!(DCDResult, "result", dstring[], "output");
+alias CompletionResultSet = Tuple!(DCDResult, "result", dstring[], "output");
 
 import server.autocomplete;
 import common.messages;
@@ -199,32 +199,43 @@ class DCDInterface : Thread {
         return task;
     }
 
-    ResultSet getCompletions(CustomEventTarget guiExecutor, in string[] importPaths, in string filename, in string content, int index) {
+    /// DCD get code completions task
+    class GetCompletionsTask : DCDTask {
 
-        debug(DCD) Log.d("DCD Context: ", dumpContext(content, index));
-        ResultSet result;
-        AutocompleteRequest request;
-        request.sourceCode = cast(ubyte[])content;
-        request.fileName = filename;
-        request.cursorPosition = index; 
+        protected void delegate(CompletionResultSet output) _callback;
+        protected CompletionResultSet result;
 
-        AutocompleteResponse response = complete(request, *getModuleCache(importPaths));
-        if(response.completions is null || response.completions.length == 0){
-            result.result = DCDResult.NO_RESULT;
-            return result;
+        this(CustomEventTarget guiExecutor, string[] importPaths, in string filename, in string content, int index, void delegate(CompletionResultSet output) callback) {
+            super(guiExecutor, importPaths, filename, content, index);
+            _callback = callback;
         }
 
-        result.result = DCDResult.SUCCESS;
-        result.output.length = response.completions.length;
-        int i=0;
-        foreach(s;response.completions){
-            result.output[i++]=to!dstring(s);            
-        }
-        debug(DCD) Log.d("DCD output:\n", response.completions);
+        override void performRequest() {
+            AutocompleteResponse response = complete(request, *getModuleCache(_importPaths));
+            if(response.completions is null || response.completions.length == 0){
+                result.result = DCDResult.NO_RESULT;
+                return;
+            }
 
-        return result;
+            result.result = DCDResult.SUCCESS;
+            result.output.length = response.completions.length;
+            int i=0;
+            foreach(s;response.completions){
+                result.output[i++]=to!dstring(s);            
+            }
+            debug(DCD) Log.d("DCD output:\n", response.completions);
+        }
+        override void postResults() {
+            _callback(result);
+        }
     }
 
+    DCDTask getCompletions(CustomEventTarget guiExecutor, string[] importPaths, string filename, string content, int index, void delegate(CompletionResultSet output) callback) {
 
+        debug(DCD) Log.d("DCD Context: ", dumpContext(content, index));
+        GetCompletionsTask task = new GetCompletionsTask(guiExecutor, importPaths, filename, content, index, callback);
+        _queue.put(task);
+        return task;
+    }
 
 }
