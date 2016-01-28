@@ -405,6 +405,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             }
             window.windowCaption(tab.text.value ~ " - "d ~ frameWindowCaptionSuffix);
         }
+        requestActionsUpdate();
     }
 
     // returns DSourceEdit from currently active tab (if it's editor), null if current tab is not editor or no tabs open
@@ -530,6 +531,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                 closeTab(tabId);
             }
         }
+        requestActionsUpdate();
     }
 
     /// create app body widget
@@ -560,10 +562,12 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         _logPanel.compilerLogIssueClickHandler = &onCompilerLogIssueClick;
         _logPanel.appendText(null, "DlangIDE is started\nHINT: Try to open some DUB project\n"d);
         string dubPath = findExecutablePath("dub");
+        string rdmdPath = findExecutablePath("rdmd");
         string dmdPath = findExecutablePath("dmd");
         string ldcPath = findExecutablePath("ldc2");
         string gdcPath = findExecutablePath("gdc");
         _logPanel.appendText(null, dubPath ? ("dub path: "d ~ toUTF32(dubPath) ~ "\n"d) : ("dub is not found! cannot build projects without DUB\n"d));
+        _logPanel.appendText(null, rdmdPath ? ("rdmd path: "d ~ toUTF32(rdmdPath) ~ "\n"d) : ("rdmd is not found!\n"d));
         _logPanel.appendText(null, dmdPath ? ("dmd path: "d ~ toUTF32(dmdPath) ~ "\n"d) : ("dmd compiler is not found!\n"d));
         _logPanel.appendText(null, ldcPath ? ("ldc path: "d ~ toUTF32(ldcPath) ~ "\n"d) : ("ldc compiler is not found!\n"d));
         _logPanel.appendText(null, gdcPath ? ("gdc path: "d ~ toUTF32(gdcPath) ~ "\n"d) : ("gdc compiler is not found!\n"d));
@@ -601,7 +605,8 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
 
         MenuItem buildItem = new MenuItem(new Action(22, "MENU_BUILD"));
         buildItem.add(ACTION_WORKSPACE_BUILD, ACTION_WORKSPACE_REBUILD, ACTION_WORKSPACE_CLEAN,
-                     ACTION_PROJECT_BUILD, ACTION_PROJECT_REBUILD, ACTION_PROJECT_CLEAN);
+                     ACTION_PROJECT_BUILD, ACTION_PROJECT_REBUILD, ACTION_PROJECT_CLEAN,
+                     ACTION_RUN_WITH_RDMD);
 
         MenuItem debugItem = new MenuItem(new Action(23, "MENU_DEBUG"));
         debugItem.add(ACTION_DEBUG_START, ACTION_DEBUG_START_NO_DEBUG, 
@@ -652,8 +657,8 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                 ACTION_FILE_SAVE, ACTION_FILE_SAVE_AS, ACTION_FILE_SAVE_ALL, ACTION_FILE_EXIT, 
                 ACTION_PROJECT_SET_STARTUP, ACTION_PROJECT_REFRESH, ACTION_PROJECT_UPDATE_DEPENDENCIES, 
                 ACTION_PROJECT_SETTINGS, ACTION_WORKSPACE_BUILD, ACTION_WORKSPACE_REBUILD, ACTION_WORKSPACE_CLEAN,
-                ACTION_PROJECT_BUILD, ACTION_PROJECT_REBUILD, ACTION_PROJECT_CLEAN, ACTION_DEBUG_START, 
-                ACTION_DEBUG_START_NO_DEBUG, ACTION_DEBUG_CONTINUE, ACTION_DEBUG_STOP, ACTION_DEBUG_PAUSE, 
+                ACTION_PROJECT_BUILD, ACTION_PROJECT_REBUILD, ACTION_PROJECT_CLEAN, ACTION_RUN_WITH_RDMD,
+                ACTION_DEBUG_START, ACTION_DEBUG_START_NO_DEBUG, ACTION_DEBUG_CONTINUE, ACTION_DEBUG_STOP, ACTION_DEBUG_PAUSE,
                 ACTION_DEBUG_RESTART,
                 ACTION_DEBUG_STEP_INTO,
                 ACTION_DEBUG_STEP_OVER,
@@ -692,7 +697,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         };
         cbBuildConfiguration.action = ACTION_BUILD_CONFIGURATIONS;
         tb.addControl(cbBuildConfiguration);
-        tb.addButtons(ACTION_PROJECT_BUILD);
+        tb.addButtons(ACTION_PROJECT_BUILD, ACTION_SEPARATOR, ACTION_RUN_WITH_RDMD);
 
         tb = res.getOrAddToolbar("Edit");
         tb.addButtons(ACTION_EDIT_COPY, ACTION_EDIT_PASTE, ACTION_EDIT_CUT, ACTION_SEPARATOR,
@@ -740,6 +745,13 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             case IDEActions.ProjectSettings:
                 // enable when project exists
                 if (currentWorkspace && currentWorkspace.startupProject && !_currentBackgroundOperation)
+                    a.state = ACTION_STATE_ENABLED;
+                else
+                    a.state = ACTION_STATE_DISABLE;
+                return true;
+            case IDEActions.RunWithRdmd:
+                // enable when D source file is in current tab
+                if (currentEditor && !_currentBackgroundOperation && currentEditor.id.endsWith(".d"))
                     a.state = ACTION_STATE_ENABLED;
                 else
                     a.state = ACTION_STATE_DISABLE;
@@ -819,6 +831,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                 case IDEActions.CleanProject:
                 case IDEActions.CleanWorkspace:
                     buildProject(BuildOperation.Clean, cast(Project)a.objectParam);
+                    return true;
+                case IDEActions.RunWithRdmd:
+                    runWithRdmd(currentEditor.id);
                     return true;
                 case IDEActions.DebugStartNoDebug:
                     buildAndRunProject(cast(Project)a.objectParam);
@@ -1320,6 +1335,16 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         setBackgroundOperation(op);
     }
     
+    void runWithRdmd(string filename, BuildResultListener listener = null) {
+        string rdmdExecutable = _settings.rdmdExecutable;
+        string rdmdAdditionalParams = _settings.rdmdAdditionalParams;
+        Builder op = new Builder(this, filename, _logPanel, currentWorkspace ? currentWorkspace.buildConfiguration : BuildConfiguration.Debug,
+                                 BuildOperation.RunWithRdmd,
+                                 rdmdExecutable, rdmdAdditionalParams,
+                                 listener);
+        setBackgroundOperation(op);
+    }
+
     /// updates list of available configurations
     void setProjectConfigurations(dstring[] items) {
         projectConfigurationCombo.items = items;

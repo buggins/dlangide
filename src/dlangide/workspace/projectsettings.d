@@ -69,7 +69,7 @@ class ProjectSettings : SettingsFile {
 }
 
 /// join parameter lists separating with space
-string joinParams(string[] params...) {
+string joinParams(string[] params...) pure {
     char[] res;
     foreach(param; params) {
         string s = param.strip;

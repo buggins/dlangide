@@ -30,6 +30,8 @@ class IDESettings : SettingsFile {
         terminalSettings.setStringDef("executable", "xterm");
         dubSettings.setStringDef("executable", "dub");
         dubSettings.setStringDef("additional_params", "");
+        rdmdSettings.setStringDef("executable", "rdmd");
+        rdmdSettings.setStringDef("additional_params", "");
         dmdToolchainSettings.setStringDef("executable", "dmd");
         dmdToolchainSettings.setStringDef("dub_additional_params", "");
         ldcToolchainSettings.setStringDef("executable", "ldc2");
@@ -66,6 +68,11 @@ class IDESettings : SettingsFile {
 
     @property Setting dubSettings() {
         Setting res = _setting.objectByPath("dlang/dub", true);
+        return res;
+    }
+
+    @property Setting rdmdSettings() {
+        Setting res = _setting.objectByPath("dlang/rdmd", true);
         return res;
     }
 
@@ -179,6 +186,14 @@ class IDESettings : SettingsFile {
 
     @property string dubAdditionalParams() {
         return dubSettings.getString("additional_params", "");
+    }
+
+    @property string rdmdExecutable() {
+        return rdmdSettings.getString("executable", "rdmd");
+    }
+
+    @property string rdmdAdditionalParams() {
+        return rdmdSettings.getString("additional_params", "");
     }
 
     string getToolchainCompilerExecutable(string toolchainName) {
