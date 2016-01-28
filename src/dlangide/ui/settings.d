@@ -26,6 +26,9 @@ SettingsPage createSettingsPages() {
     SettingsPage dub = dlang.addChild("dlang/dub", UIString("DUB"d));
     dub.addExecutableFileNameEdit("dlang/dub/executable", UIString("DUB executable"d), "dub");
     dub.addStringEdit("dlang/dub/additional_params", UIString("DUB additional params"d), "");
+    SettingsPage rdmd = dlang.addChild("dlang/rdmd", UIString("rdmd"d));
+    rdmd.addExecutableFileNameEdit("dlang/rdmd/executable", UIString("rdmd executable"d), "rdmd");
+    rdmd.addStringEdit("dlang/rdmd/additional_params", UIString("rdmd additional params"d), "");
     SettingsPage ddebug = dlang.addChild("dlang/debugger", UIString("Debugger"d));
     ddebug.addExecutableFileNameEdit("dlang/debugger/executable", UIString("Debugger executable"d), "gdb");
     SettingsPage terminal = dlang.addChild("dlang/terminal", UIString("Terminal"d));
