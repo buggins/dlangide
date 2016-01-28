@@ -107,13 +107,78 @@ class DEditorTool : EditorTool
     }
 
     DCDTask _getCompletionsTask;
-    override void getCompletions(DSourceEdit editor, TextPosition caretPosition, void delegate(dstring[]) callback) {
+    override void getCompletions(DSourceEdit editor, TextPosition caretPosition, void delegate(dstring[] completions, string[] icons) callback) {
         string[] importPaths = editor.importPaths();
 
         string content = toUTF8(editor.text);
         auto byteOffset = caretPositionToByteOffset(content, caretPosition);
         _getCompletionsTask = _frame.dcdInterface.getCompletions(editor.window, importPaths, editor.filename, content, byteOffset, delegate(CompletionResultSet output) {
-             callback(output.output);
+            string[] icons;
+            dstring[] labels;
+            foreach(index, label; output.output) {
+                string iconId;
+                char ch = index < output.completionKinds.length ? output.completionKinds[index] : 0;
+                switch(ch) {
+                    case 'c': // - class name
+                        iconId = "symbol-class";
+                        break;
+                    case 'i': // - interface name
+                        iconId = "symbol-interface";
+                        break;
+                    case 's': // - struct name
+                        iconId = "symbol-struct";
+                        break;
+                    case 'u': // - union name
+                        iconId = "symbol-union";
+                        break;
+                    case 'v': // - variable name
+                        iconId = "symbol-var";
+                        break;
+                    case 'm': // - member variable name
+                        iconId = "symbol-membervar";
+                        break;
+                    case 'k': // - keyword, built-in version, scope statement
+                        iconId = "symbol-keyword";
+                        break;
+                    case 'f': // - function or method
+                        iconId = "symbol-function";
+                        break;
+                    case 'g': // - enum name
+                        iconId = "symbol-enum";
+                        break;
+                    case 'e': // - enum member
+                        iconId = "symbol-enum";
+                        break;
+                    case 'P': // - package name
+                        iconId = "symbol-package";
+                        break;
+                    case 'M': // - module name
+                        iconId = "symbol-module";
+                        break;
+                    case 'a': // - array
+                        iconId = "symbol-array";
+                        break;
+                    case 'A': // - associative array
+                        iconId = "symbol-array";
+                        break;
+                    case 'l': // - alias name
+                        iconId = "symbol-alias";
+                        break;
+                    case 't': // - template name
+                        iconId = "symbol-template";
+                        break;
+                    case 'T': // - mixin template name
+                        iconId = "symbol-mixintemplate";
+                        break;
+                    default:
+                        break;
+                }
+                if (!iconId)
+                    iconId = "symbol-other";
+                icons ~= iconId;
+                labels ~= label;
+            }
+            callback(labels, icons);
             _getCompletionsTask = null;
         });
     }

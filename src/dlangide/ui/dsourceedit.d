@@ -499,7 +499,7 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         window.update();
     }
 
-    void showCompletionPopup(dstring[] suggestions) {
+    void showCompletionPopup(dstring[] suggestions, string[] icons) {
 
         if(suggestions.length == 0) {
             setFocus();
@@ -514,7 +514,11 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         MenuItem completionPopupItems = new MenuItem(null);
         //Add all the suggestions.
         foreach(int i, dstring suggestion ; suggestions) {
+            string iconId;
+            if (i < icons.length)
+                iconId = icons[i];
             auto action = new Action(IDEActions.InsertCompletion, suggestion);
+            action.iconId = iconId;
             completionPopupItems.add(action);
         }
         completionPopupItems.updateActionState(this);

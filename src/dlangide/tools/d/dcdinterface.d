@@ -19,7 +19,7 @@ enum DCDResult : int {
 
 alias DocCommentsResultSet = Tuple!(DCDResult, "result", string[], "docComments");
 alias FindDeclarationResultSet = Tuple!(DCDResult, "result", string, "fileName", ulong, "offset");
-alias CompletionResultSet = Tuple!(DCDResult, "result", dstring[], "output");
+alias CompletionResultSet = Tuple!(DCDResult, "result", dstring[], "output", char[], "completionKinds");
 
 import server.autocomplete;
 import common.messages;
@@ -219,9 +219,14 @@ class DCDInterface : Thread {
 
             result.result = DCDResult.SUCCESS;
             result.output.length = response.completions.length;
+            result.completionKinds.length = response.completions.length;
             int i=0;
-            foreach(s;response.completions){
-                result.output[i++]=to!dstring(s);            
+            foreach(s;response.completions) {
+                char type = 0;
+                if (i < response.completionKinds.length)
+                    type = response.completionKinds[i];
+                result.completionKinds[i] = type;
+                result.output[i++] = to!dstring(s);
             }
             debug(DCD) Log.d("DCD output:\n", response.completions);
         }

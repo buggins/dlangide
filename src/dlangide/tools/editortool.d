@@ -17,7 +17,7 @@ class EditorTool
     //Since files might be unsaved, we must send all the text content.
     abstract void goToDefinition(DSourceEdit editor, TextPosition caretPosition);
     abstract void getDocComments(DSourceEdit editor, TextPosition caretPosition, void delegate(string[]) callback);
-    abstract void getCompletions(DSourceEdit editor, TextPosition caretPosition, void delegate(dstring[]) callback);
+    abstract void getCompletions(DSourceEdit editor, TextPosition caretPosition, void delegate(dstring[] labels, string[] icons) callback);
 
     void cancelGoToDefinition() {}
     void cancelGetDocComments() {}
@@ -37,7 +37,7 @@ class DefaultEditorTool : EditorTool
         assert(0); //Go To Definition should not be called for normal files.
     }
     
-    override void getCompletions(DSourceEdit editor, TextPosition caretPosition, void delegate(dstring[]) callback) {
+    override void getCompletions(DSourceEdit editor, TextPosition caretPosition, void delegate(dstring[] labels, string[] icons) callback) {
         assert(0);
     }
 
