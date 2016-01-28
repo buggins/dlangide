@@ -616,6 +616,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
 
         MenuItem windowItem = new MenuItem(new Action(3, "MENU_WINDOW"c));
         windowItem.add(new Action(30, "MENU_WINDOW_PREFERENCES"));
+        windowItem.add(ACTION_WINDOW_CLOSE_DOCUMENT);
         windowItem.add(ACTION_WINDOW_CLOSE_ALL_DOCUMENTS);
         MenuItem helpItem = new MenuItem(new Action(4, "MENU_HELP"c));
         helpItem.add(new Action(40, "MENU_HELP_VIEW_HELP"));
@@ -657,7 +658,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                 ACTION_DEBUG_STEP_INTO,
                 ACTION_DEBUG_STEP_OVER,
                 ACTION_DEBUG_STEP_OUT,
-                ACTION_WINDOW_CLOSE_ALL_DOCUMENTS, ACTION_HELP_ABOUT];
+                ACTION_WINDOW_CLOSE_DOCUMENT, ACTION_WINDOW_CLOSE_ALL_DOCUMENTS, ACTION_HELP_ABOUT];
             actions ~= STD_EDITOR_ACTIONS;
             saveShortcutsSettings(actions);
         }
@@ -713,6 +714,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                 return true;
             case IDEActions.FileExit:
             case IDEActions.FileOpen:
+            case IDEActions.WindowCloseDocument:
             case IDEActions.WindowCloseAllDocuments:
             case IDEActions.FileOpenWorkspace:
                 // disable when background operation in progress
@@ -849,6 +851,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     return true;
                 case IDEActions.RefreshProject:
                     refreshWorkspace();
+                    return true;
+                case IDEActions.WindowCloseDocument:
+                    onTabClose(_tabs.selectedTabId);
                     return true;
                 case IDEActions.WindowCloseAllDocuments:
                     askForUnsavedEdits(delegate() {
