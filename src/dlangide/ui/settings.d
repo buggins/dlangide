@@ -14,40 +14,6 @@ public import dlangide.workspace.workspacesettings;
 SettingsPage createSettingsPages() {
     SettingsPage res = new SettingsPage("", UIString(""d));
 
-    SettingsPage ed = res.addChild("editors", UIString("Editors"d));
-    SettingsPage texted = ed.addChild("editors/textEditor", UIString("Text Editors"d));
-    texted.addNumberEdit("editors/textEditor/tabSize", UIString("Tab size"d), 1, 16, 4);
-    texted.addCheckbox("editors/textEditor/useSpacesForTabs", UIString("Use spaces for tabs"d));
-    texted.addCheckbox("editors/textEditor/smartIndents", UIString("Smart indents"d));
-    texted.addCheckbox("editors/textEditor/smartIndentsAfterPaste", UIString("Smart indent after paste"d));
-    texted.addCheckbox("editors/textEditor/showWhiteSpaceMarks", UIString("Show white space marks"d));
-
-    SettingsPage dlang = res.addChild("dlang", UIString("D"d));
-    SettingsPage dub = dlang.addChild("dlang/dub", UIString("DUB"d));
-    dub.addExecutableFileNameEdit("dlang/dub/executable", UIString("DUB executable"d), "dub");
-    dub.addStringEdit("dlang/dub/additional_params", UIString("DUB additional params"d), "");
-    SettingsPage rdmd = dlang.addChild("dlang/rdmd", UIString("rdmd"d));
-    rdmd.addExecutableFileNameEdit("dlang/rdmd/executable", UIString("rdmd executable"d), "rdmd");
-    rdmd.addStringEdit("dlang/rdmd/additional_params", UIString("rdmd additional params"d), "");
-    SettingsPage ddebug = dlang.addChild("dlang/debugger", UIString("Debugger"d));
-    ddebug.addExecutableFileNameEdit("dlang/debugger/executable", UIString("Debugger executable"d), "gdb");
-    SettingsPage terminal = dlang.addChild("dlang/terminal", UIString("Terminal"d));
-    terminal.addExecutableFileNameEdit("dlang/terminal/executable", UIString("Terminal executable"d), "xterm");
-
-    SettingsPage toolchains = dlang.addChild("dlang/toolchains", UIString("Toolchains"d));
-    SettingsPage dmdtoolchain = toolchains.addChild("dlang/toolchains/dmd", UIString("DMD"d));
-    dmdtoolchain.addExecutableFileNameEdit("dlang/toolchains/dmd/executable", UIString("DMD executable"d), "dmd");
-    dmdtoolchain.addStringEdit("dlang/toolchains/dmd/dub_additional_params", UIString("DUB additional params"d), "");
-    SettingsPage ldctoolchain = toolchains.addChild("dlang/toolchains/ldc", UIString("LDC"d));
-    ldctoolchain.addExecutableFileNameEdit("dlang/toolchains/ldc/executable", UIString("LDC2 executable"d), "ldc2");
-    ldctoolchain.addStringEdit("dlang/toolchains/ldc/dub_additional_params", UIString("DUB additional params"d), "");
-    SettingsPage ldmdtoolchain = toolchains.addChild("dlang/toolchains/ldmd", UIString("LDMD"d));
-    ldmdtoolchain.addExecutableFileNameEdit("dlang/toolchains/ldmd/executable", UIString("LDMD2 executable"d), "ldmd2");
-    ldmdtoolchain.addStringEdit("dlang/toolchains/ldmd/dub_additional_params", UIString("DUB additional params"d), "");
-    SettingsPage gdctoolchain = toolchains.addChild("dlang/toolchains/gdc", UIString("GDC"d));
-    gdctoolchain.addExecutableFileNameEdit("dlang/toolchains/gdc/executable", UIString("GDC executable"d), "gdc");
-    gdctoolchain.addStringEdit("dlang/toolchains/gdc/dub_additional_params", UIString("DUB additional params"d), "");
-
     SettingsPage ui = res.addChild("interface", UIString("Interface"d));
     ui.addStringComboBox("interface/theme", UIString("Theme"d), [
             StringListValue("ide_theme_default", "Default"d), 
@@ -88,6 +54,41 @@ SettingsPage createSettingsPages() {
                     StringListValue(1500, "1.5   "d), 
                     StringListValue(1700, "1.7   "d), 
                     StringListValue(2000, "2.0   "d)]);
+
+    SettingsPage ed = res.addChild("editors", UIString("Editors"d));
+    SettingsPage texted = ed.addChild("editors/textEditor", UIString("Text Editors"d));
+    texted.addNumberEdit("editors/textEditor/tabSize", UIString("Tab size"d), 1, 16, 4);
+    texted.addCheckbox("editors/textEditor/useSpacesForTabs", UIString("Use spaces for tabs"d));
+    texted.addCheckbox("editors/textEditor/smartIndents", UIString("Smart indents"d));
+    texted.addCheckbox("editors/textEditor/smartIndentsAfterPaste", UIString("Smart indent after paste"d));
+    texted.addCheckbox("editors/textEditor/showWhiteSpaceMarks", UIString("Show white space marks"d));
+
+    SettingsPage dlang = res.addChild("dlang", UIString("D"d));
+    SettingsPage dub = dlang.addChild("dlang/dub", UIString("DUB"d));
+    dub.addExecutableFileNameEdit("dlang/dub/executable", UIString("DUB executable"d), "dub");
+    dub.addStringEdit("dlang/dub/additional_params", UIString("DUB additional params"d), "");
+    SettingsPage rdmd = dlang.addChild("dlang/rdmd", UIString("rdmd"d));
+    rdmd.addExecutableFileNameEdit("dlang/rdmd/executable", UIString("rdmd executable"d), "rdmd");
+    rdmd.addStringEdit("dlang/rdmd/additional_params", UIString("rdmd additional params"d), "");
+    SettingsPage ddebug = dlang.addChild("dlang/debugger", UIString("Debugger"d));
+    ddebug.addExecutableFileNameEdit("dlang/debugger/executable", UIString("Debugger executable"d), "gdb");
+    SettingsPage terminal = dlang.addChild("dlang/terminal", UIString("Terminal"d));
+    terminal.addExecutableFileNameEdit("dlang/terminal/executable", UIString("Terminal executable"d), "xterm");
+
+    SettingsPage toolchains = dlang.addChild("dlang/toolchains", UIString("Toolchains"d));
+    SettingsPage dmdtoolchain = toolchains.addChild("dlang/toolchains/dmd", UIString("DMD"d));
+    dmdtoolchain.addExecutableFileNameEdit("dlang/toolchains/dmd/executable", UIString("DMD executable"d), "dmd");
+    dmdtoolchain.addStringEdit("dlang/toolchains/dmd/dub_additional_params", UIString("DUB additional params"d), "");
+    SettingsPage ldctoolchain = toolchains.addChild("dlang/toolchains/ldc", UIString("LDC"d));
+    ldctoolchain.addExecutableFileNameEdit("dlang/toolchains/ldc/executable", UIString("LDC2 executable"d), "ldc2");
+    ldctoolchain.addStringEdit("dlang/toolchains/ldc/dub_additional_params", UIString("DUB additional params"d), "");
+    SettingsPage ldmdtoolchain = toolchains.addChild("dlang/toolchains/ldmd", UIString("LDMD"d));
+    ldmdtoolchain.addExecutableFileNameEdit("dlang/toolchains/ldmd/executable", UIString("LDMD2 executable"d), "ldmd2");
+    ldmdtoolchain.addStringEdit("dlang/toolchains/ldmd/dub_additional_params", UIString("DUB additional params"d), "");
+    SettingsPage gdctoolchain = toolchains.addChild("dlang/toolchains/gdc", UIString("GDC"d));
+    gdctoolchain.addExecutableFileNameEdit("dlang/toolchains/gdc/executable", UIString("GDC executable"d), "gdc");
+    gdctoolchain.addStringEdit("dlang/toolchains/gdc/dub_additional_params", UIString("DUB additional params"d), "");
+
     return res;
 }
 
