@@ -5,19 +5,19 @@ import dlangide.workspace.projectsettings;
 import dlangui.core.logger;
 import dlangui.core.collections;
 import dlangui.core.settings;
-import std.path;
-import std.file;
-import std.utf;
 import std.algorithm;
+import std.array : empty;
+import std.file;
+import std.path;
 import std.process;
-import std.array;
+import std.utf;
 
 /// return true if filename matches rules for workspace file names
-bool isProjectFile(string filename) {
+bool isProjectFile(in string filename) pure nothrow {
     return filename.baseName.equal("dub.json") || filename.baseName.equal("package.json");
 }
 
-string toForwardSlashSeparator(string filename) {
+string toForwardSlashSeparator(in string filename) pure nothrow {
     char[] res;
     foreach(ch; filename) {
         if (ch == '\\')
@@ -43,42 +43,26 @@ class ProjectItem {
     this() {
     }
 
-    @property ProjectItem parent() {
-        return _parent;
-    }
+    @property ProjectItem parent() { return _parent; }
 
-    @property Project project() {
-        return _project;
-    }
+    @property Project project() { return _project; }
 
-    @property void project(Project p) {
-        _project = p;
-    }
+    @property void project(Project p) { _project = p; }
 
-    @property string filename() {
-        return _filename;
-    }
+    @property string filename() { return _filename; }
 
-    @property dstring name() {
-        return _name;
-    }
+    @property dstring name() { return _name; }
 
     @property string name8() {
         return _name.toUTF8;
     }
 
     /// returns true if item is folder
-    @property const bool isFolder() {
-        return false;
-    }
+    @property const bool isFolder() { return false; }
     /// returns child object count
-    @property int childCount() {
-        return 0;
-    }
+    @property int childCount() { return 0; }
     /// returns child item by index
-    ProjectItem child(int index) {
-        return null;
-    }
+    ProjectItem child(int index) { return null; }
 
     void refresh() {
     }
@@ -171,7 +155,7 @@ class ProjectFolder : ProjectItem {
                     existing.loadItems();
                 return true;
             }
-            ProjectFolder dir = new ProjectFolder(src);
+            auto dir = new ProjectFolder(src);
             addChild(dir);
             Log.d("    added project folder ", src);
             dir.loadItems();
@@ -186,7 +170,7 @@ class ProjectFolder : ProjectItem {
             ProjectItem existing = childByPathName(src);
             if (existing)
                 return true;
-            ProjectSourceFile f = new ProjectSourceFile(src);
+            auto f = new ProjectSourceFile(src);
             addChild(f);
             Log.d("    added project file ", src);
             return true;
@@ -253,14 +237,10 @@ class WorkspaceItem {
     }
 
     /// file name of workspace item
-    @property string filename() {
-        return _filename;
-    }
+    @property string filename() { return _filename; }
 
     /// workspace item directory
-    @property string dir() {
-        return _dir;
-    }
+    @property string dir() { return _dir; }
 
     /// file name of workspace item
     @property void filename(string fname) {
@@ -274,28 +254,19 @@ class WorkspaceItem {
     }
 
     /// name
-    @property dstring name() {
-        return _name;
-    }
+    @property dstring name() { return _name; }
 
     @property string name8() {
         return _name.toUTF8;
     }
 
     /// name
-    @property void name(dstring s) {
-        _name = s;
-    }
+    @property void name(dstring s) {  _name = s; }
 
-    /// name
-    @property dstring description() {
-        return _description;
-    }
-
-    /// name
-    @property void description(dstring s) {
-        _description = s;
-    }
+    /// description
+    @property dstring description() { return _description; }
+    /// description
+    @property void description(dstring s) { _description = s; }
 
     /// load
     bool load(string fname) {
@@ -465,14 +436,7 @@ class Project : WorkspaceItem {
 
     private static void addUnique(ref string[] dst, string[] items) {
         foreach(item; items) {
-            bool found = false;
-            foreach(existing; dst) {
-                if (item.equal(existing)) {
-                    found = true;
-                    break;
-                }
-            }
-            if (!found)
+            if (!canFind(dst, item))
                 dst ~= item;
         }
     }
@@ -499,17 +463,11 @@ class Project : WorkspaceItem {
     }
 
     @property ProjectSourceFile mainSourceFile() { return _mainSourceFile; }
-    @property ProjectFolder items() {
-        return _items;
-    }
+    @property ProjectFolder items() { return _items; }
 
-    @property Workspace workspace() {
-        return _workspace;
-    }
+    @property Workspace workspace() { return _workspace; }
 
-    @property void workspace(Workspace p) {
-        _workspace = p;
-    }
+    @property void workspace(Workspace p) { _workspace = p; }
 
     @property string defWorkspaceFile() {
         return buildNormalizedPath(_filename.dirName, toUTF8(name) ~ WORKSPACE_EXTENSION);
@@ -553,7 +511,7 @@ class Project : WorkspaceItem {
     }
 
     ProjectFolder findItems(string[] srcPaths) {
-        ProjectFolder folder = new ProjectFolder(_filename);
+        auto folder = new ProjectFolder(_filename);
         folder.project = this;
         string path = relativeToAbsolutePath("src");
         if (folder.loadDir(path))
@@ -594,14 +552,14 @@ class Project : WorkspaceItem {
 
     /// tries to find source file in project, returns found project source file item, or null if not found
     ProjectSourceFile findSourceFileItem(ProjectItem dir, string filename, bool fullFileName=true) {
-        for (int i = 0; i < dir.childCount; i++) {
+        foreach(i; 0 .. dir.childCount) {
             ProjectItem item = dir.child(i);
             if (item.isFolder) {
                 ProjectSourceFile res = findSourceFileItem(item, filename, fullFileName);
                 if (res)
                     return res;
             } else {
-                ProjectSourceFile res = cast(ProjectSourceFile)item;
+                auto res = cast(ProjectSourceFile)item;
                 if(res)
                 {
                     if(fullFileName && res.filename.equal(filename))
@@ -680,7 +638,7 @@ class Project : WorkspaceItem {
     bool loadSelections() {
         Project[] newdeps;
         _dependencies.length = 0;
-        DubPackageFinder finder = new DubPackageFinder();
+        auto finder = new DubPackageFinder;
         scope(exit) destroy(finder);
         SettingsFile selectionsFile = new SettingsFile(buildNormalizedPath(_dir, "dub.selections.json"));
         if (!selectionsFile.load()) {
@@ -768,37 +726,46 @@ class DubPackageFinder {
     }
 }
 
-bool isValidProjectName(string s) {
+bool isValidProjectName(in string s) pure {
     if (s.empty)
         return false;
-    for (int i = 0; i < s.length; i++) {
-        char ch = s[i];
-        if (ch != '_' && ch != '-' && (ch < '0' || ch > '9') && (ch < 'a' || ch > 'z') && (ch < 'A' || ch > 'Z'))
-            return false;
-    }
-    return true;
+    return reduce!q{ a && (b == '_' || b == '-' || std.ascii.isAlphaNum(b)) }(true, s);
 }
 
-bool isValidModuleName(string s) {
+bool isValidModuleName(in string s) pure {
     if (s.empty)
         return false;
-    for (int i = 0; i < s.length; i++) {
-        char ch = s[i];
-        if (ch != '_' && (ch < '0' || ch > '9') && (ch < 'a' || ch > 'z') && (ch < 'A' || ch > 'Z'))
-            return false;
-    }
-    return true;
+    return reduce!q{ a && (b == '_' || std.ascii.isAlphaNum(b)) }(true, s);
 }
 
-bool isValidFileName(string s) {
+bool isValidFileName(in string s) pure {
     if (s.empty)
         return false;
-    for (int i = 0; i < s.length; i++) {
-        char ch = s[i];
-        if (ch != '_' && ch != '.' && ch != '-' && (ch < '0' || ch > '9') && (ch < 'a' || ch > 'z') && (ch < 'A' || ch > 'Z'))
-            return false;
-    }
-    return true;
+    return reduce!q{ a && (b == '_' || b == '.' || b == '-' || std.ascii.isAlphaNum(b)) }(true, s);
+}
+
+unittest {
+    assert(!isValidProjectName(""));
+    assert(isValidProjectName("project"));
+    assert(isValidProjectName("cool_project"));
+    assert(isValidProjectName("project-2"));
+    assert(!isValidProjectName("project.png"));
+    assert(!isValidProjectName("[project]"));
+    assert(!isValidProjectName("<project/>"));
+    assert(!isValidModuleName(""));
+    assert(isValidModuleName("module"));
+    assert(isValidModuleName("awesome_module2"));
+    assert(!isValidModuleName("module-2"));
+    assert(!isValidModuleName("module.png"));
+    assert(!isValidModuleName("[module]"));
+    assert(!isValidModuleName("<module>"));
+    assert(!isValidFileName(""));
+    assert(isValidFileName("file"));
+    assert(isValidFileName("file_2"));
+    assert(isValidFileName("file-2"));
+    assert(isValidFileName("file.txt"));
+    assert(!isValidFileName("[file]"));
+    assert(!isValidFileName("<file>"));
 }
 
 class EditorBookmark {

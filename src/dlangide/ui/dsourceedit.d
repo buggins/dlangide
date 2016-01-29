@@ -44,9 +44,8 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         //setTokenHightlightColor(TokenCategory.Identifier, 0x206000);  // no colors
         MenuItem editPopupItem = new MenuItem(null);
         editPopupItem.add(ACTION_EDIT_COPY, ACTION_EDIT_PASTE, ACTION_EDIT_CUT, ACTION_EDIT_UNDO, 
-                          ACTION_EDIT_REDO, ACTION_EDIT_INDENT, ACTION_EDIT_UNINDENT, ACTION_EDIT_TOGGLE_LINE_COMMENT, ACTION_GET_COMPLETIONS, 
-                          ACTION_GO_TO_DEFINITION, ACTION_DEBUG_TOGGLE_BREAKPOINT);
-        //ACTION_GO_TO_DEFINITION, ACTION_GET_COMPLETIONS
+                          ACTION_EDIT_REDO, ACTION_EDIT_INDENT, ACTION_EDIT_UNINDENT, ACTION_EDIT_TOGGLE_LINE_COMMENT,
+                          ACTION_GET_COMPLETIONS, ACTION_GO_TO_DEFINITION, ACTION_DEBUG_TOGGLE_BREAKPOINT);
         popupMenu = editPopupItem;
         showIcons = true;
         //showFolding = true;
@@ -107,7 +106,8 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
     }
 
     @property bool isDSourceFile() {
-        return filename.endsWith(".d") || filename.endsWith(".dd") || filename.endsWith(".dd")  || filename.endsWith(".di") || filename.endsWith(".dh") || filename.endsWith(".ddoc");
+        return filename.endsWith(".d") || filename.endsWith(".dd") || filename.endsWith(".dd") ||
+               filename.endsWith(".di") || filename.endsWith(".dh") || filename.endsWith(".ddoc");
     }
 
     @property bool isJsonFile() {
@@ -528,7 +528,9 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         popupMenu.maxHeight(400);
         popupMenu.selectItem(0);
 
-        PopupWidget popup = window.showPopup(popupMenu, this, PopupAlign.Point | PopupAlign.Right, textPosToClient(_caretPos).left + left + _leftPaneWidth, textPosToClient(_caretPos).top + top + margins.top);
+        PopupWidget popup = window.showPopup(popupMenu, this, PopupAlign.Point | PopupAlign.Right,
+                                             textPosToClient(_caretPos).left + left + _leftPaneWidth,
+                                             textPosToClient(_caretPos).top + top + margins.top);
         popup.setFocus();
         popup.popupClosed = delegate(PopupWidget source) { setFocus(); };
         popup.flags = PopupFlags.CloseOnClickOutside;
