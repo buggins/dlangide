@@ -525,6 +525,7 @@ class Project : WorkspaceItem {
         if (!isExecutable)
             return null;
         string exename = toUTF8(name);
+        exename = _projectFile.getString("targetName", exename);
         // TODO: use targetName
         version (Windows) {
             exename = exename ~ ".exe";
