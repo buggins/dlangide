@@ -743,6 +743,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             case IDEActions.RefreshProject:
             case IDEActions.SetStartupProject:
             case IDEActions.ProjectSettings:
+            case IDEActions.RevealProjectInExplorer:
                 // enable when project exists
                 if (currentWorkspace && currentWorkspace.startupProject && !_currentBackgroundOperation)
                     a.state = ACTION_STATE_ENABLED;
@@ -866,6 +867,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     return true;
                 case IDEActions.RefreshProject:
                     refreshWorkspace();
+                    return true;
+                case IDEActions.RevealProjectInExplorer:
+                    revealProjectInExplorer(cast(Project)a.objectParam);
                     return true;
                 case IDEActions.WindowCloseDocument:
                     onTabClose(_tabs.selectedTabId);
@@ -1299,6 +1303,10 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             currentWorkspace.cleanupUnusedDependencies();
             refreshWorkspace();
         }
+    }
+
+    void revealProjectInExplorer(Project project) {
+        Platform.instance.showInFileManager(project.items.filename);
     }
 
     void buildProject(BuildOperation buildOp, Project project, BuildResultListener listener = null) {

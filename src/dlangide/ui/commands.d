@@ -27,6 +27,7 @@ enum IDEActions : int {
     RefreshProject,
     UpdateProjectDependencies,
     SetStartupProject,
+    RevealProjectInExplorer,
     ProjectSettings,
     RunWithRdmd,
 
@@ -95,6 +96,7 @@ const Action ACTION_PROJECT_BUILD = new Action(IDEActions.BuildProject, "MENU_BU
 const Action ACTION_PROJECT_REBUILD = new Action(IDEActions.RebuildProject, "MENU_BUILD_PROJECT_REBUILD"c, "run-build-clean", KeyCode.F7, KeyFlag.Control);
 const Action ACTION_PROJECT_CLEAN = new Action(IDEActions.CleanProject, "MENU_BUILD_PROJECT_CLEAN"c, null);
 const Action ACTION_PROJECT_SET_STARTUP = new Action(IDEActions.SetStartupProject, "MENU_PROJECT_SET_AS_STARTUP"c, null);
+const Action ACTION_PROJECT_REVEAL_IN_EXPLORER = new Action(IDEActions.RevealProjectInExplorer, "MENU_PROJECT_REVEAL_IN_EXPLORER"c);
 const Action ACTION_PROJECT_SETTINGS = (new Action(IDEActions.ProjectSettings, "MENU_PROJECT_SETTINGS"c, null)).disableByDefault();
 const Action ACTION_PROJECT_REFRESH = new Action(IDEActions.RefreshProject, "MENU_PROJECT_REFRESH"c);
 const Action ACTION_PROJECT_UPDATE_DEPENDENCIES = new Action(IDEActions.UpdateProjectDependencies, "MENU_PROJECT_UPDATE_DEPENDENCIES"c);

@@ -80,13 +80,14 @@ class WorkspacePanel : DockWindow {
 
         _projectPopupMenu = new MenuItem();
         _projectPopupMenu.add(ACTION_PROJECT_SET_STARTUP,
-                              ACTION_PROJECT_FOLDER_REFRESH, 
-                              ACTION_FILE_NEW_SOURCE_FILE, 
+                              ACTION_PROJECT_FOLDER_REFRESH,
+                              ACTION_FILE_NEW_SOURCE_FILE,
                               //ACTION_PROJECT_FOLDER_OPEN_ITEM,
                               ACTION_PROJECT_BUILD,
                               ACTION_PROJECT_REBUILD,
                               ACTION_PROJECT_CLEAN,
                               ACTION_PROJECT_UPDATE_DEPENDENCIES,
+                              ACTION_PROJECT_REVEAL_IN_EXPLORER,
                               ACTION_PROJECT_SETTINGS,
                               //ACTION_PROJECT_FOLDER_REMOVE_ITEM
                               );
