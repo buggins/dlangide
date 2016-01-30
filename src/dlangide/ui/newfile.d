@@ -18,10 +18,10 @@ import dlangide.workspace.workspace;
 import dlangide.ui.commands;
 import dlangide.ui.frame;
 
-import std.path;
-import std.file;
-import std.array : empty;
 import std.algorithm : startsWith, endsWith;
+import std.array : empty;
+import std.file;
+import std.path;
 
 class FileCreationResult {
     Project project;

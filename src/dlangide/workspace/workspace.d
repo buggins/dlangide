@@ -5,12 +5,12 @@ import dlangide.workspace.workspacesettings;
 import dlangide.ui.frame;
 import dlangui.core.logger;
 import dlangui.core.settings;
+import std.algorithm : map;
 import std.conv;
-import std.path;
 import std.file;
-import std.range;
+import std.path;
+import std.range : array;
 import std.utf;
-import std.algorithm;
 
 import ddebug.common.debugger;
 
@@ -75,9 +75,7 @@ class Workspace : WorkspaceItem {
         return null;
     }
 
-    @property Project[] projects() {
-        return _projects;
-    }
+    @property Project[] projects() { return _projects; }
 
     @property BuildConfiguration buildConfiguration() { return _buildConfiguration; }
     @property void buildConfiguration(BuildConfiguration config) { _buildConfiguration = config; }
