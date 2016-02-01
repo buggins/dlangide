@@ -928,7 +928,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                 case IDEActions.SetStartupProject:
                     setStartupProject(cast(Project)a.objectParam);
                     return true;
-                case IDEActions.FindText:
+                case IDEActions.FindInFiles:
                     Log.d("Opening Search Field");
                        import dlangide.ui.searchPanel;
                     int searchPanelIndex = _logPanel.getTabs.tabIndex("search");
