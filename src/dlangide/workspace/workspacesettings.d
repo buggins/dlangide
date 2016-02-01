@@ -22,8 +22,9 @@ class WorkspaceSettings : SettingsFile {
         return _startupProjectName;
     }
     @property void startupProjectName(string s) {
-        if (s.equal(_startupProjectName)) {
+        if (!s.equal(_startupProjectName)) {
             _startupProjectName = s;
+            _setting["startupProject"] = s;
             save();
         }
     }
