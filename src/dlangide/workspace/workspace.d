@@ -277,6 +277,7 @@ class Workspace : WorkspaceItem {
             Log.e("empty workspace name");
             return false;
         }
+        auto originalStartupProjectName = _settings.startupProjectName;
         Setting projects = _workspaceFile.objectByPath("projects", true);
         foreach(string key, Setting value; projects) {
             string path = value.str;
@@ -287,6 +288,7 @@ class Workspace : WorkspaceItem {
             _projects ~= project;
             project.load();
         }
+        _settings.startupProjectName = originalStartupProjectName;
         fillStartupProject();
         return true;
     }
