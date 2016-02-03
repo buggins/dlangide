@@ -75,10 +75,22 @@ class ProgramExecutionNoDebug : Thread, ProgramExecution {
         // external console support
         if (!_terminalExecutable.empty) {
             string cmdline = escapeShellCommand(params);
-            params.length = 0;
-            params ~= _terminalExecutable;
-            params ~= "-e";
-            params ~= cmdline;
+            string shellScript = `
+rm $0
+` ~ cmdline ~ `
+exit_code=$?
+echo "
+-----------------------
+(program returned exit code: $exit_code)"
+echo "Press return to continue..."
+dummy_var=""
+read dummy_var
+exit $exit_code
+`;
+            std.file.write(std.path.buildPath(_executableWorkingDir, "dlangide_run_script.sh"), shellScript);
+            string setExecFlagCommand = escapeShellCommand("chmod", "+x", "dlangide_run_script.sh");
+            spawnShell(setExecFlagCommand, stdin, stdout, stderr, null, Config.none, _executableWorkingDir);
+            params = [_terminalExecutable, "-e", "./dlangide_run_script.sh"];
         }
 
         File newstdin;

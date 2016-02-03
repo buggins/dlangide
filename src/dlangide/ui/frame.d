@@ -245,7 +245,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             window.showMessageBox(UIString("Cannot run project"d), UIString("Cannot find executable file"d));
             return;
         }
-        ProgramExecutionNoDebug program = new ProgramExecutionNoDebug();
+        auto program = new ProgramExecutionNoDebug;
         setExecutableParameters(program, project, executableFileName);
         program.setProgramExecutionStatusListener(this);
         _execution = program;
@@ -271,6 +271,48 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         program.setExecutableParams(executableFileName, args, workingDirectory, env);
         program.setTerminalExecutable(externalConsoleExecutable);
         return true;
+    }
+
+    void runWithRdmd(string filename) {
+        stopExecution();
+
+        string rdmdExecutable = _settings.rdmdExecutable;
+
+        auto program = new ProgramExecutionNoDebug;
+        string sourceFileName = baseName(filename);
+        string workingDirectory = dirName(filename);
+        string[] args;
+        {
+            string rdmdAdditionalParams = _settings.rdmdAdditionalParams;
+            if (!rdmdAdditionalParams.empty)
+                args ~= rdmdAdditionalParams.split();
+
+            auto buildConfig = currentWorkspace ? currentWorkspace.buildConfiguration : BuildConfiguration.Debug;
+            switch (buildConfig) {
+                default:
+                case BuildConfiguration.Debug:
+                    args ~= "-debug";
+                    break;
+                case BuildConfiguration.Release:
+                    args ~= "-release";
+                    break;
+                case BuildConfiguration.Unittest:
+                    args ~= "-unittest";
+                    break;
+            }
+            args ~= sourceFileName;
+        }
+        version(Windows) {
+        } else {
+            string externalConsoleExecutable = _settings.terminalExecutable;
+        }
+        _logPanel.logLine("Starting " ~ sourceFileName ~ " with rdmd");
+        _statusLine.setBackgroundOperationStatus("run-rdmd", "running..."d);
+        program.setExecutableParams(rdmdExecutable, args, workingDirectory, null);
+        program.setTerminalExecutable(externalConsoleExecutable);
+        program.setProgramExecutionStatusListener(this);
+        _execution = program;
+        program.run();
     }
 
     override protected void initialize() {
@@ -1343,16 +1385,6 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         setBackgroundOperation(op);
     }
     
-    void runWithRdmd(string filename, BuildResultListener listener = null) {
-        string rdmdExecutable = _settings.rdmdExecutable;
-        string rdmdAdditionalParams = _settings.rdmdAdditionalParams;
-        Builder op = new Builder(this, filename, _logPanel, currentWorkspace ? currentWorkspace.buildConfiguration : BuildConfiguration.Debug,
-                                 BuildOperation.RunWithRdmd,
-                                 rdmdExecutable, rdmdAdditionalParams,
-                                 listener);
-        setBackgroundOperation(op);
-    }
-
     /// updates list of available configurations
     void setProjectConfigurations(dstring[] items) {
         projectConfigurationCombo.items = items;
