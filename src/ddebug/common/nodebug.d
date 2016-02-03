@@ -82,7 +82,7 @@ exit_code=$?
 echo "
 -----------------------
 (program returned exit code: $exit_code)"
-echo "Press any key to continue..."
+echo "Press return to continue..."
 dummy_var=""
 read dummy_var
 exit $exit_code
