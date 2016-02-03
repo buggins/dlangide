@@ -16,7 +16,6 @@ alias BuildResultListener = void delegate(int);
 
 class Builder : BackgroundOperationWatcher {
     protected Project _project;
-    protected string _filename; // for rdmd
     protected ExternalProcess _extprocess;
     protected OutputPanel _log;
     protected ProtectedTextStorage _box;
@@ -55,23 +54,6 @@ class Builder : BackgroundOperationWatcher {
         _box = new ProtectedTextStorage();
     }
 
-    this(AppFrame frame, string filename, OutputPanel log, BuildConfiguration buildConfig,
-             BuildOperation buildOp,
-             string rdmdExecutable,
-             string rdmdAdditionalParams,
-             BuildResultListener listener = null) {
-        super(frame);
-        _listener = listener;
-        _buildOp = buildOp;
-        _filename = filename;
-        _buildConfig = buildConfig;
-        _executable = rdmdExecutable.empty ? "rdmd" : rdmdExecutable;
-        _additionalParams = rdmdAdditionalParams;
-        _log = log;
-        _extprocess = new ExternalProcess();
-        _box = new ProtectedTextStorage();
-    }
-
     /// log lines
     void pollText() {
         dstring text = _box.readText();
@@ -90,31 +72,10 @@ class Builder : BackgroundOperationWatcher {
             _log.clear();
             char[] program = _executable.dup;
             char[][] params;
-            char[] dir;
+            char[] dir = _project.dir.dup;
 
-            if(_buildOp == BuildOperation.RunWithRdmd) {
-                dir = std.path.dirName(_filename).dup;
-
-                if (!_additionalParams.empty)
-                    params ~= _additionalParams.dup;
-
-                switch (_buildConfig) {
-                    default:
-                    case BuildConfiguration.Debug:
-                        params ~= "-debug".dup;
-                        break;
-                    case BuildConfiguration.Release:
-                        params ~= "-release".dup;
-                        break;
-                    case BuildConfiguration.Unittest:
-                        params ~= "-unittest".dup;
-                        break;
-                }
-                params ~= std.path.baseName(_filename).dup;
-
-            } else {
+            {
                 // dub
-                dir = _project.dir.dup;
                 if (_buildOp == BuildOperation.Build || _buildOp == BuildOperation.Rebuild) {
                     params ~= "build".dup;
                     if (_buildOp == BuildOperation.Rebuild) {

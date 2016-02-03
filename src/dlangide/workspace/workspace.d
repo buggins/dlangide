@@ -19,8 +19,7 @@ enum BuildOperation {
     Clean,
     Rebuild,
     Run,
-    Upgrade,
-    RunWithRdmd
+    Upgrade
 }
 
 enum BuildConfiguration {
