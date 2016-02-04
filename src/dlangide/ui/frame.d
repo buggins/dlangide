@@ -302,9 +302,10 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             }
             args ~= sourceFileName;
         }
+        string externalConsoleExecutable = null;
         version(Windows) {
         } else {
-            string externalConsoleExecutable = _settings.terminalExecutable;
+            externalConsoleExecutable = _settings.terminalExecutable;
         }
         _logPanel.logLine("Starting " ~ sourceFileName ~ " with rdmd");
         _statusLine.setBackgroundOperationStatus("run-rdmd", "running..."d);
