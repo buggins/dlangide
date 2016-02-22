@@ -21,7 +21,8 @@ SettingsPage createSettingsPages() {
     ui.addStringComboBox("interface/language", UIString("Language"d), [
             StringListValue("en", "English"d), 
             StringListValue("ru", "Russian"d), 
-            StringListValue("es", "Spanish"d)]);
+            StringListValue("es", "Spanish"d),
+	    StringListValue("cs", "Čeština"d)]);
     ui.addIntComboBox("interface/hintingMode", UIString("Font hinting mode"d), [StringListValue(0, "Normal"d), StringListValue(1, "Force Auto Hint"d), 
                 StringListValue(2, "Disabled"d), StringListValue(3, "Light"d)]);
     ui.addIntComboBox("interface/minAntialiasedFontSize", UIString("Minimum font size for antialiasing"d), 

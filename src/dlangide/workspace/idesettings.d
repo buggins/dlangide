@@ -5,7 +5,7 @@ import dlangui.core.i18n;
 import dlangui.graphics.fonts;
 
 const AVAILABLE_THEMES = ["ide_theme_default", "ide_theme_dark"];
-const AVAILABLE_LANGUAGES = ["en", "ru", "es"];
+const AVAILABLE_LANGUAGES = ["en", "ru", "es", "cs"];
 
 class IDESettings : SettingsFile {
 
