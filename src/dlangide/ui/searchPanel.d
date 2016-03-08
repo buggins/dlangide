@@ -170,6 +170,10 @@ class SearchWidget : TabWidget {
         }
         return true;
     }
+    
+    public void setSearchText(dstring txt){
+        _findText.text = txt;
+    }
 
     protected bool onEditorAction(const Action action) {
         if (action.id == EditorActions.InsertNewLine) {
