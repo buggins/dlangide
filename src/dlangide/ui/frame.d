@@ -986,6 +986,8 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     _logPanel.getTabs.selectTab("search");
                     if(searchPanel !is null) { 
                         searchPanel.focus();
+                        dstring selectedText = currentEditor.getSelectedText();
+                        searchPanel.setSearchText(selectedText);
                     }
                     return true;
                 case IDEActions.FileNewWorkspace:
