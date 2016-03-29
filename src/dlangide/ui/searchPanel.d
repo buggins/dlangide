@@ -38,11 +38,11 @@ class SearchLogWidget : LogWidget {
 
     /// handle theme change: e.g. reload some themed resources
     override void onThemeChanged() {
+        super.onThemeChanged();
         _filenameColor = style.customColor("build_log_filename_color", 0x0000C0);
         _errorColor = style.customColor("build_log_error_color", 0xFF0000);
         _warningColor = style.customColor("build_log_warning_color", 0x606000);
         _deprecationColor = style.customColor("build_log_deprecation_color", 0x802040);
-        super.onThemeChanged();
     }
 
     override protected CustomCharProps[] handleCustomLineHighlight(int line, dstring txt, ref CustomCharProps[] buf) {
