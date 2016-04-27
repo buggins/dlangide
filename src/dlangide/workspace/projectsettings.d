@@ -7,6 +7,7 @@ import dlangide.workspace.idesettings;
 
 import std.string;
 import std.array;
+import std.algorithm : equal;
 
 const AVAILABLE_TOOLCHAINS = ["default", "dmd", "ldc", "gdc"];
 const AVAILABLE_ARCH = ["default", "x86", "x86_64", "arm", "arm64"];

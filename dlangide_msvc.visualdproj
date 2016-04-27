@@ -480,6 +480,11 @@
     <File path="deps\DCD\libdparse\src\std\experimental\lexer.d" />
     <File path="deps\DCD\libdparse\src\dparse\lexer.d" />
     <File path="deps\DCD\libdparse\src\dparse\parser.d" />
+    <File path="deps\DCD\libdparse\src\dparse\rollback_allocator.d" />
+    <File path="deps\DCD\libdparse\src\dparse\stack_buffer.d" />
+   </Folder>
+   <Folder name="msgpack">
+    <File path="deps\DCD\msgpack-d\src\msgpack.d" />
    </Folder>
   </Folder>
   <Folder name="ddc">

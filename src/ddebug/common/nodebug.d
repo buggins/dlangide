@@ -87,6 +87,8 @@ dummy_var=""
 read dummy_var
 exit $exit_code
 `;
+            static import std.file;
+            static import std.path;
             std.file.write(std.path.buildPath(_executableWorkingDir, "dlangide_run_script.sh"), shellScript);
             string setExecFlagCommand = escapeShellCommand("chmod", "+x", "dlangide_run_script.sh");
             spawnShell(setExecFlagCommand, stdin, stdout, stderr, null, Config.none, _executableWorkingDir);

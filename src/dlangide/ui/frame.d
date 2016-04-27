@@ -39,7 +39,9 @@ import ddebug.gdb.gdbinterface;
 
 import std.conv;
 import std.utf;
-import std.algorithm;
+import std.algorithm : equal, endsWith;
+import std.array : empty;
+import std.string : split;
 import std.path;
 
 bool isSupportedSourceTextFileFormat(string filename) {

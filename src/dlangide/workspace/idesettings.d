@@ -4,6 +4,8 @@ import dlangui.core.settings;
 import dlangui.core.i18n;
 import dlangui.graphics.fonts;
 
+import std.algorithm : equal;
+
 const AVAILABLE_THEMES = ["ide_theme_default", "ide_theme_dark"];
 const AVAILABLE_LANGUAGES = ["en", "ru", "es", "cs"];
 

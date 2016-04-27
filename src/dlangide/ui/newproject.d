@@ -21,6 +21,7 @@ import dlangide.ui.frame;
 import std.path;
 import std.file;
 import std.array : empty;
+import std.utf : toUTF32, toUTF8;
 
 class ProjectCreationResult {
     Workspace workspace;

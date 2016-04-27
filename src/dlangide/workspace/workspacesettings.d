@@ -5,7 +5,8 @@ import dlangui.core.i18n;
 import ddebug.common.debugger;
 import dlangide.workspace.project;
 
-import std.array;
+import std.array : empty;
+import std.algorithm : equal;
 
 /// local settings for workspace (not supposed to put under source control)
 class WorkspaceSettings : SettingsFile {

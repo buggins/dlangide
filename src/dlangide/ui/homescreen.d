@@ -8,6 +8,7 @@ import dlangide.ui.frame;
 import dlangide.ui.commands;
 
 import std.path;
+import std.utf : toUTF32;
 
 class HomeScreen : ScrollWidget {
     protected IDEFrame _frame;
