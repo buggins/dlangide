@@ -33,6 +33,7 @@ abstract class ConsoleDebuggerInterface : DebuggerBase, TextWriter {
     protected void onDebuggerStdoutLine(string line) {
     }
     private void onStdoutText(string text) {
+        Log.v("onStdoutText: ", text);
         _stdoutBuf ~= text;
         // pass full lines
         int startPos = 0;
@@ -53,6 +54,7 @@ abstract class ConsoleDebuggerInterface : DebuggerBase, TextWriter {
             }
         }
         if (fullLinesFound) {
+            //Log.v("onStdoutText: full lines found");
             for (int i = 0; i + startPos < _stdoutBuf.length; i++)
                 _stdoutBuf[i] = _stdoutBuf[i + startPos];
             _stdoutBuf.length = _stdoutBuf.length - startPos;
@@ -632,7 +634,7 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
     }
 
     override protected void onDebuggerStdoutLine(string gdbLine) {
-        //Log.d("GDB stdout: '", line, "'");
+        Log.d("GDB stdout: '", gdbLine, "'");
         string line = gdbLine;
         if (line.empty)
             return;

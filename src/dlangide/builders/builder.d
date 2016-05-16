@@ -69,8 +69,17 @@ class Builder : BackgroundOperationWatcher {
         scope(exit)pollText();
         ExternalProcessState state = _extprocess.state;
         if (state == ExternalProcessState.None) {
+            import dlangui.core.files;
+            string exepath = findExecutablePath(_executable);
+            if (!exepath) {
+                _finished = true;
+                destroy(_extprocess);
+                _extprocess = null;
+                return;
+            }
+
             _log.clear();
-            char[] program = _executable.dup;
+            char[] program = exepath.dup;
             char[][] params;
             char[] dir = _project.dir.dup;
 

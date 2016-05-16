@@ -111,11 +111,13 @@ class BackgroundReaderBase : Thread {
             _bytes.length = _bytes.length ? _bytes.length * 2 : 1024;
         bool eolchar = (data == '\r' || data == '\n');
         bool preveol = (prevchar == '\r' || prevchar == '\n');
-        if ((eolchar && !preveol) || (!eolchar && preveol)) {
-            //Log.d("Flushing for prevChar=", prevchar, " newChar=", data);
-            flush();
-        }
         _bytes[_len++] = data;
+        if (data == '\n')
+            flush();
+        //if ((eolchar && !preveol) || (!eolchar && preveol) || data == '\n') {
+        //    //Log.d("Flushing for prevChar=", prevchar, " newChar=", data);
+        //    flush();
+        //}
         prevchar = data;
     }
     void flush() {
