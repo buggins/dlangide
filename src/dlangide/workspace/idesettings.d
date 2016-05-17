@@ -28,7 +28,11 @@ class IDESettings : SettingsFile {
         ui.setIntegerDef("hintingMode", 1);
         ui.setIntegerDef("minAntialiasedFontSize", 0);
         ui.setFloatingDef("fontGamma", 0.8);
-        debuggerSettings.setStringDef("executable", "gdb");
+        version (Windows) {
+            debuggerSettings.setStringDef("executable", "mago-mi");
+        } else {
+            debuggerSettings.setStringDef("executable", "gdb");
+        }
         terminalSettings.setStringDef("executable", "xterm");
         dubSettings.setStringDef("executable", "dub");
         dubSettings.setStringDef("additional_params", "");
@@ -175,7 +179,11 @@ class IDESettings : SettingsFile {
     }
 
     @property string debuggerExecutable() {
-        return debuggerSettings.getString("executable", "gdb");
+        version (Windows) {
+            return debuggerSettings.getString("executable", "mago-mi");
+        } else {
+            return debuggerSettings.getString("executable", "gdb");
+        }
     }
 
     @property string terminalExecutable() {

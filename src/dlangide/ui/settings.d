@@ -72,7 +72,11 @@ SettingsPage createSettingsPages() {
     rdmd.addExecutableFileNameEdit("dlang/rdmd/executable", UIString("rdmd executable"d), "rdmd");
     rdmd.addStringEdit("dlang/rdmd/additional_params", UIString("rdmd additional params"d), "");
     SettingsPage ddebug = dlang.addChild("dlang/debugger", UIString("Debugger"d));
-    ddebug.addExecutableFileNameEdit("dlang/debugger/executable", UIString("Debugger executable"d), "gdb");
+    version (Windows) {
+        ddebug.addExecutableFileNameEdit("dlang/debugger/executable", UIString("Debugger executable"d), "gdb");
+    } else {
+        ddebug.addExecutableFileNameEdit("dlang/debugger/executable", UIString("Debugger executable"d), "mago-mi");
+    }
     SettingsPage terminal = dlang.addChild("dlang/terminal", UIString("Terminal"d));
     terminal.addExecutableFileNameEdit("dlang/terminal/executable", UIString("Terminal executable"d), "xterm");
 
