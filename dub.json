@@ -16,5 +16,10 @@
         "dcd": "~>0.8.0"
     },
 
+    "copyFiles-windows": [
+        "libs/windows/x86/mago-mi.exe",
+        "libs/windows/x86/udis86.dll"
+    ],
+
     "versions": ["EmbedStandardResources"]
 }
