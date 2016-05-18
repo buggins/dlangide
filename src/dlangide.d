@@ -27,10 +27,15 @@ extern (C) int UIAppMain(string[] args) {
         }
     }
 
+    //version (Windows) {
+    //    import derelict.lldb.lldbtest;
+    //    runLldbTests();
+    //}
+
     // embed non-standard resources listed in views/resources.list into executable
     embeddedResourceList.addResources(embedResourcesFromList!("resources.list")());
 
-     Platform.instance.uiTheme = "ide_theme_default";
+    Platform.instance.uiTheme = "ide_theme_default";
 
     // you can override default hinting mode here
     //FontManager.hintingMode = HintingMode.Light;
