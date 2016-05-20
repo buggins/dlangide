@@ -8,6 +8,7 @@ import std.utf;
 import std.stdio;
 import core.thread;
 import core.sync.mutex;
+import dlangui.core.files;
 
 /// interface to forward process output to
 interface TextWriter {
@@ -293,7 +294,12 @@ class ExternalProcess {
     ExternalProcessState run(char[] program, char[][]args, char[] dir, TextWriter stdoutTarget, TextWriter stderrTarget = null) {
         Log.d("ExternalProcess.run ", program, " ", args);
         _state = ExternalProcessState.None;
-        _program = program;
+        _program = findExecutablePath(cast(string)program).dup;
+        if (!_program) {
+            _state = ExternalProcessState.Error;
+            Log.e("Executable not found for ", program);
+            return _state;
+        }
         _args = args;
         _workDir = dir;
         _stdout = stdoutTarget;

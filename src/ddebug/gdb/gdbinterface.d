@@ -344,6 +344,34 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
         return null;
     }
 
+    static string quotePathIfNeeded(string s) {
+        char[] buf;
+        buf.assumeSafeAppend();
+        bool hasSpaces = false;
+        for(uint i = 0; i < s.length; i++) {
+            if (s[i] == ' ')
+                hasSpaces = true;
+        }
+        if (hasSpaces)
+            buf ~= '\"';
+        for(uint i = 0; i < s.length; i++) {
+            char ch = s[i];
+            if (ch == '\t')
+                buf ~= "\\t";
+            else if (ch == '\n')
+                buf ~= "\\n";
+            else if (ch == '\r')
+                buf ~= "\\r";
+            else if (ch == '\\')
+                buf ~= "\\\\";
+            else 
+                buf ~= ch;
+        }
+        if (hasSpaces)
+            buf ~= '\"';
+        return buf.dup;
+    }
+
     class AddBreakpointRequest : GDBRequest {
         GDBBreakpoint gdbbp;
         this(Breakpoint bp) { 
@@ -353,7 +381,7 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
             cmd ~= "-break-insert ";
             if (!bp.enabled)
                 cmd ~= "-d "; // create disabled
-            cmd ~= bp.fullFilePath;
+            cmd ~= quotePathIfNeeded(bp.fullFilePath);
             cmd ~= ":";
             cmd ~= to!string(bp.line);
             command = cmd.dup; 
