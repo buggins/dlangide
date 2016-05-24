@@ -17,8 +17,7 @@
     },
 
     "copyFiles-windows": [
-        "libs/windows/x86/mago-mi.exe",
-        "libs/windows/x86/udis86.dll"
+        "libs/windows/x86/mago-mi.exe"
     ],
 
     "versions": ["EmbedStandardResources"]
