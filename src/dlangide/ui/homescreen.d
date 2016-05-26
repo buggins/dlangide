@@ -17,7 +17,7 @@ class HomeScreen : ScrollWidget {
     protected VerticalLayout _recentItems;
     this(string ID, IDEFrame frame) {
         super(ID);
-        styleId = STYLE_EDIT_BOX;
+        //styleId = STYLE_EDIT_BOX;
         _frame = frame;
         uint linkColor = currentTheme.customColor("link_color", 0x2020FF);
         _content = new HorizontalLayout("HOME_SCREEN_BODY");
