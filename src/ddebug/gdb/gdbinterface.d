@@ -319,7 +319,7 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
     /// interrupt execution
     int _pauseRequestId;
     void execPause() {
-        _pauseRequestId = submitRequest("-exec-interrupt");
+        _pauseRequestId = submitRequest("-exec-interrupt", true);
     }
 
     /// step over
@@ -602,9 +602,9 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
     }
 
     /// submit simple text command request
-    int submitRequest(string text) {
+    int submitRequest(string text, bool forceNoWaitDebuggerReady = false) {
         auto request = new GDBRequest(text);
-        _requests.submit(request);
+        _requests.submit(request, forceNoWaitDebuggerReady);
         return request.id;
     }
 
@@ -897,13 +897,14 @@ struct GDBRequestList {
             _activeRequests[request.id] = request;
     }
 
-    int submit(GDBRequest request) {
+    int submit(GDBRequest request, bool forceNoWaitDebuggerReady = false) {
         if (!request.id)
             request.id = _target.reserveCommandId();
         if (Log.traceEnabled)
             Log.v("submitting request " ~ to!string(request.id) ~ " " ~ request.command);
-        if (_ready || _synchronousMode) {
-            _ready = _synchronousMode;
+        if (_ready || _synchronousMode || forceNoWaitDebuggerReady) {
+            if (!forceNoWaitDebuggerReady)
+                _ready = _synchronousMode;
             executeRequest(request);
         } else
             _pendingRequests ~= request;
