@@ -80,7 +80,9 @@ abstract class ConsoleDebuggerInterface : DebuggerBase, TextWriter {
 
 interface TextCommandTarget {
     /// send command as a text string
-    int sendCommand(string text);
+    int sendCommand(string text, int commandId = 0);
+    /// reserve next command id
+    int reserveCommandId();
 }
 
 import std.process;
@@ -90,19 +92,26 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
         _requests.setTarget(this);
     }
 
-    protected int commandId;
+    // last command id
+    private int _commandId;
 
-    int sendCommand(string text) {
+    int reserveCommandId() {
+        _commandId++;
+        return _commandId;
+    }
+
+    int sendCommand(string text, int id = 0) {
         ExternalProcessState state = _debuggerProcess.poll();
         if (state != ExternalProcessState.Running) {
             _stopRequested = true;
             return 0;
         }
-        commandId++;
-        string cmd = to!string(commandId) ~ text;
-        Log.d("GDB command[", commandId, "]> ", text);
+        if (!id)
+            id = reserveCommandId();
+        string cmd = to!string(id) ~ text;
+        Log.d("GDB command[", id, "]> ", text);
         sendLine(cmd);
-        return commandId;
+        return id;
     }
 
     Pid terminalPid;
@@ -212,22 +221,36 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
         }
         debuggerArgs ~= "--interpreter=mi";
         debuggerArgs ~= "--silent";
-        debuggerArgs ~= "--args";
-        debuggerArgs ~= _executableFile;
-        foreach(arg; _executableArgs)
-            debuggerArgs ~= arg;
+        if (!USE_INIT_SEQUENCE) {
+            debuggerArgs ~= "--args";
+            debuggerArgs ~= _executableFile;
+            foreach(arg; _executableArgs)
+                debuggerArgs ~= arg;
+        }
         ExternalProcessState state = runDebuggerProcess(_debuggerExecutable, debuggerArgs, _executableWorkingDir);
-        Log.i("Debugger process state:");
-        if (state == ExternalProcessState.Running) {
-            Thread.sleep(dur!"seconds"(1));
-            _callback.onProgramLoaded(true, true);
-            //sendCommand("-break-insert main");
+        Log.i("Debugger process state:", state);
+        if (USE_INIT_SEQUENCE) {
+            if (state == ExternalProcessState.Running) {
+                submitInitRequests();
+            } else {
+                _status = ExecutionStatus.Error;
+                _stopRequested = true;
+                return;
+            }
         } else {
-            _status = ExecutionStatus.Error;
-            _stopRequested = true;
-            return;
+            if (state == ExternalProcessState.Running) {
+                Thread.sleep(dur!"seconds"(1));
+                _callback.onProgramLoaded(true, true);
+                //sendCommand("-break-insert main");
+            } else {
+                _status = ExecutionStatus.Error;
+                _stopRequested = true;
+                return;
+            }
         }
     }
+
+    immutable bool USE_INIT_SEQUENCE = true;
 
     override protected void onDebuggerThreadFinished() {
         Log.d("Debugger thread finished");
@@ -273,46 +296,46 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
     /// start program execution, can be called after program is loaded
     int _startRequestId;
     void execStart() {
-        sendCommand("handle SIGUSR1 nostop noprint");
-        sendCommand("handle SIGUSR2 nostop noprint");
-        _startRequestId = sendCommand("-exec-run");
+        submitRequest("handle SIGUSR1 nostop noprint");
+        submitRequest("handle SIGUSR2 nostop noprint");
+        _startRequestId = submitRequest("-exec-run");
     }
 
     void execAbort() {
-        _startRequestId = sendCommand("-exec-abort");
+        _startRequestId = submitRequest("-exec-abort");
     }
 
     /// start program execution, can be called after program is loaded
     int _continueRequestId;
     void execContinue() {
-        _continueRequestId = sendCommand("-exec-continue");
+        _continueRequestId = submitRequest("-exec-continue");
     }
 
     /// stop program execution
     int _stopRequestId;
     void execStop() {
-        _continueRequestId = sendCommand("-gdb-exit");
+        _continueRequestId = submitRequest("-gdb-exit");
     }
     /// interrupt execution
     int _pauseRequestId;
     void execPause() {
-        _pauseRequestId = sendCommand("-exec-interrupt");
+        _pauseRequestId = submitRequest("-exec-interrupt");
     }
 
     /// step over
     int _stepOverRequestId;
     void execStepOver(ulong threadId) {
-        _stepOverRequestId = sendCommand("-exec-next".appendThreadParam(threadId));
+        _stepOverRequestId = submitRequest("-exec-next".appendThreadParam(threadId));
     }
     /// step in
     int _stepInRequestId;
     void execStepIn(ulong threadId) {
-        _stepInRequestId = sendCommand("-exec-step".appendThreadParam(threadId));
+        _stepInRequestId = submitRequest("-exec-step".appendThreadParam(threadId));
     }
     /// step out
     int _stepOutRequestId;
     void execStepOut(ulong threadId) {
-        _stepOutRequestId = sendCommand("-exec-finish".appendThreadParam(threadId));
+        _stepOutRequestId = submitRequest("-exec-finish".appendThreadParam(threadId));
     }
     /// restart
     int _restartRequestId;
@@ -440,15 +463,15 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
         }
         if (breakpointsToDelete.length) {
             Log.d("Deleting breakpoints: " ~ breakpointsToDelete);
-            sendCommand(("-break-delete " ~ breakpointsToDelete).dup);
+            submitRequest(("-break-delete " ~ breakpointsToDelete).dup);
         }
         if (breakpointsToEnable.length) {
             Log.d("Enabling breakpoints: " ~ breakpointsToEnable);
-            sendCommand(("-break-enable " ~ breakpointsToEnable).dup);
+            submitRequest(("-break-enable " ~ breakpointsToEnable).dup);
         }
         if (breakpointsToDisable.length) {
             Log.d("Disabling breakpoints: " ~ breakpointsToDisable);
-            sendCommand(("-break-disable " ~ breakpointsToDisable).dup);
+            submitRequest(("-break-disable " ~ breakpointsToDisable).dup);
         }
     }
 
@@ -578,10 +601,116 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
         _requests.submit(requests[0]);
     }
 
+    /// submit simple text command request
+    int submitRequest(string text) {
+        auto request = new GDBRequest(text);
+        _requests.submit(request);
+        return request.id;
+    }
+
     /// request stack trace and local vars for thread and frame
     void requestDebugContextInfo(ulong threadId, int frame) {
         Log.d("requestDebugContextInfo threadId=", threadId, " frame=", frame);
         submitRequest(new StackListFramesRequest(threadId, frame));
+    }
+
+    private int initRequestsSuccessful = 0;
+    private int initRequestsError = 0;
+    private int initRequestsWarnings = 0;
+    private int totalInitRequests = 0;
+    private int finishedInitRequests = 0;
+    class GDBInitRequest : GDBRequest {
+        bool _mandatory;
+        this(string cmd, bool mandatory) { 
+            command = cmd; 
+            _mandatory = mandatory;
+            totalInitRequests++;
+        }
+
+        override void onOtherResult() {
+            initRequestsSuccessful++;
+            finishedInitRequests++;
+            checkFinished();
+        }
+        
+        override void onResult() {
+            initRequestsSuccessful++;
+            finishedInitRequests++;
+            checkFinished();
+        }
+
+        /// called if resultClass is error
+        override void onError() {
+            if (_mandatory)
+                initRequestsError++;
+            else
+                initRequestsWarnings++;
+            finishedInitRequests++;
+            checkFinished();
+        }
+
+        void checkFinished() {
+            if (initRequestsError)
+                initRequestsCompleted(false);
+            else if (finishedInitRequests == totalInitRequests)
+                initRequestsCompleted(true);
+        }
+    }
+
+    void initRequestsCompleted(bool successful = true) {
+        Log.d("Init sequence complection result: ", successful);
+        if (successful) {
+            // ok
+            _callback.onProgramLoaded(true, true);
+        } else {
+            // error
+            _requests.cancelPendingRequests();
+            _status = ExecutionStatus.Error;
+            _stopRequested = true;
+        }
+    }
+
+    void submitInitRequests() {
+        initRequestsSuccessful = 0;
+        initRequestsError = 0;
+        totalInitRequests = 0;
+        initRequestsWarnings = 0;
+        finishedInitRequests = 0;
+        submitRequest(new GDBInitRequest("-environment-cd " ~ quotePathIfNeeded(_executableWorkingDir), true));
+        if (terminalTty)
+            submitRequest(new GDBInitRequest("-inferior-tty-set " ~ terminalTty, true));
+        
+        submitRequest(new GDBInitRequest("-gdb-set breakpoint pending on", false));
+        submitRequest(new GDBInitRequest("-enable-pretty-printing", false));
+        submitRequest(new GDBInitRequest("-gdb-set print object on", false));
+        submitRequest(new GDBInitRequest("-gdb-set print sevenbit-strings on", false));
+        submitRequest(new GDBInitRequest("-gdb-set host-charset UTF-8", false));
+        //11-gdb-set target-charset WINDOWS-1252
+        //12-gdb-set target-wide-charset UTF-16
+        //13source .gdbinit
+        submitRequest(new GDBInitRequest("-gdb-set target-async off", false));
+        submitRequest(new GDBInitRequest("-gdb-set auto-solib-add on", false));
+        if (_executableArgs.length) {
+            char[] buf;
+            for(uint i = 0; i < _executableArgs.length; i++) {
+                if (i > 0) 
+                    buf ~= " ";
+                buf ~= quotePathIfNeeded(_executableArgs[i]);
+            }
+            submitRequest(new GDBInitRequest(("-exec-arguments " ~ buf).dup, true));
+        }
+        submitRequest(new GDBInitRequest("-file-exec-and-symbols " ~ quotePathIfNeeded(_executableFile), true));
+
+        //debuggerArgs ~= _executableFile;
+        //foreach(arg; _executableArgs)
+        //    debuggerArgs ~= arg;
+        //ExternalProcessState state = runDebuggerProcess(_debuggerExecutable, debuggerArgs, _executableWorkingDir);
+        //17-gdb-show language
+        //18-gdb-set language c
+        //19-interpreter-exec console "p/x (char)-1"
+        //20-data-evaluate-expression "sizeof (void*)"
+        //21-gdb-set language auto
+
     }
 
     class ThreadInfoRequest : GDBRequest {
@@ -655,6 +784,7 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
     // (gdb)
     void onDebuggerIdle() {
         Log.d("GDB idle");
+        _requests.targetIsReady();
         if (_firstIdle) {
             _firstIdle = false;
             return;
@@ -718,6 +848,13 @@ class GDBRequest {
     MIValue params;
     GDBRequest next;
 
+    this() {
+    }
+
+    this(string cmdtext) {
+        command = cmdtext;
+    }
+
     /// called if resultClass is done
     void onResult() {
     }
@@ -737,17 +874,60 @@ class GDBRequest {
 
 struct GDBRequestList {
 
+    private bool _synchronousMode = false;
+
+    void setSynchronousMode(bool flg) {
+        _synchronousMode = flg;
+        _ready = _ready | _synchronousMode;
+    }
+
     private TextCommandTarget _target;
     private GDBRequest[int] _activeRequests;
+    private GDBRequest[] _pendingRequests;
+
+    private bool _ready = false;
 
     void setTarget(TextCommandTarget target) {
         _target = target;
     }
-    
-    void submit(GDBRequest request) {
-        request.id = _target.sendCommand(request.command);
+
+    private void executeRequest(GDBRequest request) {
+        request.id = _target.sendCommand(request.command, request.id);
         if (request.id)
             _activeRequests[request.id] = request;
+    }
+
+    int submit(GDBRequest request) {
+        if (!request.id)
+            request.id = _target.reserveCommandId();
+        if (Log.traceEnabled)
+            Log.v("submitting request " ~ to!string(request.id) ~ " " ~ request.command);
+        if (_ready || _synchronousMode) {
+            _ready = _synchronousMode;
+            executeRequest(request);
+        } else
+            _pendingRequests ~= request;
+        return request.id;
+    }
+
+    // (gdb) prompt received
+    void targetIsReady() {
+        _ready = true;
+        if (_pendingRequests.length) {
+            // execute next pending request
+            GDBRequest next = _pendingRequests[0];
+            for (uint i = 0; i + 1 < _pendingRequests.length; i++)
+                _pendingRequests[i] = _pendingRequests[i + 1];
+            _pendingRequests[$ - 1] = null;
+            _pendingRequests.length = _pendingRequests.length - 1;
+            executeRequest(next);
+        }
+    }
+
+    void cancelPendingRequests() {
+        foreach(ref r; _pendingRequests)
+            r = null; // just to help GC
+        _pendingRequests.length = 0;
     }
 
     bool handleResult(int token, ResultClass resultClass, MIValue params) {

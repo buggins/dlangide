@@ -73,8 +73,11 @@ class DebuggerUIHandler : DebuggerCallback, StackFrameSelectedHandler {
         _ide.logPanel.logLine("Program is loaded");
         switchToDebugPerspective();
         // TODO: check succes status and debug info
-        if (_breakpoints.length)
+        if (_breakpoints.length) {
+            Log.v("Setting breakpoints");
             _debugger.setBreakpoints(_breakpoints);
+        }
+        Log.v("Starting execution");
         _debugger.execStart();
     }
 
