@@ -78,6 +78,73 @@ struct TerminalContent {
     int cursorx;
     int cursory;
     bool focused;
+    bool _lineWrap = true;
+    @property void lineWrap(bool v) {
+        _lineWrap = v;
+    }
+    void resetTerminal() {
+        for (int i = topLine; i < cast(int)lines.length; i++) {
+            lines[i] = TerminalLine.init;
+        }
+        cursorx = 0;
+        cursory = topLine;
+    }
+    @property int screenTopLine() {
+        int y = cast(int)lines.length - height;
+        if (y < 0)
+            y = 0;
+        return y;
+    }
+    void eraseScreen(int direction, bool forLine) {
+        if (forLine) {
+            for (int x = 0; x < width; x++) {
+                if ((direction == 1 && x <= cursorx) || (direction < 1 && x >= cursorx) || (direction == 2))
+                    putCharAt(' ', x, cursory);
+            }
+        } else {
+            int screenTop = screenTopLine;
+            for (int y = 0; y < height; y++) {
+                int yy = screenTop + y;
+                if ((direction == 1 && yy <= cursory) || (direction < 1 && yy >= cursory) || (direction == 2)) {
+                    for (int x = 0; x < width; x++) {
+                        putCharAt(' ', x, yy);
+                    }
+                }
+            }
+            if (direction == 2) {
+                cursorx = 0;
+                cursory = screenTop;
+            }
+        }
+    }
+    void moveCursorBy(int x, int y) {
+        if (x) {
+            cursorx += x;
+            if (cursorx < 0)
+                cursorx = 0;
+            if (cursorx > width)
+                cursorx = width;
+        } else if (y) {
+            int screenTop = screenTopLine;
+            cursory += y;
+            if (cursory < screenTop)
+                cursory = screenTop;
+            else if (cursory >= screenTop + height)
+                cursory = screenTop + height - 1;
+        }
+    }
+    void moveCursorTo(int x, int y) {
+        int screenTop = screenTopLine;
+        if (x < 0 || y < 0) {
+            cursorx = 0;
+            cursory = screenTop;
+            return;
+        }
+        if (x >= 1 && x <= width + 1 && y >= 1 && x <= height) {
+            cursorx = x - 1;
+            cursory = screenTop + y - 1;
+        }
+    }
     void layout(FontRef font, Rect rc) {
         this.rc = rc;
         this.font = font;
@@ -108,7 +175,7 @@ struct TerminalContent {
             TerminalLine * p = &lines[i + topLine];
             // draw line in rect
             for (int x = 0; x < width; x++) {
-                bool isCursorPos = x == cursorx && i + topLine == cursory + screenTopLine;
+                bool isCursorPos = x == cursorx && i + topLine == cursory;
                 TerminalChar ch = x < p.line.length ? p.line[x] : TerminalChar.init;
                 uint bgcolor = attrToColor(ch.attr.bgColor);
                 uint textcolor = attrToColor(ch.attr.textColor);
@@ -134,35 +201,30 @@ struct TerminalContent {
             lineRect.top = lineRect.bottom;
         }
     }
-    TerminalLine * getLine(ref int yy) {
-        if (yy < 0)
-            yy = 0;
-        if (yy > height)
-            yy = height;
-        if (yy == height) {
-            topLine++;
-            yy--;
-        }
-        int y = yy;
-        y = topLine + y;
+
+    void clearExtraLines(ref int yy) {
+        int y = cast(int)lines.length;
         if (y >= maxBufferLines) {
             int delta = y - maxBufferLines;
             for (uint i = 0; i + delta < maxBufferLines && i + delta < lines.length; i++) {
                 lines[i] = lines[i + delta];
             }
-            y -= delta;
-            if (lines.length < maxBufferLines) {
-                size_t oldlen = lines.length;
-                lines.length = maxBufferLines;
-                for(auto i = oldlen; i < lines.length; i++)
-                    lines[i] = TerminalLine.init;
-            }
+            lines.length = lines.length - delta;
+            yy -= delta;
+            topLine -= delta;
+            if (topLine < 0)
+                topLine = 0;
         }
-        if (cast(uint)y >= lines.length) {
-            for (auto i = lines.length; i <= y; i++)
-                lines ~= TerminalLine.init;
+    }
+
+    TerminalLine * getLine(ref int yy) {
+        if (yy < 0)
+            yy = 0;
+        while(yy >= cast(int)lines.length) {
+            lines ~= TerminalLine.init;
         }
-        return &lines[y];
+        clearExtraLines(yy);
+        return &lines[yy];
     }
     void putCharAt(dchar ch, ref int x, ref int y) {
         if (x < 0)
@@ -175,20 +237,36 @@ struct TerminalContent {
             x = 0;
         }
         line.putCharAt(ch, x, currentAttr);
+        ensureCursorIsVisible();
     }
     int tabSize = 8;
     // supports printed characters and \r \n \t
     void putChar(dchar ch) {
-        if (ch == '\r') {
-            cursorx = 0;
+        if (ch == '\a') {
+            // bell
             return;
         }
-        if (ch == '\n') {
+        if (ch == '\b') {
+            // backspace
+            if (cursorx > 0) {
+                cursorx--;
+                putCharAt(' ', cursorx, cursory);
+                ensureCursorIsVisible();
+            }
+            return;
+        }
+        if (ch == '\r') {
+            cursorx = 0;
+            ensureCursorIsVisible();
+            return;
+        }
+        if (ch == '\n' || ch == '\f' || ch == '\v') {
             TerminalLine * line = getLine(cursory);
             line.markLineEol();
             cursory++;
             line = getLine(cursory);
             cursorx = 0;
+            ensureCursorIsVisible();
             return;
         }
         if (ch == '\t') {
@@ -205,15 +283,25 @@ struct TerminalContent {
                     cursorx++;
                 }
             }
+            ensureCursorIsVisible();
             return;
         }
         putCharAt(ch, cursorx, cursory);
         cursorx++;
+        ensureCursorIsVisible();
+    }
+
+    void ensureCursorIsVisible() {
+        topLine = cast(int)lines.length - height;
+        if (topLine < 0)
+            topLine = 0;
+        if (cursory < topLine)
+            cursory = topLine;
     }
 
     void updateScrollBar(ScrollBar sb) {
         sb.pageSize = height;
-        sb.maxValue = lines.length ? lines.length - 1 : 0;
+        sb.maxValue = cast(int)lines.length;
         sb.position = topLine;
     }
 
@@ -345,7 +433,7 @@ class TerminalWidget : WidgetGroup, OnScrollHandler {
         dchar[] decoded;
         decoded.assumeSafeAppend;
         dchar ch = 0;
-        for (;;) {
+        while (index < outputBuffer.length) {
             size_t oldindex = index;
             try {
                 ch = decode(outputBuffer, index);
@@ -370,6 +458,19 @@ class TerminalWidget : WidgetGroup, OnScrollHandler {
             write(cast(dstring)decoded);
     }
 
+    static bool parseParam(dchar[] buf, ref int index, ref int value) {
+        if (index >= buf.length)
+            return false;
+        if (buf[index] < '0' || buf[index] > '9')
+            return false;
+        value = 0;
+        while (index < buf.length && buf[index] >= '0' && buf[index] <= '9') {
+            value = value * 10 + (buf[index] - '0');
+            index++;
+        }
+        return true;
+    }
+
     private dchar[] outputChars;
     // write utf32
     void write(dstring chars) {
@@ -381,13 +482,104 @@ class TerminalWidget : WidgetGroup, OnScrollHandler {
             return;
         uint i = 0;
         for (; i < outputChars.length; i++) {
-            int ch = outputChars[i];
+            bool unfinished = false;
+            dchar ch = outputChars[i];
+            dchar ch2 = i + 1 < outputChars.length ? outputChars[i + 1] : 0;
+            dchar ch3 = i + 2 < outputChars.length ? outputChars[i + 2] : 0;
+            //dchar ch4 = i + 3 < outputChars.length ? outputChars[i + 3] : 0;
             if (ch < ' ') {
                 // control character
-                switch(ch) {
-                    case '\r':
-                    case '\n':
-                    case '\t':
+                if (ch == 27) {
+                    if (ch2 == 0)
+                        break; // unfinished ESC sequence
+                    // ESC sequence
+                    if (ch2 == '[') {
+                        // ESC [
+                        if (!ch3)
+                            break; // unfinished
+                        int param1 = -1;
+                        int param2 = -1;
+                        int index = i + 2;
+                        bool questionMark = false;
+                        if (index < outputChars.length && outputChars[index] == '?') {
+                            questionMark = true;
+                            index++;
+                        }
+                        parseParam(outputChars, index, param1);
+                        if (index < outputChars.length && outputChars[index] == ';') {
+                            index++;
+                            parseParam(outputChars, index, param2);
+                        }
+                        if (index >= outputChars.length)
+                            break; // unfinished sequence: not enough chars
+                        int param1def1 = param1 >= 1 ? param1 : 1;
+                        ch3 = outputChars[index];
+                        i = index;
+                        // command is parsed completely, ch3 == command type char
+
+                        // ESC[7h and ESC[7l -- enable/disable line wrap
+                        if (param1 == '7' && (ch3 == 'h' || ch3 == 'l')) {
+                            _content.lineWrap(ch3 == 'h');
+                            continue;
+                        }
+                        if (ch3 == 'H' || ch3 == 'f') {
+                            _content.moveCursorTo(param2, param1);
+                            continue;
+                        }
+                        if (ch3 == 'A') { // cursor up
+                            _content.moveCursorBy(0, -param1def1);
+                            continue;
+                        }
+                        if (ch3 == 'B') { // cursor down
+                            _content.moveCursorBy(0, param1def1);
+                            continue;
+                        }
+                        if (ch3 == 'C') { // cursor forward
+                            _content.moveCursorBy(param1def1, 0);
+                            continue;
+                        }
+                        if (ch3 == 'D') { // cursor back
+                            _content.moveCursorBy(-param1def1, 0);
+                            continue;
+                        }
+                        if (ch3 == 'K' || ch3 == 'J') {
+                            _content.eraseScreen(param1, ch3 == 'K');
+                            continue;
+                        }
+                    } else switch(ch2) {
+                    case 'c':
+                        _content.resetTerminal();
+                        i++;
+                        break;
+                    case '=': // Set alternate keypad mode
+                    case '>': // Set numeric keypad mode
+                    case 'N': // Set single shift 2
+                    case 'O': // Set single shift 3
+                    case 'H': // Set a tab at the current column
+                    case '<': // Enter/exit ANSI mode (VT52)
+                        i++;
+                        // ignore
+                        break;
+                    case '(': // default font
+                    case ')': // alternate font
+                        i++;
+                        i++;
+                        // ignore
+                        break;
+                    default:
+                        // unsupported
+                        break;
+                    }
+                    if (unfinished)
+                        break;
+                } else switch(ch) {
+                    case '\a': // bell
+                    case '\f': // form feed
+                    case '\v': // vtab
+                    case '\r': // cr
+                    case '\n': // lf
+                    case '\t': // tab
+                    case '\b': // backspace
                         _content.putChar(ch);
                         break;
                     default:

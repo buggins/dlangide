@@ -161,11 +161,23 @@ class OutputPanel : DockWindow {
         _tabs.addTab(_terminalWidget, "Output"d);
         _terminalWidget.write("Hello\nSecond line\nTest\n"d);
         _terminalWidget.write("SomeString 123456789\rAwesomeString\n"d); // test \r
+        // testing tabs
         _terminalWidget.write("id\tname\tdescription\n"d);
         _terminalWidget.write("1\tFoo\tFoo line\n"d);
         _terminalWidget.write("2\tBar\tBar line\n"d);
         _terminalWidget.write("3\tFoobar\tFoo bar line\n"d);
-        _terminalWidget.write("Testing very long line. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n"d);
+        _terminalWidget.write("\n\n\n"d);
+        // testing line wrapping
+        _terminalWidget.write("Testing very long line. Юникод. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n"c);
+        // testing cursor position changes
+        _terminalWidget.write("\x1b[4;4HCURSOR(4,4)\x1b[HHOME\x1b[B*A\x1b[B*B\x1b[5C\x1b[D***\x1b[A*UP\x1b[3B*DOWN"d);
+        //_terminalWidget.write("\x1b[Jerased down"d);
+        //_terminalWidget.write("\x1b[1Jerased up"d);
+        //_terminalWidget.write("\x1b[2Jerased screen"d);
+        //_terminalWidget.write("\x1b[Kerased eol"d);
+        //_terminalWidget.write("\x1b[1Kerased bol"d);
+        //_terminalWidget.write("\x1b[2Kerased line"d);
+        //_terminalWidget.write("Юникод Unicode"d);
 
         return _tabs;
     }
