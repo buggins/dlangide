@@ -18,5 +18,9 @@
     <color id="build_log_deprecation_color" value="#802040"/>
 
     <drawable id="btn_check" value="btn_check"/>
+    <style id="TERMINAL" parent="EDIT_BOX_NO_FRAME"
+    />
+  
+
 </theme>
 

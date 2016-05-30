@@ -4,6 +4,7 @@ import dlangui;
 import dlangide.workspace.workspace;
 import dlangide.workspace.project;
 import dlangide.ui.frame;
+import dlangide.ui.terminal;
 
 import std.utf;
 import std.regex;
@@ -125,6 +126,7 @@ class OutputPanel : DockWindow {
     Signal!CompilerLogIssueClickHandler compilerLogIssueClickHandler;
 
     protected CompilerLogWidget _logWidget;
+    protected TerminalWidget _terminalWidget;
 
     TabWidget _tabs;
 
@@ -153,6 +155,17 @@ class OutputPanel : DockWindow {
         //_tabs.tabHost.styleId = STYLE_DOCK_WINDOW_BODY;
         _tabs.addTab(_logWidget, "Compiler Log"d);
         _tabs.selectTab("logwidget");
+
+        _terminalWidget = new TerminalWidget("TERMINAL");
+        _terminalWidget.layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT);
+        _tabs.addTab(_terminalWidget, "Output"d);
+        _terminalWidget.write("Hello\nSecond line\nTest\n"d);
+        _terminalWidget.write("SomeString 123456789\rAwesomeString\n"d); // test \r
+        _terminalWidget.write("id\tname\tdescription\n"d);
+        _terminalWidget.write("1\tFoo\tFoo line\n"d);
+        _terminalWidget.write("2\tBar\tBar line\n"d);
+        _terminalWidget.write("3\tFoobar\tFoo bar line\n"d);
+        _terminalWidget.write("Testing very long line. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n"d);
 
         return _tabs;
     }

@@ -53,7 +53,7 @@
   <cccmd>$(CC) -c</cccmd>
   <ccTransOpt>1</ccTransOpt>
   <program>$(DMDInstallDir)windows\bin\dmd.exe</program>
-  <imppath>$(ProjectDir)/../dlangui/src $(ProjectDir)/../dlangui/3rdparty $(ProjectDir)/../dlangui/deps/DerelictGL3/source  $(ProjectDir)/../dlangui/deps/DerelictUtil/source  $(ProjectDir)/../dlangui/deps/DerelictFT/source  $(ProjectDir)/../dlangui/deps/DerelictSDL2/source  $(ProjectDir)/../dlangui/deps/libdparse/src</imppath>
+  <imppath>$(ProjectDir)/../dlangui/src $(ProjectDir)/../dlangui/3rdparty $(ProjectDir)/../dlangui/deps/DerelictGL3/source  $(ProjectDir)/../dlangui/deps/DerelictUtil/source  $(ProjectDir)/../dlangui/deps/DerelictFT/source  $(ProjectDir)/../dlangui/deps/DerelictSDL2/source  $(ProjectDir)/../dlangui/deps/libdparse/src $(ProjectDir)/../DerelictLLDB/source</imppath>
   <fileImppath>views views/res views/res/i18n views/res/mdpi views/res/hdpi</fileImppath>
   <outdir>$(ConfigurationName)</outdir>
   <objdir>$(OutDir)</objdir>
@@ -72,7 +72,7 @@
   <debuglevel>0</debuglevel>
   <debugids>DebugInfo DCD</debugids>
   <versionlevel>0</versionlevel>
-  <versionids>EmbedStandardResources USE_FREETYPE</versionids>
+  <versionids>EmbedStandardResources</versionids>
   <dump_source>0</dump_source>
   <mapverbosity>0</mapverbosity>
   <createImplib>0</createImplib>
@@ -155,7 +155,7 @@
   <cccmd>$(CC) -c</cccmd>
   <ccTransOpt>1</ccTransOpt>
   <program>$(DMDInstallDir)windows\bin\dmd.exe</program>
-  <imppath>$(ProjectDir)/../dlangui/src $(ProjectDir)/../dlangui/3rdparty $(ProjectDir)/../dlangui/deps/DerelictGL3/source  $(ProjectDir)/../dlangui/deps/DerelictUtil/source  $(ProjectDir)/../dlangui/deps/DerelictFT/source  $(ProjectDir)/../dlangui/deps/DerelictSDL2/source  $(ProjectDir)/../dlangui/deps/libdparse/src</imppath>
+  <imppath>$(ProjectDir)/../dlangui/src $(ProjectDir)/../dlangui/3rdparty $(ProjectDir)/../dlangui/deps/DerelictGL3/source  $(ProjectDir)/../dlangui/deps/DerelictUtil/source  $(ProjectDir)/../dlangui/deps/DerelictFT/source  $(ProjectDir)/../dlangui/deps/DerelictSDL2/source  $(ProjectDir)/../dlangui/deps/libdparse/src $(ProjectDir)/../DerelictLLDB/source</imppath>
   <fileImppath>views views/res views/res/i18n views/res/mdpi views/res/hdpi</fileImppath>
   <outdir>$(ConfigurationName)</outdir>
   <objdir>$(OutDir)</objdir>
@@ -212,7 +212,7 @@
   <multiobj>0</multiobj>
   <singleFileCompilation>0</singleFileCompilation>
   <oneobj>0</oneobj>
-  <mscoff>0</mscoff>
+  <mscoff>1</mscoff>
   <trace>0</trace>
   <quiet>0</quiet>
   <verbose>0</verbose>
@@ -254,10 +254,10 @@
   <stackStomp>0</stackStomp>
   <compiler>0</compiler>
   <otherDMD>0</otherDMD>
-  <cccmd>$(CC) -c</cccmd>
+  <cccmd>$(CC) -c -v</cccmd>
   <ccTransOpt>1</ccTransOpt>
   <program>$(DMDInstallDir)windows\bin\dmd.exe</program>
-  <imppath>$(ProjectDir)/../dlangui/src $(ProjectDir)/../dlangui/3rdparty $(ProjectDir)/../dlangui/deps/DerelictGL3/source  $(ProjectDir)/../dlangui/deps/DerelictUtil/source  $(ProjectDir)/../dlangui/deps/DerelictFT/source  $(ProjectDir)/../dlangui/deps/DerelictSDL2/source  $(ProjectDir)/../dlangui/deps/libdparse/src</imppath>
+  <imppath>$(ProjectDir)/../dlangui/src $(ProjectDir)/../dlangui/3rdparty $(ProjectDir)/../dlangui/deps/DerelictGL3/source  $(ProjectDir)/../dlangui/deps/DerelictUtil/source  $(ProjectDir)/../dlangui/deps/DerelictFT/source  $(ProjectDir)/../dlangui/deps/DerelictSDL2/source  $(ProjectDir)/../dlangui/deps/libdparse/src $(ProjectDir)/../DerelictLLDB/source</imppath>
   <fileImppath>views views/res views/res/i18n views/res/mdpi views/res/hdpi</fileImppath>
   <outdir>$(ConfigurationName)</outdir>
   <objdir>$(OutDir)</objdir>
@@ -300,7 +300,7 @@
   <exefile>$(OutDir)\$(ProjectName).exe</exefile>
   <useStdLibPath>1</useStdLibPath>
   <cRuntime>2</cRuntime>
-  <privatePhobos>0</privatePhobos>
+  <privatePhobos>1</privatePhobos>
   <additionalOptions />
   <preBuildCommand />
   <postBuildCommand />
@@ -359,7 +359,7 @@
   <cccmd>$(CC) -c</cccmd>
   <ccTransOpt>1</ccTransOpt>
   <program>$(DMDInstallDir)windows\bin\dmd.exe</program>
-  <imppath>$(ProjectDir)/../dlangui/src $(ProjectDir)/../dlangui/3rdparty $(ProjectDir)/../dlangui/deps/DerelictGL3/source  $(ProjectDir)/../dlangui/deps/DerelictUtil/source  $(ProjectDir)/../dlangui/deps/DerelictFT/source  $(ProjectDir)/../dlangui/deps/DerelictSDL2/source $(ProjectDir)/../dlangui/deps/libdparse/src</imppath>
+  <imppath>$(ProjectDir)/../dlangui/src $(ProjectDir)/../dlangui/3rdparty $(ProjectDir)/../dlangui/deps/DerelictGL3/source  $(ProjectDir)/../dlangui/deps/DerelictUtil/source  $(ProjectDir)/../dlangui/deps/DerelictFT/source  $(ProjectDir)/../dlangui/deps/DerelictSDL2/source  $(ProjectDir)/../dlangui/deps/libdparse/src $(ProjectDir)/../DerelictLLDB/source</imppath>
   <fileImppath>views views/res views/res/i18n views/res/mdpi views/res/hdpi</fileImppath>
   <outdir>$(ConfigurationName)</outdir>
   <objdir>$(OutDir)</objdir>
@@ -540,6 +540,7 @@
     <File path="src\dlangide\ui\searchPanel.d" />
     <File path="src\dlangide\ui\settings.d" />
     <File path="src\dlangide\ui\stackpanel.d" />
+    <File path="src\dlangide\ui\terminal.d" />
     <File path="src\dlangide\ui\watchpanel.d" />
     <File path="src\dlangide\ui\wspanel.d" />
    </Folder>
