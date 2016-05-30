@@ -6,6 +6,7 @@ import dlangui.widgets.controls;
 struct TerminalAttr {
     ubyte bgColor = 7;
     ubyte textColor = 0;
+    ubyte flags = 0;
 }
 
 struct TerminalChar {
@@ -69,6 +70,7 @@ struct TerminalContent {
     Rect rc;
     FontRef font;
     TerminalAttr currentAttr;
+    TerminalAttr defAttr;
     int maxBufferLines = 3000;
     int topLine;
     int width; // width in chars
@@ -131,6 +133,32 @@ struct TerminalContent {
                 cursory = screenTop;
             else if (cursory >= screenTop + height)
                 cursory = screenTop + height - 1;
+        }
+    }
+    void setAttributes(int[] attrs) {
+        foreach (attr; attrs) {
+            if (attr < 0)
+                continue;
+            if (attr >= 30 && attr <= 37) {
+                currentAttr.textColor = cast(ubyte)(attr - 30);
+            } else if (attr >= 40 && attr <= 47) {
+                currentAttr.bgColor = cast(ubyte)(attr - 40);
+            } else if (attr >= 0 && attr <= 10) {
+                switch(attr) {
+                    case 0:
+                        currentAttr = defAttr;
+                        break;
+                    case 1:
+                    case 2:
+                    case 4:
+                    case 5:
+                    case 7:
+                    case 8:
+                    default:
+                        break;
+
+                }
+            }
         }
     }
     void moveCursorTo(int x, int y) {
@@ -499,6 +527,7 @@ class TerminalWidget : WidgetGroup, OnScrollHandler {
                             break; // unfinished
                         int param1 = -1;
                         int param2 = -1;
+                        int[] extraParams;
                         int index = i + 2;
                         bool questionMark = false;
                         if (index < outputChars.length && outputChars[index] == '?') {
@@ -510,11 +539,24 @@ class TerminalWidget : WidgetGroup, OnScrollHandler {
                             index++;
                             parseParam(outputChars, index, param2);
                         }
+                        while (index < outputChars.length && outputChars[index] == ';') {
+                            index++;
+                            int n = -1;
+                            parseParam(outputChars, index, n);
+                            if (n >= 0)
+                                extraParams ~= n;
+                        }
                         if (index >= outputChars.length)
                             break; // unfinished sequence: not enough chars
                         int param1def1 = param1 >= 1 ? param1 : 1;
                         ch3 = outputChars[index];
                         i = index;
+                        if (ch3 == 'm') {
+                            // set attributes
+                            _content.setAttributes([param1, param2]);
+                            if (extraParams.length)
+                                _content.setAttributes(extraParams);
+                        }
                         // command is parsed completely, ch3 == command type char
 
                         // ESC[7h and ESC[7l -- enable/disable line wrap

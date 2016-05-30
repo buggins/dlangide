@@ -178,6 +178,8 @@ class OutputPanel : DockWindow {
         //_terminalWidget.write("\x1b[1Kerased bol"d);
         //_terminalWidget.write("\x1b[2Kerased line"d);
         //_terminalWidget.write("Юникод Unicode"d);
+        _terminalWidget.write("\x1b[34;45m blue on magenta "d);
+        _terminalWidget.write("\x1b[31;46m red on cyan "d);
 
         return _tabs;
     }
