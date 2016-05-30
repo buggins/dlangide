@@ -3,10 +3,39 @@ module dlangide.ui.terminal;
 import dlangui.widgets.widget;
 import dlangui.widgets.controls;
 
-struct TerminalChar {
-    ubyte bgColor = 0;
+struct TerminalAttr {
+    ubyte bgColor = 7;
     ubyte textColor = 0;
+}
+
+struct TerminalChar {
+    TerminalAttr attr;
     dchar ch = ' ';
+}
+
+__gshared static uint[16] TERMINAL_PALETTE = [
+    0x000000, // black
+    0xFF0000,
+    0x00FF00,
+    0xFFFF00,
+    0x0000FF,
+    0xFF00FF,
+    0x00FFFF,
+    0xFFFFFF, // white
+    0x808080,
+    0x800000,
+    0x008000,
+    0x808000,
+    0x000080,
+    0x800080,
+    0x008080,
+    0xC0C0C0,
+];
+
+uint attrToColor(ubyte v) {
+    if (v >= 16)
+        return 0;
+    return TERMINAL_PALETTE[v];
 }
 
 struct TerminalLine {
@@ -20,13 +49,17 @@ struct TerminalLine {
     }
     void markLineOverflow() {}
     void markLineEol() {}
-    void putCharAt(dchar ch, int x) {
+    void putCharAt(dchar ch, int x, TerminalAttr currentAttr) {
         if (x >= line.length) {
+            TerminalChar d;
+            d.attr = currentAttr;
+            d.ch = ' ';
             while (x >= line.length) {
                 line.assumeSafeAppend;
-                line ~= TerminalChar.init;
+                line ~= d;
             }
         }
+        line[x].attr = currentAttr;
         line[x].ch = ch;
     }
 }
@@ -35,6 +68,7 @@ struct TerminalContent {
     TerminalLine[] lines;
     Rect rc;
     FontRef font;
+    TerminalAttr currentAttr;
     int maxBufferLines = 3000;
     int topLine;
     int width; // width in chars
@@ -43,6 +77,7 @@ struct TerminalContent {
     int charh; // single char height
     int cursorx;
     int cursory;
+    bool focused;
     void layout(FontRef font, Rect rc) {
         this.rc = rc;
         this.font = font;
@@ -65,15 +100,35 @@ struct TerminalContent {
         dchar[] text;
         text.length = 1;
         text[0] = ' ';
+        int screenTopLine = cast(int)lines.length - height;
+        if (screenTopLine < 0)
+            screenTopLine = 0;
         for (uint i = 0; i < height && i + topLine < lines.length; i++) {
             lineRect.bottom = lineRect.top + charh;
             TerminalLine * p = &lines[i + topLine];
             // draw line in rect
-            for (int x = 0; x < p.line.length; x++) {
-                dchar ch = p.line[x].ch;
-                if (ch >= ' ') {
-                    text[0] = ch;
-                    font.drawText(buf, lineRect.left + x * charw, lineRect.top, text, 0);
+            for (int x = 0; x < width; x++) {
+                bool isCursorPos = x == cursorx && i + topLine == cursory + screenTopLine;
+                TerminalChar ch = x < p.line.length ? p.line[x] : TerminalChar.init;
+                uint bgcolor = attrToColor(ch.attr.bgColor);
+                uint textcolor = attrToColor(ch.attr.textColor);
+                if (isCursorPos && focused) {
+                    // invert
+                    uint tmp = bgcolor;
+                    bgcolor = textcolor;
+                    textcolor = tmp;
+                }
+                Rect charrc = lineRect;
+                charrc.left = lineRect.left + x * charw;
+                charrc.right = charrc.left + charw;
+                charrc.bottom = charrc.top + charh;
+                buf.fillRect(charrc, bgcolor);
+                if (isCursorPos) {
+                    buf.drawFrame(charrc, focused ? (textcolor | 0xC0000000) : (textcolor | 0x80000000), Rect(1,1,1,1));
+                }
+                if (ch.ch >= ' ') {
+                    text[0] = ch.ch;
+                    font.drawText(buf, charrc.left, charrc.top, text, textcolor);
                 }
             }
             lineRect.top = lineRect.bottom;
@@ -119,7 +174,7 @@ struct TerminalContent {
             line = getLine(y);
             x = 0;
         }
-        line.putCharAt(ch, x);
+        line.putCharAt(ch, x, currentAttr);
     }
     int tabSize = 8;
     // supports printed characters and \r \n \t
@@ -161,9 +216,18 @@ struct TerminalContent {
         sb.maxValue = lines.length ? lines.length - 1 : 0;
         sb.position = topLine;
     }
+
+    void scrollTo(int y) {
+        if (y + height > lines.length)
+            y = cast(int)lines.length - height;
+        if (y < 0)
+            y = 0;
+        topLine = y;
+    }
+
 }
 
-class TerminalWidget : WidgetGroup {
+class TerminalWidget : WidgetGroup, OnScrollHandler {
     protected ScrollBar _verticalScrollBar;
     protected TerminalContent _content;
     this() {
@@ -172,10 +236,52 @@ class TerminalWidget : WidgetGroup {
     this(string ID) {
         super(ID);
         styleId = "TERMINAL";
+        focusable = true;
         _verticalScrollBar = new ScrollBar("VERTICAL_SCROLLBAR", Orientation.Vertical);
         _verticalScrollBar.minValue = 0;
+        _verticalScrollBar.scrollEvent = this;
         addChild(_verticalScrollBar);
     }
+
+    void scrollTo(int y) {
+        _content.scrollTo(y);
+    }
+
+    /// handle scroll event
+    bool onScrollEvent(AbstractSlider source, ScrollEvent event) {
+        switch(event.action) {
+            /// space above indicator pressed
+            case ScrollAction.PageUp:
+                scrollTo(_content.topLine - (_content.height ? _content.height - 1 : 1));
+                break;
+            /// space below indicator pressed
+            case ScrollAction.PageDown:
+                scrollTo(_content.topLine + (_content.height ? _content.height - 1 : 1));
+                break;
+            /// up/left button pressed
+            case ScrollAction.LineUp:
+                scrollTo(_content.topLine - 1);
+                break;
+            /// down/right button pressed
+            case ScrollAction.LineDown:
+                scrollTo(_content.topLine + 1);
+                break;
+            /// slider pressed
+            case ScrollAction.SliderPressed:
+                break;
+            /// dragging in progress
+            case ScrollAction.SliderMoved:
+                scrollTo(event.position);
+                break;
+            /// dragging finished
+            case ScrollAction.SliderReleased:
+                break;
+            default:
+                break;
+        }
+        return true;
+    }
+
     /** 
     Measure widget according to desired width and height constraints. (Step 1 of two phase layout). 
 
@@ -302,4 +408,15 @@ class TerminalWidget : WidgetGroup {
         }
         _content.updateScrollBar(_verticalScrollBar);
     }
+
+    /// override to handle focus changes
+    override protected void handleFocusChange(bool focused, bool receivedFocusFromKeyboard = false) {
+        if (focused)
+            _content.focused = true;
+        else {
+            _content.focused = false;
+        }
+        super.handleFocusChange(focused);
+    }
+
 }
