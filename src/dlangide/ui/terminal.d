@@ -654,3 +654,48 @@ class TerminalWidget : WidgetGroup, OnScrollHandler {
     }
 
 }
+
+class TerminalDevice {
+    int masterfd;
+    int slavefd;
+    string name;
+    void close() {
+        if (masterfd && masterfd != -1) {
+            import core.sys.posix.unistd;
+            close(masterfd);
+            masterfd = 0;
+        }
+    }
+    bool create() {
+        import std.string;
+        const(char) * s = null;
+        {
+            import core.sys.posix.fcntl;
+            import core.sys.posix.stdio;
+            import core.sys.posix.stdlib;
+            import core.sys.posix.unistd;
+            masterfd = posix_openpt(O_RDWR | O_NOCTTY);
+            if (masterfd == -1) {
+                Log.e("posix_openpt failed - cannot open terminal");
+                return false;
+            }
+            if (grantpt(masterfd) == -1 || unlockpt(masterfd) == -1) {
+                Log.e("grantpt / unlockpt failed - cannot open terminal");
+                close(masterfd);
+                masterfd = 0;
+                return false;
+            }
+            s = ptsname(masterfd);
+            if (!s) {
+                Log.e("ptsname failed - cannot open terminal");
+                close(masterfd);
+                masterfd = 0;
+                return false;
+            }
+        }
+        name = fromStringz(s).dup;
+        Log.i("ptty device created: ", name);
+        return true;
+    }
+}
+
