@@ -406,6 +406,7 @@
     <Compile Include="deps\DCD\dsymbol\src\dsymbol\builtin\symbols.d">
       <Link>3rdparty\dsymbol\symbols.d</Link>
     </Compile>
+    <Compile Include="src\dlangide\ui\terminal.d" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="src\ddebug\gdb\" />
