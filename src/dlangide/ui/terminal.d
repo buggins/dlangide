@@ -655,46 +655,113 @@ class TerminalWidget : WidgetGroup, OnScrollHandler {
 
 }
 
-class TerminalDevice {
-    int masterfd;
-    int slavefd;
+import core.thread;
+
+class TerminalDevice : Thread {
+    version (Windows) {
+        import win32.windows;
+        HANDLE hpipe;
+    } else {
+        int masterfd;
+    }
     string name;
-    void close() {
-        if (masterfd && masterfd != -1) {
-            import core.sys.posix.unistd;
-            close(masterfd);
-            masterfd = 0;
+    bool closed;
+    bool connected;
+
+    this() {
+        super(&threadProc);
+    }
+    ~this() {
+        close();
+    }
+
+    void threadProc() {
+    }
+
+    bool write(string msg) {
+        if (!msg.length)
+            return true;
+        if (!closed)
+            return false;
+        version (Windows) {
+            for (;;) {
+                DWORD bytesWritten = 0;
+                if (WriteFile(hpipe, cast(char*)msg.ptr, msg.length, &bytesWritten, null) != TRUE) {
+                    return false;
+                }
+                if (bytesWritten < msg.length)
+                    msg = msg[bytesWritten .. $];
+                else
+                    break;
+            }
+        } else {
+            // linux/posix
         }
+        return true;
+    }
+    void close() {
+        version (Windows) {
+            if (hpipe && hpipe != INVALID_HANDLE_VALUE) {
+                CloseHandle(hpipe);
+                hpipe = null;
+            }
+        } else {
+            if (masterfd && masterfd != -1) {
+                import core.sys.posix.unistd;
+                close(masterfd);
+                masterfd = 0;
+            }
+        }
+        name = null;
+        closed = true;
     }
     bool create() {
         import std.string;
-        const(char) * s = null;
-        {
-            import core.sys.posix.fcntl;
-            import core.sys.posix.stdio;
-            import core.sys.posix.stdlib;
-            import core.sys.posix.unistd;
-            masterfd = posix_openpt(O_RDWR | O_NOCTTY);
-            if (masterfd == -1) {
-                Log.e("posix_openpt failed - cannot open terminal");
+        version (Windows) {
+            import std.uuid;
+            name = "\\\\.\\pipe\\dlangide-terminal-" ~ randomUUID().toString;
+            hpipe = CreateNamedPipeA(cast(const(char)*)name.toStringz, 
+                             PIPE_ACCESS_DUPLEX, 
+                             cast(uint)PIPE_TYPE_BYTE,
+                             1,
+                             16384,
+                             16384,
+                             50,
+                             null);
+            if (hpipe == INVALID_HANDLE_VALUE) {
+                Log.e("Failed to create named pipe for terminal, error=", GetLastError());
+                close();
                 return false;
             }
-            if (grantpt(masterfd) == -1 || unlockpt(masterfd) == -1) {
-                Log.e("grantpt / unlockpt failed - cannot open terminal");
-                close(masterfd);
-                masterfd = 0;
-                return false;
+        } else {
+            const(char) * s = null;
+            {
+                import core.sys.posix.fcntl;
+                import core.sys.posix.stdio;
+                import core.sys.posix.stdlib;
+                import core.sys.posix.unistd;
+                masterfd = posix_openpt(O_RDWR | O_NOCTTY);
+                if (masterfd == -1) {
+                    Log.e("posix_openpt failed - cannot open terminal");
+                    close();
+                    return false;
+                }
+                if (grantpt(masterfd) == -1 || unlockpt(masterfd) == -1) {
+                    Log.e("grantpt / unlockpt failed - cannot open terminal");
+                    close();
+                    return false;
+                }
+                s = ptsname(masterfd);
+                if (!s) {
+                    Log.e("ptsname failed - cannot open terminal");
+                    close();
+                    return false;
+                }
             }
-            s = ptsname(masterfd);
-            if (!s) {
-                Log.e("ptsname failed - cannot open terminal");
-                close(masterfd);
-                masterfd = 0;
-                return false;
-            }
+            name = fromStringz(s).dup;
         }
-        name = fromStringz(s).dup;
         Log.i("ptty device created: ", name);
+        start();
         return true;
     }
 }
