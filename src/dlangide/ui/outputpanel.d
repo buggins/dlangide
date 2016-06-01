@@ -185,6 +185,8 @@ class OutputPanel : DockWindow {
         //if (!term.create()) {
         //    Log.e("Cannot create terminal device");
         //}
+        _terminalWidget.write("\n\n\n\nDevice: "d ~ toUTF32(_terminalWidget.deviceName));
+        _terminalWidget.write("\x1b[0m\nnormal text\n"d);
         return _tabs;
     }
 

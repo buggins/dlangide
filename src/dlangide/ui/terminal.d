@@ -380,7 +380,7 @@ class TerminalWidget : WidgetGroup, OnScrollHandler {
     }
 
     /// returns terminal/tty device (or named pipe for windows) name
-    @property string deviceName() { return _device ? _device.name : null; }
+    @property string deviceName() { return _device ? _device.deviceName : null; }
 
     void scrollTo(int y) {
         _content.scrollTo(y);
@@ -520,6 +520,11 @@ class TerminalWidget : WidgetGroup, OnScrollHandler {
             index++;
         }
         return true;
+    }
+
+    void handleInput(dstring chars) {
+        import std.utf;
+        _device.write(chars.toUTF8);
     }
 
     private dchar[] outputChars;
@@ -709,7 +714,7 @@ class TerminalDevice : Thread {
         Log.d("TerminalDevice threadProc() enter");
         version(Windows) {
             while (!closed) {
-                Log.d("Waiting for TerminalDevice client");
+                Log.d("TerminalDevice -- Waiting for client");
                 if (ConnectNamedPipe(hpipe, null)) {
                     // accept client
                     Log.d("TerminalDevice client connected");
@@ -743,7 +748,7 @@ class TerminalDevice : Thread {
     bool write(string msg) {
         if (!msg.length)
             return true;
-        if (!closed)
+        if (closed || !started)
             return false;
         version (Windows) {
             for (;;) {
