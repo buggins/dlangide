@@ -855,7 +855,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     return true;
                 case IDEActions.HelpAbout:
                     window.showMessageBox(UIString("About DlangIDE "d ~ DLANGIDE_VERSION), 
-                                          UIString("DLangIDE\n(C) Vadim Lopatin, 2014\nhttp://github.com/buggins/dlangide\nIDE for D programming language written in D\nUses DlangUI library for GUI"d));
+                                          UIString("DLangIDE\n(C) Vadim Lopatin, 2014-2016\nhttp://github.com/buggins/dlangide\nIDE for D programming language written in D\nUses DlangUI library for GUI"d));
                     return true;
                 case StandardAction.OpenUrl:
                     platform.openURL(a.stringParam);
