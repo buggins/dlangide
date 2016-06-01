@@ -346,6 +346,7 @@ struct TerminalContent {
 class TerminalWidget : WidgetGroup, OnScrollHandler {
     protected ScrollBar _verticalScrollBar;
     protected TerminalContent _content;
+    protected TerminalDevice _device;
     this() {
         this(null);
     }
@@ -357,7 +358,29 @@ class TerminalWidget : WidgetGroup, OnScrollHandler {
         _verticalScrollBar.minValue = 0;
         _verticalScrollBar.scrollEvent = this;
         addChild(_verticalScrollBar);
+        _device = new TerminalDevice();
+        TerminalWidget _this = this;
+        if (_device.create()) {
+            _device.onBytesRead = delegate (char[] data) {
+                import dlangui.platforms.common.platform;
+                Window w = window;
+                if (w) {
+                    //w.exe
+                    w.executeInUiThread(delegate() {
+                        if (w.isChild(_this))
+                            write(cast(string)data);
+                    });
+                }
+            };
+        }
     }
+    ~this() {
+        if (_device)
+            destroy(_device);
+    }
+
+    /// returns terminal/tty device (or named pipe for windows) name
+    @property string deviceName() { return _device ? _device.name : null; }
 
     void scrollTo(int y) {
         _content.scrollTo(y);
@@ -657,16 +680,22 @@ class TerminalWidget : WidgetGroup, OnScrollHandler {
 
 import core.thread;
 
+interface TerminalInputHandler {
+    void onBytesReceived(char[] data);
+}
+
 class TerminalDevice : Thread {
+    Signal!TerminalInputHandler onBytesRead;
     version (Windows) {
         import win32.windows;
         HANDLE hpipe;
     } else {
         int masterfd;
     }
-    string name;
-    bool closed;
-    bool connected;
+    @property string deviceName() { return _name; }
+    private string _name;
+    private bool started;
+    private bool closed;
 
     this() {
         super(&threadProc);
@@ -676,6 +705,39 @@ class TerminalDevice : Thread {
     }
 
     void threadProc() {
+        started = true;
+        Log.d("TerminalDevice threadProc() enter");
+        version(Windows) {
+            while (!closed) {
+                Log.d("Waiting for TerminalDevice client");
+                if (ConnectNamedPipe(hpipe, null)) {
+                    // accept client
+                    Log.d("TerminalDevice client connected");
+                    char[4096] buf;
+                    for (;;) {
+                        if (closed)
+                            break;
+                        DWORD bytesRead = 0;
+                        // read data from client
+                        if (ReadFile(hpipe, &buf, buf.length, &bytesRead, null)) {
+                            if (closed)
+                                break;
+                            if (bytesRead && onBytesRead.assigned) {
+                                onBytesRead(buf[0 .. bytesRead].dup);
+                            }
+                        } else {
+                            break;
+                        }
+                    }
+                    Log.d("TerminalDevice client disconnecting");
+                    // disconnect client
+                    DisconnectNamedPipe(hpipe);
+                }
+            }
+        } else {
+            // posix
+        }
+        Log.d("TerminalDevice threadProc() exit");
     }
 
     bool write(string msg) {
@@ -700,7 +762,28 @@ class TerminalDevice : Thread {
         return true;
     }
     void close() {
+        if (closed)
+            return;
+        closed = true;
+        if (!started)
+            return;
         version (Windows) {
+            import std.string;
+            // ping terminal to handle closed flag
+            HANDLE h = CreateFileA(
+                               _name.toStringz,   // pipe name 
+                               GENERIC_READ |  // read and write access 
+                               GENERIC_WRITE,
+                               0,              // no sharing 
+                               null,           // default security attributes
+                               OPEN_EXISTING,  // opens existing pipe 
+                               0,              // default attributes 
+                               null);
+            if (h != INVALID_HANDLE_VALUE) {
+                DWORD bytesWritten = 0;
+                WriteFile(h, "stop".ptr, 4, &bytesWritten, null);
+                CloseHandle(h);
+            }
             if (hpipe && hpipe != INVALID_HANDLE_VALUE) {
                 CloseHandle(hpipe);
                 hpipe = null;
@@ -712,15 +795,15 @@ class TerminalDevice : Thread {
                 masterfd = 0;
             }
         }
-        name = null;
-        closed = true;
+        join(false);
+        _name = null;
     }
     bool create() {
         import std.string;
         version (Windows) {
             import std.uuid;
-            name = "\\\\.\\pipe\\dlangide-terminal-" ~ randomUUID().toString;
-            hpipe = CreateNamedPipeA(cast(const(char)*)name.toStringz, 
+            _name = "\\\\.\\pipe\\dlangide-terminal-" ~ randomUUID().toString;
+            hpipe = CreateNamedPipeA(cast(const(char)*)_name.toStringz, 
                              PIPE_ACCESS_DUPLEX, 
                              cast(uint)PIPE_TYPE_BYTE,
                              1,
@@ -758,9 +841,9 @@ class TerminalDevice : Thread {
                     return false;
                 }
             }
-            name = fromStringz(s).dup;
+            _name = fromStringz(s).dup;
         }
-        Log.i("ptty device created: ", name);
+        Log.i("ptty device created: ", _name);
         start();
         return true;
     }
