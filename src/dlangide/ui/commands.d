@@ -45,6 +45,7 @@ enum IDEActions : int {
     DebugStepOut,
 
     HelpAbout,
+    HelpViewHelp,
     WindowCloseDocument,
     WindowCloseAllDocuments,
     CreateNewWorkspace,
@@ -127,6 +128,7 @@ const Action ACTION_EDIT_TOGGLE_LINE_COMMENT = (new Action(EditorActions.ToggleL
 const Action ACTION_EDIT_TOGGLE_BLOCK_COMMENT = (new Action(EditorActions.ToggleBlockComment, "MENU_EDIT_TOGGLE_BLOCK_COMMENT"c, null, KeyCode.KEY_DIVIDE, KeyFlag.Control|KeyFlag.Shift)).disableByDefault();
 const Action ACTION_EDIT_PREFERENCES = (new Action(IDEActions.EditPreferences, "MENU_EDIT_PREFERENCES"c, null)).disableByDefault();
 const Action ACTION_HELP_ABOUT = new Action(IDEActions.HelpAbout, "MENU_HELP_ABOUT"c);
+const Action ACTION_HELP_VIEW_HELP = new Action(IDEActions.HelpViewHelp, "MENU_HELP_VIEW_HELP"c);
 const Action ACTION_WINDOW_CLOSE_DOCUMENT = new Action(IDEActions.WindowCloseDocument, "MENU_WINDOW_CLOSE_DOCUMENT"c, null, KeyCode.KEY_W, KeyFlag.Control);
 const Action ACTION_WINDOW_CLOSE_ALL_DOCUMENTS = new Action(IDEActions.WindowCloseAllDocuments, "MENU_WINDOW_CLOSE_ALL_DOCUMENTS"c);
 

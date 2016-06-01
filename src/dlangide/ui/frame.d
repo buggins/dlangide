@@ -44,6 +44,10 @@ import std.array : empty;
 import std.string : split;
 import std.path;
 
+immutable string HELP_PAGE_URL = "https://github.com/buggins/dlangide/wiki";
+// TODO: get version from GIT commit
+immutable dstring DLANGIDE_VERSION = "v0.6.8"d;
+
 bool isSupportedSourceTextFileFormat(string filename) {
     return (filename.endsWith(".d") || filename.endsWith(".txt") || filename.endsWith(".cpp") || filename.endsWith(".h") || filename.endsWith(".c")
         || filename.endsWith(".json") || filename.endsWith(".dd") || filename.endsWith(".ddoc") || filename.endsWith(".xml") || filename.endsWith(".html")
@@ -666,11 +670,11 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
 
 
         MenuItem windowItem = new MenuItem(new Action(3, "MENU_WINDOW"c));
-        windowItem.add(new Action(30, "MENU_WINDOW_PREFERENCES"));
+        //windowItem.add(new Action(30, "MENU_WINDOW_PREFERENCES"));
         windowItem.add(ACTION_WINDOW_CLOSE_DOCUMENT);
         windowItem.add(ACTION_WINDOW_CLOSE_ALL_DOCUMENTS);
         MenuItem helpItem = new MenuItem(new Action(4, "MENU_HELP"c));
-        helpItem.add(new Action(40, "MENU_HELP_VIEW_HELP"));
+        helpItem.add(ACTION_HELP_VIEW_HELP);
         helpItem.add(ACTION_HELP_ABOUT);
         mainMenuItems.add(fileItem);
         mainMenuItems.add(editItem);
@@ -846,8 +850,11 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     if (onCanClose())
                         window.close();
                     return true;
+                case IDEActions.HelpViewHelp:
+                    Platform.instance.openURL(HELP_PAGE_URL);
+                    return true;
                 case IDEActions.HelpAbout:
-                    window.showMessageBox(UIString("About DlangIDE"d), 
+                    window.showMessageBox(UIString("About DlangIDE "d ~ DLANGIDE_VERSION), 
                                           UIString("DLangIDE\n(C) Vadim Lopatin, 2014\nhttp://github.com/buggins/dlangide\nIDE for D programming language written in D\nUses DlangUI library for GUI"d));
                     return true;
                 case StandardAction.OpenUrl:
