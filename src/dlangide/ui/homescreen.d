@@ -17,6 +17,7 @@ class HomeScreen : ScrollWidget {
     protected VerticalLayout _recentItems;
     this(string ID, IDEFrame frame) {
         super(ID);
+        import dlangide.ui.frame;
         //styleId = STYLE_EDIT_BOX;
         _frame = frame;
         uint linkColor = currentTheme.customColor("link_color", 0x2020FF);
@@ -28,7 +29,7 @@ class HomeScreen : ScrollWidget {
         _column2.layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT).padding(Rect(20, 20, 20, 20));
         _content.addChild(_column1);
         _content.addChild(_column2);
-        _column1.addChild((new TextWidget(null, "Dlang IDE"d)).fontSize(32).textColor(linkColor));
+        _column1.addChild((new TextWidget(null, "Dlang IDE"d ~ " " ~ DLANGIDE_VERSION)).fontSize(32).textColor(linkColor));
         _column1.addChild((new TextWidget(null, "D language IDE written in D"d)).fontSize(20));
         _column1.addChild((new TextWidget(null, "(c) Vadim Lopatin 2015"d)).fontSize(22).textColor(linkColor));
         _column1.addChild(new VSpacer());

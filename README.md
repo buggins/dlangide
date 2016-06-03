@@ -41,13 +41,30 @@ Wiki: [https://github.com/buggins/dlangide/wiki](https://github.com/buggins/dlan
 
 DlangUI project GitHub page: [https://github.com/buggins/dlangui](https://github.com/buggins/dlangui)
 
+Mago debugger GitHub page: [https://github.com/rainers/mago](https://github.com/rainers/mago)
 
+
+Build tools
+===========
+
+DlangIDE uses DUB as build tool, and its dub.json as project file format.
+You can select DMD, LDC or GDC compiler toolchain.
 
 DCD integration
 ===============
 
+Symbol lookup and autocompletion is using DCD (D completion daemon).
 Hans-Albert Maritz (Freakazo) implementated DCD integration using DCD client/server.
 Keywan Ghadami improved it to use DCD as a library.
+Now DCD is embedded into DlangIDE, and no separate executables are needed.
+
+
+Debugger support
+================
+
+Windows: use mago-mi debugger (https://github.com/buggins/dlangide/blob/master/libs/windows/x86/mago-mi.exe) or GDB
+Linux: use GDB or lldb-mi debugger
+OSX: use GDB or LLDBMI2 debugger
 
 
 Building DlangIDE
@@ -150,6 +167,6 @@ OSX: open solution file with Mono-D
 
         dlangide/dlangide-monod-osx.sln
 
-Choose dlangide as startap project.
+Choose dlangide as startup project.
 
-Coding style: [https://github.com/buggins/dlangide/blob/master/README.md](https://github.com/buggins/dlangide/blob/master/README.md)
+Coding style: [https://github.com/buggins/dlangui/blob/master/CODING_STYLE.md](https://github.com/buggins/dlangui/blob/master/CODING_STYLE.md)

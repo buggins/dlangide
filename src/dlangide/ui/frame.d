@@ -432,7 +432,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             _tabs.selectTab(index, true);
         } else {
             HomeScreen home = new HomeScreen(HOME_SCREEN_ID, this);
-            _tabs.addTab(home, "Home"d, null, true);
+            _tabs.addTab(home, "DlangIDE Home"d, null, true);
             _tabs.selectTab(HOME_SCREEN_ID, true);
         }
     }
@@ -854,7 +854,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     Platform.instance.openURL(HELP_PAGE_URL);
                     return true;
                 case IDEActions.HelpAbout:
-                    window.showMessageBox(UIString("About DlangIDE "d ~ DLANGIDE_VERSION), 
+                    window.showMessageBox(UIString("About DlangIDE "d ~ DLANGIDE_VERSION),
                                           UIString("DLangIDE\n(C) Vadim Lopatin, 2014-2016\nhttp://github.com/buggins/dlangide\nIDE for D programming language written in D\nUses DlangUI library for GUI"d));
                     return true;
                 case StandardAction.OpenUrl:
