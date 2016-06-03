@@ -50,21 +50,25 @@ Build tools
 DlangIDE uses DUB as build tool, and its dub.json as project file format.
 You can select DMD, LDC or GDC compiler toolchain.
 
+
 DCD integration
 ===============
 
 Symbol lookup and autocompletion is using DCD (D completion daemon).
+
 Hans-Albert Maritz (Freakazo) implementated DCD integration using DCD client/server.
+
 Keywan Ghadami improved it to use DCD as a library.
+
 Now DCD is embedded into DlangIDE, and no separate executables are needed.
 
 
 Debugger support
 ================
 
-Windows: use mago-mi debugger (https://github.com/buggins/dlangide/blob/master/libs/windows/x86/mago-mi.exe) or GDB
-Linux: use GDB or lldb-mi debugger
-OSX: use GDB or LLDBMI2 debugger
+* Windows: use mago-mi debugger (https://github.com/buggins/dlangide/blob/master/libs/windows/x86/mago-mi.exe) or GDB
+* Linux: use GDB or lldb-mi debugger
+* OSX: use GDB or LLDBMI2 debugger
 
 
 Building DlangIDE
