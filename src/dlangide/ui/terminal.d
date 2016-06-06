@@ -795,8 +795,8 @@ class TerminalDevice : Thread {
             }
         } else {
             if (masterfd && masterfd != -1) {
-                import core.sys.posix.unistd;
-                close(masterfd);
+                import core.sys.posix.unistd: close_=close;
+                close_(masterfd);
                 masterfd = 0;
             }
         }
