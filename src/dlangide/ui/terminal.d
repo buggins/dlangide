@@ -948,7 +948,7 @@ class TerminalDevice : Thread {
                 import core.sys.posix.fcntl;
                 import core.sys.posix.stdio;
                 import core.sys.posix.stdlib;
-                import core.sys.posix.unistd;
+                //import core.sys.posix.unistd;
                 masterfd = posix_openpt(O_RDWR | O_NOCTTY);
                 if (masterfd == -1) {
                     Log.e("posix_openpt failed - cannot open terminal");
