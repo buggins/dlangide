@@ -671,6 +671,10 @@ class TerminalWidget : WidgetGroup, OnScrollHandler {
         _device.write(chars.toUTF8);
     }
 
+    void resetTerminal() {
+        _content.resetTerminal();
+    }
+
     private dchar[] outputChars;
     // write utf32
     void write(dstring chars) {
@@ -874,7 +878,9 @@ class TerminalDevice : Thread {
                             break;
                         DWORD bytesRead = 0;
                         // read data from client
-                        if (ReadFile(hpipe, &buf, buf.length, &bytesRead, null)) {
+                        Log.d("TerminalDevice reading from pipe");
+                        if (ReadFile(hpipe, &buf, 1, &bytesRead, null)) { //buf.length
+                            Log.d("TerminalDevice bytes read: ", bytesRead);
                             if (closed)
                                 break;
                             if (bytesRead && onBytesRead.assigned) {
@@ -887,6 +893,7 @@ class TerminalDevice : Thread {
                     Log.d("TerminalDevice client disconnecting");
                     connected = false;
                     // disconnect client
+                    FlushFileBuffers(hpipe); 
                     DisconnectNamedPipe(hpipe);
                 }
             }
@@ -983,11 +990,12 @@ class TerminalDevice : Thread {
             import std.uuid;
             _name = "\\\\.\\pipe\\dlangide-terminal-" ~ randomUUID().toString;
             hpipe = CreateNamedPipeA(cast(const(char)*)_name.toStringz, 
-                             PIPE_ACCESS_DUPLEX, 
-                             cast(uint)PIPE_TYPE_BYTE,
+                             PIPE_ACCESS_DUPLEX | FILE_FLAG_FIRST_PIPE_INSTANCE, // dwOpenMode
+                             PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT, // | PIPE_REJECT_REMOTE_CLIENTS,
+                             //PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT, // | PIPE_REJECT_REMOTE_CLIENTS,
                              1,
-                             16384,
-                             16384,
+                             1, //16384,
+                             1, //16384,
                              50,
                              null);
             if (hpipe == INVALID_HANDLE_VALUE) {

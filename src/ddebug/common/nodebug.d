@@ -11,7 +11,7 @@ class ProgramExecutionNoDebug : Thread, ProgramExecution {
     // parameters
     /// provides _executableFile, _executableArgs, _executableWorkingDir, _executableEnvVars parameters and setter function setExecutableParams
     mixin ExecutableParams;
-    /// provides _terminalExecutable and setTerminalExecutable setter
+    /// provides _terminalExecutable, _terminalTty, setTerminalExecutable, and setTerminalTty
     mixin TerminalParams;
 
     protected ProgramExecutionStatusListener _listener;

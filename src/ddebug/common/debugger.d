@@ -303,6 +303,11 @@ class DebuggerProxy : Debugger, DebuggerCallback {
         _debugger.setTerminalExecutable(terminalExecutable);
     }
 
+    /// set terminal device name before execution
+    void setTerminalTty(string terminalTty) {
+        _debugger.setTerminalTty(terminalTty);
+    }
+
     /// set debugger executable
     void setDebuggerExecutable(string debuggerExecutable) {
         _debugger.setDebuggerExecutable(debuggerExecutable);
@@ -413,7 +418,7 @@ abstract class DebuggerBase : Thread, Debugger {
 
     /// provides _executableFile, _executableArgs, _executableWorkingDir, _executableEnvVars parameters and setter function setExecutableParams
     mixin ExecutableParams;
-    /// provides _terminalExecutable and setTerminalExecutable setter
+    /// provides _terminalExecutable, _terminalTty, setTerminalExecutable, and setTerminalTty
     mixin TerminalParams;
 
     protected DebuggerCallback _callback;

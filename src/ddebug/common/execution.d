@@ -23,6 +23,8 @@ interface ProgramExecution {
     void setExecutableParams(string executableFile, string[] args, string workingDir, string[string] envVars);
     /// set external terminal parameters before execution
     void setTerminalExecutable(string terminalExecutable);
+    /// set external terminal tty before execution
+    void setTerminalTty(string terminalTty);
 
     /// returns true if it's debugger
     @property bool isDebugger();
@@ -53,15 +55,20 @@ mixin template ExecutableParams() {
 }
 
 
-/// provides _terminalExecutable and setTerminalExecutable setter
+/// provides _terminalExecutable, _terminalTty, setTerminalExecutable, and setTerminalTty
 mixin template TerminalParams() {
 
     /// executable file name for external console/terminal
     protected string _terminalExecutable;
+    protected string _terminalTty;
 
     /// set external terminal parameters before execution
     void setTerminalExecutable(string terminalExecutable) {
         _terminalExecutable = terminalExecutable;
+    }
+
+    void setTerminalTty(string terminalTty) {
+        _terminalTty = terminalTty;
     }
 }
 

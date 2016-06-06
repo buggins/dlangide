@@ -179,6 +179,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         switch(status) {
             case ExecutionStatus.Error:
                 _logPanel.logLine("Cannot run program " ~ process.executableFile);
+                _logPanel.activateLogTab();
                 break;
             case ExecutionStatus.Finished:
                 _logPanel.logLine("Program " ~ process.executableFile ~ " finished with exit code " ~ to!string(exitCode));
@@ -274,8 +275,14 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             _logPanel.logLine("Starting debugger for " ~ executableFileName);
         _statusLine.setBackgroundOperationStatus("debug-run", program.isDebugger ?  "debugging..."d : "running..."d);
         string[string] env;
+        string tty = _logPanel.terminalDeviceName;
         program.setExecutableParams(executableFileName, args, workingDirectory, env);
-        program.setTerminalExecutable(externalConsoleExecutable);
+        if (!tty.empty) {
+            Log.d("Terminal window device name: ", tty);
+            program.setTerminalTty(tty);
+            _logPanel.activateTerminalTab(true);
+        } else
+            program.setTerminalExecutable(externalConsoleExecutable);
         return true;
     }
 
@@ -1375,6 +1382,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             _logPanel.logLine("No project is opened");
             return;
         }
+        _logPanel.activateLogTab();
         if (!listener) {
             if (buildOp == BuildOperation.Upgrade || buildOp == BuildOperation.Build || buildOp == BuildOperation.Rebuild) {
                 listener = delegate(int result) {

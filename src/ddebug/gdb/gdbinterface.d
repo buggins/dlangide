@@ -115,9 +115,11 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
     }
 
     Pid terminalPid;
-    string terminalTty;
+    string externalTerminalTty;
 
     string startTerminal() {
+        if (!_terminalTty.empty)
+            return _terminalTty;
         Log.d("Starting terminal ", _terminalExecutable);
         import std.random;
         import std.file;
@@ -125,7 +127,7 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
         import std.string;
         import core.thread;
         uint n = uniform(0, 0x10000000, rndGen());
-        terminalTty = null;
+        externalTerminalTty = null;
         string termfile = buildPath(tempDir, format("dlangide-term-name-%07x.tmp", n));
         Log.d("temp file for tty name: ", termfile);
         try {
@@ -151,27 +153,29 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
             }
             // read TTY from file
             if (exists(termfile)) {
-                terminalTty = readText(termfile);
-                if (terminalTty.endsWith("\n"))
-                    terminalTty = terminalTty[0 .. $-1];
+                externalTerminalTty = readText(termfile);
+                if (externalTerminalTty.endsWith("\n"))
+                    externalTerminalTty = externalTerminalTty[0 .. $-1];
                 // delete file
                 remove(termfile);
-                Log.d("Terminal tty: ", terminalTty);
+                Log.d("Terminal tty: ", externalTerminalTty);
             }
         } catch (Exception e) {
             Log.e("Failed to start terminal ", e);
             killTerminal();
         }
-        if (terminalTty.length == 0) {
+        if (externalTerminalTty.length == 0) {
             Log.i("Cannot start terminal");
             killTerminal();
         } else {
-            Log.i("Terminal: ", terminalTty);
+            Log.i("Terminal: ", externalTerminalTty);
         }
-        return terminalTty;
+        return externalTerminalTty;
     }
 
     bool isTerminalActive() {
+        if (!_terminalTty.empty)
+            return true;
         if (_terminalExecutable.empty)
             return true;
         if (terminalPid is null)
@@ -188,6 +192,8 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
     }
 
     void killTerminal() {
+        if (!_terminalTty.empty)
+            return;
         if (_terminalExecutable.empty)
             return;
         if (terminalPid is null)
@@ -208,16 +214,18 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
     override void startDebugging() {
         Log.d("GDBInterface.startDebugging()");
         string[] debuggerArgs;
-        if (!_terminalExecutable.empty) {
-            terminalTty = startTerminal();
-            if (terminalTty.length == 0) {
+        if (!_terminalExecutable.empty || !_terminalTty.empty) {
+            externalTerminalTty = startTerminal();
+            if (externalTerminalTty.length == 0) {
                 //_callback.onResponse(ResponseCode.CannotRunDebugger, "Cannot start terminal");
                 _status = ExecutionStatus.Error;
                 _stopRequested = true;
                 return;
             }
-            debuggerArgs ~= "-tty";
-            debuggerArgs ~= terminalTty;
+            if (!USE_INIT_SEQUENCE) {
+                debuggerArgs ~= "-tty";
+                debuggerArgs ~= externalTerminalTty;
+            }
         }
         debuggerArgs ~= "--interpreter=mi";
         debuggerArgs ~= "--silent";
@@ -677,8 +685,8 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
         initRequestsWarnings = 0;
         finishedInitRequests = 0;
         submitRequest(new GDBInitRequest("-environment-cd " ~ quotePathIfNeeded(_executableWorkingDir), true));
-        if (terminalTty)
-            submitRequest(new GDBInitRequest("-inferior-tty-set " ~ terminalTty, true));
+        if (externalTerminalTty)
+            submitRequest(new GDBInitRequest("-inferior-tty-set " ~ quotePathIfNeeded(externalTerminalTty), true));
         
         submitRequest(new GDBInitRequest("-gdb-set breakpoint pending on", false));
         submitRequest(new GDBInitRequest("-enable-pretty-printing", false));

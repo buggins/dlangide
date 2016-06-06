@@ -132,10 +132,27 @@ class OutputPanel : DockWindow {
 
     @property TabWidget getTabs() { return _tabs;}
 
+    void activateLogTab() {
+        _tabs.selectTab("logwidget");
+    }
+
+    void activateTerminalTab(bool clear = false) {
+        _tabs.selectTab("TERMINAL");
+        if (clear)
+            _terminalWidget.resetTerminal();
+    }
+
     this(string id) {
         _showCloseButton = false;
         dockAlignment = DockAlignment.Bottom;
         super(id);
+    }
+
+    /// terminal device for Console tab
+    @property string terminalDeviceName() {
+        if (_terminalWidget)
+            return _terminalWidget.deviceName;
+        return null;
     }
 
     override protected Widget createBodyWidget() {
