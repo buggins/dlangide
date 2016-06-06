@@ -367,8 +367,10 @@ class TerminalWidget : WidgetGroup, OnScrollHandler {
                 if (w) {
                     //w.exe
                     w.executeInUiThread(delegate() {
-                        if (w.isChild(_this))
+                        if (w.isChild(_this)) {
                             write(data);
+                            w.update(true);
+                        }
                     });
                 }
             };
@@ -449,31 +451,31 @@ class TerminalWidget : WidgetGroup, OnScrollHandler {
             return true;
         }
         if (event.action == KeyAction.KeyDown) {
-            dstring flsgsstr;
-            dstring flsgsstr2;
-            dstring flsgsstr3;
+            dstring flagsstr;
+            dstring flagsstr2;
+            dstring flagsstr3;
             if ((event.flags & KeyFlag.MainFlags) == KeyFlag.Menu) {
-                flsgsstr = "1;1";
-                flsgsstr2 = ";1";
-                flsgsstr3 = "1";
+                flagsstr = "1;1";
+                flagsstr2 = ";1";
+                flagsstr3 = "1";
             }
             if ((event.flags & KeyFlag.MainFlags) == KeyFlag.Shift) {
-                flsgsstr = "1;2";
-                flsgsstr2 = ";2";
-                flsgsstr3 = "2";
+                flagsstr = "1;2";
+                flagsstr2 = ";2";
+                flagsstr3 = "2";
             }
             if ((event.flags & KeyFlag.MainFlags) == KeyFlag.Alt) {
-                flsgsstr = "1;3";
-                flsgsstr2 = ";3";
-                flsgsstr3 = "3";
+                flagsstr = "1;3";
+                flagsstr2 = ";3";
+                flagsstr3 = "3";
             }
             if ((event.flags & KeyFlag.MainFlags) == KeyFlag.Control) {
-                flsgsstr = "1;5";
-                flsgsstr2 = ";5";
-                flsgsstr3 = ";5";
+                flagsstr = "1;5";
+                flagsstr2 = ";5";
+                flagsstr3 = ";5";
             }
             switch (event.keyCode) {
-                case KeyCode.ESC:
+                case KeyCode.ESCAPE:
                     return handleTextInput("\x1b");
                 case KeyCode.RETURN:
                     return handleTextInput("\n");
@@ -482,29 +484,29 @@ class TerminalWidget : WidgetGroup, OnScrollHandler {
                 case KeyCode.BACK:
                     return handleTextInput("\t");
                 case KeyCode.F1:
-                    return handleTextInput("\x1bO" ~ flsgsstr3 ~ "P");
+                    return handleTextInput("\x1bO" ~ flagsstr3 ~ "P");
                 case KeyCode.F2:
-                    return handleTextInput("\x1bO" ~ flsgsstr3 ~ "Q");
+                    return handleTextInput("\x1bO" ~ flagsstr3 ~ "Q");
                 case KeyCode.F3:
-                    return handleTextInput("\x1bO" ~ flsgsstr3 ~ "R");
+                    return handleTextInput("\x1bO" ~ flagsstr3 ~ "R");
                 case KeyCode.F4:
-                    return handleTextInput("\x1bO" ~ flsgsstr3 ~ "S");
+                    return handleTextInput("\x1bO" ~ flagsstr3 ~ "S");
                 case KeyCode.F5:
-                    return handleTextInput("\x1b[15" ~ flsgsstr2 ~ "~");
+                    return handleTextInput("\x1b[15" ~ flagsstr2 ~ "~");
                 case KeyCode.F6:
-                    return handleTextInput("\x1b[17" ~ flsgsstr2 ~ "~");
+                    return handleTextInput("\x1b[17" ~ flagsstr2 ~ "~");
                 case KeyCode.F7:
-                    return handleTextInput("\x1b[18" ~ flsgsstr2 ~ "~");
+                    return handleTextInput("\x1b[18" ~ flagsstr2 ~ "~");
                 case KeyCode.F8:
-                    return handleTextInput("\x1b[19" ~ flsgsstr2 ~ "~");
+                    return handleTextInput("\x1b[19" ~ flagsstr2 ~ "~");
                 case KeyCode.F9:
-                    return handleTextInput("\x1b[20" ~ flsgsstr2 ~ "~");
+                    return handleTextInput("\x1b[20" ~ flagsstr2 ~ "~");
                 case KeyCode.F10:
-                    return handleTextInput("\x1b[21" ~ flsgsstr2 ~ "~");
+                    return handleTextInput("\x1b[21" ~ flagsstr2 ~ "~");
                 case KeyCode.F11:
-                    return handleTextInput("\x1b[23" ~ flsgsstr2 ~ "~");
+                    return handleTextInput("\x1b[23" ~ flagsstr2 ~ "~");
                 case KeyCode.F12:
-                    return handleTextInput("\x1b[24" ~ flsgsstr2 ~ "~");
+                    return handleTextInput("\x1b[24" ~ flagsstr2 ~ "~");
                 case KeyCode.LEFT:
                     return handleTextInput("\x1b[" ~ flagsstr ~ "D");
                 case KeyCode.RIGHT:
@@ -514,24 +516,24 @@ class TerminalWidget : WidgetGroup, OnScrollHandler {
                 case KeyCode.DOWN:
                     return handleTextInput("\x1b[" ~ flagsstr ~ "B");
                 case KeyCode.INS:
-                    return handleTextInput("\x1b[2" ~ flsgsstr2 ~ "~");
+                    return handleTextInput("\x1b[2" ~ flagsstr2 ~ "~");
                 case KeyCode.DEL:
-                    return handleTextInput("\x1b[3" ~ flsgsstr2 ~ "~");
+                    return handleTextInput("\x1b[3" ~ flagsstr2 ~ "~");
                 case KeyCode.HOME:
                     return handleTextInput("\x1b[" ~ flagsstr ~ "H");
                 case KeyCode.END:
                     return handleTextInput("\x1b[" ~ flagsstr ~ "F");
                 case KeyCode.PAGEUP:
-                    return handleTextInput("\x1b[5" ~ flsgsstr2 ~ "~");
+                    return handleTextInput("\x1b[5" ~ flagsstr2 ~ "~");
                 case KeyCode.PAGEDOWN:
-                    return handleTextInput("\x1b[6" ~ flsgsstr2 ~ "~");
+                    return handleTextInput("\x1b[6" ~ flagsstr2 ~ "~");
                 default:
                     break;
             }
         }
         if (event.action == KeyAction.KeyUp) {
             switch (event.keyCode) {
-                case KeyCode.ESC:
+                case KeyCode.ESCAPE:
                 case KeyCode.RETURN:
                 case KeyCode.TAB:
                 case KeyCode.BACK:
@@ -838,6 +840,10 @@ class TerminalDevice : Thread {
         HANDLE hpipe;
     } else {
         int masterfd;
+        import core.sys.posix.fcntl: open_=open, O_WRONLY;
+        import core.sys.posix.unistd: close_=close;
+        import core.sys.posix.unistd: write_=write;
+        import core.sys.posix.unistd: read_=read;
     }
     @property string deviceName() { return _name; }
     private string _name;
@@ -886,6 +892,15 @@ class TerminalDevice : Thread {
             }
         } else {
             // posix
+            char[4096] buf;
+            while(!closed) {
+                auto bytesRead = read_(masterfd, buf.ptr, buf.length);
+                if (closed)
+                    break;
+                if (bytesRead > 0 && onBytesRead.assigned) {
+                    onBytesRead(buf[0 .. bytesRead].dup);
+                }
+            }
         }
         Log.d("TerminalDevice threadProc() exit");
     }
@@ -910,6 +925,10 @@ class TerminalDevice : Thread {
             }
         } else {
             // linux/posix
+            if (masterfd && masterfd != -1) {
+                auto bytesRead = write_(masterfd, msg.ptr, msg.length);
+            }
+            
         }
         return true;
     }
@@ -936,19 +955,27 @@ class TerminalDevice : Thread {
                 WriteFile(h, "stop".ptr, 4, &bytesWritten, null);
                 CloseHandle(h);
             }
+        } else {
+            if (masterfd && masterfd != -1) {
+                import std.string;
+                int clientfd = open_(_name.toStringz, O_WRONLY);
+                write_(clientfd, "1".ptr, 1);
+                close_(clientfd);
+            }
+        }
+        join(false);
+        version (Windows) {
             if (hpipe && hpipe != INVALID_HANDLE_VALUE) {
                 CloseHandle(hpipe);
                 hpipe = null;
             }
         } else {
             if (masterfd && masterfd != -1) {
-                import core.sys.posix.unistd: close_=close;
                 close_(masterfd);
                 masterfd = 0;
             }
         }
-        join(false);
-        _name = null;
+            _name = null;
     }
     bool create() {
         import std.string;
@@ -975,7 +1002,7 @@ class TerminalDevice : Thread {
                 import core.sys.posix.stdio;
                 import core.sys.posix.stdlib;
                 //import core.sys.posix.unistd;
-                masterfd = posix_openpt(O_RDWR | O_NOCTTY);
+                masterfd = posix_openpt(O_RDWR | O_NOCTTY | O_SYNC);
                 if (masterfd == -1) {
                     Log.e("posix_openpt failed - cannot open terminal");
                     close();
