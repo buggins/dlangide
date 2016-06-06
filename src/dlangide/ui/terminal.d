@@ -449,7 +449,32 @@ class TerminalWidget : WidgetGroup, OnScrollHandler {
             return true;
         }
         if (event.action == KeyAction.KeyDown) {
+            dstring flsgsstr;
+            dstring flsgsstr2;
+            dstring flsgsstr3;
+            if ((event.flags & KeyFlag.MainFlags) == KeyFlag.Menu) {
+                flsgsstr = "1;1";
+                flsgsstr2 = ";1";
+                flsgsstr3 = "1";
+            }
+            if ((event.flags & KeyFlag.MainFlags) == KeyFlag.Shift) {
+                flsgsstr = "1;2";
+                flsgsstr2 = ";2";
+                flsgsstr3 = "2";
+            }
+            if ((event.flags & KeyFlag.MainFlags) == KeyFlag.Alt) {
+                flsgsstr = "1;3";
+                flsgsstr2 = ";3";
+                flsgsstr3 = "3";
+            }
+            if ((event.flags & KeyFlag.MainFlags) == KeyFlag.Control) {
+                flsgsstr = "1;5";
+                flsgsstr2 = ";5";
+                flsgsstr3 = ";5";
+            }
             switch (event.keyCode) {
+                case KeyCode.ESC:
+                    return handleTextInput("\x1b");
                 case KeyCode.RETURN:
                     return handleTextInput("\n");
                 case KeyCode.TAB:
@@ -457,55 +482,56 @@ class TerminalWidget : WidgetGroup, OnScrollHandler {
                 case KeyCode.BACK:
                     return handleTextInput("\t");
                 case KeyCode.F1:
-                    return handleTextInput("\x1bOP");
+                    return handleTextInput("\x1bO" ~ flsgsstr3 ~ "P");
                 case KeyCode.F2:
-                    return handleTextInput("\x1bOQ");
+                    return handleTextInput("\x1bO" ~ flsgsstr3 ~ "Q");
                 case KeyCode.F3:
-                    return handleTextInput("\x1bOR");
+                    return handleTextInput("\x1bO" ~ flsgsstr3 ~ "R");
                 case KeyCode.F4:
-                    return handleTextInput("\x1bOS");
+                    return handleTextInput("\x1bO" ~ flsgsstr3 ~ "S");
                 case KeyCode.F5:
-                    return handleTextInput("\x1b[15~");
+                    return handleTextInput("\x1b[15" ~ flsgsstr2 ~ "~");
                 case KeyCode.F6:
-                    return handleTextInput("\x1b[17~");
+                    return handleTextInput("\x1b[17" ~ flsgsstr2 ~ "~");
                 case KeyCode.F7:
-                    return handleTextInput("\x1b[18~");
+                    return handleTextInput("\x1b[18" ~ flsgsstr2 ~ "~");
                 case KeyCode.F8:
-                    return handleTextInput("\x1b[19~");
+                    return handleTextInput("\x1b[19" ~ flsgsstr2 ~ "~");
                 case KeyCode.F9:
-                    return handleTextInput("\x1b[20~");
+                    return handleTextInput("\x1b[20" ~ flsgsstr2 ~ "~");
                 case KeyCode.F10:
-                    return handleTextInput("\x1b[21~");
+                    return handleTextInput("\x1b[21" ~ flsgsstr2 ~ "~");
                 case KeyCode.F11:
-                    return handleTextInput("\x1b[23~");
+                    return handleTextInput("\x1b[23" ~ flsgsstr2 ~ "~");
                 case KeyCode.F12:
-                    return handleTextInput("\x1b[24~");
+                    return handleTextInput("\x1b[24" ~ flsgsstr2 ~ "~");
                 case KeyCode.LEFT:
-                    return handleTextInput("\x1b[D");
+                    return handleTextInput("\x1b[" ~ flagsstr ~ "D");
                 case KeyCode.RIGHT:
-                    return handleTextInput("\x1b[C");
+                    return handleTextInput("\x1b[" ~ flagsstr ~ "C");
                 case KeyCode.UP:
-                    return handleTextInput("\x1b[A");
+                    return handleTextInput("\x1b[" ~ flagsstr ~ "A");
                 case KeyCode.DOWN:
-                    return handleTextInput("\x1b[B");
+                    return handleTextInput("\x1b[" ~ flagsstr ~ "B");
                 case KeyCode.INS:
-                    return handleTextInput("\x1b[2~");
+                    return handleTextInput("\x1b[2" ~ flsgsstr2 ~ "~");
                 case KeyCode.DEL:
-                    return handleTextInput("\x1b[3~");
+                    return handleTextInput("\x1b[3" ~ flsgsstr2 ~ "~");
                 case KeyCode.HOME:
-                    return handleTextInput("\x1b[1~");
+                    return handleTextInput("\x1b[" ~ flagsstr ~ "H");
                 case KeyCode.END:
-                    return handleTextInput("\x1b[4~");
+                    return handleTextInput("\x1b[" ~ flagsstr ~ "F");
                 case KeyCode.PAGEUP:
-                    return handleTextInput("\x1b[5~");
+                    return handleTextInput("\x1b[5" ~ flsgsstr2 ~ "~");
                 case KeyCode.PAGEDOWN:
-                    return handleTextInput("\x1b[6~");
+                    return handleTextInput("\x1b[6" ~ flsgsstr2 ~ "~");
                 default:
                     break;
             }
         }
         if (event.action == KeyAction.KeyUp) {
             switch (event.keyCode) {
+                case KeyCode.ESC:
                 case KeyCode.RETURN:
                 case KeyCode.TAB:
                 case KeyCode.BACK:
