@@ -361,14 +361,14 @@ class TerminalWidget : WidgetGroup, OnScrollHandler {
         _device = new TerminalDevice();
         TerminalWidget _this = this;
         if (_device.create()) {
-            _device.onBytesRead = delegate (char[] data) {
+            _device.onBytesRead = delegate (string data) {
                 import dlangui.platforms.common.platform;
                 Window w = window;
                 if (w) {
                     //w.exe
                     w.executeInUiThread(delegate() {
                         if (w.isChild(_this))
-                            write(cast(string)data);
+                            write(data);
                     });
                 }
             };
@@ -419,6 +419,122 @@ class TerminalWidget : WidgetGroup, OnScrollHandler {
                 break;
         }
         return true;
+    }
+
+    /// check echo mode
+    @property bool echo() { return _echo; }
+    /// set echo mode
+    @property void echo(bool b) { _echo = b; }
+
+    Signal!TerminalInputHandler onBytesRead;
+    protected bool _echo = false;
+    bool handleTextInput(dstring str) {
+        import std.utf;
+        string s8 = toUTF8(str);
+        if (_echo)
+            write(s8);
+        if (_device)
+            _device.write(s8);
+        if (onBytesRead.assigned) {
+            onBytesRead(s8);
+        }
+        return true;
+    }
+
+    override bool onKeyEvent(KeyEvent event) {
+        if (event.action == KeyAction.Text) {
+            dstring text = event.text;
+            if (text.length)
+                handleTextInput(text);
+            return true;
+        }
+        if (event.action == KeyAction.KeyDown) {
+            switch (event.keyCode) {
+                case KeyCode.RETURN:
+                    return handleTextInput("\n");
+                case KeyCode.TAB:
+                    return handleTextInput("\t");
+                case KeyCode.BACK:
+                    return handleTextInput("\t");
+                case KeyCode.F1:
+                    return handleTextInput("\x1bOP");
+                case KeyCode.F2:
+                    return handleTextInput("\x1bOQ");
+                case KeyCode.F3:
+                    return handleTextInput("\x1bOR");
+                case KeyCode.F4:
+                    return handleTextInput("\x1bOS");
+                case KeyCode.F5:
+                    return handleTextInput("\x1b[15~");
+                case KeyCode.F6:
+                    return handleTextInput("\x1b[17~");
+                case KeyCode.F7:
+                    return handleTextInput("\x1b[18~");
+                case KeyCode.F8:
+                    return handleTextInput("\x1b[19~");
+                case KeyCode.F9:
+                    return handleTextInput("\x1b[20~");
+                case KeyCode.F10:
+                    return handleTextInput("\x1b[21~");
+                case KeyCode.F11:
+                    return handleTextInput("\x1b[23~");
+                case KeyCode.F12:
+                    return handleTextInput("\x1b[24~");
+                case KeyCode.LEFT:
+                    return handleTextInput("\x1b[D");
+                case KeyCode.RIGHT:
+                    return handleTextInput("\x1b[C");
+                case KeyCode.UP:
+                    return handleTextInput("\x1b[A");
+                case KeyCode.DOWN:
+                    return handleTextInput("\x1b[B");
+                case KeyCode.INS:
+                    return handleTextInput("\x1b[2~");
+                case KeyCode.DEL:
+                    return handleTextInput("\x1b[3~");
+                case KeyCode.HOME:
+                    return handleTextInput("\x1b[1~");
+                case KeyCode.END:
+                    return handleTextInput("\x1b[4~");
+                case KeyCode.PAGEUP:
+                    return handleTextInput("\x1b[5~");
+                case KeyCode.PAGEDOWN:
+                    return handleTextInput("\x1b[6~");
+                default:
+                    break;
+            }
+        }
+        if (event.action == KeyAction.KeyUp) {
+            switch (event.keyCode) {
+                case KeyCode.RETURN:
+                case KeyCode.TAB:
+                case KeyCode.BACK:
+                case KeyCode.F1:
+                case KeyCode.F2:
+                case KeyCode.F3:
+                case KeyCode.F4:
+                case KeyCode.F5:
+                case KeyCode.F6:
+                case KeyCode.F7:
+                case KeyCode.F8:
+                case KeyCode.F9:
+                case KeyCode.F10:
+                case KeyCode.F11:
+                case KeyCode.F12:
+                case KeyCode.UP:
+                case KeyCode.DOWN:
+                case KeyCode.LEFT:
+                case KeyCode.RIGHT:
+                case KeyCode.HOME:
+                case KeyCode.END:
+                case KeyCode.PAGEUP:
+                case KeyCode.PAGEDOWN:
+                    return true;
+                default:
+                    break;
+            }
+        }
+        return super.onKeyEvent(event);
     }
 
     /** 
@@ -686,7 +802,7 @@ class TerminalWidget : WidgetGroup, OnScrollHandler {
 import core.thread;
 
 interface TerminalInputHandler {
-    void onBytesReceived(char[] data);
+    void onBytesReceived(string data);
 }
 
 class TerminalDevice : Thread {
@@ -701,6 +817,7 @@ class TerminalDevice : Thread {
     private string _name;
     private bool started;
     private bool closed;
+    private bool connected;
 
     this() {
         super(&threadProc);
@@ -716,6 +833,7 @@ class TerminalDevice : Thread {
             while (!closed) {
                 Log.d("TerminalDevice -- Waiting for client");
                 if (ConnectNamedPipe(hpipe, null)) {
+                    connected = true;
                     // accept client
                     Log.d("TerminalDevice client connected");
                     char[4096] buf;
@@ -735,6 +853,7 @@ class TerminalDevice : Thread {
                         }
                     }
                     Log.d("TerminalDevice client disconnecting");
+                    connected = false;
                     // disconnect client
                     DisconnectNamedPipe(hpipe);
                 }
@@ -751,6 +870,8 @@ class TerminalDevice : Thread {
         if (closed || !started)
             return false;
         version (Windows) {
+            if (!connected)
+                return false;
             for (;;) {
                 DWORD bytesWritten = 0;
                 if (WriteFile(hpipe, cast(char*)msg.ptr, msg.length, &bytesWritten, null) != TRUE) {
