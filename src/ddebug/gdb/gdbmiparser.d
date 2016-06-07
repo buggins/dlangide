@@ -63,7 +63,7 @@ string demangleFunctionName(string fn) {
     import std.ascii;
     //import core.demangle : Demangle;
     uint i = 0;
-    for(; fn[i] == '_' || isAlphaNum(fn[i]); i++) {
+    for(; i < fn.length && (fn[i] == '_' || isAlphaNum(fn[i])); i++) {
         // next
     }
     string rest = i < fn.length ? fn[i .. $] : null;
