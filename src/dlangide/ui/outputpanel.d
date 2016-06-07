@@ -11,6 +11,13 @@ import std.regex;
 import std.algorithm : startsWith;
 import std.string;
 
+version (Windows) {
+    enum ENABLE_INTERNAL_TERMINAL = false;
+} else {
+    enum ENABLE_INTERNAL_TERMINAL = true;
+}
+
+
 /// event listener to navigate by error/warning position
 interface CompilerLogIssueClickHandler {
     bool onCompilerLogIssueClick(dstring filename, int line, int column);
@@ -22,11 +29,16 @@ class CompilerLogWidget : LogWidget {
 
     Signal!CompilerLogIssueClickHandler compilerLogIssueClickHandler;
 
-    auto ctr = ctRegex!(r"(.+)\((\d+)\): (Error|Warning|Deprecation): (.+)"d);
+    //auto ctr = ctRegex!(r"(.+)\((\d+)\): (Error|Warning|Deprecation): (.+)"d);
+    auto ctr = ctRegex!(r"(.+)\((\d+)(?:,(\d+))?\): (Error|Warning|Deprecation): (.+)"d);
 
     /// forward to super c'tor
     this(string ID) {
         super(ID);
+        //auto match2 = matchFirst("file.d(123,234): Error: bla bla"d, ctr2);
+        //if (!match2.empty) {
+        //    Log.d("found");
+        //}
     }
 
     protected uint _filenameColor = 0x0000C0;
@@ -90,6 +102,31 @@ class CompilerLogWidget : LogWidget {
                 colors[i].textFlags = flags;
             }
             return colors;
+        } else if ((txt.startsWith("Performing ") && txt.indexOf(" build using ") > 0)
+                   || txt.startsWith("Upgrading project in ")
+                   ) {
+            CustomCharProps[] colors = new CustomCharProps[txt.length];
+            uint cl = defColor;
+            flags |= TextFlag.Underline;
+            for (int i = 0; i < txt.length; i++) {
+                colors[i].color = cl;
+                colors[i].textFlags = flags;
+            }
+            return colors;
+        } else if (txt.indexOf(": building configuration ") > 0) {
+            CustomCharProps[] colors = new CustomCharProps[txt.length];
+            uint cl = _filenameColor;
+            flags |= TextFlag.Underline;
+            for (int i = 0; i < txt.length; i++) {
+                dstring rest = txt[i..$];
+                if (rest.startsWith(": building configuration "d)) {
+                    //cl = defColor;
+                    flags &= ~TextFlag.Underline;
+                }
+                colors[i].color = cl;
+                colors[i].textFlags = flags;
+            }
+            return colors;
         }
         return null;
     }
@@ -109,7 +146,17 @@ class CompilerLogWidget : LogWidget {
             if(!match.empty) {
                 if (compilerLogIssueClickHandler.assigned) {
                     import std.conv:to;
-                    compilerLogIssueClickHandler(match[1], to!int(match[2]), 0);
+                    int row = to!int(match[2]) - 1;
+                    if (row < 0)
+                        row = 0;
+                    int col = 0;
+                    if (match[3]) {
+                        col = to!int(match[3]) - 1;
+                        if (col < 0)
+                            col = 0;
+                    }
+
+                    compilerLogIssueClickHandler(match[1], row, col);
                 }
             }
 
@@ -137,9 +184,11 @@ class OutputPanel : DockWindow {
     }
 
     void activateTerminalTab(bool clear = false) {
-        _tabs.selectTab("TERMINAL");
-        if (clear)
-            _terminalWidget.resetTerminal();
+        static if (ENABLE_INTERNAL_TERMINAL) {
+            _tabs.selectTab("TERMINAL");
+            if (clear)
+                _terminalWidget.resetTerminal();
+        }
     }
 
     this(string id) {
@@ -150,8 +199,10 @@ class OutputPanel : DockWindow {
 
     /// terminal device for Console tab
     @property string terminalDeviceName() {
-        if (_terminalWidget)
-            return _terminalWidget.deviceName;
+        static if (ENABLE_INTERNAL_TERMINAL) {
+            if (_terminalWidget)
+                return _terminalWidget.deviceName;
+        }
         return null;
     }
 
@@ -173,37 +224,39 @@ class OutputPanel : DockWindow {
         _tabs.addTab(_logWidget, "Compiler Log"d);
         _tabs.selectTab("logwidget");
 
-        _terminalWidget = new TerminalWidget("TERMINAL");
-        _terminalWidget.layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT);
-        _tabs.addTab(_terminalWidget, "Output"d);
-        _terminalWidget.write("Hello\nSecond line\nTest\n"d);
-        _terminalWidget.write("SomeString 123456789\rAwesomeString\n"d); // test \r
-        // testing tabs
-        _terminalWidget.write("id\tname\tdescription\n"d);
-        _terminalWidget.write("1\tFoo\tFoo line\n"d);
-        _terminalWidget.write("2\tBar\tBar line\n"d);
-        _terminalWidget.write("3\tFoobar\tFoo bar line\n"d);
-        _terminalWidget.write("\n\n\n"d);
-        // testing line wrapping
-        _terminalWidget.write("Testing very long line. Юникод. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n"c);
-        // testing cursor position changes
-        _terminalWidget.write("\x1b[4;4HCURSOR(4,4)\x1b[HHOME\x1b[B*A\x1b[B*B\x1b[5C\x1b[D***\x1b[A*UP\x1b[3B*DOWN"d);
-        //_terminalWidget.write("\x1b[Jerased down"d);
-        //_terminalWidget.write("\x1b[1Jerased up"d);
-        //_terminalWidget.write("\x1b[2Jerased screen"d);
-        //_terminalWidget.write("\x1b[Kerased eol"d);
-        //_terminalWidget.write("\x1b[1Kerased bol"d);
-        //_terminalWidget.write("\x1b[2Kerased line"d);
-        //_terminalWidget.write("Юникод Unicode"d);
-        _terminalWidget.write("\x1b[34;45m blue on magenta "d);
-        _terminalWidget.write("\x1b[31;46m red on cyan "d);
-        //_terminalWidget.write("\x1b[2Jerased screen"d);
-        //TerminalDevice term = new TerminalDevice();
-        //if (!term.create()) {
-        //    Log.e("Cannot create terminal device");
-        //}
-        _terminalWidget.write("\n\n\n\nDevice: "d ~ toUTF32(_terminalWidget.deviceName));
-        _terminalWidget.write("\x1b[0m\nnormal text\n"d);
+        static if (ENABLE_INTERNAL_TERMINAL) {
+            _terminalWidget = new TerminalWidget("TERMINAL");
+            _terminalWidget.layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT);
+            _tabs.addTab(_terminalWidget, "Output"d);
+            _terminalWidget.write("Hello\nSecond line\nTest\n"d);
+            _terminalWidget.write("SomeString 123456789\rAwesomeString\n"d); // test \r
+            // testing tabs
+            _terminalWidget.write("id\tname\tdescription\n"d);
+            _terminalWidget.write("1\tFoo\tFoo line\n"d);
+            _terminalWidget.write("2\tBar\tBar line\n"d);
+            _terminalWidget.write("3\tFoobar\tFoo bar line\n"d);
+            _terminalWidget.write("\n\n\n"d);
+            // testing line wrapping
+            _terminalWidget.write("Testing very long line. Юникод. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n"c);
+            // testing cursor position changes
+            _terminalWidget.write("\x1b[4;4HCURSOR(4,4)\x1b[HHOME\x1b[B*A\x1b[B*B\x1b[5C\x1b[D***\x1b[A*UP\x1b[3B*DOWN"d);
+            //_terminalWidget.write("\x1b[Jerased down"d);
+            //_terminalWidget.write("\x1b[1Jerased up"d);
+            //_terminalWidget.write("\x1b[2Jerased screen"d);
+            //_terminalWidget.write("\x1b[Kerased eol"d);
+            //_terminalWidget.write("\x1b[1Kerased bol"d);
+            //_terminalWidget.write("\x1b[2Kerased line"d);
+            //_terminalWidget.write("Юникод Unicode"d);
+            _terminalWidget.write("\x1b[34;45m blue on magenta "d);
+            _terminalWidget.write("\x1b[31;46m red on cyan "d);
+            //_terminalWidget.write("\x1b[2Jerased screen"d);
+            //TerminalDevice term = new TerminalDevice();
+            //if (!term.create()) {
+            //    Log.e("Cannot create terminal device");
+            //}
+            _terminalWidget.write("\n\n\n\nDevice: "d ~ toUTF32(_terminalWidget.deviceName));
+            _terminalWidget.write("\x1b[0m\nnormal text\n"d);
+        }
         return _tabs;
     }
 
