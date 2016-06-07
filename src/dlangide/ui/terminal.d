@@ -84,6 +84,10 @@ struct TerminalContent {
     @property void lineWrap(bool v) {
         _lineWrap = v;
     }
+    void clear() {
+        lines.length = 0;
+        cursorx = cursory = topLine= 0;
+    }
     void resetTerminal() {
         for (int i = topLine; i < cast(int)lines.length; i++) {
             lines[i] = TerminalLine.init;
@@ -672,7 +676,8 @@ class TerminalWidget : WidgetGroup, OnScrollHandler {
     }
 
     void resetTerminal() {
-        _content.resetTerminal();
+        _content.clear();
+        _content.updateScrollBar(_verticalScrollBar);
     }
 
     private dchar[] outputChars;
@@ -872,13 +877,24 @@ class TerminalDevice : Thread {
                     connected = true;
                     // accept client
                     Log.d("TerminalDevice client connected");
-                    char[4096] buf;
+                    char[16384] buf;
                     for (;;) {
                         if (closed)
                             break;
                         DWORD bytesRead = 0;
+                        DWORD bytesAvail = 0;
+                        DWORD bytesInMessage = 0;
                         // read data from client
-                        Log.d("TerminalDevice reading from pipe");
+                        //Log.d("TerminalDevice reading from pipe");
+                        if (!PeekNamedPipe(hpipe, buf.ptr, cast(DWORD)buf.length, &bytesRead, &bytesAvail, &bytesInMessage)) {
+                            break;
+                        }
+                        if (closed)
+                            break;
+                        if (!bytesRead) {
+                            Sleep(10);
+                            continue;
+                        }
                         if (ReadFile(hpipe, &buf, 1, &bytesRead, null)) { //buf.length
                             Log.d("TerminalDevice bytes read: ", bytesRead);
                             if (closed)
@@ -989,15 +1005,18 @@ class TerminalDevice : Thread {
         version (Windows) {
             import std.uuid;
             _name = "\\\\.\\pipe\\dlangide-terminal-" ~ randomUUID().toString;
+            SECURITY_ATTRIBUTES sa;
+            sa.nLength = sa.sizeof;
+            sa.bInheritHandle = TRUE;
             hpipe = CreateNamedPipeA(cast(const(char)*)_name.toStringz, 
                              PIPE_ACCESS_DUPLEX | FILE_FLAG_FIRST_PIPE_INSTANCE, // dwOpenMode
-                             PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT, // | PIPE_REJECT_REMOTE_CLIENTS,
-                             //PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT, // | PIPE_REJECT_REMOTE_CLIENTS,
+                             //PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT, // | PIPE_REJECT_REMOTE_CLIENTS,
+                             PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT, // | PIPE_REJECT_REMOTE_CLIENTS,
                              1,
-                             1, //16384,
-                             1, //16384,
-                             50,
-                             null);
+                             16384,
+                             16384,
+                             20,
+                             &sa);
             if (hpipe == INVALID_HANDLE_VALUE) {
                 Log.e("Failed to create named pipe for terminal, error=", GetLastError());
                 close();
