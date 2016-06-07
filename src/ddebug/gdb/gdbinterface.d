@@ -780,7 +780,7 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
             _threadId = threadId;
             _frameId = frameId;
             //command = "-stack-list-variables --thread " ~ to!string(_threadId) ~ " --frame " ~ to!string(_frameId) ~ " --simple-values"; 
-            command = "-stack-list-locals --thread " ~ to!string(_threadId) ~ " --frame " ~ to!string(_frameId) ~ " 2"; 
+            command = "-stack-list-locals --thread " ~ to!string(_threadId) ~ " --frame " ~ to!string(_frameId) ~ " 1"; 
         }
         override void onResult() {
             DebugVariableList variables = parseVariableList(params);
