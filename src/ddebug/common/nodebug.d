@@ -137,6 +137,9 @@ exit $exit_code
     /// returns true if it's debugger
     @property bool isDebugger() { return false; }
 
+    /// returns true if it's mago debugger
+    @property bool isMagoDebugger() { return false; }
+
     /// executable file
     @property string executableFile() { return _executableFile; }
 

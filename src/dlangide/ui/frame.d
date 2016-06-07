@@ -46,7 +46,7 @@ import std.path;
 
 immutable string HELP_PAGE_URL = "https://github.com/buggins/dlangide/wiki";
 // TODO: get version from GIT commit
-immutable dstring DLANGIDE_VERSION = "v0.6.8"d;
+immutable dstring DLANGIDE_VERSION = "v0.6.12"d;
 
 bool isSupportedSourceTextFileFormat(string filename) {
     return (filename.endsWith(".d") || filename.endsWith(".txt") || filename.endsWith(".cpp") || filename.endsWith(".h") || filename.endsWith(".c")
@@ -215,8 +215,8 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
 
         GDBInterface program = new GDBInterface();
         DebuggerProxy debuggerProxy = new DebuggerProxy(program, &executeInUiThread);
-        setExecutableParameters(debuggerProxy, project, executableFileName);
         debuggerProxy.setDebuggerExecutable(debuggerExecutable);
+        setExecutableParameters(debuggerProxy, project, executableFileName);
         _execution = debuggerProxy;
         _debugHandler = new DebuggerUIHandler(this, debuggerProxy);
         _debugHandler.onBreakpointListUpdated(currentWorkspace.getBreakpoints());
@@ -263,8 +263,11 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         string[] args;
         string externalConsoleExecutable = null;
         string workingDirectory = project.workingDirectory;
+        string tty = _logPanel.terminalDeviceName;
         if (project.runInExternalConsole) {
             version(Windows) {
+                if (program.isMagoDebugger)
+                    tty = "external-console";
             } else {
                 externalConsoleExecutable = _settings.terminalExecutable;
             }
@@ -275,12 +278,12 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             _logPanel.logLine("Starting debugger for " ~ executableFileName);
         _statusLine.setBackgroundOperationStatus("debug-run", program.isDebugger ?  "debugging..."d : "running..."d);
         string[string] env;
-        string tty = _logPanel.terminalDeviceName;
         program.setExecutableParams(executableFileName, args, workingDirectory, env);
         if (!tty.empty) {
             Log.d("Terminal window device name: ", tty);
             program.setTerminalTty(tty);
-            _logPanel.activateTerminalTab(true);
+            if (tty != "external-console")
+                _logPanel.activateTerminalTab(true);
         } else
             program.setTerminalExecutable(externalConsoleExecutable);
         return true;
@@ -365,7 +368,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         import std.conv:to;
         openSourceFile(to!string(filename));
 
-        currentEditor().setCaretPos(line-1,column);
+        currentEditor().setCaretPos(line, column);
 
         return true;
     }

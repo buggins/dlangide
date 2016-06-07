@@ -292,6 +292,9 @@ class DebuggerProxy : Debugger, DebuggerCallback {
 
     /// returns true if it's debugger
     @property bool isDebugger() { return true; }
+    /// returns true if it's mago debugger
+    @property bool isMagoDebugger() { return _debugger.isMagoDebugger; }
+
     /// executable file
     @property string executableFile() { return _debugger.executableFile; }
     /// returns execution status
@@ -433,6 +436,13 @@ abstract class DebuggerBase : Thread, Debugger {
     void setDebuggerExecutable(string debuggerExecutable) {
         _debuggerExecutable = debuggerExecutable;
     }
+
+    /// returns true if it's mago debugger
+    @property bool isMagoDebugger() {
+        import std.string;
+        return _debuggerExecutable.indexOf("mago-mi") >= 0;
+    }
+
 
     @property bool isDebugger() { return true; }
 

@@ -28,6 +28,8 @@ interface ProgramExecution {
 
     /// returns true if it's debugger
     @property bool isDebugger();
+    /// returns true if it's mago debugger
+    @property bool isMagoDebugger();
     /// executable file
     @property string executableFile();
     /// returns execution status
