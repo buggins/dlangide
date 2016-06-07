@@ -52,6 +52,7 @@ class StackPanel : DockWindow, OnItemSelectedHandler, CellActivatedHandler {
     int _currentThreadIndex;
     int _currentFrame;
     void updateDebugInfo(DebugThreadList data, ulong currentThreadId, int currentFrame) {
+        import std.path;
         _debugInfo = data;
         if (currentThreadId == 0)
             currentThreadId = data.currentThreadId;
@@ -76,7 +77,12 @@ class StackPanel : DockWindow, OnItemSelectedHandler, CellActivatedHandler {
                 _comboBox.selectedItemIndex = _currentThreadIndex;
                 _grid.resize(2, _selectedThread.length);
                 for (int i = 0; i < _selectedThread.length; i++) {
-                    _grid.setCellText(0, i, _selectedThread[i].func.toUTF32);
+                    if (_selectedThread[i].func)
+                        _grid.setCellText(0, i, _selectedThread[i].func.toUTF32);
+                    else if (_selectedThread[i].from)
+                        _grid.setCellText(0, i, baseName(_selectedThread[i].from.toUTF32));
+                    else
+                        _grid.setCellText(0, i, _selectedThread[i].file.toUTF32);
                     _grid.setCellText(1, i, _selectedThread[i].formattedAddress.toUTF32);
                 }
             } else {

@@ -71,6 +71,7 @@ class DebuggerUIHandler : DebuggerCallback, StackFrameSelectedHandler {
     /// debugger is started and loaded program, you can set breakpoints at this time
     void onProgramLoaded(bool successful, bool debugInfoLoaded) {
         _ide.logPanel.logLine("Program is loaded");
+        _ide.statusLine.setStatusText("Loaded"d);
         switchToDebugPerspective();
         // TODO: check succes status and debug info
         if (_breakpoints.length) {
@@ -114,13 +115,16 @@ class DebuggerUIHandler : DebuggerCallback, StackFrameSelectedHandler {
             _ide.statusLine.setStatusText("Stopped"d);
             _debugger.stop();
         } else if (state == DebuggingState.running) {
-            _ide.logPanel.logLine("Program is started");
+            //_ide.logPanel.logLine("Program is started");
             _ide.statusLine.setStatusText("Running"d);
             _ide.window.update();
         } else if (state == DebuggingState.paused) {
             updateLocation(location);
-            _ide.logPanel.logLine("Program is paused.");
-            _ide.statusLine.setStatusText("Paused"d);
+            //_ide.logPanel.logLine("Program is paused.");
+            if (reason == StateChangeReason.exception)
+                _ide.statusLine.setStatusText("Signal received"d);
+            else
+                _ide.statusLine.setStatusText("Paused"d);
             _ide.window.update();
         }
     }

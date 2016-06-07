@@ -19,6 +19,7 @@ enum StateChangeReason {
     unknown,
     breakpointHit,
     endSteppingRange,
+    exception,
     exited,
 }
 
@@ -26,6 +27,7 @@ class LocationBase {
     string file;
     string fullFilePath;
     string projectFilePath;
+    string from;
     int line;
     this() {}
     this(LocationBase v) {
@@ -33,6 +35,7 @@ class LocationBase {
         fullFilePath = v.fullFilePath;
         projectFilePath = v.projectFilePath;
         line = v.line;
+        from = v.from;
     }
     LocationBase clone() { return new LocationBase(this); }
 }

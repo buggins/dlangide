@@ -886,7 +886,7 @@ class TerminalDevice : Thread {
                         DWORD bytesInMessage = 0;
                         // read data from client
                         //Log.d("TerminalDevice reading from pipe");
-                        if (!PeekNamedPipe(hpipe, buf.ptr, cast(DWORD)buf.length, &bytesRead, &bytesAvail, &bytesInMessage)) {
+                        if (!PeekNamedPipe(hpipe, buf.ptr, cast(DWORD)1 /*buf.length*/, &bytesRead, &bytesAvail, &bytesInMessage)) {
                             break;
                         }
                         if (closed)
@@ -1009,12 +1009,12 @@ class TerminalDevice : Thread {
             sa.nLength = sa.sizeof;
             sa.bInheritHandle = TRUE;
             hpipe = CreateNamedPipeA(cast(const(char)*)_name.toStringz, 
-                             PIPE_ACCESS_DUPLEX | FILE_FLAG_FIRST_PIPE_INSTANCE, // dwOpenMode
+                             PIPE_ACCESS_DUPLEX | FILE_FLAG_WRITE_THROUGH | FILE_FLAG_FIRST_PIPE_INSTANCE, // dwOpenMode
                              //PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT, // | PIPE_REJECT_REMOTE_CLIENTS,
                              PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT, // | PIPE_REJECT_REMOTE_CLIENTS,
                              1,
-                             16384,
-                             16384,
+                             1, //16384,
+                             1, //16384,
                              20,
                              &sa);
             if (hpipe == INVALID_HANDLE_VALUE) {

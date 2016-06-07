@@ -539,6 +539,9 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
                 }
                 updateState();
                 _callback.onDebugState(DebuggingState.paused, StateChangeReason.breakpointHit, location, bp);
+            } else if (reason.equal("signal-received")) {
+                updateState();
+                _callback.onDebugState(DebuggingState.paused, StateChangeReason.exception, location, bp);
             } else if (reason.equal("exited-normally")) {
                 _exitCode = 0;
                 Log.i("Program exited. Exit code ", _exitCode);

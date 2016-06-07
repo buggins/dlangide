@@ -54,6 +54,28 @@ MIValue parseMI(string s) {
     }
 }
 
+string demangleFunctionName(string fn) {
+    if (!fn)
+        return fn;
+    if (!fn.startsWith("_D"))
+        return fn;
+    import std.demangle;
+    import std.ascii;
+    //import core.demangle : Demangle;
+    uint i = 0;
+    for(; fn[i] == '_' || isAlphaNum(fn[i]); i++) {
+        // next
+    }
+    string rest = i < fn.length ? fn[i .. $] : null;
+    try {
+        return demangle(fn[0..i]) ~ rest;
+    } catch (Exception e) {
+        // cannot demangle
+        Log.v("Failed to demangle " ~ fn[0..i]);
+        return fn;
+    }
+}
+
 /*
     frame = {
             addr = "0x00000000004015b2",
@@ -73,8 +95,9 @@ DebugFrame parseFrame(MIValue frame) {
     location.projectFilePath = toNativeDelimiters(frame.getString("file"));
     location.fullFilePath = toNativeDelimiters(frame.getString("fullname"));
     location.line = frame.getInt("line");
-    location.func = frame.getString("func");
+    location.func = demangleFunctionName(frame.getString("func"));
     location.address = frame.getUlong("addr");
+    location.from = toNativeDelimiters(frame.getString("from"));
     location.level = frame.getInt("level");
     return location;
 }
