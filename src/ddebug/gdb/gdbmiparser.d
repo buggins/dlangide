@@ -54,16 +54,22 @@ MIValue parseMI(string s) {
     }
 }
 
-string demangleFunctionName(string fn) {
-    if (!fn)
-        return fn;
-    if (!fn.startsWith("_D"))
-        return fn;
+string demangleFunctionName(string mangledName) {
+    import std.ascii;
+    if (!mangledName)
+        return mangledName;
+    string fn = mangledName;
+    if (!fn.startsWith("_D")) {
+        // trying to fix strange corrupted mangling under OSX/dmd/lldb
+    	if (fn.length < 3 || fn[0]!='D' || !isDigit(fn[1]))
+        	return mangledName;
+        fn = "_" ~ mangledName;
+    }
     import std.demangle;
     import std.ascii;
     //import core.demangle : Demangle;
     uint i = 0;
-    for(; fn[i] == '_' || isAlphaNum(fn[i]); i++) {
+    for(; i < fn.length && (fn[i] == '_' || isAlphaNum(fn[i])); i++) {
         // next
     }
     string rest = i < fn.length ? fn[i .. $] : null;
@@ -72,7 +78,7 @@ string demangleFunctionName(string fn) {
     } catch (Exception e) {
         // cannot demangle
         Log.v("Failed to demangle " ~ fn[0..i]);
-        return fn;
+        return mangledName;
     }
 }
 

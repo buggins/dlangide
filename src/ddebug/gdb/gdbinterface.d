@@ -227,7 +227,8 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
                 debuggerArgs ~= externalTerminalTty;
             }
         }
-        debuggerArgs ~= "--interpreter=mi";
+        debuggerArgs ~= "--interpreter";
+        debuggerArgs ~= "mi2";
         debuggerArgs ~= "--silent";
         if (!USE_INIT_SEQUENCE) {
             debuggerArgs ~= "--args";
@@ -503,6 +504,8 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
         Log.d("GDB internal debug message: ", s);
     }
 
+    long _stoppedThreadId = 0;
+
     // *stopped,reason="exited-normally"
     // *running,thread-id="all"
     // *asyncclass,result
@@ -524,12 +527,14 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
             StateChangeReason reasonId = StateChangeReason.unknown;
             DebugFrame location = parseFrame(params["frame"]);
             string threadId = params.getString("thread-id");
+            _stoppedThreadId = params.getUlong("thread-id", 0);
             string stoppedThreads = params.getString("all");
             Breakpoint bp = null;
             if (reason.equal("end-stepping-range")) {
                 updateState();
                 _callback.onDebugState(DebuggingState.paused, StateChangeReason.endSteppingRange, location, bp);
             } else if (reason.equal("breakpoint-hit")) {
+		        Log.v("handling breakpoint-hit");
                 if (GDBBreakpoint gdbbp = findBreakpointByNumber(params.getString("bkptno"))) {
                     bp = gdbbp.bp;
                     if (!location && bp) {
@@ -537,9 +542,11 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
                         location.fillMissingFields(bp);
                     }
                 }
+                //_requests.targetIsReady();
                 updateState();
                 _callback.onDebugState(DebuggingState.paused, StateChangeReason.breakpointHit, location, bp);
             } else if (reason.equal("signal-received")) {
+                //_requests.targetIsReady();
                 updateState();
                 _callback.onDebugState(DebuggingState.paused, StateChangeReason.exception, location, bp);
             } else if (reason.equal("exited-normally")) {
@@ -560,6 +567,8 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
                 _exitCode = -1;
                 _callback.onDebugState(DebuggingState.stopped, StateChangeReason.exited, null, null);
             }
+        } else {
+	        Log.e("unknown async type `", msgType, "`");
         }
     }
 
@@ -692,7 +701,7 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
             submitRequest(new GDBInitRequest("-inferior-tty-set " ~ quotePathIfNeeded(externalTerminalTty), true));
         
         submitRequest(new GDBInitRequest("-gdb-set breakpoint pending on", false));
-        submitRequest(new GDBInitRequest("-enable-pretty-printing", false));
+        //submitRequest(new GDBInitRequest("-enable-pretty-printing", false));
         submitRequest(new GDBInitRequest("-gdb-set print object on", false));
         submitRequest(new GDBInitRequest("-gdb-set print sevenbit-strings on", false));
         submitRequest(new GDBInitRequest("-gdb-set host-charset UTF-8", false));
@@ -728,9 +737,11 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
         this() { command = "-thread-info"; }
         override void onResult() {
             _currentState = parseThreadList(params);
-            if (_currentState) {
+			if (_currentState) {
                 // TODO
                 Log.d("Thread list is parsed");
+                if (!_currentState.currentThreadId)
+                	_currentState.currentThreadId = _stoppedThreadId;
                 submitRequest(new StackListFramesRequest(_currentState.currentThreadId, 0));
             }
         }
@@ -768,7 +779,8 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
         this(ulong threadId, int frameId) {
             _threadId = threadId;
             _frameId = frameId;
-            command = "-stack-list-variables --thread " ~ to!string(_threadId) ~ " --frame " ~ to!string(_frameId) ~ " --simple-values"; 
+            //command = "-stack-list-variables --thread " ~ to!string(_threadId) ~ " --frame " ~ to!string(_frameId) ~ " --simple-values"; 
+            command = "-stack-list-locals --thread " ~ to!string(_threadId) ~ " --frame " ~ to!string(_frameId) ~ " 1"; 
         }
         override void onResult() {
             DebugVariableList variables = parseVariableList(params);
