@@ -329,6 +329,8 @@ class ExternalProcess {
             Log.e("Cannot run program ", _program, " ", e);
         } catch (std.stdio.StdioException e) {
             Log.e("Cannot redirect streams for program ", _program, " ", e);
+        } catch (Throwable e) {
+            Log.e("Exception while trying to run program ", _program, " ", e);
         }
         return _state;
     }
