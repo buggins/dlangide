@@ -50,6 +50,7 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         showIcons = true;
         //showFolding = true;
         showWhiteSpaceMarks = true;
+        showTabPositionMarks = true;
         content.marksChanged = this;
     }
 
@@ -89,6 +90,7 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         smartIndents = _settings.smartIndents;
         smartIndentsAfterPaste = _settings.smartIndentsAfterPaste;
         showWhiteSpaceMarks = _settings.showWhiteSpaceMarks;
+        showTabPositionMarks = _settings.showTabPositionMarks;
     }
 
     protected EditorTool _editorTool;
