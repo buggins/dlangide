@@ -68,31 +68,32 @@ extern (C) int UIAppMain(string[] args) {
     //}
     version(unittest) {
         return 0;
-    }
+    } else {
 
-    // create window
-    Window window = Platform.instance.createWindow("Dlang IDE", null, WindowFlag.Resizable, 900, 730);
-    // set window icon
-    window.windowIcon = drawableCache.getImage("dlangui-logo1");
+        // create window
+        Window window = Platform.instance.createWindow("Dlang IDE", null, WindowFlag.Resizable, 900, 730);
+        // set window icon
+        window.windowIcon = drawableCache.getImage("dlangui-logo1");
     
-    //Widget w = new Widget();
-    //pragma(msg, w.click.return_t, "", w.click.params_t);
+        //Widget w = new Widget();
+        //pragma(msg, w.click.return_t, "", w.click.params_t);
 
-    IDEFrame frame = new IDEFrame(window);
+        IDEFrame frame = new IDEFrame(window);
 
 
-    // open home screen tab
-    frame.showHomeScreen();
-    // for testing: load workspace at startup
-    //frame.openFileOrWorkspace(appendPath(exePath, "../workspaces/sample1/sample1.dlangidews"));
+        // open home screen tab
+        frame.showHomeScreen();
+        // for testing: load workspace at startup
+        //frame.openFileOrWorkspace(appendPath(exePath, "../workspaces/sample1/sample1.dlangidews"));
 
-    // show window
-    window.show();
+        // show window
+        window.show();
 
-    //jsonTest();
+        //jsonTest();
 
-    // run message loop
-    return Platform.instance.enterMessageLoop();
+        // run message loop
+        return Platform.instance.enterMessageLoop();
+    }
 }
 
 /*
