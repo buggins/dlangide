@@ -66,6 +66,9 @@ extern (C) int UIAppMain(string[] args) {
     //version(USE_GDB_DEBUG) {
     //    debuggerTestGDB();
     //}
+    version(unittest) {
+        return 0;
+    }
 
     // create window
     Window window = Platform.instance.createWindow("Dlang IDE", null, WindowFlag.Resizable, 900, 730);
