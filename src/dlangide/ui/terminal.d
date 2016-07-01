@@ -938,7 +938,7 @@ class TerminalDevice : Thread {
                 return false;
             for (;;) {
                 DWORD bytesWritten = 0;
-                if (WriteFile(hpipe, cast(char*)msg.ptr, msg.length, &bytesWritten, null) != TRUE) {
+                if (WriteFile(hpipe, cast(char*)msg.ptr, cast(int)msg.length, &bytesWritten, null) != TRUE) {
                     return false;
                 }
                 if (bytesWritten < msg.length)
