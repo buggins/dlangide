@@ -924,6 +924,28 @@ class Token {
     @property float floatValue() { return 0; }
     @property byte precision() { return 0; }
     @property bool isImaginary() { return false; }
+    @property bool isBracket() {
+        OpCode op = opCode; 
+        return op == OpCode.PAR_OPEN 
+            || op == OpCode.PAR_CLOSE 
+            || op == OpCode.SQ_OPEN 
+            || op == OpCode.SQ_CLOSE 
+            || op == OpCode.CURL_OPEN 
+            || op == OpCode.CURL_CLOSE; 
+    }
+    @property bool isOpenBracket() {
+        OpCode op = opCode;
+        return op == OpCode.PAR_OPEN
+            || op == OpCode.SQ_OPEN
+            || op == OpCode.CURL_OPEN;
+    }
+    @property bool isCloseBracket() {
+        OpCode op = opCode; 
+        return op == OpCode.PAR_CLOSE
+            || op == OpCode.SQ_CLOSE
+            || op == OpCode.CURL_CLOSE;
+    }
+    @property bool isEof() { return type == TokenType.EOF; }
 
     /// returns opcode ID - for opcode tokens
     @property OpCode opCode() { return OpCode.NONE; }
