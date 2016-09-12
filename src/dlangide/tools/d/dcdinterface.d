@@ -193,7 +193,7 @@ class DCDInterface : Thread {
 
     DCDTask goToDefinition(CustomEventTarget guiExecutor, string[] importPaths, in string filename, in string content, int index, void delegate(FindDeclarationResultSet res) callback) {
 
-        debug(DCD) Log.d("DCD Context: ", dumpContext(content, index));
+        debug(DCD) Log.d("DCD GoToDefinition task Context: ", dumpContext(content, index), " importPaths:", importPaths);
         GoToDefinitionTask task = new GoToDefinitionTask(guiExecutor, importPaths, filename, content, index, callback);
         _queue.put(task);
         return task;
