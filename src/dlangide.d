@@ -72,8 +72,10 @@ extern (C) int UIAppMain(string[] args) {
 
         // create window
         Window window = Platform.instance.createWindow("Dlang IDE", null, WindowFlag.Resizable, 900, 730);
-        // set window icon
-        window.windowIcon = drawableCache.getImage("dlangui-logo1");
+        static if (BACKEND_GUI) {
+            // set window icon
+            window.windowIcon = drawableCache.getImage("dlangui-logo1");
+        }
     
         //Widget w = new Widget();
         //pragma(msg, w.click.return_t, "", w.click.params_t);
