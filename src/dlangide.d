@@ -13,6 +13,11 @@ mixin APP_ENTRY_POINT;
 /// entry point for dlangui based application
 extern (C) int UIAppMain(string[] args) {
 
+    debug(TestParser) {
+        import ddc.lexer.parser;
+        runParserTests();
+    }
+
     version(Windows) {
         debug {
             sharedLog = new FileLogger("dcd.log");

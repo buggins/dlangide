@@ -896,10 +896,13 @@ public Keyword findKeyword(Keyword start, Keyword end, dchar * name, int len, re
  * Token.
  */
 class Token {
-    protected SourceFile _file;
-    protected int _line;
-    protected int _pos;
-    protected TokenType _type;
+    //                                 32bit      64bit platform
+    //                    vtable       4 bytes    8 bytes
+    protected SourceFile _file;   //   4 bytes    8 bytes
+    protected int _line;          //   4 bytes    4 bytes
+    protected int _pos;           //   4 bytes    4 bytes
+    protected TokenType _type;    //   1 byte     1 byte
+    //                    total        17 bytes   25 bytes
     /// returns token type
     @property TokenType type() { return _type; }
     /// returns file info for source
@@ -909,7 +912,7 @@ class Token {
     /// returns 1-based source line position of token start
     @property int pos() { return _pos; }
     /// returns token text
-    @property dchar[] text() { return null; }
+    @property dstring text() { return null; }
 
     // number token properties
     @property dchar literalType() { return 0; }
@@ -1018,7 +1021,7 @@ class OpToken : Token {
     OpCode _op;
     public @property override OpCode opCode() { return _op; }
     public @property void opCode(OpCode op) { _op = op; }
-    public @property override dchar[] text() { return cast(dchar[])getOpNameD(_op); }
+    public @property override dstring text() { return getOpNameD(_op); }
     this() {
         super(TokenType.OP);
     }
@@ -1039,7 +1042,7 @@ class KeywordToken : Token {
     Keyword _keyword;
     public @property override Keyword keyword() { return _keyword; }
     public @property void keyword(Keyword keyword) { _keyword = keyword; }
-    public @property override dchar[] text() { return cast(dchar[])getKeywordNameD(_keyword); }
+    public @property override dstring text() { return getKeywordNameD(_keyword); }
     this() {
         super(TokenType.KEYWORD);
     }
@@ -1058,7 +1061,7 @@ class KeywordToken : Token {
 
 /// comment token
 class CommentToken : Token {
-    protected dchar[] _text;
+    protected dstring _text;
     protected bool _isDocumentationComment;
     protected bool _isMultilineComment;
 
@@ -1080,14 +1083,14 @@ class CommentToken : Token {
         _isMultilineComment = f;
     }
 
-    @property override dchar[] text() { return _text; }
-    @property void text(dchar[] text) { _text = text; }
+    @property override dstring text() { return _text; }
+    @property void text(dchar[] text) { _text = cast(dstring)text; }
     this() {
         super(TokenType.COMMENT);
     }
     this(SourceFile file, uint line, uint pos, dchar[] text) {
         super(TokenType.COMMENT, file, line, pos);
-        _text = text;
+        _text = cast(dstring)text;
     }
     override public Token clone() {
         CommentToken res = new CommentToken(_file, _line, _pos, _text.dup);
@@ -1102,7 +1105,7 @@ class CommentToken : Token {
 
 /// Invalid token holder - for error tolerant parsing
 class InvalidToken : Token {
-    protected dchar[] _text;
+    protected dstring _text;
     protected TokenType _invalidTokenType;
     protected int _errorCode;
     protected string _errorMessage;
@@ -1121,16 +1124,16 @@ class InvalidToken : Token {
     @property void invalidTokenType(TokenType t) { _invalidTokenType = t; }
 
     /// text of invalid token
-    @property override dchar[] text() { return _text; }
+    @property override dstring text() { return _text; }
     /// text of invalid token
-    @property void text(dchar[] text) { _text = text; }
+    @property void text(dchar[] text) { _text = cast(dstring)text; }
 
     this() {
         super(TokenType.INVALID);
     }
     this(SourceFile file, uint line, uint pos, dchar[] text) {
         super(TokenType.INVALID, file, line, pos);
-        _text = text;
+        _text = cast(dstring)text;
     }
     override Token clone() {
         InvalidToken res = new InvalidToken(_file, _line, _pos, _text.dup);
@@ -1145,7 +1148,7 @@ class InvalidToken : Token {
 }
 
 alias tokenizer_ident_t = uint;
-alias tokenizer_ident_name_t = dchar[];
+alias tokenizer_ident_name_t = dstring;
 
 enum : tokenizer_ident_t {
     NO_IDENT = 0
@@ -1191,8 +1194,9 @@ class IdentHolder {
         if (found)
             return *found; 
         uint newid = _nextId++;
-        _nameToId[cast(dstring)name] = newid;
-        _idToName[newid] = cast(tokenizer_ident_name_t)name;
+        immutable tokenizer_ident_name_t nameCopy = name.dup;
+        _nameToId[nameCopy] = newid;
+        _idToName[newid] = nameCopy;
         return newid;
     }
 }
@@ -1208,17 +1212,17 @@ static this() {
 }
 
 class StringLiteralToken : Token {
-    dchar[] _text;
+    dstring _text;
     dchar _literalType;
     public @property override dchar literalType() { return _literalType; }
-    public @property override dchar[] text() { return _text; }
-    public void setText(dchar[] text, dchar type) { _text = text; _literalType = type; }
+    public @property override dstring text() { return _text; }
+    public void setText(dchar[] text, dchar type) { _text = cast(dstring)text; _literalType = type; }
     this() {
         super(TokenType.STRING);
     }
     this(SourceFile file, uint line, uint pos, dchar[] text, dchar type) {
         super(TokenType.STRING, file, line, pos);
-        _text = text;
+        _text = cast(dstring)text;
         _literalType = type;
     }
     override public Token clone() {
@@ -1234,7 +1238,7 @@ class CharacterLiteralToken : Token {
     dchar _literalType;
     @property override dchar literalType() { return _literalType; }
     @property dchar character() { return _character; }
-    @property override dchar[] text() { return [_character]; }
+    @property override dstring text() { return [_character]; }
     void setCharacter(dchar ch, dchar type) { _character = ch; _literalType = type; }
     this() {
         super(TokenType.CHARACTER);
@@ -1259,7 +1263,7 @@ class IntegerLiteralToken : Token {
     public @property override ulong intValue() { return _value; }
     public @property override bool isUnsigned() { return _unsigned; }
     public @property override ulong isLong() { return _long; }
-    public @property override dchar[] text() { return cast(dchar[])to!dstring(_value); }
+    public @property override dstring text() { return to!dstring(_value); }
     public void setValue(ulong value, bool unsignedFlag = false, bool longFlag = false) {
         _value = value;
         _unsigned = unsignedFlag;
@@ -1296,7 +1300,7 @@ class RealLiteralToken : Token {
     public @property override float floatValue() { return cast(float)_value; }
     public @property override byte precision() { return _precision; }
     public @property override bool isImaginary() { return _imaginary; }
-    public @property override dchar[] text() { return cast(dchar[])to!dstring(_value); }
+    public @property override dstring text() { return to!dstring(_value); }
     public void setValue(real value, byte precision = 1, bool imaginary = false) {
         _value = value;
         _precision = precision;
@@ -1325,14 +1329,18 @@ class RealLiteralToken : Token {
 
 class IdentToken : Token {
     tokenizer_ident_t _id;
-    public @property override dchar[] text() { return identMap.nameById(_id); }
-    public void setText(dchar[] text) { _id = identMap.idByName(text); }
+    public @property override dstring text() {
+        return identMap.nameById(_id);
+    }
+    public void setText(dchar[] text) {
+        _id = identMap.idByName(cast(immutable)text);
+    }
     this() {
         super(TokenType.IDENTIFIER);
     }
     this(SourceFile file, uint line, uint pos, dchar[] text) {
         super(TokenType.IDENTIFIER, file, line, pos);
-        _id = identMap.idByName(text);
+        _id = identMap.idByName(cast(immutable)text);
     }
     this(SourceFile file, uint line, uint pos, tokenizer_ident_t id) {
         super(TokenType.IDENTIFIER, file, line, pos);
@@ -2714,7 +2722,7 @@ class Tokenizer
         if (ch == EOF_CHAR) {
             return emitEof();
         }
-        if (ch == EOL_CHAR || ch == 0x0020 || ch == 0x0009 || ch == 0x000B || ch == 0x000C) {
+        if (ch == '\r' || ch == '\n' || ch == 0x0020 || ch == 0x0009 || ch == 0x000B || ch == 0x000C) {
             // white space (treat EOL as whitespace, too)
             return processWhiteSpace(ch);
         }
@@ -2786,7 +2794,18 @@ class Tokenizer
         return parserError("Invalid token", _line, _pos);
     }
 
-    
+    /// tokenize all
+    Token[] allTokens() {
+        Token[] res;
+        res.assumeSafeAppend;
+        for(;;) {
+            Token tok = nextToken();
+            if (!tok || tok.type == TokenType.EOF)
+                break;
+            res ~= tok.clone();
+        }
+        return res;
+    }
 }
 
 unittest {

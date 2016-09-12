@@ -478,7 +478,7 @@
   <doXGeneration>1</doXGeneration>
   <xfilename>$(IntDir)\$(TargetName).json</xfilename>
   <debuglevel>0</debuglevel>
-  <debugids>DebugInfo DCD</debugids>
+  <debugids>TestParser DebugInfo DCD</debugids>
   <versionlevel>0</versionlevel>
   <versionids>USE_CONSOLE EmbedStandardResources</versionids>
   <dump_source>0</dump_source>
@@ -691,9 +691,11 @@
   </Folder>
   <Folder name="ddc">
    <Folder name="lexer">
+    <File path="src\ddc\lexer\ast.d" />
     <File path="src\ddc\lexer\exceptions.d" />
     <File path="src\ddc\lexer\Lexer.d" />
     <File path="src\ddc\lexer\LexerException.d" />
+    <File path="src\ddc\lexer\parser.d" />
     <File path="src\ddc\lexer\textsource.d" />
     <File path="src\ddc\lexer\tokenizer.d" />
    </Folder>
