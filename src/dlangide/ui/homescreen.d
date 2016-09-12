@@ -24,9 +24,10 @@ class HomeScreen : ScrollWidget {
         _content = new HorizontalLayout("HOME_SCREEN_BODY");
         _content.layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT);
         VerticalLayout _column1 = new VerticalLayout();
-        _column1.layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT).padding(Rect(20, 20, 20, 20));
+        int pad = BACKEND_GUI ? 20 : 1;
+        _column1.layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT).padding(Rect(pad, pad, pad, pad));
         VerticalLayout _column2 = new VerticalLayout();
-        _column2.layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT).padding(Rect(20, 20, 20, 20));
+        _column2.layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT).padding(Rect(pad, pad, pad, pad));
         _content.addChild(_column1);
         _content.addChild(_column2);
         _column1.addChild((new TextWidget(null, "Dlang IDE"d ~ " " ~ DLANGIDE_VERSION)).fontSize(32).textColor(linkColor));

@@ -3,7 +3,7 @@
         fontFace="Verdana,Arial,DejaVu Sans"
         fontFamily="SansSerif"
 	>
-    <color id="edit_background" value="#FFFFFF"/>
+    <color id="edit_background" value="#000080"/>
     <color id="link_color" value="#2020FF"/>
     <color id="syntax_highlight_comment" value="#008000"/>
     <color id="syntax_highlight_keyword" value="#0000FF"/>
