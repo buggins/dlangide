@@ -188,7 +188,7 @@ class BackgroundReaderBase : Thread {
         // read file by bytes
         try {
             version (Windows) {
-                import win32.windows;
+                import core.sys.windows.windows;
                 // separate version for windows as workaround for hanging rawRead
                 HANDLE h = _file.windowsHandle;
                 DWORD bytesRead = 0;

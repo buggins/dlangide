@@ -845,7 +845,7 @@ interface TerminalInputHandler {
 class TerminalDevice : Thread {
     Signal!TerminalInputHandler onBytesRead;
     version (Windows) {
-        import win32.windows;
+        import core.sys.windows.windows;
         HANDLE hpipe;
     } else {
         int masterfd;
