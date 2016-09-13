@@ -38,8 +38,10 @@ interface BookmarkListChangeListener {
 class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
     this(string ID) {
         super(ID);
-        styleId = null;
-        backgroundColor = style.customColor("edit_background");
+        static if (BACKEND_GUI) {
+            styleId = null;
+            backgroundColor = style.customColor("edit_background");
+        }
         onThemeChanged();
         //setTokenHightlightColor(TokenCategory.Identifier, 0x206000);  // no colors
         MenuItem editPopupItem = new MenuItem(null);
@@ -63,7 +65,7 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
 
     /// handle theme change: e.g. reload some themed resources
     override void onThemeChanged() {
-        backgroundColor = style.customColor("edit_background");
+        static if (BACKEND_GUI) backgroundColor = style.customColor("edit_background");
         setTokenHightlightColor(TokenCategory.Comment, style.customColor("syntax_highlight_comment")); // green
         setTokenHightlightColor(TokenCategory.Keyword, style.customColor("syntax_highlight_keyword")); // blue
         setTokenHightlightColor(TokenCategory.String, style.customColor("syntax_highlight_string"));  // brown
