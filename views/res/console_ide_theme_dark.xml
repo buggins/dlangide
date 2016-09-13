@@ -1,20 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<theme id="ide_theme_dark" parent="theme_default"
+<theme id="ide_theme_dark" parent="ide_theme_default"
         fontFace="Verdana,Arial,DejaVu Sans"
         fontFamily="SansSerif"
 	textColor="#E0E0E0"
 	>
-    <color id="edit_background" value="#070808"/>
-    <color id="link_color" value="#2020FF"/>
-    <color id="syntax_highlight_comment" value="#808000"/>
-    <color id="syntax_highlight_keyword" value="#00FF00"/>
-    <color id="syntax_highlight_string" value="#FF00FF"/>
-    <color id="syntax_highlight_character" value="#FFFF00"/>
-    <color id="syntax_highlight_error" value="#FF0000"/>
-    <color id="syntax_highlight_comment_documentation" value="#FFFF00"/>
-
-    <color id="build_log_filename_color" value="#0000FF"/>
-    <color id="build_log_error_color" value="#FF0000"/>
-    <color id="build_log_warning_color" value="#FFFF00"/>
-    <color id="build_log_deprecation_color" value="#FF00FF"/>
 </theme>

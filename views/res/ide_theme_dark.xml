@@ -12,6 +12,9 @@
     <color id="syntax_highlight_character" value="#C37525"/>
     <color id="syntax_highlight_error" value="#FF0000"/>
     <color id="syntax_highlight_comment_documentation" value="#50a000"/>
+    <color id="syntax_highlight_integer" value="#FFFFFF"/>
+    <color id="syntax_highlight_float" value="#FFFFFF"/>
+    <color id="syntax_highlight_ident" value="#C0C0C0"/>
 
     <color id="build_log_filename_color" value="#3030FF"/>
     <color id="build_log_error_color" value="#FF4040"/>

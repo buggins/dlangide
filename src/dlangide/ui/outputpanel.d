@@ -11,12 +11,16 @@ import std.regex;
 import std.algorithm : startsWith;
 import std.string;
 
-version (Windows) {
-    enum ENABLE_INTERNAL_TERMINAL = false;
-} else {
+static if (BACKEND_CONSOLE) {
     enum ENABLE_INTERNAL_TERMINAL = true;
+} else {
+    version (Windows) {
+        enum ENABLE_INTERNAL_TERMINAL = false;
+    } else {
+        enum ENABLE_INTERNAL_TERMINAL = true;
+    }
 }
-
+enum ENABLE_INTERNAL_TERMINAL_TEST = false;
 
 /// event listener to navigate by error/warning position
 interface CompilerLogIssueClickHandler {
@@ -228,6 +232,9 @@ class OutputPanel : DockWindow {
             _terminalWidget = new TerminalWidget("TERMINAL");
             _terminalWidget.layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT);
             _tabs.addTab(_terminalWidget, "Output"d);
+            _terminalWidget.write("Hello\nSecond line\nTest\n"d);
+        }
+        static if (ENABLE_INTERNAL_TERMINAL_TEST) {
             _terminalWidget.write("Hello\nSecond line\nTest\n"d);
             _terminalWidget.write("SomeString 123456789\rAwesomeString\n"d); // test \r
             // testing tabs

@@ -4,8 +4,8 @@ import dlangui.widgets.widget;
 import dlangui.widgets.controls;
 
 struct TerminalAttr {
-    ubyte bgColor = 7;
-    ubyte textColor = 0;
+    ubyte bgColor = 0;
+    ubyte textColor = 7;
     ubyte flags = 0;
 }
 
@@ -22,7 +22,7 @@ __gshared static uint[16] TERMINAL_PALETTE = [
     0x0000FF,
     0xFF00FF,
     0x00FFFF,
-    0xFFFFFF, // white
+    0xC0C0C0, // white
     0x808080,
     0x800000,
     0x008000,
@@ -30,7 +30,7 @@ __gshared static uint[16] TERMINAL_PALETTE = [
     0x000080,
     0x800080,
     0x008080,
-    0xC0C0C0,
+    0xFFFFFF,
 ];
 
 uint attrToColor(ubyte v) {

@@ -266,7 +266,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         string tty = _logPanel.terminalDeviceName;
         if (project.runInExternalConsole) {
             version(Windows) {
-                if (program.isMagoDebugger)
+                if (program.isMagoDebugger && BACKEND_GUI)
                     tty = "external-console";
             } else {
                 externalConsoleExecutable = _settings.terminalExecutable;

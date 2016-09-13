@@ -11,6 +11,9 @@
     <color id="syntax_highlight_character" value="#a31515"/>
     <color id="syntax_highlight_error" value="#FF0000"/>
     <color id="syntax_highlight_comment_documentation" value="#206000"/>
+    <color id="syntax_highlight_integer" value="#000000"/>
+    <color id="syntax_highlight_float" value="#000000"/>
+    <color id="syntax_highlight_ident" value="#000000"/>
 
     <color id="build_log_filename_color" value="#0000C0"/>
     <color id="build_log_error_color" value="#FF0000"/>

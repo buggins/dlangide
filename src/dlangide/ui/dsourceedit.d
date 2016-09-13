@@ -68,7 +68,10 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         static if (BACKEND_GUI) backgroundColor = style.customColor("edit_background");
         setTokenHightlightColor(TokenCategory.Comment, style.customColor("syntax_highlight_comment")); // green
         setTokenHightlightColor(TokenCategory.Keyword, style.customColor("syntax_highlight_keyword")); // blue
+        setTokenHightlightColor(TokenCategory.Integer, style.customColor("syntax_highlight_integer", 0x000000));
+        setTokenHightlightColor(TokenCategory.Float, style.customColor("syntax_highlight_float", 0x000000));
         setTokenHightlightColor(TokenCategory.String, style.customColor("syntax_highlight_string"));  // brown
+        setTokenHightlightColor(TokenCategory.Identifier, style.customColor("syntax_highlight_ident"));
         setTokenHightlightColor(TokenCategory.Character, style.customColor("syntax_highlight_character"));  // brown
         setTokenHightlightColor(TokenCategory.Error, style.customColor("syntax_highlight_error"));  // red
         setTokenHightlightColor(TokenCategory.Comment_Documentation, style.customColor("syntax_highlight_comment_documentation"));
@@ -145,7 +148,7 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         return menu;
     }
 
-    uint _executionLineHighlightColor = 0x808080FF;
+    uint _executionLineHighlightColor = BACKEND_GUI ? 0x808080FF : 0x000080;
     int _executionLine = -1;
     @property int executionLine() { return _executionLine; }
     @property void executionLine(int line) {
