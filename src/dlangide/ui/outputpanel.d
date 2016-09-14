@@ -11,15 +11,16 @@ import std.regex;
 import std.algorithm : startsWith;
 import std.string;
 
-static if (BACKEND_CONSOLE) {
-    enum ENABLE_INTERNAL_TERMINAL = true;
-} else {
+//static if (BACKEND_CONSOLE) {
+//    enum ENABLE_INTERNAL_TERMINAL = true;
+//} else {
     version (Windows) {
         enum ENABLE_INTERNAL_TERMINAL = false;
     } else {
         enum ENABLE_INTERNAL_TERMINAL = true;
     }
-}
+//}
+
 enum ENABLE_INTERNAL_TERMINAL_TEST = false;
 
 /// event listener to navigate by error/warning position
