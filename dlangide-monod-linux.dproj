@@ -188,6 +188,42 @@
     <Externalconsole>true</Externalconsole>
     <DebugLevel>0</DebugLevel>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'DebugConsole|x64' ">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Debug</OutputPath>
+    <VersionIds>
+      <VersionIds>
+        <String>USE_CONSOLE</String>
+      </VersionIds>
+    </VersionIds>
+    <ObjectsDirectory>obj/Debug</ObjectsDirectory>
+    <LinkinThirdPartyLibraries>true</LinkinThirdPartyLibraries>
+    <ExtraCompilerArguments>-Jviews
+-Jviews/res
+-Jviews/res/i18n
+-Jviews/res/mdpi
+-Jviews/res/hdpi</ExtraCompilerArguments>
+    <UnittestMode>false</UnittestMode>
+    <OutputName>dlangide-monod-linux</OutputName>
+    <Target>Executable</Target>
+    <Externalconsole>true</Externalconsole>
+    <DebugLevel>0</DebugLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'DebugConsole|AnyCPU' ">
+    <OutputPath>bin\DebugConsole</OutputPath>
+    <ObjectsDirectory>obj/DebugConsole</ObjectsDirectory>
+    <LinkinThirdPartyLibraries>false</LinkinThirdPartyLibraries>
+    <ExtraCompilerArguments>-Jviews
+-Jviews/res
+-Jviews/res/i18n
+-Jviews/res/mdpi
+-Jviews/res/hdpi</ExtraCompilerArguments>
+    <UnittestMode>false</UnittestMode>
+    <OutputName>dlangide-monod-linux</OutputName>
+    <Target>Executable</Target>
+    <Externalconsole>true</Externalconsole>
+    <DebugLevel>0</DebugLevel>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="src\dlangide.d" />
     <Compile Include="src\ddc\lexer\exceptions.d" />
