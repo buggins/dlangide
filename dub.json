@@ -22,7 +22,13 @@
 
     "configurations" : [
         {
-            "name" : "default",
+            "name" : "default"
+        }, 
+        {
+            "name" : "minimal",
+            "subConfigurations" : {
+                "dlangui" : "minimal"
+            }
         }, 
         {
             "name" : "console",
