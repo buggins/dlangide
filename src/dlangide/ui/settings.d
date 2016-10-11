@@ -66,9 +66,28 @@ SettingsPage createSettingsPages() {
     import dlangui.graphics.fonts;
     import std.utf : toUTF32;
     FontFaceProps[] allFaces = FontManager.instance.getFaces();
-    for (int i = 0; i < allFaces.length; i++) {
-        if (allFaces[i].family == FontFamily.MonoSpace)
-            faces ~= StringListValue(allFaces[i].face, toUTF32(allFaces[i].face));
+    import std.algorithm.sorting : sort;
+    auto fontComp = function(ref FontFaceProps a, ref FontFaceProps b) {
+        if (a.family == FontFamily.MonoSpace && b.family != FontFamily.MonoSpace)
+            return -1;
+        if (a.family != FontFamily.MonoSpace && b.family == FontFamily.MonoSpace)
+            return 1;
+        if (a.face < b.face)
+            return -1;
+        if (a.face > b.face)
+            return 1;
+        return 0;
+    };
+    //auto sorted = allFaces.sort!((a, b) => (a.family == FontFamily.MonoSpace && b.family != FontFamily.MonoSpace) || (a.face < b.face));
+    auto sorted = sort!((a, b) => fontComp(a, b) < 0)(allFaces);
+    
+    //allFaces = allFaces.sort!((a, b) => a.family == FontFamily.MonoSpace && b.family == FontFamily.MonoSpace || a.face < b.face);
+    //for (int i = 0; i < allFaces.length; i++) {
+    foreach (face; sorted) {
+        if (face.family == FontFamily.MonoSpace)
+            faces ~= StringListValue(face.face, "*"d ~ toUTF32(face.face));
+        else
+            faces ~= StringListValue(face.face, toUTF32(face.face));
     }
     texted.addStringComboBox("editors/textEditor/fontFace", UIString("Font face"d), faces);
 
