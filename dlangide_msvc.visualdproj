@@ -615,6 +615,8 @@
  <Folder name="dlangide">
   <Folder name="3rdparty">
    <Folder name="containers">
+    <File path="deps\DCD\containers\src\containers\internal\backwards.d" />
+    <File path="deps\DCD\containers\src\containers\cyclicbuffer.d" />
     <File path="deps\DCD\containers\src\containers\dynamicarray.d" />
     <File path="deps\DCD\containers\src\containers\internal\element_type.d" />
     <File path="deps\DCD\containers\src\containers\internal\hash.d" />
@@ -684,9 +686,20 @@
     <File path="deps\DCD\libdparse\src\std\experimental\lexer.d" />
     <File path="deps\DCD\libdparse\src\dparse\lexer.d" />
     <File path="deps\DCD\libdparse\src\dparse\parser.d" />
+    <File path="deps\DCD\libdparse\src\dparse\rollback_allocator.d" />
+    <File path="deps\DCD\libdparse\src\dparse\stack_buffer.d" />
    </Folder>
    <Folder name="msgpack">
-    <File path="deps\DCD\msgpack-d\src\msgpack.d" />
+    <File path="deps\DCD\msgpack-d\src\msgpack\attribute.d" />
+    <File path="deps\DCD\msgpack-d\src\msgpack\buffer.d" />
+    <File path="deps\DCD\msgpack-d\src\msgpack\common.d" />
+    <File path="deps\DCD\msgpack-d\src\msgpack\exception.d" />
+    <File path="deps\DCD\msgpack-d\src\msgpack\package.d" />
+    <File path="deps\DCD\msgpack-d\src\msgpack\packer.d" />
+    <File path="deps\DCD\msgpack-d\src\msgpack\register.d" />
+    <File path="deps\DCD\msgpack-d\src\msgpack\streaming_unpacker.d" />
+    <File path="deps\DCD\msgpack-d\src\msgpack\unpacker.d" />
+    <File path="deps\DCD\msgpack-d\src\msgpack\value.d" />
    </Folder>
   </Folder>
   <Folder name="ddc">
