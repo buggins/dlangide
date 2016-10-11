@@ -96,6 +96,13 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         smartIndentsAfterPaste = _settings.smartIndentsAfterPaste;
         showWhiteSpaceMarks = _settings.showWhiteSpaceMarks;
         showTabPositionMarks = _settings.showTabPositionMarks;
+        string face = _settings.editorFontFace;
+        if (face == "Default")
+            face = null;
+        else if (face)
+            face ~= ",";
+        face ~= DEFAULT_SOURCE_EDIT_FONT_FACES;
+        fontFace = face;
     }
 
     protected EditorTool _editorTool;

@@ -89,7 +89,7 @@
   <cv2pdbOptions />
   <objfiles />
   <linkswitches />
-  <libfiles>ole32.lib kernel32.lib user32.lib comctl32.lib comdlg32.lib psapi.lib</libfiles>
+  <libfiles>ole32.lib kernel32.lib user32.lib</libfiles>
   <libpaths />
   <deffile />
   <resfile />
@@ -191,7 +191,7 @@
   <cv2pdbOptions />
   <objfiles />
   <linkswitches />
-  <libfiles>ole32.lib kernel32.lib user32.lib comctl32.lib comdlg32.lib psapi.lib</libfiles>
+  <libfiles>ole32.lib kernel32.lib user32.lib</libfiles>
   <libpaths />
   <deffile />
   <resfile />
@@ -293,7 +293,7 @@
   <cv2pdbOptions />
   <objfiles />
   <linkswitches />
-  <libfiles>ole32.lib kernel32.lib user32.lib comctl32.lib comdlg32.lib psapi.lib</libfiles>
+  <libfiles>ole32.lib kernel32.lib user32.lib</libfiles>
   <libpaths />
   <deffile />
   <resfile />
@@ -395,7 +395,7 @@
   <cv2pdbOptions />
   <objfiles />
   <linkswitches />
-  <libfiles>ole32.lib kernel32.lib user32.lib comctl32.lib comdlg32.lib psapi.lib</libfiles>
+  <libfiles>ole32.lib kernel32.lib user32.lib</libfiles>
   <libpaths />
   <deffile />
   <resfile />
@@ -497,7 +497,7 @@
   <cv2pdbOptions />
   <objfiles />
   <linkswitches />
-  <libfiles>ole32.lib kernel32.lib user32.lib comctl32.lib comdlg32.lib psapi.lib</libfiles>
+  <libfiles>ole32.lib kernel32.lib user32.lib</libfiles>
   <libpaths />
   <deffile />
   <resfile />
@@ -599,7 +599,7 @@
   <cv2pdbOptions />
   <objfiles />
   <linkswitches />
-  <libfiles>ole32.lib kernel32.lib user32.lib comctl32.lib comdlg32.lib psapi.lib</libfiles>
+  <libfiles>ole32.lib kernel32.lib user32.lib</libfiles>
   <libpaths />
   <deffile />
   <resfile />

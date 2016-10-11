@@ -2,6 +2,7 @@ module dlangide.ui.terminal;
 
 import dlangui.widgets.widget;
 import dlangui.widgets.controls;
+import dlangui.widgets.scrollbar;
 
 struct TerminalAttr {
     ubyte bgColor = 0;

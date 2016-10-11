@@ -23,6 +23,7 @@ SettingsPage createSettingsPages() {
             StringListValue("ru", "Russian"d), 
             StringListValue("es", "Spanish"d),
 	    StringListValue("cs", "Čeština"d)]);
+
     ui.addIntComboBox("interface/hintingMode", UIString("Font hinting mode"d), [StringListValue(0, "Normal"d), StringListValue(1, "Force Auto Hint"d), 
                 StringListValue(2, "Disabled"d), StringListValue(3, "Light"d)]);
     ui.addIntComboBox("interface/minAntialiasedFontSize", UIString("Minimum font size for antialiasing"d), 
@@ -58,12 +59,26 @@ SettingsPage createSettingsPages() {
 
     SettingsPage ed = res.addChild("editors", UIString("Editors"d));
     SettingsPage texted = ed.addChild("editors/textEditor", UIString("Text Editors"d));
+
+    // font faces
+    StringListValue[] faces;
+    faces ~= StringListValue("Default", "Default"d);
+    import dlangui.graphics.fonts;
+    import std.utf : toUTF32;
+    FontFaceProps[] allFaces = FontManager.instance.getFaces();
+    for (int i = 0; i < allFaces.length; i++) {
+        if (allFaces[i].family == FontFamily.MonoSpace)
+            faces ~= StringListValue(allFaces[i].face, toUTF32(allFaces[i].face));
+    }
+    texted.addStringComboBox("editors/textEditor/fontFace", UIString("Font face"d), faces);
+
     texted.addNumberEdit("editors/textEditor/tabSize", UIString("Tab size"d), 1, 16, 4);
     texted.addCheckbox("editors/textEditor/useSpacesForTabs", UIString("Use spaces for tabs"d));
     texted.addCheckbox("editors/textEditor/smartIndents", UIString("Smart indents"d));
     texted.addCheckbox("editors/textEditor/smartIndentsAfterPaste", UIString("Smart indent after paste"d));
     texted.addCheckbox("editors/textEditor/showWhiteSpaceMarks", UIString("Show white space marks"d));
     texted.addCheckbox("editors/textEditor/showTabPositionMarks", UIString("Show tab position marks"d));
+
 
     SettingsPage dlang = res.addChild("dlang", UIString("D"d));
     SettingsPage dub = dlang.addChild("dlang/dub", UIString("DUB"d));

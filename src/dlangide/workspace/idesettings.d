@@ -23,6 +23,7 @@ class IDESettings : SettingsFile {
         ed.setBooleanDef("smartIndentsAfterPaste", true);
         ed.setBooleanDef("showWhiteSpaceMarks", true);
         ed.setBooleanDef("showTabPositionMarks", true);
+        ed.setStringDef("fontFace", "Default");
         Setting ui = uiSettings();
         ui.setStringDef("theme", "ide_theme_default");
         ui.setStringDef("language", "en");
@@ -157,6 +158,8 @@ class IDESettings : SettingsFile {
     @property bool showTabPositionMarks() { return editorSettings.getBoolean("showTabPositionMarks", true); }
     /// set tab position marks enabled flag
     @property IDESettings showTabPositionMarks(bool enabled) { editorSettings.setBoolean("showTabPositionMarks", enabled); return this; }
+    /// string value of font face
+    @property string editorFontFace() { return editorSettings.getString("fontFace", "Default"); }
 
     
 
