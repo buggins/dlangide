@@ -368,6 +368,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         import std.conv:to;
         openSourceFile(to!string(filename));
 
+        currentEditor().setCaretPos(line, 0);
         currentEditor().setCaretPos(line, column);
 
         return true;
