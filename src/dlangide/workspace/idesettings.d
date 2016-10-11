@@ -241,6 +241,19 @@ class IDESettings : SettingsFile {
         return null;
     }
 
+    /// get recent path for category name, returns null if not found
+    @property string getRecentPath(string category = "FILE_OPEN_DLG_PATH") {
+        Setting obj = _setting.objectByPath("pathHistory", true);
+        return obj.getString(category, null);
+    }
+
+    /// set recent path for category name
+    @property void setRecentPath(string value, string category = "FILE_OPEN_DLG_PATH") {
+        Setting obj = _setting.objectByPath("pathHistory", true);
+        obj.setString(category, value);
+        save();
+    }
+
     @property string[] recentWorkspaces() {
         import std.file;
         Setting obj = _setting.objectByPath("history", true);

@@ -876,10 +876,12 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     FileDialog dlg = createFileDialog(caption);
                     dlg.addFilter(FileFilterEntry(UIString("Source files"d), "*.d;*.dd;*.ddoc;*.di;*.dh;*.json;*.xml;*.ini"));
                     dlg.addFilter(FileFilterEntry(UIString("All files"d), "*.*"));
-                    dlg.dialogResult = delegate(Dialog dlg, const Action result) {
+                    dlg.path = _settings.getRecentPath("FILE_OPEN_PATH");
+                    dlg.dialogResult = delegate(Dialog d, const Action result) {
                         if (result.id == ACTION_OPEN.id) {
                             string filename = result.stringParam;
                             openSourceFile(filename);
+                            _settings.setRecentPath(dlg.path, "FILE_OPEN_PATH");
                         }
                     };
                     dlg.show();
@@ -951,11 +953,14 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     caption = "Open Workspace or Project"d;
                     FileDialog dlg = createFileDialog(caption);
                     dlg.addFilter(FileFilterEntry(UIString("Workspace and project files"d), "*.dlangidews;dub.json;package.json"));
-                    dlg.dialogResult = delegate(Dialog dlg, const Action result) {
+                    dlg.path = _settings.getRecentPath("FILE_OPEN_WORKSPACE_PATH");
+                    dlg.dialogResult = delegate(Dialog d, const Action result) {
                         if (result.id == ACTION_OPEN.id) {
                             string filename = result.stringParam;
-                            if (filename.length)
+                            if (filename.length) {
                                 openFileOrWorkspace(filename);
+                                _settings.setRecentPath(dlg.path, "FILE_OPEN_WORKSPACE_PATH");
+                            }
                         }
                     };
                     dlg.show();
@@ -1363,6 +1368,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         }
         if (ws) {
             _settings.updateRecentWorkspace(ws.filename);
+            _settings.setRecentPath(ws.dir, "FILE_OPEN_WORKSPACE_PATH");
         }
 
     }
