@@ -1361,6 +1361,10 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             openSourceFile(ws.startupProject.mainSourceFile.filename);
             _tabs.setFocus();
         }
+        if (ws) {
+            _settings.updateRecentWorkspace(ws.filename);
+        }
+
     }
 
     void refreshProject(Project project) {
