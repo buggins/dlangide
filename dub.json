@@ -12,8 +12,8 @@
     "stringImportPaths": ["views", "views/res", "views/res/i18n", "views/res/mdpi", "views/res/hdpi"],
 
     "dependencies": {
-        "dlangui": "==0.9.15",
-        "dcd": "~>0.8.0"
+        "dlangui": "==0.9.16",
+        "dcd": "~>0.9.0-alpha4"
     },
 
     "copyFiles-windows": [
