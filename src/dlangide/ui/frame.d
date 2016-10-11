@@ -156,6 +156,13 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         });
     }
 
+    protected void handleBuildError(int result, Project project) {
+        ErrorPosition err = _logPanel.firstError;
+        if (err) {
+            onCompilerLogIssueClick(err.filename, err.line, err.pos);
+        }
+    }
+
     protected void buildAndDebugProject(Project project) {
         if (!currentWorkspace)
             return;
@@ -169,6 +176,8 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             if (!result) {
                 Log.i("Build completed successfully. Starting debug for project.");
                 debugProject(project);
+            } else {
+                handleBuildError(result, project);
             }
         });
     }
@@ -236,6 +245,8 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             if (!result) {
                 Log.i("Build completed successfully. Running program...");
                 runProject(project);
+            } else {
+                handleBuildError(result, project);
             }
         });
     }
@@ -1406,6 +1417,8 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     if (!result) {
                         // success: update workspace
                         refreshProject(project);
+                    } else {
+                        handleBuildError(result, project);
                     }
                 };
             }

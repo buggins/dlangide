@@ -28,6 +28,16 @@ interface CompilerLogIssueClickHandler {
     bool onCompilerLogIssueClick(dstring filename, int line, int column);
 }
 
+class ErrorPosition {
+    dstring filename;
+    int line;
+    int pos;
+    this(dstring fn, int l, int p) {
+        filename = fn;
+        line = l;
+        pos = p;
+    }
+}
 
 /// Log widget with parsing of compiler output
 class CompilerLogWidget : LogWidget {
@@ -136,11 +146,54 @@ class CompilerLogWidget : LogWidget {
         return null;
     }
 
+    ErrorPosition errorFromLine(int line) {
+        if (line >= this.content.length || line < 0)
+            return null; // invalid line number
+        auto logLine = this.content.line(line);
+
+        //src\tetris.d(49): Error: found 'return' when expecting ';' following statement
+
+        auto match = matchFirst(logLine, ctr);
+
+        if(!match.empty) {
+            dstring filename = match[1];
+            import std.conv:to;
+            int row = to!int(match[2]) - 1;
+            if (row < 0)
+                row = 0;
+            int col = 0;
+            if (match[3]) {
+                col = to!int(match[3]) - 1;
+                if (col < 0)
+                    col = 0;
+            }
+            return new ErrorPosition(filename, row, col);
+        }
+        return null;
+    }
+
+    /// returns first error line info from log
+    ErrorPosition firstError() {
+        for (int i = 0; i < _content.length; i++) {
+            ErrorPosition err = errorFromLine(i);
+            if (err)
+                return err;
+        }
+        return null;
+    }
+
     ///
     override bool onMouseEvent(MouseEvent event) {
 
         if (event.action == MouseAction.ButtonDown && event.button == MouseButton.Left) {
             super.onMouseEvent(event);
+
+            auto errorPos = errorFromLine(_caretPos.line);
+            if (errorPos) {
+                if (compilerLogIssueClickHandler.assigned) {
+                    compilerLogIssueClickHandler(errorPos.filename, errorPos.line, errorPos.pos);
+                }
+            }
 
             auto logLine = this.content.line(this._caretPos.line);
 
@@ -208,6 +261,12 @@ class OutputPanel : DockWindow {
             if (_terminalWidget)
                 return _terminalWidget.deviceName;
         }
+        return null;
+    }
+
+    ErrorPosition firstError() {
+        if (_logWidget)
+            return _logWidget.firstError();
         return null;
     }
 
