@@ -11,6 +11,9 @@ import dlangide.workspace.project;
 import std.string;
 import std.conv;
 
+// parallel search is disabled to fix #178
+//version = PARALLEL_SEARCH;
+
 interface SearchResultClickHandler {
     bool onSearchResultClick(int line);
 }
@@ -221,7 +224,10 @@ class SearchWidget : TabWidget {
             ProjectFolder projFolder = cast(ProjectFolder) project;
             import std.parallelism;
             for (int i = 0; i < projFolder.childCount; i++) {
-                    taskPool.put(task(&searchInProject, projFolder.child(i), text));   
+                version (PARALLEL_SEARCH)
+                    taskPool.put(task(&searchInProject, projFolder.child(i), text));
+                else
+                    searchInProject(projFolder.child(i), text);
             }
         }
         else {
@@ -254,19 +260,30 @@ class SearchWidget : TabWidget {
                 break;
             case "Project":
                foreach(Project project; _frame._wsPanel.workspace.projects) {
-                    if(!project.isDependency)
-                        taskPool.put(task(&searchInProject, project.items, source));
+                    if(!project.isDependency) {
+                        version (PARALLEL_SEARCH)
+                            taskPool.put(task(&searchInProject, project.items, source));
+                        else
+                            searchInProject(project.items, source);
+                    }
                }
                break;
             case "Dependencies":
                foreach(Project project; _frame._wsPanel.workspace.projects) {
-                    if(project.isDependency)
-                        taskPool.put(task(&searchInProject, project.items, source));
+                    if(project.isDependency) {
+                        version (PARALLEL_SEARCH)
+                            taskPool.put(task(&searchInProject, project.items, source));
+                        else
+                            searchInProject(project.items, source);
+                    }
                }
                break;
             case "Everywhere":
                foreach(Project project; _frame._wsPanel.workspace.projects) {
-                    taskPool.put(task(&searchInProject, project.items, source));
+                   version (PARALLEL_SEARCH)
+                       taskPool.put(task(&searchInProject, project.items, source));
+                   else
+                       searchInProject(project.items, source);
                }
                break;
             default:
