@@ -37,14 +37,14 @@ class NewProjectDlg : Dialog {
     Workspace _currentWorkspace;
     IDEFrame _ide;
 
-    this(IDEFrame parent, bool newWorkspace, Workspace currentWorkspace) {
+    this(IDEFrame parent, bool newWorkspace, Workspace currentWorkspace, string dir) {
         super(newWorkspace ? UIString("New Workspace"d) : UIString("New Project"d), parent.window, 
               DialogFlag.Modal | DialogFlag.Resizable | DialogFlag.Popup, 500, 400);
         _ide = parent;
         _icon = "dlangui-logo1";
         this._currentWorkspace = currentWorkspace;
         _newWorkspace = newWorkspace;
-        _location = currentWorkspace !is null ? currentWorkspace.dir : currentDir;
+        _location = dir !is null ? dir : (currentWorkspace !is null ? currentWorkspace.dir : currentDir);
     }
 
     /// override to implement creation of dialog controls

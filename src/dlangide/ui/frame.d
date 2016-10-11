@@ -1179,7 +1179,10 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
     void createNewProject(bool newWorkspace) {
         if (currentWorkspace is null)
             newWorkspace = true;
-        NewProjectDlg dlg = new NewProjectDlg(this, newWorkspace, currentWorkspace);
+        string location = _settings.getRecentPath("FILE_OPEN_WORKSPACE_PATH");
+        if (newWorkspace && location)
+            location = location.dirName;
+        NewProjectDlg dlg = new NewProjectDlg(this, newWorkspace, currentWorkspace, location);
         dlg.dialogResult = delegate(Dialog dlg, const Action result) {
             if (result.id == ACTION_FILE_NEW_PROJECT.id || result.id == ACTION_FILE_NEW_WORKSPACE.id) {
                 //Log.d("settings after edit:\n", s.toJSON(true));
