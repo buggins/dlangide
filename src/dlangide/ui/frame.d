@@ -364,8 +364,10 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
 
     /// source file selected in workspace tree
     bool onSourceFileSelected(ProjectSourceFile file, bool activate) {
-        Log.d("onSourceFileSelected ", file.filename);
-        return openSourceFile(file.filename, file, activate);
+        Log.d("onSourceFileSelected ", file.filename, " activate=", activate);
+        if (activate)
+            return openSourceFile(file.filename, file, activate);
+        return false;
     }
 
     /// returns global IDE settings
