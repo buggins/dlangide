@@ -488,8 +488,12 @@ class Project : WorkspaceItem {
         version (Windows) {
             exename = exename ~ ".exe";
         }
-        // TODO: use targetPath
-        string exePath = buildNormalizedPath(_filename.dirName, "bin", exename);
+        string targetPath = _projectFile.getString("targetPath", null);
+        string exePath;
+        if (targetPath.length)
+            exePath = buildNormalizedPath(_filename.dirName, targetPath, exename); // int $targetPath directory
+        else
+            exePath = buildNormalizedPath(_filename.dirName, exename); // in project directory
         return exePath;
     }
 
