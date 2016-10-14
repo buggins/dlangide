@@ -513,6 +513,34 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         window.update();
     }
 
+    protected CompletionPopupMenu _completionPopupMenu;
+    protected PopupWidget _completionPopup;
+
+    dstring identPrefixUnderCursor() {
+        dstring line = _content[_caretPos.line];
+        if (_caretPos.pos > line.length)
+            return null;
+        int end = _caretPos.pos;
+        int start = end;
+        while (start >= 0) {
+            dchar prevChar = start > 0 ? line[start - 1] : 0;
+            if (!isIdentChar(prevChar))
+                break;
+            start--;
+        }
+        if (start >= end)
+            return null;
+        return line[start .. end].dup;
+    }
+
+    void closeCompletionPopup(CompletionPopupMenu completion) {
+        if (!_completionPopup || _completionPopupMenu !is completion)
+            return;
+        _completionPopup.close();
+        _completionPopup = null;
+        _completionPopupMenu = null;
+    }
+
     void showCompletionPopup(dstring[] suggestions, string[] icons) {
 
         if(suggestions.length == 0) {
@@ -525,32 +553,102 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
             return;
         }
 
-        MenuItem completionPopupItems = new MenuItem(null);
-        //Add all the suggestions.
-        foreach(int i, dstring suggestion ; suggestions) {
-            string iconId;
-            if (i < icons.length)
-                iconId = icons[i];
-            auto action = new Action(IDEActions.InsertCompletion, suggestion);
-            action.iconId = iconId;
-            completionPopupItems.add(action);
-        }
-        completionPopupItems.updateActionState(this);
-
-        PopupMenu popupMenu = new PopupMenu(completionPopupItems);
-        popupMenu.menuItemAction = this;
-        popupMenu.maxHeight(400);
-        popupMenu.selectItem(0);
-
-        PopupWidget popup = window.showPopup(popupMenu, this, PopupAlign.Point | PopupAlign.Right,
+        dstring prefix = identPrefixUnderCursor();
+        _completionPopupMenu = new CompletionPopupMenu(this, suggestions, icons, prefix);
+        int yOffset = font.height;
+        _completionPopup = window.showPopup(_completionPopupMenu, this, PopupAlign.Point | PopupAlign.Right,
                                              textPosToClient(_caretPos).left + left + _leftPaneWidth,
-                                             textPosToClient(_caretPos).top + top + margins.top);
-        popup.setFocus();
-        popup.popupClosed = delegate(PopupWidget source) { setFocus(); };
-        popup.flags = PopupFlags.CloseOnClickOutside;
+                                             textPosToClient(_caretPos).top + top + margins.top + yOffset);
+        _completionPopup.setFocus();
+        _completionPopup.popupClosed = delegate(PopupWidget source) { 
+            setFocus();
+            _completionPopup = null;
+        };
+        _completionPopup.flags = PopupFlags.CloseOnClickOutside;
 
         Log.d("Showing popup at ", textPosToClient(_caretPos).left, " ", textPosToClient(_caretPos).top);
         window.update();
     }
+}
 
+/// returns true if character is valid ident character
+bool isIdentChar(dchar ch) {
+    return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') || ch == '_';
+}
+
+/// returns true if all characters are valid ident chars
+bool isIdentText(dstring s) {
+    foreach(ch; s)
+        if (!isIdentChar(ch))
+            return false;
+    return true;
+}
+
+class CompletionPopupMenu : PopupMenu {
+    protected dstring _initialPrefix;
+    protected dstring _prefix;
+    protected dstring[] _suggestions;
+    protected string[] _icons;
+    protected MenuItem _items;
+    protected DSourceEdit _editor;
+    this(DSourceEdit editor, dstring[] suggestions, string[] icons, dstring initialPrefix) {
+        _initialPrefix = initialPrefix;
+        _prefix = initialPrefix.dup;
+        _editor = editor;
+        _suggestions = suggestions;
+        _icons = icons;
+        _items = updateItems();
+        super(_items);
+        menuItemAction = _editor;
+        maxHeight(400);
+        selectItem(0);
+    }
+    MenuItem updateItems() {
+        MenuItem res = new MenuItem();
+        foreach(int i, dstring suggestion ; _suggestions) {
+            if (_prefix.length && !suggestion.startsWith(_prefix))
+                continue;
+            string iconId;
+            if (i < _icons.length)
+                iconId = _icons[i];
+            auto action = new Action(IDEActions.InsertCompletion, suggestion);
+            action.iconId = iconId;
+            res.add(action);
+        }
+        res.updateActionState(_editor);
+        return res;
+    }
+    /// handle keys
+    override bool onKeyEvent(KeyEvent event) {
+        if (event.action == KeyAction.Text) {
+            _prefix ~= event.text;
+            MenuItem newItems = updateItems();
+            if (newItems.subitemCount == 0) {
+                // no matches anymore
+                _editor.onKeyEvent(event);
+                _editor.closeCompletionPopup(this);
+                return true;
+            } else {
+                _editor.onKeyEvent(event);
+                menuItems = newItems;
+                selectItem(0);
+                return true;
+            }
+        } else if (event.action == KeyAction.KeyDown && event.keyCode == KeyCode.BACK && event.noModifiers) {
+            if (_prefix.length > _initialPrefix.length) {
+                _prefix.length = _prefix.length - 1;
+                MenuItem newItems = updateItems();
+                _editor.onKeyEvent(event);
+                menuItems = newItems;
+                selectItem(0);
+            } else {
+                _editor.onKeyEvent(event);
+                _editor.closeCompletionPopup(this);
+            }
+            return true;
+        } else if (event.action == KeyAction.KeyDown && event.keyCode == KeyCode.RETURN) {
+        } else if (event.action == KeyAction.KeyDown && event.keyCode == KeyCode.SPACE) {
+        }
+        return super.onKeyEvent(event);
+    }
 }
