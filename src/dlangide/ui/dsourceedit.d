@@ -60,6 +60,13 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         this("SRCEDIT");
     }
 
+    ~this() {
+        if (_editorTool) {
+            destroy(_editorTool);
+            _editorTool = null;
+        }
+    }
+
     Signal!BreakpointListChangeListener breakpointListChanged;
     Signal!BookmarkListChangeListener bookmarkListChanged;
 
@@ -107,7 +114,13 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
 
     protected EditorTool _editorTool;
     @property EditorTool editorTool() { return _editorTool; }
-    @property EditorTool editorTool(EditorTool tool) { return _editorTool = tool; };
+    @property EditorTool editorTool(EditorTool tool) { 
+        if (_editorTool && _editorTool !is tool) {
+            destroy(_editorTool);
+            _editorTool = null;
+        }
+        return _editorTool = tool; 
+    };
 
     protected ProjectSourceFile _projectSourceFile;
     @property ProjectSourceFile projectSourceFile() { return _projectSourceFile; }
@@ -569,6 +582,58 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         Log.d("Showing popup at ", textPosToClient(_caretPos).left, " ", textPosToClient(_caretPos).top);
         window.update();
     }
+
+    protected ulong _completionTimerId;
+    protected enum COMPLETION_TIMER_MS = 700;
+    protected void startCompletionTimer() {
+        if (_completionTimerId) {
+            cancelTimer(_completionTimerId);
+        }
+        _completionTimerId = setTimer(COMPLETION_TIMER_MS);
+    }
+    protected void cancelCompletionTimer() {
+        if (_completionTimerId) {
+            cancelTimer(_completionTimerId);
+            _completionTimerId = 0;
+        }
+    }
+    /// handle timer; return true to repeat timer event after next interval, false cancel timer
+    override bool onTimer(ulong id) {
+        if (id == _completionTimerId) {
+            _completionTimerId = 0;
+            if (!_completionPopup)
+                window.dispatchAction(ACTION_GET_COMPLETIONS, this);
+        }
+        return super.onTimer(id);
+    }
+
+    /// override to handle focus changes
+    override protected void handleFocusChange(bool focused, bool receivedFocusFromKeyboard = false) {
+        if (!focused)
+            cancelCompletionTimer();
+        super.handleFocusChange(focused, receivedFocusFromKeyboard);
+    }
+
+    protected uint _lastKeyDownCode;
+    protected uint _periodKeyCode;
+    /// handle keys: support autocompletion after . press with delay
+    override bool onKeyEvent(KeyEvent event) {
+        if (event.action == KeyAction.KeyDown)
+            _lastKeyDownCode = event.keyCode;
+        if (event.action == KeyAction.Text && event.noModifiers && event.text==".") {
+            _periodKeyCode = _lastKeyDownCode;
+            startCompletionTimer();
+        } else {
+            if (event.action == KeyAction.KeyUp && (event.text == "." || event.keyCode == KeyCode.KEY_PERIOD || event.keyCode == _periodKeyCode)) {
+                // keep completion timer
+            } else {
+                // cancel completion timer
+                cancelCompletionTimer();
+            }
+        }
+        return super.onKeyEvent(event);
+    }
+
 }
 
 /// returns true if character is valid ident character
