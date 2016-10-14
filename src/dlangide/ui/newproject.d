@@ -407,6 +407,7 @@ void main(string[] args) {
     writeln("Press enter...");
     readln();
 }
+
 };
 
 immutable string SOURCE_CODE_VIBED_HELLOWORLD = q{
@@ -426,18 +427,21 @@ void handleRequest(HTTPServerRequest req,
     if (req.path == "/")
         res.writeBody("Hello, World!", "text/plain");
 }
+
 };
 
 immutable string DUB_JSON_VIBED_HELLOWORLD = q{
 {
     "dependencies": {
-        "vibe-d": "~>0.7.26"
+        "vibe-d": "~>0.7.30-rc.1"
     },
     "versions": ["VibeDefaultMain"]
 }
+
 };
 
 immutable string SOURCE_CODE_DLANGUI_HELLOWORLD = q{
+// DlangUI application
 import dlangui;
 
 mixin APP_ENTRY_POINT;
@@ -453,7 +457,6 @@ extern (C) int UIAppMain(string[] args) {
         VerticalLayout {
             margins: 10
             padding: 10
-            backgroundColor: "#C0E0E070" // semitransparent yellow background
             // red bold text with size = 150% of base style size and font face Arial
             TextWidget { text: "Hello World example for DlangUI"; textColor: "red"; fontSize: 150%; fontWeight: 800; fontFace: "Arial" }
             // arrange controls as form - table with two columns
@@ -504,14 +507,16 @@ extern (C) int UIAppMain(string[] args) {
     // run message loop
     return Platform.instance.enterMessageLoop();
 }
+
 };
 
 immutable string DUB_JSON_DLANGUI_HELLOWORLD = q{
 {
     "dependencies": {
-        "dlangui": "~master"
+        "dlangui": "~>0.9.24"
     }
 }
+
 };
 
 class ProjectTemplate {
