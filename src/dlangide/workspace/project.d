@@ -359,6 +359,7 @@ class Project : WorkspaceItem {
     protected ProjectSettings _settingsFile;
     protected bool _isDependency;
     protected bool _isSubproject;
+    protected bool _isEmbeddedSubproject;
     protected dstring _baseProjectName;
     protected string _dependencyVersion;
 
@@ -384,6 +385,13 @@ class Project : WorkspaceItem {
         } else {
             _isSubproject = false;
         }
+    }
+
+    void setSubprojectJson(Setting s) {
+        if (!_projectFile)
+            _projectFile = new SettingsFile();
+        _isEmbeddedSubproject = true;
+        _projectFile.replaceSetting(s.clone);
     }
 
     @property ProjectSettings settings() {
@@ -531,17 +539,8 @@ class Project : WorkspaceItem {
     ProjectFolder findItems(string[] srcPaths) {
         auto folder = new ProjectFolder(_filename);
         folder.project = this;
-        string path = relativeToAbsolutePath("src");
-        if (folder.loadDir(path))
-            _sourcePaths ~= path;
-        path = relativeToAbsolutePath("source");
-        if (folder.loadDir(path))
-            _sourcePaths ~= path;
         foreach(customPath; srcPaths) {
-            path = relativeToAbsolutePath(customPath);
-            foreach(existing; _sourcePaths)
-                if (path.equal(existing))
-                    continue; // already exists
+            string path = relativeToAbsolutePath(customPath);
             if (folder.loadDir(path))
                 _sourcePaths ~= path;
         }
@@ -595,19 +594,101 @@ class Project : WorkspaceItem {
     }
 
     protected Project[] _subPackages;
-    override bool load(string fname = null) {
-        import dlangui.core.files;
-        if (!_projectFile)
-            _projectFile = new SettingsFile();
-        _mainSourceFile = null;
-        if (fname.length > 0)
-            filename = fname;
-        if (!_projectFile.load(_filename)) {
-            Log.e("failed to load project from file ", _filename);
-            return false;
-        }
-        Log.d("Reading project from file ", _filename);
 
+    /// add item to string array ignoring duplicates
+    protected static void addUnique(ref string[] list, string item) {
+        foreach(s; list)
+            if (s == item)
+                return;
+        list ~= item;
+    }
+
+    /// add item to string array ignoring duplicates
+    protected void addRelativePathIfExists(ref string[] list, string item) {
+        item = relativeToAbsolutePath(item);
+        if (item.exists && item.isDir)
+            addUnique(list, item);
+    }
+
+    /// find source paths for project
+    protected string[] findSourcePaths() {
+        string[] res;
+        res.assumeSafeAppend;
+        string[] srcPaths = _projectFile.getStringArray("sourcePaths");
+        foreach(s; srcPaths)
+            addRelativePathIfExists(res, s);
+        Setting configs = _projectFile.objectByPath("configurations");
+        if (configs) {
+            for (int i = 0; i < configs.length; i++) {
+                Setting s = configs[i];
+                if (s) {
+                    string[] paths = s.getStringArray("sourcePaths");
+                    foreach(path; paths)
+                        addRelativePathIfExists(res, path);
+                }
+            }
+        }
+        if (!res.length) {
+            addRelativePathIfExists(res, "src");
+            addRelativePathIfExists(res, "source");
+        }
+
+        return res;
+    }
+
+    void processSubpackages() {
+        import dlangui.core.files;
+        _subPackages.length = 0;
+        Setting subPackages = _projectFile.settingByPath("subPackages", SettingType.ARRAY, false);
+        if (subPackages) {
+            string p = _projectFile.filename.dirName;
+            for(int i = 0; i < subPackages.length; i++) {
+                Setting sp = subPackages[i];
+                if (sp.isString) {
+                    // string
+                    string path = convertPathDelimiters(sp.str);
+                    string relative = relativePath(path, p);
+                    path = buildNormalizedPath(absolutePath(relative, p));
+                    //Log.d("Subproject path: ", path);
+                    string fn = DubPackageFinder.findPackageFile(path);
+                    //Log.d("Subproject file: ", fn);
+                    Project prj = new Project(_workspace, fn);
+                    prj.setBaseProject(this);
+                    if (prj.load()) {
+                        Log.d("Loaded subpackage from file: ", fn);
+                        _subPackages ~= prj;
+                        if (_workspace)
+                            _workspace.addDependencyProject(prj);
+                    } else {
+                        Log.w("Failed to load subpackage from file: ", fn);
+                    }
+                } else if (sp.isObject) {
+                    // object - file inside base project dub.json
+                    Log.d("Subpackage is JSON object");
+                    string subname = sp.getString("name");
+                    if (subname) {
+                        Project prj = new Project(_workspace, _filename ~ "@" ~ subname);
+                        prj.setBaseProject(this);
+                        prj.setSubprojectJson(sp);
+                        bool res = prj.processLoadedProject();
+                        if (res) {
+                            Log.d("Added embedded subpackage ", subname);
+                            _subPackages ~= prj;
+                            if (_workspace)
+                                _workspace.addDependencyProject(prj);
+                        } else {
+                            Log.w("Error while processing embedded subpackage");
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /// parse data from _projectFile after loading
+    bool processLoadedProject() {
+        //
+        _mainSourceFile = null;
         try {
             _name = toUTF32(_projectFile.getString("name"));
             _originalName = _name;
@@ -621,7 +702,11 @@ class Project : WorkspaceItem {
             _description = toUTF32(_projectFile.getString("description"));
             Log.d("  project name: ", _name);
             Log.d("  project description: ", _description);
-            string[] srcPaths = _projectFile.getStringArray("sourcePaths");
+
+            processSubpackages();
+
+            string[] srcPaths = findSourcePaths();
+            _sourcePaths = null;
             _items = findItems(srcPaths);
             findMainSourceFile();
 
@@ -633,37 +718,7 @@ class Project : WorkspaceItem {
             _configurations = ProjectConfiguration.load(_projectFile);
             Log.i("Project configurations: ", _configurations);
 
-            _subPackages.length = 0;
-            Setting subPackages = _projectFile.settingByPath("subPackages", SettingType.ARRAY, false);
-            if (subPackages) {
-                string p = _projectFile.filename.dirName;
-                for(int i = 0; i < subPackages.length; i++) {
-                    Setting sp = subPackages[i];
-                    if (sp.isString) {
-                        // string
-                        string path = convertPathDelimiters(sp.str);
-                        string relative = relativePath(path, p);
-                        path = buildNormalizedPath(absolutePath(relative, p));
-                        //Log.d("Subproject path: ", path);
-                        string fn = DubPackageFinder.findPackageFile(path);
-                        //Log.d("Subproject file: ", fn);
-                        Project prj = new Project(_workspace, fn);
-                        prj.setBaseProject(this);
-                        if (prj.load()) {
-                            Log.d("Loaded subpackage from file: ", fn);
-                            _subPackages ~= prj;
-                            if (_workspace)
-                                _workspace.addDependencyProject(prj);
-                        } else {
-                            Log.w("Failed to load subpackage from file: ", fn);
-                        }
-                    } else if (sp.isObject) {
-                        // object - file inside base project dub.json
-                        Log.d("Subpackage is JSON object; TODO");
-                    }
-                }
-            }
-            
+
         } catch (Exception e) {
             Log.e("Cannot read project file", e);
             return false;
@@ -672,7 +727,23 @@ class Project : WorkspaceItem {
         return true;
     }
 
+    override bool load(string fname = null) {
+        if (!_projectFile)
+            _projectFile = new SettingsFile();
+        if (fname.length > 0)
+            filename = fname;
+        if (!_projectFile.load(_filename)) {
+            Log.e("failed to load project from file ", _filename);
+            return false;
+        }
+        Log.d("Reading project from file ", _filename);
+        return processLoadedProject();
+
+    }
+
     override bool save(string fname = null) {
+        if (_isEmbeddedSubproject)
+            return false;
         if (fname !is null)
             filename = fname;
         assert(filename !is null);
