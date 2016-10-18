@@ -230,6 +230,7 @@ class WorkspaceItem {
     protected string _filename;
     protected string _dir;
     protected dstring _name;
+    protected dstring _originalName;
     protected dstring _description;
 
     this(string fname = null) {
@@ -357,6 +358,8 @@ class Project : WorkspaceItem {
     protected SettingsFile _projectFile;
     protected ProjectSettings _settingsFile;
     protected bool _isDependency;
+    protected bool _isSubproject;
+    protected dstring _baseProjectName;
     protected string _dependencyVersion;
 
     protected string[] _sourcePaths;
@@ -370,6 +373,17 @@ class Project : WorkspaceItem {
         _dependencyVersion = dependencyVersion;
         _isDependency = _dependencyVersion.length > 0;
         _projectFile = new SettingsFile(fname);
+    }
+
+    void setBaseProject(Project p) {
+        if (p) {
+            _isSubproject = true;
+            _isDependency = p._isDependency;
+            _baseProjectName = p._originalName;
+            _dependencyVersion = p._dependencyVersion;
+        } else {
+            _isSubproject = false;
+        }
     }
 
     @property ProjectSettings settings() {
@@ -580,7 +594,9 @@ class Project : WorkspaceItem {
         return findSourceFileItem(_items, filename, fullFileName);
     }
 
+    protected Project[] _subPackages;
     override bool load(string fname = null) {
+        import dlangui.core.files;
         if (!_projectFile)
             _projectFile = new SettingsFile();
         _mainSourceFile = null;
@@ -594,6 +610,10 @@ class Project : WorkspaceItem {
 
         try {
             _name = toUTF32(_projectFile.getString("name"));
+            _originalName = _name;
+            if (_baseProjectName) {
+                _name = _baseProjectName ~ ":" ~ _name;
+            }
             if (_isDependency) {
                 _name ~= "-"d;
                 _name ~= toUTF32(_dependencyVersion.startsWith("~") ? _dependencyVersion[1..$] : _dependencyVersion);
@@ -612,6 +632,37 @@ class Project : WorkspaceItem {
 
             _configurations = ProjectConfiguration.load(_projectFile);
             Log.i("Project configurations: ", _configurations);
+
+            _subPackages.length = 0;
+            Setting subPackages = _projectFile.settingByPath("subPackages", SettingType.ARRAY, false);
+            if (subPackages) {
+                string p = _projectFile.filename.dirName;
+                for(int i = 0; i < subPackages.length; i++) {
+                    Setting sp = subPackages[i];
+                    if (sp.isString) {
+                        // string
+                        string path = convertPathDelimiters(sp.str);
+                        string relative = relativePath(path, p);
+                        path = buildNormalizedPath(absolutePath(relative, p));
+                        //Log.d("Subproject path: ", path);
+                        string fn = DubPackageFinder.findPackageFile(path);
+                        //Log.d("Subproject file: ", fn);
+                        Project prj = new Project(_workspace, fn);
+                        prj.setBaseProject(this);
+                        if (prj.load()) {
+                            Log.d("Loaded subpackage from file: ", fn);
+                            _subPackages ~= prj;
+                            if (_workspace)
+                                _workspace.addDependencyProject(prj);
+                        } else {
+                            Log.w("Failed to load subpackage from file: ", fn);
+                        }
+                    } else if (sp.isObject) {
+                        // object - file inside base project dub.json
+                        Log.d("Subpackage is JSON object; TODO");
+                    }
+                }
+            }
             
         } catch (Exception e) {
             Log.e("Cannot read project file", e);
@@ -699,22 +750,27 @@ class DubPackageFinder {
         }
     }
 
+    /// find package file (dub.json, package.json) in specified dir; returns absoulute path to found file or null if not found
+    static string findPackageFile(string pathName) {
+        string fn = buildNormalizedPath(pathName, "dub.json");
+        if (fn.exists && fn.isFile)
+            return fn;
+        fn = buildNormalizedPath(pathName, "package.json");
+        if (fn.exists && fn.isFile)
+            return fn;
+        return null;
+    }
+
     protected string findPackage(string packageDir, string packageName, string packageVersion) {
         string fullName = packageVersion.startsWith("~") ? packageName ~ "-" ~ packageVersion[1..$] : packageName ~ "-" ~ packageVersion;
         string pathName = absolutePath(buildNormalizedPath(packageDir, fullName));
         if (pathName.exists && pathName.isDir) {
-            string fn = buildNormalizedPath(pathName, "dub.json");
-            if (fn.exists && fn.isFile)
-                return fn;
-            fn = buildNormalizedPath(pathName, "package.json");
-            if (fn.exists && fn.isFile)
+            string fn = findPackageFile(pathName);
+            if (fn)
                 return fn;
             // new DUB support - with package subdirectory
-            fn = buildNormalizedPath(pathName, packageName, "dub.json");
-            if (fn.exists && fn.isFile)
-                return fn;
-            fn = buildNormalizedPath(pathName, packageName, "package.json");
-            if (fn.exists && fn.isFile)
+            fn = findPackageFile(buildNormalizedPath(pathName, packageName));
+            if (fn)
                 return fn;
         }
         return null;
