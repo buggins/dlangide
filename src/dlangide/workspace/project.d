@@ -14,7 +14,8 @@ import std.utf;
 
 /// return true if filename matches rules for workspace file names
 bool isProjectFile(in string filename) pure nothrow {
-    return filename.baseName.equal("dub.json") || filename.baseName.equal("package.json");
+    return filename.baseName.equal("dub.json") || filename.baseName.equal("DUB.JSON") || filename.baseName.equal("package.json") ||
+        filename.baseName.equal("dub.sdl") || filename.baseName.equal("DUB.SDL");
 }
 
 string toForwardSlashSeparator(in string filename) pure nothrow {
@@ -824,6 +825,9 @@ class DubPackageFinder {
     /// find package file (dub.json, package.json) in specified dir; returns absoulute path to found file or null if not found
     static string findPackageFile(string pathName) {
         string fn = buildNormalizedPath(pathName, "dub.json");
+        if (fn.exists && fn.isFile)
+            return fn;
+        fn = buildNormalizedPath(pathName, "dub.sdl");
         if (fn.exists && fn.isFile)
             return fn;
         fn = buildNormalizedPath(pathName, "package.json");

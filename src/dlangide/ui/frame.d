@@ -50,7 +50,7 @@ immutable dstring DLANGIDE_VERSION = "v0.6.19"d;
 
 bool isSupportedSourceTextFileFormat(string filename) {
     return (filename.endsWith(".d") || filename.endsWith(".txt") || filename.endsWith(".cpp") || filename.endsWith(".h") || filename.endsWith(".c")
-        || filename.endsWith(".json") || filename.endsWith(".dd") || filename.endsWith(".ddoc") || filename.endsWith(".xml") || filename.endsWith(".html")
+        || filename.endsWith(".json") || filename.endsWith(".sdl") || filename.endsWith(".dd") || filename.endsWith(".ddoc") || filename.endsWith(".xml") || filename.endsWith(".html")
         || filename.endsWith(".html") || filename.endsWith(".css") || filename.endsWith(".log") || filename.endsWith(".hpp"));
 }
 
@@ -861,6 +861,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         FileDialog dlg = new FileDialog(caption, window, null);
         dlg.filetypeIcons[".d"] = "text-d";
         dlg.filetypeIcons["dub.json"] = "project-d";
+        dlg.filetypeIcons["dub.sdl"] = "project-d";
         dlg.filetypeIcons["package.json"] = "project-d";
         dlg.filetypeIcons[".dlangidews"] = "project-development";
         return dlg;
@@ -888,7 +889,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     UIString caption;
                     caption = "Open Text File"d;
                     FileDialog dlg = createFileDialog(caption);
-                    dlg.addFilter(FileFilterEntry(UIString("Source files"d), "*.d;*.dd;*.ddoc;*.di;*.dh;*.json;*.xml;*.ini"));
+                    dlg.addFilter(FileFilterEntry(UIString("Source files"d), "*.d;*.dd;*.ddoc;*.di;*.dh;*.json;*.sdl;*.xml;*.ini"));
                     dlg.addFilter(FileFilterEntry(UIString("All files"d), "*.*"));
                     dlg.path = _settings.getRecentPath("FILE_OPEN_PATH");
                     dlg.dialogResult = delegate(Dialog d, const Action result) {
@@ -966,7 +967,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     UIString caption;
                     caption = "Open Workspace or Project"d;
                     FileDialog dlg = createFileDialog(caption);
-                    dlg.addFilter(FileFilterEntry(UIString("Workspace and project files"d), "*.dlangidews;dub.json;package.json"));
+                    dlg.addFilter(FileFilterEntry(UIString("Workspace and project files"d), "*.dlangidews;dub.json;dub.sdl;package.json"));
                     dlg.path = _settings.getRecentPath("FILE_OPEN_WORKSPACE_PATH");
                     dlg.dialogResult = delegate(Dialog d, const Action result) {
                         if (result.id == ACTION_OPEN.id) {
