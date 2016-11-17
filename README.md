@@ -3,21 +3,21 @@
 WTF?! (What The Fork)
 ======================
 Now you can set dmd includes paths (for correct work with DCD) in workspace settings file (newworkspace.dlangidews)
-
+<pre>
 example:
 {
-	"name": "newworkspace",
-    "description": null,
-    "projects": {
-        "newproject": "newproject/dub.json"
-    },
-    "includePath": [
-        "/usr/include/dlang/dmd/"
-    ]
+        "name" : "newworkspace",
+        "description" : null,
+        "projects" : {
+                "newproject" : "newproject/dub.json"<br>
+        },
+        "includePath" : [
+                "/usr/include/dlang/dmd/"
+        ]
 }
-
+</pre>
 PS. 
-	Sorry about bad code. Please correct me.
+        Sorry about bad code. Please correct me.
 
 Dlang IDE
 =========
