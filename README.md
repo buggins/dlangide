@@ -1,5 +1,24 @@
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/buggins/dlangide?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)  [![Build Status](https://travis-ci.org/buggins/dlangide.svg?branch=master)](https://travis-ci.org/buggins/dlangide) [![PayPayl donate button](https://img.shields.io/badge/paypal-donate-yellow.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=H2ADZV8S6TDHQ "Donate once-off to this project using Paypal")
 
+WTF?! (What The Fork)
+======================
+Now you can set dmd includes paths (for correct work with DCD) in workspace settings file (newworkspace.dlangidews)
+
+example:
+{
+	"name": "newworkspace",
+    "description": null,
+    "projects": {
+        "newproject": "newproject/dub.json"
+    },
+    "includePath": [
+        "/usr/include/dlang/dmd/"
+    ]
+}
+
+PS. 
+	Sorry about bad code. Please correct me.
+
 Dlang IDE
 =========
 

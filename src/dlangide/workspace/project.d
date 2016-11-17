@@ -12,6 +12,8 @@ import std.path;
 import std.process;
 import std.utf;
 
+string[] includePath;
+
 /// return true if filename matches rules for workspace file names
 bool isProjectFile(in string filename) pure nothrow {
     return filename.baseName.equal("dub.json") || filename.baseName.equal("DUB.JSON") || filename.baseName.equal("package.json") ||
@@ -284,6 +286,11 @@ class WorkspaceItem {
 /// detect DMD source paths
 string[] dmdSourcePaths() {
     string[] res;
+
+	if(!includePath.empty){
+		res ~= includePath;
+	}
+
     version(Windows) {
         import dlangui.core.files;
         string dmdPath = findExecutablePath("dmd");
@@ -371,6 +378,10 @@ class Project : WorkspaceItem {
     this(Workspace ws, string fname = null, string dependencyVersion = null) {
         super(fname);
         _workspace = ws;
+
+		foreach(obj; _workspace.includePath.array)
+			includePath ~= obj.str;
+
         _items = new ProjectFolder(fname);
         _dependencyVersion = dependencyVersion;
         _isDependency = _dependencyVersion.length > 0;
