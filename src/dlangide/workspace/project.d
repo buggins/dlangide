@@ -379,8 +379,10 @@ class Project : WorkspaceItem {
         super(fname);
         _workspace = ws;
 
-		foreach(obj; _workspace.includePath.array)
-			includePath ~= obj.str;
+        if (_workspace) {
+    		foreach(obj; _workspace.includePath.array)
+    			includePath ~= obj.str;
+        }
 
         _items = new ProjectFolder(fname);
         _dependencyVersion = dependencyVersion;
