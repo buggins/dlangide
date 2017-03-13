@@ -75,6 +75,11 @@ class Workspace : WorkspaceItem {
         return null;
     }
 
+    @property Setting includePath(){
+        Setting res = _workspaceFile.objectByPath("includePath", true);
+        return res;
+    }    
+
     @property Project[] projects() { return _projects; }
 
     @property BuildConfiguration buildConfiguration() { return _buildConfiguration; }
