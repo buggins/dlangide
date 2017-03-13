@@ -981,8 +981,10 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     dlg.show();
                     return true;
                 case IDEActions.GoToDefinition:
-                    Log.d("Trying to go to definition.");
-                    currentEditor.editorTool.goToDefinition(currentEditor(), currentEditor.caretPos);
+                    if (currentEditor) {
+                        Log.d("Trying to go to definition.");
+                        currentEditor.editorTool.goToDefinition(currentEditor(), currentEditor.caretPos);
+                    }
                     return true;
                 case IDEActions.GetDocComments:
                     Log.d("Trying to get doc comments.");
