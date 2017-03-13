@@ -7,7 +7,7 @@ Cross platform D language IDE written using DlangUI library.
 
 Currently supported features:
 
-* Can open DUB (dub.json) projects
+* Uses DUB (dub.json or dub.sdl) project format
 * Shows tree with project source files
 * Can open and edit source files from project or file system in multi-tab editor
 * Build and run project with DUB
@@ -47,7 +47,7 @@ Mago debugger GitHub page: [https://github.com/rainers/mago](https://github.com/
 Build tools
 ===========
 
-DlangIDE uses DUB as build tool, and its dub.json as project file format.
+DlangIDE uses DUB as build tool, and its dub.json or dub.sdl as project file format.
 You can select DMD, LDC or GDC compiler toolchain.
 
 
