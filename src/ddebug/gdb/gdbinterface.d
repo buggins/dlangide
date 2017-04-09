@@ -783,7 +783,7 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
             command = "-stack-list-locals --thread " ~ to!string(_threadId) ~ " --frame " ~ to!string(_frameId) ~ " 1"; 
         }
         override void onResult() {
-            DebugVariableList variables = parseVariableList(params);
+            DebugVariableList variables = parseVariableList(params,"locals");
             if (variables) {
                 // TODO
                 Log.d("Variable list is parsed: " ~ to!string(variables));
