@@ -1313,34 +1313,52 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         } else if (filename.isProjectFile) {
             _logPanel.clear();
             _logPanel.logLine("Trying to open project from " ~ filename);
-            Project project = new Project(currentWorkspace, filename);
-            string defWsFile = project.defWorkspaceFile;
-            if (currentWorkspace) {
-                Project existing = currentWorkspace.findProject(project.filename);
-                if (existing) {
-                    _logPanel.logLine("This project already exists in current workspace");
-                    window.showMessageBox(UIString("Open project"d), UIString("Project is already in workspace"d));
-                    return;
-                }
-                window.showMessageBox(UIString("Open project"d), UIString("Do you want to create new workspace or use current one?"d),
-                                      [ACTION_ADD_TO_CURRENT_WORKSPACE, ACTION_CREATE_NEW_WORKSPACE, ACTION_CANCEL], 0, delegate(const Action result) {
-                                          if (result.id == IDEActions.CreateNewWorkspace) {
-                                              // new ws
-                                              createNewWorkspaceForExistingProject(project);
-                                              hideHomeScreen();
-                                          } else if (result.id == IDEActions.AddToCurrentWorkspace) {
-                                              // add to current
-                                              currentWorkspace.addProject(project);
-                                              loadProject(project);
-                                              currentWorkspace.save();
-                                              refreshWorkspace();
-                                              hideHomeScreen();
-                                          }
-                                          return true;
-                                      });
+
+            // if there is no current workspace create new one
+            auto ws = currentWorkspace;
+            if (currentWorkspace is null) {
+                _logPanel.logLine("There is no current workspace. Creating new one.");
+                ws = new Workspace(this);
+                
+            }
+
+            // check if this project exists in current workspace
+            Project existing = ws.findProject(filename);
+            if (existing) {
+                _logPanel.logLine("This project already exists in current workspace");
+                window.showMessageBox(UIString("Open project"d), UIString("Project is already in workspace"d));
+                return;
+            }
+
+            // create the project and initialize workspace if we has create it
+            // or ask user to select what he wants - continue work with the current
+            // workspace or create new workspace for the project being loaded
+            Project project = new Project(ws, filename);
+            if (currentWorkspace is null)
+            {
+                ws.name = project.name;
+                ws.description = project.description;
+                ws.addProject(project);
+                loadProject(project);
+                ws.save(project.defWorkspaceFile);
+                setWorkspace(ws);
             } else {
-                // new workspace file
-                createNewWorkspaceForExistingProject(project);
+                window.showMessageBox(UIString("Open project"d), UIString("Do you want to create new workspace or use current one?"d),
+                                  [ACTION_ADD_TO_CURRENT_WORKSPACE, ACTION_CREATE_NEW_WORKSPACE, ACTION_CANCEL], 0, delegate(const Action result) {
+                                      if (result.id == IDEActions.CreateNewWorkspace) {
+                                          // new ws
+                                          createNewWorkspaceForExistingProject(project);
+                                          hideHomeScreen();
+                                      } else if (result.id == IDEActions.AddToCurrentWorkspace) {
+                                          // add to current
+                                          currentWorkspace.addProject(project);
+                                          loadProject(project);
+                                          currentWorkspace.save();
+                                          refreshWorkspace();
+                                          hideHomeScreen();
+                                      }
+                                      return true;
+                                  });
             }
         } else {
             _logPanel.logLine("File is not recognized as DlangIDE project or workspace file");

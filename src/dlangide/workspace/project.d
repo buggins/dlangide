@@ -377,6 +377,9 @@ class Project : WorkspaceItem {
 
     this(Workspace ws, string fname = null, string dependencyVersion = null) {
         super(fname);
+
+        assert (ws);
+        
         _workspace = ws;
 
         if (_workspace) {
