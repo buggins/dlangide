@@ -46,7 +46,7 @@ import std.path;
 
 immutable string HELP_PAGE_URL = "https://github.com/buggins/dlangide/wiki";
 // TODO: get version from GIT commit
-immutable dstring DLANGIDE_VERSION = "v0.6.19"d;
+immutable dstring DLANGIDE_VERSION = "v0.7.30"d;
 
 bool isSupportedSourceTextFileFormat(string filename) {
     return (filename.endsWith(".d") || filename.endsWith(".txt") || filename.endsWith(".cpp") || filename.endsWith(".h") || filename.endsWith(".c")

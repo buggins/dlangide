@@ -20,7 +20,7 @@ import dlangide.ui.frame;
 
 import std.algorithm : startsWith, endsWith, equal;
 import std.array : empty;
-import std.utf : toUTF32, toUTF8;
+import std.utf : toUTF32;
 import std.file;
 import std.path;
 

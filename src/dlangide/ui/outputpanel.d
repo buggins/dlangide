@@ -162,7 +162,7 @@ class CompilerLogWidget : LogWidget {
             if (row < 0)
                 row = 0;
             int col = 0;
-            if (match[3]) {
+            if (match[3] && match[3] != "") {
                 col = to!int(match[3]) - 1;
                 if (col < 0)
                     col = 0;
