@@ -14,20 +14,21 @@ public import dlangide.workspace.workspacesettings;
 SettingsPage createSettingsPages() {
     SettingsPage res = new SettingsPage("", UIString(""d));
 
-    SettingsPage ui = res.addChild("interface", UIString("Interface"d));
-    ui.addStringComboBox("interface/theme", UIString("Theme"d), [
-            StringListValue("ide_theme_default", "Default"d), 
-            StringListValue("ide_theme_dark", "Dark"d)]);
-    ui.addStringComboBox("interface/language", UIString("Language"d), [
-            StringListValue("en", "English"d), 
-            StringListValue("ru", "Russian"d), 
-            StringListValue("es", "Spanish"d),
-	    StringListValue("cs", "Čeština"d)]);
+    SettingsPage ui = res.addChild("interface", UIString("OPTION_INTERFACE"c));
+    ui.addStringComboBox("interface/theme", UIString("OPTION_THEME"c), [
+            StringListValue("ide_theme_default", "OPTION_DEFAULT"c), 
+            StringListValue("ide_theme_dark", "OPTION_DARK"c)]);
+    ui.addStringComboBox("interface/language", UIString("OPTION_LANGUAGE"c), [
+            StringListValue("en", "MENU_VIEW_LANGUAGE_EN"c), 
+            StringListValue("ru", "MENU_VIEW_LANGUAGE_RU"c), 
+            StringListValue("es", "MENU_VIEW_LANGUAGE_ES"c),
+	    StringListValue("cs", "MENU_VIEW_LANGUAGE_CS"c)]);
 
-    ui.addIntComboBox("interface/hintingMode", UIString("Font hinting mode"d), [StringListValue(0, "Normal"d), StringListValue(1, "Force Auto Hint"d), 
-                StringListValue(2, "Disabled"d), StringListValue(3, "Light"d)]);
-    ui.addIntComboBox("interface/minAntialiasedFontSize", UIString("Minimum font size for antialiasing"d), 
-                      [StringListValue(0, "Always ON"d), 
+    ui.addIntComboBox("interface/hintingMode", UIString("OPTION_FONT_HINTING"c), [StringListValue(0, "OPTION_FONT_HINTING_NORMAL"c), 
+                StringListValue(1, "OPTION_FONT_HINTING_FORCE"c), 
+                StringListValue(2, "OPTION_FONT_HINTING_DISABLED"c), StringListValue(3, "OPTION_FONT_HINTING_LIGHT"c)]);
+    ui.addIntComboBox("interface/minAntialiasedFontSize", UIString("OPTION_FONT_ANTIALIASING"c), 
+                      [StringListValue(0, "OPTION_FONT_ANTIALIASING_ALWAYS_ON"c), 
                       StringListValue(12, "12"d), 
                       StringListValue(14, "14"d), 
                       StringListValue(16, "16"d), 
@@ -35,8 +36,8 @@ SettingsPage createSettingsPages() {
                       StringListValue(24, "24"d), 
                       StringListValue(32, "32"d), 
                       StringListValue(48, "48"d), 
-                      StringListValue(255, "Always OFF"d)]);
-    ui.addFloatComboBox("interface/fontGamma", UIString("Font gamma"d), 
+                      StringListValue(255, "OPTION_FONT_ANTIALIASING_ALWAYS_OFF"c)]);
+    ui.addFloatComboBox("interface/fontGamma", UIString("OPTION_FONT_GAMMA"c), 
                    [
                     StringListValue(500,  "0.5   "d),
                     StringListValue(600,  "0.6   "d),
@@ -57,12 +58,12 @@ SettingsPage createSettingsPages() {
                     StringListValue(1700, "1.7   "d), 
                     StringListValue(2000, "2.0   "d)]);
 
-    SettingsPage ed = res.addChild("editors", UIString("Editors"d));
-    SettingsPage texted = ed.addChild("editors/textEditor", UIString("Text Editors"d));
+    SettingsPage ed = res.addChild("editors", UIString("OPTION_EDITORS"c));
+    SettingsPage texted = ed.addChild("editors/textEditor", UIString("OPTION_TEXT_EDITORS"c));
 
     // font faces
     StringListValue[] faces;
-    faces ~= StringListValue("Default", "Default"d);
+    faces ~= StringListValue("Default", "OPTION_DEFAULT"c);
     import dlangui.graphics.fonts;
     import std.utf : toUTF32;
     FontFaceProps[] allFaces = FontManager.instance.getFaces();
@@ -89,45 +90,45 @@ SettingsPage createSettingsPages() {
         else
             faces ~= StringListValue(face.face, toUTF32(face.face));
     }
-    texted.addStringComboBox("editors/textEditor/fontFace", UIString("Font face"d), faces);
+    texted.addStringComboBox("editors/textEditor/fontFace", UIString("OPTION_FONT_FACE"c), faces);
 
-    texted.addNumberEdit("editors/textEditor/tabSize", UIString("Tab size"d), 1, 16, 4);
-    texted.addCheckbox("editors/textEditor/useSpacesForTabs", UIString("Use spaces for tabs"d));
-    texted.addCheckbox("editors/textEditor/smartIndents", UIString("Smart indents"d));
-    texted.addCheckbox("editors/textEditor/smartIndentsAfterPaste", UIString("Smart indent after paste"d));
-    texted.addCheckbox("editors/textEditor/showWhiteSpaceMarks", UIString("Show white space marks"d));
-    texted.addCheckbox("editors/textEditor/showTabPositionMarks", UIString("Show tab position marks"d));
+    texted.addNumberEdit("editors/textEditor/tabSize", UIString("OPTION_TAB"c), 1, 16, 4);
+    texted.addCheckbox("editors/textEditor/useSpacesForTabs", UIString("OPTION_USE_SPACES"c));
+    texted.addCheckbox("editors/textEditor/smartIndents", UIString("OPTION_SMART_INDENTS"c));
+    texted.addCheckbox("editors/textEditor/smartIndentsAfterPaste", UIString("OPTION_SMART_INDENTS_PASTE"c));
+    texted.addCheckbox("editors/textEditor/showWhiteSpaceMarks", UIString("OPTION_SHOW_SPACES"c));
+    texted.addCheckbox("editors/textEditor/showTabPositionMarks", UIString("OPTION_SHOW_TABS"c));
 
 
     SettingsPage dlang = res.addChild("dlang", UIString("D"d));
     SettingsPage dub = dlang.addChild("dlang/dub", UIString("DUB"d));
-    dub.addExecutableFileNameEdit("dlang/dub/executable", UIString("DUB executable"d), "dub");
-    dub.addStringEdit("dlang/dub/additional_params", UIString("DUB additional params"d), "");
+    dub.addExecutableFileNameEdit("dlang/dub/executable", UIString("OPTION_DUB_EXECUTABLE"c), "dub");
+    dub.addStringEdit("dlang/dub/additional_params", UIString("OPTION_DUB_ADDITIONAL_PARAMS"c), "");
     SettingsPage rdmd = dlang.addChild("dlang/rdmd", UIString("rdmd"d));
-    rdmd.addExecutableFileNameEdit("dlang/rdmd/executable", UIString("rdmd executable"d), "rdmd");
-    rdmd.addStringEdit("dlang/rdmd/additional_params", UIString("rdmd additional params"d), "");
-    SettingsPage ddebug = dlang.addChild("dlang/debugger", UIString("Debugger"d));
+    rdmd.addExecutableFileNameEdit("dlang/rdmd/executable", UIString("OPTION_RDMD_EXECUTABLE"c), "rdmd");
+    rdmd.addStringEdit("dlang/rdmd/additional_params", UIString("OPTION_RDMD_ADDITIONAL_PARAMS"c), "");
+    SettingsPage ddebug = dlang.addChild("dlang/debugger", UIString("OPTION_DEBUGGER"c));
     version (Windows) {
-        ddebug.addExecutableFileNameEdit("dlang/debugger/executable", UIString("Debugger executable"d), "gdb");
+        ddebug.addExecutableFileNameEdit("dlang/debugger/executable", UIString("OPTION_DEBUGGER_EXECUTABLE"c), "gdb");
     } else {
-        ddebug.addExecutableFileNameEdit("dlang/debugger/executable", UIString("Debugger executable"d), "mago-mi");
+        ddebug.addExecutableFileNameEdit("dlang/debugger/executable", UIString("OPTION_DEBUGGER_EXECUTABLE"c), "mago-mi");
     }
-    SettingsPage terminal = dlang.addChild("dlang/terminal", UIString("Terminal"d));
-    terminal.addExecutableFileNameEdit("dlang/terminal/executable", UIString("Terminal executable"d), "xterm");
+    SettingsPage terminal = dlang.addChild("dlang/terminal", UIString("OPTION_TERMINAL"c));
+    terminal.addExecutableFileNameEdit("dlang/terminal/executable", UIString("OPTION_TERMINAL_EXECUTABLE"c), "xterm");
 
-    SettingsPage toolchains = dlang.addChild("dlang/toolchains", UIString("Toolchains"d));
+    SettingsPage toolchains = dlang.addChild("dlang/toolchains", UIString("OPTION_TOOLCHANS"c));
     SettingsPage dmdtoolchain = toolchains.addChild("dlang/toolchains/dmd", UIString("DMD"d));
-    dmdtoolchain.addExecutableFileNameEdit("dlang/toolchains/dmd/executable", UIString("DMD executable"d), "dmd");
-    dmdtoolchain.addStringEdit("dlang/toolchains/dmd/dub_additional_params", UIString("DUB additional params"d), "");
+    dmdtoolchain.addExecutableFileNameEdit("dlang/toolchains/dmd/executable", UIString("OPTION_DMD_EXECUTABLE"c), "dmd");
+    dmdtoolchain.addStringEdit("dlang/toolchains/dmd/dub_additional_params", UIString("OPTION_DUB_ADDITIONAL_PARAMS"c), "");
     SettingsPage ldctoolchain = toolchains.addChild("dlang/toolchains/ldc", UIString("LDC"d));
-    ldctoolchain.addExecutableFileNameEdit("dlang/toolchains/ldc/executable", UIString("LDC2 executable"d), "ldc2");
-    ldctoolchain.addStringEdit("dlang/toolchains/ldc/dub_additional_params", UIString("DUB additional params"d), "");
+    ldctoolchain.addExecutableFileNameEdit("dlang/toolchains/ldc/executable", UIString("OPTION_LDC2_EXECUTABLE"c), "ldc2");
+    ldctoolchain.addStringEdit("dlang/toolchains/ldc/dub_additional_params", UIString("OPTION_DUB_ADDITIONAL_PARAMS"c), "");
     SettingsPage ldmdtoolchain = toolchains.addChild("dlang/toolchains/ldmd", UIString("LDMD"d));
-    ldmdtoolchain.addExecutableFileNameEdit("dlang/toolchains/ldmd/executable", UIString("LDMD2 executable"d), "ldmd2");
-    ldmdtoolchain.addStringEdit("dlang/toolchains/ldmd/dub_additional_params", UIString("DUB additional params"d), "");
+    ldmdtoolchain.addExecutableFileNameEdit("dlang/toolchains/ldmd/executable", UIString("OPTION_LDMD2_EXECUTABLE"c), "ldmd2");
+    ldmdtoolchain.addStringEdit("dlang/toolchains/ldmd/dub_additional_params", UIString("OPTION_DUB_ADDITIONAL_PARAMS"c), "");
     SettingsPage gdctoolchain = toolchains.addChild("dlang/toolchains/gdc", UIString("GDC"d));
-    gdctoolchain.addExecutableFileNameEdit("dlang/toolchains/gdc/executable", UIString("GDC executable"d), "gdc");
-    gdctoolchain.addStringEdit("dlang/toolchains/gdc/dub_additional_params", UIString("DUB additional params"d), "");
+    gdctoolchain.addExecutableFileNameEdit("dlang/toolchains/gdc/executable", UIString("OPTION_GDC_EXECUTABLE"c), "gdc");
+    gdctoolchain.addStringEdit("dlang/toolchains/gdc/dub_additional_params", UIString("OPTION_DUB_ADDITIONAL_PARAMS"c), "");
 
     return res;
 }
