@@ -25,6 +25,7 @@ import ddebug.common.debugger;
 
 import std.algorithm;
 import std.utf : toUTF32;
+import std.utf : toUTF8;
 
 interface BreakpointListChangeListener {
     void onBreakpointListChanged(ProjectSourceFile sourceFile, Breakpoint[] breakpoints);
