@@ -47,7 +47,7 @@ class HomeScreen : ScrollWidget {
         if (recentWorkspaces.length) {
             foreach(fn; recentWorkspaces) {
                 Action a = ACTION_FILE_OPEN_WORKSPACE.clone();
-                a.label = UIString(toUTF32(stripExtension(baseName(fn))));
+                a.label = UIString.fromRaw(toUTF32(stripExtension(baseName(fn))));
                 a.stringParam = fn;
                 _column1.addChild(new LinkButton(a));
             }

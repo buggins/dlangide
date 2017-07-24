@@ -38,7 +38,7 @@ class NewProjectDlg : Dialog {
     IDEFrame _ide;
 
     this(IDEFrame parent, bool newWorkspace, Workspace currentWorkspace, string dir) {
-        super(newWorkspace ? UIString("New Workspace"d) : UIString("New Project"d), parent.window, 
+        super(newWorkspace ? UIString.fromRaw("New Workspace"d) : UIString.fromRaw("New Project"d), parent.window, 
               DialogFlag.Modal | DialogFlag.Resizable | DialogFlag.Popup, 500, 400);
         _ide = parent;
         _icon = "dlangui-logo1";
@@ -130,7 +130,7 @@ class NewProjectDlg : Dialog {
         _edLocation.filetypeIcons["dub.json"] = "project-d";
         _edLocation.filetypeIcons["package.json"] = "project-d";
         _edLocation.filetypeIcons[".dlangidews"] = "project-development";
-        _edLocation.addFilter(FileFilterEntry(UIString("DlangIDE files"d), "*.dlangidews;*.d;*.dd;*.di;*.ddoc;*.dh;*.json;*.xml;*.ini"));
+        _edLocation.addFilter(FileFilterEntry(UIString.fromRaw("DlangIDE files"d), "*.dlangidews;*.d;*.dd;*.di;*.ddoc;*.dh;*.json;*.xml;*.ini"));
         _edLocation.caption = "Select directory"d;
 
         if (_currentWorkspace) {
@@ -273,14 +273,14 @@ class NewProjectDlg : Dialog {
         if (action.id == IDEActions.FileNewWorkspace || action.id == IDEActions.FileNewProject) {
             if (!exists(_location)) {
                 // show message box with OK and CANCEL buttons, cancel by default, and handle its result
-                window.showMessageBox(UIString("Cannot create project"d), UIString("The target location does not exist.\nDo you want to create the target directory?"), [ACTION_YES, ACTION_CANCEL], 1, delegate(const Action a) {
+                window.showMessageBox(UIString.fromRaw("Cannot create project"d), UIString.fromRaw("The target location does not exist.\nDo you want to create the target directory?"), [ACTION_YES, ACTION_CANCEL], 1, delegate(const Action a) {
                     if (a.id == StandardAction.Yes) {
                         try {
                             mkdirRecurse(_location);
                             close(action);
                         } catch (Exception e) {
                             setError("Cannot create target location");
-                            window.showMessageBox(UIString("Cannot create project"d), UIString(getError()));
+                            window.showMessageBox(UIString.fromRaw("Cannot create project"d), UIString.fromRaw(getError()));
                         }
                     }
                     return true;
@@ -288,11 +288,11 @@ class NewProjectDlg : Dialog {
                 return;
             }
             if (!validate()) {
-                window.showMessageBox(UIString("Cannot create project"d), UIString(getError()));
+                window.showMessageBox(UIString.fromRaw("Cannot create project"d), UIString.fromRaw(getError()));
                 return;
             }
             if (!createProject()) {
-                window.showMessageBox(UIString("Cannot create project"d), UIString("Failed to create project"));
+                window.showMessageBox(UIString.fromRaw("Cannot create project"d), UIString.fromRaw("Failed to create project"));
                 return;
             }
             newaction.objectParam = _result;
@@ -496,8 +496,8 @@ extern (C) int UIAppMain(string[] args) {
     };
     // show message box with content of editors
     window.mainWidget.childById!Button("btnOk").click = delegate(Widget w) {
-        window.showMessageBox(UIString("Ok button pressed"d), 
-                              UIString("Editors content\nEdit1: "d ~ edit1.text ~ "\nEdit2: "d ~ edit2.text));
+        window.showMessageBox(UIString.fromRaw("Ok button pressed"d), 
+                              UIString.fromRaw("Editors content\nEdit1: "d ~ edit1.text ~ "\nEdit2: "d ~ edit2.text));
         return true;
     };
 
