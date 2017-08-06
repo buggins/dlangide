@@ -89,7 +89,7 @@
   <cv2pdbOptions />
   <objfiles />
   <linkswitches />
-  <libfiles>ole32.lib kernel32.lib user32.lib</libfiles>
+  <libfiles />
   <libpaths />
   <deffile />
   <resfile />
@@ -172,7 +172,7 @@
   <doXGeneration>1</doXGeneration>
   <xfilename>$(IntDir)\$(TargetName).json</xfilename>
   <debuglevel>0</debuglevel>
-  <debugids />
+  <debugids>DebugInfo DCD</debugids>
   <versionlevel>0</versionlevel>
   <versionids>EmbedStandardResources</versionids>
   <dump_source>0</dump_source>
@@ -191,7 +191,7 @@
   <cv2pdbOptions />
   <objfiles />
   <linkswitches />
-  <libfiles>ole32.lib kernel32.lib user32.lib</libfiles>
+  <libfiles />
   <libpaths />
   <deffile />
   <resfile />
@@ -293,7 +293,7 @@
   <cv2pdbOptions />
   <objfiles />
   <linkswitches />
-  <libfiles>ole32.lib kernel32.lib user32.lib</libfiles>
+  <libfiles />
   <libpaths />
   <deffile />
   <resfile />
@@ -376,7 +376,7 @@
   <doXGeneration>1</doXGeneration>
   <xfilename>$(IntDir)\$(TargetName).json</xfilename>
   <debuglevel>0</debuglevel>
-  <debugids />
+  <debugids>DebugInfo DCD</debugids>
   <versionlevel>0</versionlevel>
   <versionids>EmbedStandardResources</versionids>
   <dump_source>0</dump_source>
@@ -395,7 +395,7 @@
   <cv2pdbOptions />
   <objfiles />
   <linkswitches />
-  <libfiles>ole32.lib kernel32.lib user32.lib</libfiles>
+  <libfiles />
   <libpaths />
   <deffile />
   <resfile />
@@ -478,7 +478,7 @@
   <doXGeneration>1</doXGeneration>
   <xfilename>$(IntDir)\$(TargetName).json</xfilename>
   <debuglevel>0</debuglevel>
-  <debugids>TestParser DebugInfo DCD</debugids>
+  <debugids>DebugInfo DCD</debugids>
   <versionlevel>0</versionlevel>
   <versionids>USE_CONSOLE EmbedStandardResources</versionids>
   <dump_source>0</dump_source>
@@ -497,7 +497,7 @@
   <cv2pdbOptions />
   <objfiles />
   <linkswitches />
-  <libfiles>ole32.lib kernel32.lib user32.lib</libfiles>
+  <libfiles />
   <libpaths />
   <deffile />
   <resfile />
@@ -599,7 +599,7 @@
   <cv2pdbOptions />
   <objfiles />
   <linkswitches />
-  <libfiles>ole32.lib kernel32.lib user32.lib</libfiles>
+  <libfiles />
   <libpaths />
   <deffile />
   <resfile />
@@ -656,29 +656,7 @@
     <File path="deps\DCD\dsymbol\src\dsymbol\builtin\symbols.d" />
     <File path="deps\DCD\dsymbol\src\dsymbol\type_lookup.d" />
    </Folder>
-   <Folder name="experimental_allocator">
-    <File path="deps\DCD\libdparse\experimental_allocator\src\std\experimental\allocator\building_blocks\allocator_list.d" />
-    <File path="deps\DCD\libdparse\experimental_allocator\src\std\experimental\allocator\building_blocks\bitmapped_block.d" />
-    <File path="deps\DCD\libdparse\experimental_allocator\src\std\experimental\allocator\building_blocks\bucketizer.d" />
-    <File path="deps\DCD\libdparse\experimental_allocator\src\std\experimental\allocator\common.d" />
-    <File path="deps\DCD\libdparse\experimental_allocator\src\std\experimental\allocator\building_blocks\fallback_allocator.d" />
-    <File path="deps\DCD\libdparse\experimental_allocator\src\std\experimental\allocator\building_blocks\free_list.d" />
-    <File path="deps\DCD\libdparse\experimental_allocator\src\std\experimental\allocator\building_blocks\free_tree.d" />
-    <File path="deps\DCD\libdparse\experimental_allocator\src\std\experimental\allocator\gc_allocator.d" />
-    <File path="deps\DCD\libdparse\experimental_allocator\src\std\experimental\allocator\building_blocks\kernighan_ritchie.d" />
-    <File path="deps\DCD\libdparse\experimental_allocator\src\std\experimental\allocator\mallocator.d" />
-    <File path="deps\DCD\libdparse\experimental_allocator\src\std\experimental\allocator\mmap_allocator.d" />
-    <File path="deps\DCD\libdparse\experimental_allocator\src\std\experimental\allocator\building_blocks\null_allocator.d" />
-    <File path="deps\DCD\libdparse\experimental_allocator\src\std\experimental\allocator\package.d" />
-    <File path="deps\DCD\libdparse\experimental_allocator\src\std\experimental\allocator\building_blocks\package.d" />
-    <File path="deps\DCD\libdparse\experimental_allocator\src\std\experimental\allocator\building_blocks\quantizer.d" />
-    <File path="deps\DCD\libdparse\experimental_allocator\src\std\experimental\allocator\building_blocks\region.d" />
-    <File path="deps\DCD\libdparse\experimental_allocator\src\std\experimental\allocator\building_blocks\scoped_allocator.d" />
-    <File path="deps\DCD\libdparse\experimental_allocator\src\std\experimental\allocator\building_blocks\segregator.d" />
-    <File path="deps\DCD\libdparse\experimental_allocator\src\std\experimental\allocator\showcase.d" />
-    <File path="deps\DCD\libdparse\experimental_allocator\src\std\experimental\allocator\building_blocks\stats_collector.d" />
-    <File path="deps\DCD\libdparse\experimental_allocator\src\std\experimental\allocator\typed.d" />
-   </Folder>
+   <Folder name="experimental_allocator" />
    <Folder name="libdparse">
     <File path="deps\DCD\libdparse\src\dparse\ast.d" />
     <File path="deps\DCD\libdparse\src\dparse\entities.d" />

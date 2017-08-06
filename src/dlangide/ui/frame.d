@@ -169,7 +169,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         if (!project)
             project = currentWorkspace.startupProject;
         if (!project) {
-            window.showMessageBox(UIString("Cannot debug project"d), UIString("Startup project is not specified"d));
+            window.showMessageBox(UIString.fromRaw("Cannot debug project"d), UIString.fromRaw("Startup project is not specified"d));
             return;
         }
         buildProject(BuildOperation.Build, project, delegate(int result) {
@@ -208,17 +208,17 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         import std.file;
         stopExecution();
         if (!project) {
-            window.showMessageBox(UIString("Cannot debug project"d), UIString("Startup project is not specified"d));
+            window.showMessageBox(UIString.fromRaw("Cannot debug project"d), UIString.fromRaw("Startup project is not specified"d));
             return;
         }
         string executableFileName = project.executableFileName;
         if (!executableFileName || !exists(executableFileName) || !isFile(executableFileName)) {
-            window.showMessageBox(UIString("Cannot debug project"d), UIString("Cannot find executable file"d));
+            window.showMessageBox(UIString.fromRaw("Cannot debug project"d), UIString.fromRaw("Cannot find executable file"d));
             return;
         }
         string debuggerExecutable = _settings.debuggerExecutable;
         if (debuggerExecutable.empty) {
-            window.showMessageBox(UIString("Cannot debug project"d), UIString("No debugger executable specified in settings"d));
+            window.showMessageBox(UIString.fromRaw("Cannot debug project"d), UIString.fromRaw("No debugger executable specified in settings"d));
             return;
         }
 
@@ -238,7 +238,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         if (!project)
             project = currentWorkspace.startupProject;
         if (!project) {
-            window.showMessageBox(UIString("Cannot run project"d), UIString("Startup project is not specified"d));
+            window.showMessageBox(UIString.fromRaw("Cannot run project"d), UIString.fromRaw("Startup project is not specified"d));
             return;
         }
         buildProject(BuildOperation.Build, project, delegate(int result) {
@@ -255,12 +255,12 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         import std.file;
         stopExecution();
         if (!project) {
-            window.showMessageBox(UIString("Cannot run project"d), UIString("Startup project is not specified"d));
+            window.showMessageBox(UIString.fromRaw("Cannot run project"d), UIString.fromRaw("Startup project is not specified"d));
             return;
         }
         string executableFileName = project.executableFileName;
         if (!executableFileName || !exists(executableFileName) || !isFile(executableFileName)) {
-            window.showMessageBox(UIString("Cannot run project"d), UIString("Cannot find executable file"d));
+            window.showMessageBox(UIString.fromRaw("Cannot run project"d), UIString.fromRaw("Cannot find executable file"d));
             return;
         }
         auto program = new ProgramExecutionNoDebug;
@@ -287,7 +287,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             _logPanel.logLine("MSG_STARTING"c ~ " " ~ executableFileName);
         else
             _logPanel.logLine("MSG_STARTING_DEBUGGER"c ~ " " ~ executableFileName);
-        const auto status =  program.isDebugger ?  UIString("DEBUGGING"c).value : UIString("RUNNING"c).value;
+        const auto status =  program.isDebugger ?  UIString.fromId("DEBUGGING"c).value : UIString.fromId("RUNNING"c).value;
         _statusLine.setBackgroundOperationStatus("debug-run", status);
         string[string] env;
         program.setExecutableParams(executableFileName, args, workingDirectory, env);
@@ -439,7 +439,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             } else {
                 destroy(editor);
                 if (window)
-                    window.showMessageBox(UIString("File open error"d), UIString("Failed to open file "d ~ toUTF32(file.filename)));
+                    window.showMessageBox(UIString.fromRaw("File open error"d), UIString.fromRaw("Failed to open file "d ~ toUTF32(file.filename)));
                 return false;
             }
         }
@@ -457,7 +457,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             _tabs.selectTab(index, true);
         } else {
             HomeScreen home = new HomeScreen(HOME_SCREEN_ID, this);
-            _tabs.addTab(home, UIString("HOME"c), null, true);
+            _tabs.addTab(home, UIString.fromId("HOME"c), null, true);
             _tabs.selectTab(HOME_SCREEN_ID, true);
              auto _settings = new IDESettings(buildNormalizedPath(settingsDir, "settings.json"));
             // Auto open last project
@@ -557,7 +557,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         }
         string tabId = ed.id;
         // tab content is modified - ask for confirmation
-        window.showMessageBox(UIString("Close file "d ~ toUTF32(baseName(tabId))), UIString("Content of this file has been changed."d), 
+        window.showMessageBox(UIString.fromRaw("Close file "d ~ toUTF32(baseName(tabId))), UIString.fromRaw("Content of this file has been changed."d), 
                               [ACTION_SAVE, ACTION_SAVE_ALL, ACTION_DISCARD_CHANGES, ACTION_DISCARD_ALL, ACTION_CANCEL], 
                               0, delegate(const Action result) {
                                   if (result == StandardAction.Save) {
@@ -596,7 +596,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             DSourceEdit d = cast(DSourceEdit)_tabs.tabBody(tabId);
             if (d && d.content.modified) {
                 // tab content is modified - ask for confirmation
-                window.showMessageBox(UIString("Close tab"d), UIString("Content of "d ~ toUTF32(baseName(tabId)) ~ " file has been changed."d), 
+                window.showMessageBox(UIString.fromRaw("Close tab"d), UIString.fromRaw("Content of "d ~ toUTF32(baseName(tabId)) ~ " file has been changed."d), 
                                       [ACTION_SAVE, ACTION_DISCARD_CHANGES, ACTION_CANCEL], 
                                       0, delegate(const Action result) {
                                           if (result == StandardAction.Save) {
@@ -889,18 +889,18 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     Platform.instance.openURL(HELP_PAGE_URL);
                     return true;
                 case IDEActions.HelpAbout:
-                    window.showMessageBox(UIString("ABOUT"c) ~ " " ~ DLANGIDE_VERSION,
-                                          UIString("DLangIDE\n(C) Vadim Lopatin, 2014-2016\nhttp://github.com/buggins/dlangide\nIDE for D programming language written in D\nUses DlangUI library for GUI"d));
+                    window.showMessageBox(UIString.fromId("ABOUT"c) ~ " " ~ DLANGIDE_VERSION,
+                                          UIString.fromRaw("DLangIDE\n(C) Vadim Lopatin, 2014-2016\nhttp://github.com/buggins/dlangide\nIDE for D programming language written in D\nUses DlangUI library for GUI"d));
                     return true;
                 case StandardAction.OpenUrl:
                     platform.openURL(a.stringParam);
                     return true;
                 case IDEActions.FileOpen:
                     UIString caption;
-                    caption = UIString("HEADER_OPEN_TEXT_FILE"c);
+                    caption = UIString.fromId("HEADER_OPEN_TEXT_FILE"c);
                     FileDialog dlg = createFileDialog(caption);
-                    dlg.addFilter(FileFilterEntry(UIString("SOURCE_FILES"c), "*.d;*.dd;*.ddoc;*.di;*.dh;*.json;*.sdl;*.xml;*.ini"));
-                    dlg.addFilter(FileFilterEntry(UIString("ALL_FILES"c), "*.*"));
+                    dlg.addFilter(FileFilterEntry(UIString.fromId("SOURCE_FILES"c), "*.d;*.dd;*.ddoc;*.di;*.dh;*.json;*.sdl;*.xml;*.ini"));
+                    dlg.addFilter(FileFilterEntry(UIString.fromId("ALL_FILES"c), "*.*"));
                     dlg.path = _settings.getRecentPath("FILE_OPEN_PATH");
                     dlg.dialogResult = delegate(Dialog d, const Action result) {
                         if (result.id == ACTION_OPEN.id) {
@@ -976,9 +976,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                         return true;
                     }
                     // Ask user for workspace to open
-                    UIString caption = "HEADER_OPEN_WORKSPACE_OR_PROJECT"c;
+                    UIString caption = UIString.fromId("HEADER_OPEN_WORKSPACE_OR_PROJECT"c);
                     FileDialog dlg = createFileDialog(caption);
-                    dlg.addFilter(FileFilterEntry(UIString("WORKSPACE_AND_PROJECT_FILES"c), "*.dlangidews;dub.json;dub.sdl;package.json"));
+                    dlg.addFilter(FileFilterEntry(UIString.fromId("WORKSPACE_AND_PROJECT_FILES"c), "*.dlangidews;dub.json;dub.sdl;package.json"));
                     dlg.path = _settings.getRecentPath("FILE_OPEN_WORKSPACE_PATH");
                     dlg.dialogResult = delegate(Dialog d, const Action result) {
                         if (result.id == ACTION_OPEN.id) {
@@ -1142,8 +1142,8 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         Project project = srcfile.project;
         if (!project)
             return;
-        window.showMessageBox(UIString("Remove file"d), 
-                UIString("Do you want to remove file "d ~ srcfile.name ~ "?"), 
+        window.showMessageBox(UIString.fromRaw("Remove file"d), 
+                UIString.fromRaw("Do you want to remove file "d ~ srcfile.name ~ "?"), 
                 [ACTION_YES, ACTION_NO], 
                 1, delegate(const Action result) {
                     if (result == StandardAction.Yes) {
@@ -1238,7 +1238,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         //Log.d("settings before copy:\n", _settings.setting.toJSON(true));
         Setting s = _settings.copySettings();
         //Log.d("settings after copy:\n", s.toJSON(true));
-        SettingsDialog dlg = new SettingsDialog(UIString("HEADER_SETTINGS"c), window, s, createSettingsPages());
+        SettingsDialog dlg = new SettingsDialog(UIString.fromId("HEADER_SETTINGS"c), window, s, createSettingsPages());
         dlg.dialogResult = delegate(Dialog dlg, const Action result) {
             if (result.id == ACTION_APPLY.id) {
                 //Log.d("settings after edit:\n", s.toJSON(true));
@@ -1268,7 +1268,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         if (!project)
             return;
         Setting s = project.settings.copySettings();
-        SettingsDialog dlg = new SettingsDialog(UIString(project.name ~ " settings"d), window, s, createProjectSettingsPages());
+        SettingsDialog dlg = new SettingsDialog(UIString.fromRaw(project.name ~ " settings"d), window, s, createProjectSettingsPages());
         dlg.dialogResult = delegate(Dialog dlg, const Action result) {
             if (result.id == ACTION_APPLY.id) {
                 //Log.d("settings after edit:\n", s.toJSON(true));
@@ -1301,10 +1301,10 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
     private bool loadProject(Project project) {
         if (!project.load()) {
             _logPanel.logLine("Cannot read project " ~ project.filename);
-            window.showMessageBox(UIString("ERROR_OPEN_PROJECT"c).value, UIString("ERROR_OPENING_PROJECT"c).value ~ toUTF32(project.filename));
+            window.showMessageBox(UIString.fromId("ERROR_OPEN_PROJECT"c).value, UIString.fromId("ERROR_OPENING_PROJECT"c).value ~ toUTF32(project.filename));
             return false;
         }
-        const auto msg = UIString("MSG_OPENED_PROJECT"c);
+        const auto msg = UIString.fromId("MSG_OPENED_PROJECT"c);
         _logPanel.logLine(toUTF32("Project file " ~ project.filename ~  " is opened ok"));
         return true;
     }
@@ -1320,23 +1320,24 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     _settings.updateRecentWorkspace(filename);
                 });
             } else {
-                window.showMessageBox(UIString("ERROR_OPEN_WORKSPACE"c).value, UIString("ERROR_OPENING_WORKSPACE"c).value);
+                window.showMessageBox(UIString.fromId("ERROR_OPEN_WORKSPACE"c).value, UIString.fromId("ERROR_OPENING_WORKSPACE"c).value);
                 return;
             }
         } else if (filename.isProjectFile) { // Open non-DlangIDE project file or DlangIDE project
             _logPanel.clear();
-            const auto msg = "MSG_TRY_OPEN_PROJECT"c;
-            _logPanel.logLine(msg ~ " " ~ filename);
+            const auto msg = UIString.fromId("MSG_TRY_OPEN_PROJECT"c).value;
+            _logPanel.logLine(msg ~ toUTF32(" " ~ filename));
             Project project = new Project(currentWorkspace, filename);
             string defWsFile = project.defWorkspaceFile;
             if (currentWorkspace) {
                 Project existing = currentWorkspace.findProject(project.filename);
                 if (existing) {
-                    _logPanel.logLine("MSG_PROJECT_ALREADY_OPENED"c);
-                    window.showMessageBox(UIString("MSG_OPEN_PROJECT"c), UIString("MSG_PROJECT_ALREADY_OPENED"c));
+                    _logPanel.logLine("Project is already in workspace"d);
+                    window.showMessageBox(UIString.fromId("MSG_OPEN_PROJECT"c), UIString.fromId("MSG_PROJECT_ALREADY_OPENED"c));
                     return;
                 }
-                window.showMessageBox(UIString("MSG_OPEN_PROJECT"c), UIString("QUESTION_NEW_WORKSPACE"c),
+                window.showMessageBox(UIString.fromId("MSG_OPEN_PROJECT"c), UIString.fromId("QUESTION_NEW_WORKSPACE"c),
+
                                       [ACTION_ADD_TO_CURRENT_WORKSPACE, ACTION_CREATE_NEW_WORKSPACE, ACTION_CANCEL], 0, delegate(const Action result) {
                                           if (result.id == IDEActions.CreateNewWorkspace) {
                                               // new ws
@@ -1358,7 +1359,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             }
         } else {
             _logPanel.logLine("File is not recognized as DlangIDE project or workspace file");
-            window.showMessageBox(UIString("ERROR_INVALID_WORKSPACE_FILE"c), UIString("ERROR_INVALID_WS_OR_PROJECT_FILE"c));
+            window.showMessageBox(UIString.fromId("ERROR_INVALID_WORKSPACE_FILE"c), UIString.fromId("ERROR_INVALID_WS_OR_PROJECT_FILE"c));
         }
     }
 

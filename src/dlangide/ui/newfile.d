@@ -39,7 +39,7 @@ class NewFileDlg : Dialog {
     ProjectFolder _folder;
     string[] _sourcePaths;
     this(IDEFrame parent, Project currentProject, ProjectFolder folder) {
-        super(UIString("New source file"d), parent.window, 
+        super(UIString.fromRaw("New source file"d), parent.window, 
               DialogFlag.Modal | DialogFlag.Resizable | DialogFlag.Popup, 500, 400);
         _ide = parent;
         _icon = "dlangui-logo1";
@@ -119,7 +119,7 @@ class NewFileDlg : Dialog {
         _edLocation.filetypeIcons["dub.json"] = "project-d";
         _edLocation.filetypeIcons["package.json"] = "project-d";
         _edLocation.filetypeIcons[".dlangidews"] = "project-development";
-        _edLocation.addFilter(FileFilterEntry(UIString("DlangIDE files"d), "*.dlangidews;*.d;*.dd;*.di;*.ddoc;*.dh;*.json;*.xml;*.ini"));
+        _edLocation.addFilter(FileFilterEntry(UIString.fromRaw("DlangIDE files"d), "*.dlangidews;*.d;*.dd;*.di;*.ddoc;*.dh;*.json;*.xml;*.ini"));
         _edLocation.caption = "Select directory"d;
 
         // fill templates
@@ -266,11 +266,11 @@ class NewFileDlg : Dialog {
         Action newaction = action.clone();
         if (action.id == IDEActions.FileNew) {
             if (!validate()) {
-                window.showMessageBox(UIString("Error"d), UIString("Invalid parameters"));
+                window.showMessageBox(UIString.fromRaw("Error"d), UIString.fromRaw("Invalid parameters"));
                 return;
             }
             if (!createItem()) {
-                window.showMessageBox(UIString("Error"d), UIString("Failed to create project item"));
+                window.showMessageBox(UIString.fromRaw("Error"d), UIString.fromRaw("Failed to create project item"));
                 return;
             }
             newaction.objectParam = _result;
