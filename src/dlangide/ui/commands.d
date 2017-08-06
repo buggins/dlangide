@@ -132,8 +132,8 @@ const Action ACTION_HELP_VIEW_HELP = new Action(IDEActions.HelpViewHelp, "MENU_H
 const Action ACTION_WINDOW_CLOSE_DOCUMENT = new Action(IDEActions.WindowCloseDocument, "MENU_WINDOW_CLOSE_DOCUMENT"c, null, KeyCode.KEY_W, KeyFlag.Control);
 const Action ACTION_WINDOW_CLOSE_ALL_DOCUMENTS = new Action(IDEActions.WindowCloseAllDocuments, "MENU_WINDOW_CLOSE_ALL_DOCUMENTS"c);
 
-const Action ACTION_CREATE_NEW_WORKSPACE = new Action(IDEActions.CreateNewWorkspace, "Create new workspace"d);
-const Action ACTION_ADD_TO_CURRENT_WORKSPACE = new Action(IDEActions.AddToCurrentWorkspace, "Add to current workspace"d);
+const Action ACTION_CREATE_NEW_WORKSPACE = new Action(IDEActions.CreateNewWorkspace, "OPTION_CREATE_NEW_WORKSPACE"c);
+const Action ACTION_ADD_TO_CURRENT_WORKSPACE = new Action(IDEActions.AddToCurrentWorkspace, "OPTION_ADD_TO_CURRENT_WORKSPACE"c);
 
 const Action ACTION_GET_DOC_COMMENTS = (new Action(IDEActions.GetDocComments,  "SHOW_DOC_COMMENTS"c, ""c, KeyCode.KEY_D, KeyFlag.Control|KeyFlag.Shift)).addAccelerator(KeyCode.F12, KeyFlag.Control).disableByDefault();
 const Action ACTION_GO_TO_DEFINITION = (new Action(IDEActions.GoToDefinition,  "GO_TO_DEFINITION"c, ""c, KeyCode.KEY_G, KeyFlag.Control)).addAccelerator(KeyCode.F12, 0).disableByDefault();

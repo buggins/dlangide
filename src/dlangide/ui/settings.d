@@ -12,8 +12,14 @@ public import dlangide.workspace.workspacesettings;
 
 /// create DlangIDE settings pages tree
 SettingsPage createSettingsPages() {
+    // Root page
     SettingsPage res = new SettingsPage("", UIString(""d));
 
+    // Common page
+    SettingsPage common = res.addChild("common", UIString("OPTION_COMMON"c));
+    common.addCheckbox("common/autoOpenLastProject", UIString("OPTION_AUTO_OPEN_LAST_PROJECT"c));
+    
+    // UI settings page
     SettingsPage ui = res.addChild("interface", UIString("OPTION_INTERFACE"c));
     ui.addStringComboBox("interface/theme", UIString("OPTION_THEME"c), [
             StringListValue("ide_theme_default", "OPTION_DEFAULT"c), 

@@ -244,8 +244,31 @@ class Workspace : WorkspaceItem {
         if (_filename.empty) // no file name specified
             return false;
         _settings.save(_filename ~ WORKSPACE_SETTINGS_EXTENSION);
+        // If name is null, then compose it from projects
+        // If description is null, then compose it from project's descriptions
+        immutable auto nf = _name.empty;
+        immutable auto df = _description.empty;
+        if (nf || df)
+        {
+            _name = nf ? "" : _name;
+            _description = df ? "" : _description;
+            foreach (Project p; _projects) {
+               if (p.isDependency)
+                    continue; // don't add dependency
+                if (nf)
+                    _name ~= p.name ~ ",";
+                if (df)
+                    _description ~= p.description ~ " / ";
+            }
+            if (!_name.empty) // cut off last comma
+                _name = _name[ 0 .. $ - 1 ];
+            if (!_description.empty) // cut off last delimiter
+                _description = _description[ 0 .. $ - 3 ]; 
+        }
         _workspaceFile.setString("name", toUTF8(_name));
         _workspaceFile.setString("description", toUTF8(_description));
+        Log.d("workspace name: ", _name);
+        Log.d("workspace description: ", _description);
         Setting projects = _workspaceFile.objectByPath("projects", true);
         projects.clear(SettingType.OBJECT);
         foreach (Project p; _projects) {
