@@ -281,8 +281,8 @@ class IDESettings : SettingsFile {
     }
     
     @property bool autoOpenLastProject() {
-        Setting obj =_setting.objectByPath("common/autoOpenLastProject");
-        return _setting.objectByPath("common/autoOpenLastProject").boolean;
+        Setting obj =_setting.objectByPath("common", true);
+        return obj.getBoolean("autoOpenLastProject", false);
     }
 }
 
