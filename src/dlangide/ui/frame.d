@@ -284,10 +284,11 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             }
         }
         if (!program.isDebugger)
-            _logPanel.logLine("Starting " ~ executableFileName);
+            _logPanel.logLine("MSG_STARTING"c ~ " " ~ executableFileName);
         else
-            _logPanel.logLine("Starting debugger for " ~ executableFileName);
-        _statusLine.setBackgroundOperationStatus("debug-run", program.isDebugger ?  "debugging..."d : "running..."d);
+            _logPanel.logLine("MSG_STARTING_DEBUGGER"c ~ " " ~ executableFileName);
+        const auto status =  program.isDebugger ?  UIString.fromId("DEBUGGING"c).value : UIString.fromId("RUNNING"c).value;
+        _statusLine.setBackgroundOperationStatus("debug-run", status);
         string[string] env;
         program.setExecutableParams(executableFileName, args, workingDirectory, env);
         if (!tty.empty) {
@@ -456,8 +457,17 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             _tabs.selectTab(index, true);
         } else {
             HomeScreen home = new HomeScreen(HOME_SCREEN_ID, this);
-            _tabs.addTab(home, "DlangIDE Home"d, null, true);
+            _tabs.addTab(home, UIString.fromId("HOME"c), null, true);
             _tabs.selectTab(HOME_SCREEN_ID, true);
+             auto _settings = new IDESettings(buildNormalizedPath(settingsDir, "settings.json"));
+            // Auto open last project
+            const auto recentWorkspaces = settings.recentWorkspaces;
+            if (recentWorkspaces.length > 0 && _settings.autoOpenLastProject())
+            {
+                Action a = ACTION_FILE_OPEN_WORKSPACE.clone();
+                a.stringParam = recentWorkspaces[0];
+                handleAction(a);
+            }
         }
     }
 
@@ -879,7 +889,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     Platform.instance.openURL(HELP_PAGE_URL);
                     return true;
                 case IDEActions.HelpAbout:
-                    window.showMessageBox(UIString.fromRaw("About DlangIDE "d ~ DLANGIDE_VERSION),
+                    window.showMessageBox(UIString.fromId("ABOUT"c) ~ " " ~ DLANGIDE_VERSION,
                                           UIString.fromRaw("DLangIDE\n(C) Vadim Lopatin, 2014-2016\nhttp://github.com/buggins/dlangide\nIDE for D programming language written in D\nUses DlangUI library for GUI"d));
                     return true;
                 case StandardAction.OpenUrl:
@@ -887,10 +897,10 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     return true;
                 case IDEActions.FileOpen:
                     UIString caption;
-                    caption = "Open Text File"d;
+                    caption = UIString.fromId("HEADER_OPEN_TEXT_FILE"c);
                     FileDialog dlg = createFileDialog(caption);
-                    dlg.addFilter(FileFilterEntry(UIString.fromRaw("Source files"d), "*.d;*.dd;*.ddoc;*.di;*.dh;*.json;*.sdl;*.xml;*.ini"));
-                    dlg.addFilter(FileFilterEntry(UIString.fromRaw("All files"d), "*.*"));
+                    dlg.addFilter(FileFilterEntry(UIString.fromId("SOURCE_FILES"c), "*.d;*.dd;*.ddoc;*.di;*.dh;*.json;*.sdl;*.xml;*.ini"));
+                    dlg.addFilter(FileFilterEntry(UIString.fromId("ALL_FILES"c), "*.*"));
                     dlg.path = _settings.getRecentPath("FILE_OPEN_PATH");
                     dlg.dialogResult = delegate(Dialog d, const Action result) {
                         if (result.id == ACTION_OPEN.id) {
@@ -960,14 +970,15 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     });
                     return true;
                 case IDEActions.FileOpenWorkspace:
+                    // Already specified workspace
                     if (!a.stringParam.empty) {
                         openFileOrWorkspace(a.stringParam);
                         return true;
                     }
-                    UIString caption;
-                    caption = "Open Workspace or Project"d;
+                    // Ask user for workspace to open
+                    UIString caption = UIString.fromId("HEADER_OPEN_WORKSPACE_OR_PROJECT"c);
                     FileDialog dlg = createFileDialog(caption);
-                    dlg.addFilter(FileFilterEntry(UIString.fromRaw("Workspace and project files"d), "*.dlangidews;dub.json;dub.sdl;package.json"));
+                    dlg.addFilter(FileFilterEntry(UIString.fromId("WORKSPACE_AND_PROJECT_FILES"c), "*.dlangidews;dub.json;dub.sdl;package.json"));
                     dlg.path = _settings.getRecentPath("FILE_OPEN_WORKSPACE_PATH");
                     dlg.dialogResult = delegate(Dialog d, const Action result) {
                         if (result.id == ACTION_OPEN.id) {
@@ -1227,7 +1238,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         //Log.d("settings before copy:\n", _settings.setting.toJSON(true));
         Setting s = _settings.copySettings();
         //Log.d("settings after copy:\n", s.toJSON(true));
-        SettingsDialog dlg = new SettingsDialog(UIString.fromRaw("DlangIDE settings"d), window, s, createSettingsPages());
+        SettingsDialog dlg = new SettingsDialog(UIString.fromId("HEADER_SETTINGS"c), window, s, createSettingsPages());
         dlg.dialogResult = delegate(Dialog dlg, const Action result) {
             if (result.id == ACTION_APPLY.id) {
                 //Log.d("settings after edit:\n", s.toJSON(true));
@@ -1290,14 +1301,16 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
     private bool loadProject(Project project) {
         if (!project.load()) {
             _logPanel.logLine("Cannot read project " ~ project.filename);
-            window.showMessageBox(UIString.fromRaw("Cannot open project"d), UIString.fromRaw("Error occured while opening project "d ~ toUTF32(project.filename)));
+            window.showMessageBox(UIString.fromId("ERROR_OPEN_PROJECT"c).value, UIString.fromId("ERROR_OPENING_PROJECT"c).value ~ toUTF32(project.filename));
             return false;
         }
+        const auto msg = UIString.fromId("MSG_OPENED_PROJECT"c);
         _logPanel.logLine(toUTF32("Project file " ~ project.filename ~  " is opened ok"));
         return true;
     }
 
     void openFileOrWorkspace(string filename) {
+        // Open DlangIDE workspace file
         if (filename.isWorkspaceFile) {
             Workspace ws = new Workspace(this);
             if (ws.load(filename)) {
@@ -1307,22 +1320,24 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     _settings.updateRecentWorkspace(filename);
                 });
             } else {
-                window.showMessageBox(UIString.fromRaw("Cannot open workspace"d), UIString.fromRaw("Error occured while opening workspace"d));
+                window.showMessageBox(UIString.fromId("ERROR_OPEN_WORKSPACE"c).value, UIString.fromId("ERROR_OPENING_WORKSPACE"c).value);
                 return;
             }
-        } else if (filename.isProjectFile) {
+        } else if (filename.isProjectFile) { // Open non-DlangIDE project file or DlangIDE project
             _logPanel.clear();
-            _logPanel.logLine("Trying to open project from " ~ filename);
+            const auto msg = UIString.fromId("MSG_TRY_OPEN_PROJECT"c).value;
+            _logPanel.logLine(msg ~ toUTF32(" " ~ filename));
             Project project = new Project(currentWorkspace, filename);
             string defWsFile = project.defWorkspaceFile;
             if (currentWorkspace) {
                 Project existing = currentWorkspace.findProject(project.filename);
                 if (existing) {
-                    _logPanel.logLine("This project already exists in current workspace");
-                    window.showMessageBox(UIString.fromRaw("Open project"d), UIString.fromRaw("Project is already in workspace"d));
+                    _logPanel.logLine("Project is already in workspace"d);
+                    window.showMessageBox(UIString.fromId("MSG_OPEN_PROJECT"c), UIString.fromId("MSG_PROJECT_ALREADY_OPENED"c));
                     return;
                 }
-                window.showMessageBox(UIString.fromRaw("Open project"d), UIString.fromRaw("Do you want to create new workspace or use current one?"d),
+                window.showMessageBox(UIString.fromId("MSG_OPEN_PROJECT"c), UIString.fromId("QUESTION_NEW_WORKSPACE"c),
+
                                       [ACTION_ADD_TO_CURRENT_WORKSPACE, ACTION_CREATE_NEW_WORKSPACE, ACTION_CANCEL], 0, delegate(const Action result) {
                                           if (result.id == IDEActions.CreateNewWorkspace) {
                                               // new ws
@@ -1344,7 +1359,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             }
         } else {
             _logPanel.logLine("File is not recognized as DlangIDE project or workspace file");
-            window.showMessageBox(UIString.fromRaw("Invalid workspace file"d), UIString.fromRaw("This file is not a valid workspace or project file"d));
+            window.showMessageBox(UIString.fromId("ERROR_INVALID_WORKSPACE_FILE"c), UIString.fromId("ERROR_INVALID_WS_OR_PROJECT_FILE"c));
         }
     }
 
@@ -1361,7 +1376,10 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         Workspace ws = new Workspace(this);
         ws.name = project.name;
         ws.description = project.description;
+        Log.d("workspace name: ", project.name);
+        Log.d("workspace description: ", project.description);
         ws.addProject(project);
+        // Load project data
         loadProject(project);
         ws.save(defWsFile);
         setWorkspace(ws);

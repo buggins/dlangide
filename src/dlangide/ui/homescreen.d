@@ -6,6 +6,7 @@ import dlangui.widgets.scroll;
 import dlangui.widgets.controls;
 import dlangide.ui.frame;
 import dlangide.ui.commands;
+import dlangui.core.i18n;
 
 import std.path;
 import std.utf : toUTF32;
@@ -30,11 +31,11 @@ class HomeScreen : ScrollWidget {
         _column2.layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT).padding(Rect(pad, pad, pad, pad));
         _content.addChild(_column1);
         _content.addChild(_column2);
-        _column1.addChild((new TextWidget(null, "Dlang IDE"d ~ " " ~ DLANGIDE_VERSION)).fontSize(32).textColor(linkColor));
-        _column1.addChild((new TextWidget(null, "D language IDE written in D"d)).fontSize(20));
-        _column1.addChild((new TextWidget(null, "(c) Vadim Lopatin 2015"d)).fontSize(22).textColor(linkColor));
+        _column1.addChild((new TextWidget(null, "Dlang IDE "d ~ DLANGIDE_VERSION)).fontSize(32).textColor(linkColor));
+        _column1.addChild((new TextWidget(null, UIString.fromId("DESCRIPTION"c))).fontSize(20));
+        _column1.addChild((new TextWidget(null, UIString.fromId("COPYRIGHT"c))).fontSize(22).textColor(linkColor));
         _column1.addChild(new VSpacer());
-        _column1.addChild((new TextWidget(null, "Start with:"d)).fontSize(20).textColor(linkColor));
+        _column1.addChild((new TextWidget(null, UIString.fromId("START_WITH"c))).fontSize(20).textColor(linkColor));
         _startItems = new VerticalLayout();
         _recentItems = new VerticalLayout();
         _startItems.addChild(new ImageTextButton(ACTION_FILE_OPEN_WORKSPACE));
@@ -42,7 +43,9 @@ class HomeScreen : ScrollWidget {
         _startItems.addChild(new ImageTextButton(ACTION_FILE_NEW_PROJECT));
         _column1.addChild(_startItems);
         _column1.addChild(new VSpacer());
-        _column1.addChild((new TextWidget(null, "Recent:"d)).fontSize(20).textColor(linkColor));
+        
+        // Recent workspaces 
+        _column1.addChild((new TextWidget(null, UIString.fromId("RECENT"c))).fontSize(20).textColor(linkColor));
         string[] recentWorkspaces = _frame.settings.recentWorkspaces;
         if (recentWorkspaces.length) {
             foreach(fn; recentWorkspaces) {
@@ -52,15 +55,17 @@ class HomeScreen : ScrollWidget {
                 _column1.addChild(new LinkButton(a));
             }
         } else {
-            _recentItems.addChild((new TextWidget(null, "No recent items"d)));
+            _recentItems.addChild((new TextWidget(null, UIString.fromId("NO_RECENT"c))));
         }
         _column1.addChild(_recentItems);
+        
+        // Useful links
         _column1.addChild(new VSpacer());
-        _column2.addChild((new TextWidget(null, "Useful Links:"d)).fontSize(20).textColor(linkColor));
-        _column2.addChild(new UrlImageTextButton(null, "D Programming Language"d, "http://dlang.org/"));
-        _column2.addChild(new UrlImageTextButton(null, "DUB repository"d, "http://code.dlang.org/"));
-        _column2.addChild(new UrlImageTextButton(null, "DLangUI on GitHub"d, "https://github.com/buggins/dlangui"));
-        _column2.addChild(new UrlImageTextButton(null, "DLangIDE on GitHub"d, "https://github.com/buggins/dlangide"));
+        _column2.addChild((new TextWidget(null, UIString.fromId("USEFUL_LINKS"c))).fontSize(20).textColor(linkColor));
+        _column2.addChild(new UrlImageTextButton(null, UIString.fromId("D_LANG"c).value, "http://dlang.org/"));
+        _column2.addChild(new UrlImageTextButton(null, UIString.fromId("DUB_REP"c).value, "http://code.dlang.org/"));
+        _column2.addChild(new UrlImageTextButton(null, UIString.fromId("DLANG_UI"c).value, "https://github.com/buggins/dlangui"));
+        _column2.addChild(new UrlImageTextButton(null, UIString.fromId("DLANG_IDE"c).value, "https://github.com/buggins/dlangide"));
         _column2.addChild(new VSpacer());
         contentWidget = _content;
     }

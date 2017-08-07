@@ -53,7 +53,7 @@ class IDESettings : SettingsFile {
     /// override to do something after loading - e.g. set defaults
     override void afterLoad() {
     }
-
+    
     @property Setting editorSettings() {
         Setting res = _setting.objectByPath("editors/textEditor", true);
         return res;
@@ -279,6 +279,10 @@ class IDESettings : SettingsFile {
         obj["recentWorkspaces"] = list;
         save();
     }
-
+    
+    @property bool autoOpenLastProject() {
+        Setting obj =_setting.objectByPath("common/autoOpenLastProject");
+        return _setting.objectByPath("common/autoOpenLastProject").boolean;
+    }
 }
 
