@@ -86,7 +86,16 @@ extern (C) int UIAppMain(string[] args) {
         //pragma(msg, w.click.return_t, "", w.click.params_t);
 
         IDEFrame frame = new IDEFrame(window);
-
+        
+        // Open project, if it specified in command line
+        if (args.length > 1)
+        {
+            Action a = ACTION_FILE_OPEN_WORKSPACE.clone();
+            a.stringParam = args[1];
+            frame.handleAction(a);
+            // Mark that workspace opened to prevent auto open
+            frame.isOpenedWorkspace(true);
+        }
 
         // open home screen tab
         frame.showHomeScreen();
