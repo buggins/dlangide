@@ -82,6 +82,8 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
     OutputPanel _logPanel;
     DockHost _dockHost;
     TabWidget _tabs;
+    // Is any workspace already opened?
+    private auto openedWorkspace = false;
 
     ///Cache for parsed D files for autocomplete and symbol finding
     import dlangide.tools.d.dcdinterface;
@@ -130,6 +132,16 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
     /// returns true if program execution or debugging is active
     @property bool isExecutionActive() {
         return _execution !is null;
+    }
+    
+    /// Is any workspace already opened?
+    @property bool isOpenedWorkspace() {
+        return openedWorkspace;
+    }
+    
+    /// Is any workspace already opened?
+    @property void isOpenedWorkspace(bool opened) {
+        openedWorkspace = opened;    
     }
 
     /// called when program execution is stopped
@@ -460,9 +472,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             _tabs.addTab(home, UIString.fromId("HOME"c), null, true);
             _tabs.selectTab(HOME_SCREEN_ID, true);
              auto _settings = new IDESettings(buildNormalizedPath(settingsDir, "settings.json"));
-            // Auto open last project
+            // Auto open last workspace, if no workspace specified in command line and autoOpen flag set to true
             const auto recentWorkspaces = settings.recentWorkspaces;
-            if (recentWorkspaces.length > 0 && _settings.autoOpenLastProject())
+            if (!openedWorkspace && recentWorkspaces.length > 0 && _settings.autoOpenLastProject())
             {
                 Action a = ACTION_FILE_OPEN_WORKSPACE.clone();
                 a.stringParam = recentWorkspaces[0];
