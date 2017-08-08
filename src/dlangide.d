@@ -88,17 +88,18 @@ extern (C) int UIAppMain(string[] args) {
         IDEFrame frame = new IDEFrame(window);
         
         // Open project, if it specified in command line
-        if (args.length > 1)
+        if (args.length > 0)
         {
             Action a = ACTION_FILE_OPEN_WORKSPACE.clone();
-            a.stringParam = args[1];
+            a.stringParam = args[0].toAbsolutePath;
             frame.handleAction(a);
             // Mark that workspace opened to prevent auto open
             frame.isOpenedWorkspace(true);
         }
 
         // open home screen tab
-        frame.showHomeScreen();
+        if (!frame.isOpenedWorkspace)
+            frame.showHomeScreen();
         // for testing: load workspace at startup
         //frame.openFileOrWorkspace(appendPath(exePath, "../workspaces/sample1/sample1.dlangidews"));
 
