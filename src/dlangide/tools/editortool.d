@@ -34,14 +34,14 @@ class DefaultEditorTool : EditorTool
     }
     
     override void goToDefinition(DSourceEdit editor, TextPosition caretPosition) {
-        assert(0); //Go To Definition should not be called for normal files.
+        //assert(0); //Go To Definition should not be called for normal files.
     }
     
     override void getCompletions(DSourceEdit editor, TextPosition caretPosition, void delegate(dstring[] labels, string[] icons) callback) {
-        assert(0);
+        //assert(0);
     }
 
     override void getDocComments(DSourceEdit editor, TextPosition caretPosition, void delegate(string[]) callback) {
-        assert(0);
+        //assert(0);
     }
 }

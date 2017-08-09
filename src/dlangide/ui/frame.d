@@ -444,7 +444,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                 }
                 applySettings(editor, settings);
                 _tabs.selectTab(index, true);
-                if( filename.endsWith(".d") )
+                if( filename.endsWith(".d") || filename.endsWith(".di") )
                     editor.editorTool = new DEditorTool(this);
                 else
                     editor.editorTool = new DefaultEditorTool(this);
