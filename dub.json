@@ -35,6 +35,12 @@
             "subConfigurations" : {
                 "dlangui" : "console"
             }
+        }, 
+        {
+            "name" : "x11",
+            "subConfigurations" : {
+                "dlangui" : "x11"
+            }
         }
     ],
 
