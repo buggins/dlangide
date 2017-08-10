@@ -48,7 +48,8 @@ class DCDTask {
     void createRequest() {
         request.sourceCode = cast(ubyte[])_content;
         request.fileName = _filename;
-        request.cursorPosition = _index; 
+        request.cursorPosition = _index;
+        request.importPaths = _importPaths;
     }
     void performRequest() {
         // override
@@ -69,11 +70,27 @@ class DCDTask {
     }
 }
 
+class ModuleCacheAccessor {
+    import dsymbol.modulecache;
+    //protected ASTAllocator _astAllocator;
+    protected ModuleCache _moduleCache;
+    this(in string[] importPaths) {
+        _moduleCache = ModuleCache(new ASTAllocator);
+        _moduleCache.addImportPaths(importPaths);
+    }
+    protected ModuleCache * getModuleCache(in string[] importPaths) {
+        _moduleCache.addImportPaths(importPaths);
+        return &_moduleCache;
+    }
+}
+
 /// Async interface to DCD
 class DCDInterface : Thread {
 
     import dsymbol.modulecache;
-    protected ModuleCache _moduleCache = ModuleCache(new ASTAllocator);
+    //protected ASTAllocator _astAllocator;
+    //protected ModuleCache * _moduleCache;
+    ModuleCacheAccessor _moduleCache;
     protected BlockingQueue!DCDTask _queue;
 
     this() {
@@ -88,13 +105,37 @@ class DCDInterface : Thread {
         join();
         destroy(_queue);
         _queue = null;
+        if (_moduleCache) {
+            destroyModuleCache();
+        }
+    }
+
+    protected void destroyModuleCache() {
+        if (_moduleCache) {
+            Log.d("DCD: destroying module cache");
+            destroy(_moduleCache);
+            _moduleCache = null;
+            /*
+            if (_astAllocator) {
+                _astAllocator.deallocateAll();
+                destroy(_astAllocator);
+                _astAllocator = null;
+            }
+            */
+        }
     }
 
     protected ModuleCache * getModuleCache(in string[] importPaths) {
         // TODO: clear cache if import paths removed or changed
         // hold several module cache instances - make cache of caches
-        _moduleCache.addImportPaths(importPaths);
-        return &_moduleCache;
+        //destroyModuleCache();
+        //if (!_astAllocator)
+        //    _astAllocator = new ASTAllocator;
+        if (!_moduleCache) {
+            _moduleCache = new ModuleCacheAccessor(importPaths);
+        }
+        return _moduleCache.getModuleCache(importPaths);
+        //return _moduleCache;
     }
 
     void threadFunc() {
@@ -104,7 +145,8 @@ class DCDInterface : Thread {
             if (!_queue.get(task))
                 break;
             if (task && !task.cancelled) {
-                Log.d("Execute DCD task");
+                import std.file : getcwd;
+                Log.d("Execute DCD task; current dir=", getcwd);
                 task.execute();
                 Log.d("DCD task execution finished");
             }
@@ -141,7 +183,7 @@ class DCDInterface : Thread {
         override void performRequest() {
             AutocompleteResponse response = getDoc(request, *getModuleCache(_importPaths));
 
-            result.docComments = response.docComments;
+            result.docComments = response.docComments.dup;
             result.result = DCDResult.SUCCESS;
 
             debug(DCD) Log.d("DCD doc comments:\n", result.docComments);
@@ -176,7 +218,7 @@ class DCDInterface : Thread {
         override void performRequest() {
             AutocompleteResponse response = findDeclaration(request, *getModuleCache(_importPaths));
 
-            result.fileName = response.symbolFilePath;
+            result.fileName = response.symbolFilePath.dup;
             result.offset = response.symbolLocation;
             result.result = DCDResult.SUCCESS;
 

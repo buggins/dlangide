@@ -27,12 +27,29 @@ class DEditorTool : EditorTool
         cancelGetCompletions();
     }
 
+    static bool isIdentChar(char ch) {
+        return ch == '_' || (ch >= 'a' && ch <='z') || (ch >= 'A' && ch <='Z') || ((ch & 0x80) != 0);
+    }
+    static bool isAtWord(string content, size_t byteOffset) {
+        if (byteOffset >= content.length)
+            return false;
+        if (isIdentChar(content[byteOffset]))
+            return true;
+        if (byteOffset > 0 && isIdentChar(content[byteOffset - 1]))
+            return true;
+        if (byteOffset + 1 < content.length && isIdentChar(content[byteOffset + 1]))
+            return true;
+        return false;
+    }
+
     DCDTask _getDocCommentsTask;
     override void getDocComments(DSourceEdit editor, TextPosition caretPosition, void delegate(string[]) callback) {
         cancelGetDocComments();
         string[] importPaths = editor.importPaths();
         string content = toUTF8(editor.text);
         auto byteOffset = caretPositionToByteOffset(content, caretPosition);
+        if (!isAtWord(content, byteOffset))
+            return;
         _getDocCommentsTask = _frame.dcdInterface.getDocComments(editor.window, importPaths, editor.filename, content, byteOffset, delegate(DocCommentsResultSet output) {
             if(output.result == DCDResult.SUCCESS) {
                 auto doc = output.docComments;

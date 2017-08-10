@@ -67,6 +67,10 @@ class ProjectSettings : SettingsFile {
             return null;
         return cfg;
     }
+
+    @property bool runInExternalConsole() {
+        return debugSettings.getBoolean("external_console", true);
+    }
 }
 
 /// join parameter lists separating with space

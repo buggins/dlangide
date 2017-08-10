@@ -163,7 +163,7 @@ SettingsPage createProjectSettingsPages() {
     SettingsPage dbg = res.addChild("debug", UIString.fromRaw("Run and Debug"d));
     dbg.addStringEdit("debug/run_args", UIString.fromRaw("Command line args"d), "");
     dbg.addDirNameEdit("debug/working_dir", UIString.fromRaw("Working directory"d), "");
-    dbg.addCheckbox("debug/external_console", UIString.fromRaw("Run in external console"d), true);
+    dbg.addCheckbox("debug/external_console", UIString.fromRaw("Run in external console"d), false);
 
     return res;
 }

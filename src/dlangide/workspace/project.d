@@ -547,7 +547,7 @@ class Project : WorkspaceItem {
 
     @property bool runInExternalConsole() {
         // TODO
-        return true;
+        return settings.runInExternalConsole;
     }
 
     ProjectFolder findItems(string[] srcPaths) {
