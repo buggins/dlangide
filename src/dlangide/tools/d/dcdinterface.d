@@ -12,6 +12,19 @@ import std.typecons;
 import std.conv;
 import std.string;
 
+import std.experimental.allocator;
+import std.experimental.allocator.mallocator;
+import std.experimental.allocator.gc_allocator;
+
+import server.autocomplete;
+import common.messages;
+import dsymbol.modulecache;
+
+//alias SharedASTAllocator = CAllocatorImpl!(Mallocator);
+//alias SharedASTAllocator = CAllocatorImpl!(Mallocator);
+//alias SharedASTAllocator = CSharedAllocatorImpl!(Mallocator);
+alias SharedASTAllocator = ASTAllocator;
+
 enum DCDResult : int {
     SUCCESS,
     NO_RESULT,
@@ -22,8 +35,6 @@ alias DocCommentsResultSet = Tuple!(DCDResult, "result", string[], "docComments"
 alias FindDeclarationResultSet = Tuple!(DCDResult, "result", string, "fileName", ulong, "offset");
 alias CompletionResultSet = Tuple!(DCDResult, "result", dstring[], "output", char[], "completionKinds");
 
-import server.autocomplete;
-import common.messages;
 
 class DCDTask {
     protected bool _cancelled;
@@ -85,7 +96,7 @@ class ModuleCacheAccessor {
     //protected ASTAllocator _astAllocator;
     protected ModuleCache _moduleCache;
     this(in string[] importPaths) {
-        _moduleCache = ModuleCache(new ASTAllocator);
+        _moduleCache = ModuleCache(new SharedASTAllocator);
         _moduleCache.addImportPaths(internStrings(importPaths));
     }
     protected ModuleCache * getModuleCache(in string[] importPaths) {
@@ -149,6 +160,7 @@ class DCDInterface : Thread {
     }
 
     void threadFunc() {
+        _moduleCache = new ModuleCacheAccessor(null);
         Log.d("Starting DCD tasks thread");
         while (!_queue.closed()) {
             DCDTask task;
@@ -296,3 +308,19 @@ class DCDInterface : Thread {
     }
 
 }
+
+
+/// to test broken DCD after DUB invocation
+/// run it after DCD ModuleCache is instantiated
+void testDCDFailAfterThreadCreation() {
+    import core.thread;
+
+    Log.d("testDCDFailAfterThreadCreation");
+    Thread thread = new Thread(delegate() {
+        Thread.sleep(dur!"msecs"(2000));
+    });
+    thread.start();
+    thread.join();
+    Log.d("testDCDFailAfterThreadCreation finished");
+}
+

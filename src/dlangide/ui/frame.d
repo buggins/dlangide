@@ -46,10 +46,10 @@ import std.path;
 
 immutable string HELP_PAGE_URL = "https://github.com/buggins/dlangide/wiki";
 // TODO: get version from GIT commit
-immutable dstring DLANGIDE_VERSION = "v0.7.41"d;
+immutable dstring DLANGIDE_VERSION = "v0.7.42"d;
 
 bool isSupportedSourceTextFileFormat(string filename) {
-    return (filename.endsWith(".d") || filename.endsWith(".txt") || filename.endsWith(".cpp") || filename.endsWith(".h") || filename.endsWith(".c")
+    return (filename.endsWith(".d") || filename.endsWith(".di") || filename.endsWith(".dt") || filename.endsWith(".txt") || filename.endsWith(".cpp") || filename.endsWith(".h") || filename.endsWith(".c")
         || filename.endsWith(".json") || filename.endsWith(".sdl") || filename.endsWith(".dd") || filename.endsWith(".ddoc") || filename.endsWith(".xml") || filename.endsWith(".html")
         || filename.endsWith(".html") || filename.endsWith(".css") || filename.endsWith(".log") || filename.endsWith(".hpp"));
 }
@@ -901,8 +901,11 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     Platform.instance.openURL(HELP_PAGE_URL);
                     return true;
                 case IDEActions.HelpAbout:
+                    //debug {
+                    //    testDCDFailAfterThreadCreation();
+                    //}
                     window.showMessageBox(UIString.fromId("ABOUT"c) ~ " " ~ DLANGIDE_VERSION,
-                                          UIString.fromRaw("DLangIDE\n(C) Vadim Lopatin, 2014-2016\nhttp://github.com/buggins/dlangide\nIDE for D programming language written in D\nUses DlangUI library for GUI"d));
+                                          UIString.fromRaw("DLangIDE\n(C) Vadim Lopatin, 2014-2017\nhttp://github.com/buggins/dlangide\nIDE for D programming language written in D\nUses DlangUI library for GUI"d));
                     return true;
                 case StandardAction.OpenUrl:
                     platform.openURL(a.stringParam);
@@ -911,7 +914,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     UIString caption;
                     caption = UIString.fromId("HEADER_OPEN_TEXT_FILE"c);
                     FileDialog dlg = createFileDialog(caption);
-                    dlg.addFilter(FileFilterEntry(UIString.fromId("SOURCE_FILES"c), "*.d;*.dd;*.ddoc;*.di;*.dh;*.json;*.sdl;*.xml;*.ini"));
+                    dlg.addFilter(FileFilterEntry(UIString.fromId("SOURCE_FILES"c), "*.d;*.dd;*.ddoc;*.di;*.dt;*.dh;*.json;*.sdl;*.xml;*.ini"));
                     dlg.addFilter(FileFilterEntry(UIString.fromId("ALL_FILES"c), "*.*"));
                     dlg.path = _settings.getRecentPath("FILE_OPEN_PATH");
                     dlg.dialogResult = delegate(Dialog d, const Action result) {

@@ -170,3 +170,4 @@ class Builder : BackgroundOperationWatcher {
             _listener(_exitCode);
     }
 }
+

@@ -119,7 +119,7 @@ class NewFileDlg : Dialog {
         _edLocation.filetypeIcons["dub.json"] = "project-d";
         _edLocation.filetypeIcons["package.json"] = "project-d";
         _edLocation.filetypeIcons[".dlangidews"] = "project-development";
-        _edLocation.addFilter(FileFilterEntry(UIString.fromRaw("DlangIDE files"d), "*.dlangidews;*.d;*.dd;*.di;*.ddoc;*.dh;*.json;*.xml;*.ini"));
+        _edLocation.addFilter(FileFilterEntry(UIString.fromRaw("DlangIDE files"d), "*.dlangidews;*.d;*.dd;*.di;*.ddoc;*.dh;*.json;*.xml;*.ini;*.dt"));
         _edLocation.caption = "Select directory"d;
 
         // fill templates
@@ -295,6 +295,15 @@ class NewFileDlg : Dialog {
                     "\n", true);
         _templates ~= new ProjectTemplate("JSON file"d, "Empty json file."d, ".json",
                     "{\n}\n", true);
+        _templates ~= new ProjectTemplate("Vibe-D Diet Template file"d, "Empty Vibe-D Diet Template."d, ".dt",
+                                          q{
+doctype html
+html
+    head
+        title Hello, World
+    body
+        h1 Hello World
+}, true);
     }
 }
 
