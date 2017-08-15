@@ -125,6 +125,7 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
 
     protected ProjectSourceFile _projectSourceFile;
     @property ProjectSourceFile projectSourceFile() { return _projectSourceFile; }
+    @property void projectSourceFile(ProjectSourceFile v) { _projectSourceFile = v; }
     /// load by filename
     override bool load(string fn) {
         _projectSourceFile = null;
@@ -222,6 +223,14 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
     /// save to the same file
     bool save() {
         return _content.save();
+    }
+
+    /// save to the same file
+    override bool save(string fn) {
+        bool res = super.save(fn);
+        //if (res && projectSourceFile)
+        //    projectSourceFile.setFilename(filename);
+        return res;
     }
 
     void insertCompletion(dstring completionText) {

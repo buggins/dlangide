@@ -46,7 +46,7 @@ import std.path;
 
 immutable string HELP_PAGE_URL = "https://github.com/buggins/dlangide/wiki";
 // TODO: get version from GIT commit
-immutable dstring DLANGIDE_VERSION = "v0.7.44"d;
+immutable dstring DLANGIDE_VERSION = "v0.7.45"d;
 
 bool isSupportedSourceTextFileFormat(string filename) {
     return (filename.endsWith(".d") || filename.endsWith(".di") || filename.endsWith(".dt") || filename.endsWith(".txt") || filename.endsWith(".cpp") || filename.endsWith(".h") || filename.endsWith(".c")
@@ -514,6 +514,18 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         _tabs.removeTab(tabId);
     }
 
+    void renameTab(string oldfilename, string newfilename) {
+        int index = _tabs.tabIndex(newfilename);
+        if (index >= 0) {
+            // file is already opened in tab - close it
+            _tabs.removeTab(newfilename);
+        }
+        int oldindex = _tabs.tabIndex(oldfilename);
+        if (oldindex >= 0) {
+            _tabs.renameTab(oldindex, newfilename, UIString.fromRaw(newfilename.baseName));
+        }
+    }
+
     /// close all editor tabs
     void closeAllDocuments() {
         for (int i = _tabs.tabCount - 1; i >= 0; i--) {
@@ -879,8 +891,8 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         }
     }
 
-    FileDialog createFileDialog(UIString caption) {
-        FileDialog dlg = new FileDialog(caption, window, null);
+    FileDialog createFileDialog(UIString caption, int fileDialogFlags = DialogFlag.Modal | DialogFlag.Resizable | FileDialogFlag.FileMustExist) {
+        FileDialog dlg = new FileDialog(caption, window, null, fileDialogFlags);
         dlg.filetypeIcons[".d"] = "text-d";
         dlg.filetypeIcons["dub.json"] = "project-d";
         dlg.filetypeIcons["dub.sdl"] = "project-d";
@@ -909,6 +921,40 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     return true;
                 case StandardAction.OpenUrl:
                     platform.openURL(a.stringParam);
+                    return true;
+                case IDEActions.FileSaveAs:
+                    DSourceEdit ed = currentEditor;
+                    UIString caption;
+                    caption = UIString.fromId("HEADER_SAVE_FILE_AS"c);
+                    FileDialog dlg = createFileDialog(caption, DialogFlag.Modal | DialogFlag.Resizable | FileDialogFlag.Save);
+                    dlg.addFilter(FileFilterEntry(UIString.fromId("SOURCE_FILES"c), "*.d;*.dd;*.ddoc;*.di;*.dt;*.dh;*.json;*.sdl;*.xml;*.ini"));
+                    dlg.addFilter(FileFilterEntry(UIString.fromId("ALL_FILES"c), "*.*"));
+                    dlg.path = ed.filename.dirName;
+                    dlg.filename = ed.filename;
+                    dlg.dialogResult = delegate(Dialog d, const Action result) {
+                        if (result.id == ACTION_SAVE.id) {
+                            string oldfilename = ed.filename;
+                            string filename = result.stringParam;
+                            ed.save(filename);
+                            if (oldfilename == filename)
+                                return;
+                            renameTab(oldfilename, filename);
+                            ed.id = filename;
+                            if( filename.endsWith(".d") || filename.endsWith(".di") )
+                                ed.editorTool = new DEditorTool(this);
+                            else
+                                ed.editorTool = new DefaultEditorTool(this);
+                            //openSourceFile(filename);
+                            refreshWorkspace();
+                            ProjectSourceFile file = _wsPanel.findSourceFileItem(filename, false);
+                            if (file)
+                                ed.projectSourceFile = file;
+                            else
+                                ed.projectSourceFile = null;
+                            _settings.setRecentPath(dlg.path, "FILE_OPEN_PATH");
+                        }
+                    };
+                    dlg.show();
                     return true;
                 case IDEActions.FileOpen:
                     UIString caption;
