@@ -940,6 +940,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                                 return;
                             renameTab(oldfilename, filename);
                             ed.id = filename;
+                            ed.setSyntaxSupport();
                             if( filename.endsWith(".d") || filename.endsWith(".di") )
                                 ed.editorTool = new DEditorTool(this);
                             else
@@ -947,9 +948,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                             //openSourceFile(filename);
                             refreshWorkspace();
                             ProjectSourceFile file = _wsPanel.findSourceFileItem(filename, false);
-                            if (file)
+                            if (file) {
                                 ed.projectSourceFile = file;
-                            else
+                            } else
                                 ed.projectSourceFile = null;
                             _settings.setRecentPath(dlg.path, "FILE_OPEN_PATH");
                         }
