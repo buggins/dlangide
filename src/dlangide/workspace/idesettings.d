@@ -30,6 +30,8 @@ class IDESettings : SettingsFile {
         ui.setIntegerDef("hintingMode", 1);
         ui.setIntegerDef("minAntialiasedFontSize", 0);
         ui.setFloatingDef("fontGamma", 0.8);
+        ui.setStringDef("uiFontFace", "Default");
+        ui.setIntegerDef("uiFontSize", 10);
         version (Windows) {
             debuggerSettings.setStringDef("executable", "mago-mi");
         } else {
