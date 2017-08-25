@@ -51,6 +51,7 @@ StringListValue[] createFaceList(bool monospaceFirst) {
 }
 
 StringListValue[] createIntValueList(int[] values, dstring suffix = ""d) {
+    import std.conv : to;
     StringListValue[] res;
     res.assumeSafeAppend();
     foreach(n; values) {
