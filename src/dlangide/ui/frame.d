@@ -1354,6 +1354,22 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         FontManager.minAnitialiasedFontSize = settings.minAntialiasedFontSize;
         Platform.instance.uiLanguage = settings.uiLanguage;
         Platform.instance.uiTheme = settings.uiTheme;
+        bool needUpdateTheme = false;
+        string oldFontFace = currentTheme.fontFace;
+        string newFontFace = settings.uiFontFace;
+        if (newFontFace == "Default")
+            newFontFace = "Helvetica Neue,Verdana,Arial,DejaVu Sans,Liberation Sans,Helvetica,Roboto,Droid Sans";
+        int oldFontSize = currentTheme.fontSize;
+        if (oldFontFace != newFontFace) {
+            currentTheme.fontFace = newFontFace;
+            needUpdateTheme = true;
+        }
+        if (oldFontSize != settings.uiFontSize) {
+            currentTheme.fontSize = settings.uiFontSize;
+            needUpdateTheme = true;
+        }
+        if (needUpdateTheme)
+            Platform.instance.onThemeChanged();
         requestLayout();
     }
 

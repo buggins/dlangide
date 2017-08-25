@@ -126,6 +126,16 @@ class IDESettings : SettingsFile {
         return this;
     }
 
+    /// UI font face
+    @property string uiFontFace() {
+        return uiSettings.getString("uiFontFace", "Default");
+    }
+
+    /// UI font size
+    @property int uiFontSize() {
+        return pointsToPixels(cast(int)uiSettings.getInteger("uiFontSize", 10));
+    }
+
     /// text editor setting, true if need to insert spaces instead of tabs
     @property bool useSpacesForTabs() {
         return editorSettings.getBoolean("useSpacesForTabs", true);
