@@ -30,10 +30,10 @@ install:
       then
         sudo dpkg --add-architecture i386
         sudo apt-get update
-        sudo apt-get install -y gcc-multilib libgl1-mesa-glx:i386 libfreetype6:i386 libsdl2-2.0-0:i386
+        sudo apt-get install -y gcc-multilib libgl1-mesa-glx:i386 libfreetype6:i386 libsdl2-2.0-0:i386 zlib1g-dev:i386
       else
         sudo apt-get update
-        sudo apt-get install -y libfreetype6 libsdl2-2.0-0
+        sudo apt-get install -y libfreetype6 libsdl2-2.0-0 zlib1g-dev
       fi
     fi
 

@@ -4,7 +4,6 @@ import dlangui.core.logger;
 import dlangui.core.files;
 import dlangui.platforms.common.platform;
 import ddebug.common.queue;
-import dsymbol.string_interning : internString;
 
 import core.thread;
 
@@ -59,7 +58,7 @@ class DCDTask {
     }
     void createRequest() {
         request.sourceCode = cast(ubyte[])_content;
-        request.fileName = internString(_filename);
+        request.fileName = _filename;
         request.cursorPosition = _index;
         request.importPaths = _importPaths;
     }
@@ -82,25 +81,16 @@ class DCDTask {
     }
 }
 
-string[] internStrings(in string[] src) {
-    if (!src)
-        return null;
-    string[] res;
-    foreach(s; src)
-        res ~= internString(s);
-    return res;
-}
-
 class ModuleCacheAccessor {
     import dsymbol.modulecache;
     //protected ASTAllocator _astAllocator;
     protected ModuleCache _moduleCache;
     this(in string[] importPaths) {
         _moduleCache = ModuleCache(new SharedASTAllocator);
-        _moduleCache.addImportPaths(internStrings(importPaths));
+        _moduleCache.addImportPaths(importPaths);
     }
     protected ModuleCache * getModuleCache(in string[] importPaths) {
-        _moduleCache.addImportPaths(internStrings(importPaths));
+        _moduleCache.addImportPaths(importPaths);
         return &_moduleCache;
     }
 }
@@ -161,6 +151,7 @@ class DCDInterface : Thread {
 
     void threadFunc() {
         _moduleCache = new ModuleCacheAccessor(null);
+        getModuleCache(null);
         Log.d("Starting DCD tasks thread");
         while (!_queue.closed()) {
             DCDTask task;
@@ -174,6 +165,7 @@ class DCDInterface : Thread {
             }
         }
         Log.d("Exiting DCD tasks thread");
+        destroyModuleCache();
     }
 
     import dsymbol.modulecache;

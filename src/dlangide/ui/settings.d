@@ -10,6 +10,56 @@ public import dlangide.workspace.projectsettings;
 public import dlangide.workspace.idesettings;
 public import dlangide.workspace.workspacesettings;
 
+StringListValue[] createFaceList(bool monospaceFirst) {
+    StringListValue[] faces;
+    faces.assumeSafeAppend();
+    faces ~= StringListValue("Default", "OPTION_DEFAULT"c);
+    import dlangui.graphics.fonts;
+    import std.utf : toUTF32;
+    FontFaceProps[] allFaces = FontManager.instance.getFaces();
+    import std.algorithm.sorting : sort;
+    auto fontCompMonospaceFirst = function(ref FontFaceProps a, ref FontFaceProps b) {
+        if (a.family == FontFamily.MonoSpace && b.family != FontFamily.MonoSpace)
+            return -1;
+        if (a.family != FontFamily.MonoSpace && b.family == FontFamily.MonoSpace)
+            return 1;
+        if (a.face < b.face)
+            return -1;
+        if (a.face > b.face)
+            return 1;
+        return 0;
+    };
+    auto fontComp = function(ref FontFaceProps a, ref FontFaceProps b) {
+        if (a.face < b.face)
+            return -1;
+        if (a.face > b.face)
+            return 1;
+        return 0;
+    };
+    //auto sorted = allFaces.sort!((a, b) => (a.family == FontFamily.MonoSpace && b.family != FontFamily.MonoSpace) || (a.face < b.face));
+    auto sorted = sort!((a, b) => (monospaceFirst ? fontCompMonospaceFirst(a, b) : fontComp(a, b)) < 0)(allFaces);
+
+    //allFaces = allFaces.sort!((a, b) => a.family == FontFamily.MonoSpace && b.family == FontFamily.MonoSpace || a.face < b.face);
+    //for (int i = 0; i < allFaces.length; i++) {
+    foreach (face; sorted) {
+        if (face.family == FontFamily.MonoSpace)
+            faces ~= StringListValue(face.face, "*"d ~ toUTF32(face.face));
+        else
+            faces ~= StringListValue(face.face, toUTF32(face.face));
+    }
+    return faces;
+}
+
+StringListValue[] createIntValueList(int[] values, dstring suffix = ""d) {
+    import std.conv : to;
+    StringListValue[] res;
+    res.assumeSafeAppend();
+    foreach(n; values) {
+        res ~= StringListValue(n, to!dstring(n) ~ suffix);
+    }
+    return res;
+}
+
 /// create DlangIDE settings pages tree
 SettingsPage createSettingsPages() {
     // Root page
@@ -29,6 +79,13 @@ SettingsPage createSettingsPages() {
             StringListValue("ru", "MENU_VIEW_LANGUAGE_RU"c), 
             StringListValue("es", "MENU_VIEW_LANGUAGE_ES"c),
 	    StringListValue("cs", "MENU_VIEW_LANGUAGE_CS"c)]);
+
+    // UI font faces
+    ui.addStringComboBox("interface/uiFontFace", UIString.fromId("OPTION_FONT_FACE"c), 
+                      createFaceList(false));
+    ui.addIntComboBox("interface/uiFontSize", UIString.fromId("OPTION_FONT_SIZE"c), 
+                      createIntValueList([6,7,8,9,10,11,12,14,16,18,20,22,24,26,28,30,32]));
+
 
     ui.addIntComboBox("interface/hintingMode", UIString.fromId("OPTION_FONT_HINTING"c), [StringListValue(0, "OPTION_FONT_HINTING_NORMAL"c), 
                 StringListValue(1, "OPTION_FONT_HINTING_FORCE"c), 
@@ -67,36 +124,8 @@ SettingsPage createSettingsPages() {
     SettingsPage ed = res.addChild("editors", UIString.fromId("OPTION_EDITORS"c));
     SettingsPage texted = ed.addChild("editors/textEditor", UIString.fromId("OPTION_TEXT_EDITORS"c));
 
-    // font faces
-    StringListValue[] faces;
-    faces ~= StringListValue("Default", "OPTION_DEFAULT"c);
-    import dlangui.graphics.fonts;
-    import std.utf : toUTF32;
-    FontFaceProps[] allFaces = FontManager.instance.getFaces();
-    import std.algorithm.sorting : sort;
-    auto fontComp = function(ref FontFaceProps a, ref FontFaceProps b) {
-        if (a.family == FontFamily.MonoSpace && b.family != FontFamily.MonoSpace)
-            return -1;
-        if (a.family != FontFamily.MonoSpace && b.family == FontFamily.MonoSpace)
-            return 1;
-        if (a.face < b.face)
-            return -1;
-        if (a.face > b.face)
-            return 1;
-        return 0;
-    };
-    //auto sorted = allFaces.sort!((a, b) => (a.family == FontFamily.MonoSpace && b.family != FontFamily.MonoSpace) || (a.face < b.face));
-    auto sorted = sort!((a, b) => fontComp(a, b) < 0)(allFaces);
-    
-    //allFaces = allFaces.sort!((a, b) => a.family == FontFamily.MonoSpace && b.family == FontFamily.MonoSpace || a.face < b.face);
-    //for (int i = 0; i < allFaces.length; i++) {
-    foreach (face; sorted) {
-        if (face.family == FontFamily.MonoSpace)
-            faces ~= StringListValue(face.face, "*"d ~ toUTF32(face.face));
-        else
-            faces ~= StringListValue(face.face, toUTF32(face.face));
-    }
-    texted.addStringComboBox("editors/textEditor/fontFace", UIString.fromId("OPTION_FONT_FACE"c), faces);
+    // editor font faces
+    texted.addStringComboBox("editors/textEditor/fontFace", UIString.fromId("OPTION_FONT_FACE"c), createFaceList(true));
 
     texted.addNumberEdit("editors/textEditor/tabSize", UIString.fromId("OPTION_TAB"c), 1, 16, 4);
     texted.addCheckbox("editors/textEditor/useSpacesForTabs", UIString.fromId("OPTION_USE_SPACES"c));

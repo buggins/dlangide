@@ -88,10 +88,10 @@ extern (C) int UIAppMain(string[] args) {
         IDEFrame frame = new IDEFrame(window);
         
         // Open project, if it specified in command line
-        if (args.length > 0)
+        if (args.length > 1)
         {
             Action a = ACTION_FILE_OPEN_WORKSPACE.clone();
-            a.stringParam = args[0].toAbsolutePath;
+            a.stringParam = args[1].toAbsolutePath;
             frame.handleAction(a);
             // Mark that workspace opened to prevent auto open
             frame.isOpenedWorkspace(true);

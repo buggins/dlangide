@@ -30,6 +30,8 @@ class IDESettings : SettingsFile {
         ui.setIntegerDef("hintingMode", 1);
         ui.setIntegerDef("minAntialiasedFontSize", 0);
         ui.setFloatingDef("fontGamma", 0.8);
+        ui.setStringDef("uiFontFace", "Default");
+        ui.setIntegerDef("uiFontSize", 10);
         version (Windows) {
             debuggerSettings.setStringDef("executable", "mago-mi");
         } else {
@@ -122,6 +124,16 @@ class IDESettings : SettingsFile {
     @property IDESettings uiLanguage(string v) {
         uiSettings.setString("language", limitString(v, AVAILABLE_LANGUAGES));
         return this;
+    }
+
+    /// UI font face
+    @property string uiFontFace() {
+        return uiSettings.getString("uiFontFace", "Default");
+    }
+
+    /// UI font size
+    @property int uiFontSize() {
+        return pointsToPixels(cast(int)uiSettings.getInteger("uiFontSize", 10));
     }
 
     /// text editor setting, true if need to insert spaces instead of tabs

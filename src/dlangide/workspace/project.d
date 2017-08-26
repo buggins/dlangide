@@ -227,6 +227,11 @@ class ProjectSourceFile : ProjectItem {
     @property string projectFilePath() {
         return project.absoluteToRelativePath(filename);
     }
+
+    void setFilename(string filename) {
+        _filename = buildNormalizedPath(filename);
+        _name = toUTF32(baseName(_filename));
+    }
 }
 
 class WorkspaceItem {
