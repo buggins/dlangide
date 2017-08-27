@@ -182,7 +182,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         if (!project)
             project = currentWorkspace.startupProject;
         if (!project) {
-            window.showMessageBox(UIString.fromRaw("Cannot debug project"d), UIString.fromRaw("Startup project is not specified"d));
+            window.showMessageBox(UIString.fromId("ERROR_CANNOT_DEBUG_PROJECT"c), UIString.fromId("ERROR_STARTUP_PROJECT_ABSENT"c));
             return;
         }
         buildProject(BuildOperation.Build, project, delegate(int result) {
@@ -452,7 +452,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             } else {
                 destroy(editor);
                 if (window)
-                    window.showMessageBox(UIString.fromRaw("File open error"d), UIString.fromRaw("Failed to open file "d ~ toUTF32(file.filename)));
+                    window.showMessageBox(UIString.fromId("ERROR_OPEN_FILE"c), UIString.fromId("ERROR_OPENING_FILE"c) ~ " " ~ toUTF32(file.filename));
                 return false;
             }
         }
@@ -582,7 +582,8 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         }
         string tabId = ed.id;
         // tab content is modified - ask for confirmation
-        window.showMessageBox(UIString.fromRaw("Close file "d ~ toUTF32(baseName(tabId))), UIString.fromRaw("Content of this file has been changed."d), 
+        auto header = UIString.fromRaw("HEADER_CLOSE_FILE"c);
+        window.showMessageBox(header ~ " " ~ toUTF32(baseName(tabId)), UIString.fromId("MSG_FILE_CONTENT_CHANGED"c), 
                               [ACTION_SAVE, ACTION_SAVE_ALL, ACTION_DISCARD_CHANGES, ACTION_DISCARD_ALL, ACTION_CANCEL], 
                               0, delegate(const Action result) {
                                   if (result == StandardAction.Save) {
@@ -621,7 +622,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             DSourceEdit d = cast(DSourceEdit)_tabs.tabBody(tabId);
             if (d && d.content.modified) {
                 // tab content is modified - ask for confirmation
-                window.showMessageBox(UIString.fromRaw("Close tab"d), UIString.fromRaw("Content of "d ~ toUTF32(baseName(tabId)) ~ " file has been changed."d), 
+                window.showMessageBox(UIString.fromId("HEADER_CLOSE_TAB"c), UIString.fromId("MSG_TAB_CONTENT_CHANGED"c) ~ ": " ~ toUTF32(baseName(tabId)), 
                                       [ACTION_SAVE, ACTION_DISCARD_CHANGES, ACTION_CANCEL], 
                                       0, delegate(const Action result) {
                                           if (result == StandardAction.Save) {
@@ -1342,6 +1343,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         dlg.show();
     }
 
+    // Applying settings to tabs/sources and it's opening
     void applySettings(IDESettings settings) {
         for (int i = _tabs.tabCount - 1; i >= 0; i--) {
             DSourceEdit ed = cast(DSourceEdit)_tabs.tabBody(i);
@@ -1396,7 +1398,12 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     askForUnsavedEdits(delegate() {
                     setWorkspace(ws);
                     hideHomeScreen();
+                    // Write workspace to recent workspaces list
                     _settings.updateRecentWorkspace(filename);
+                    // All was opened, attempt to restore files
+                    const string[] files = currentWorkspace.files();
+                    for (int i; i < files.length; i++)
+                        openSourceFile(files[i]);
                 });
             } else {
                 window.showMessageBox(UIString.fromId("ERROR_OPEN_WORKSPACE"c).value, UIString.fromId("ERROR_OPENING_WORKSPACE"c).value);
@@ -1479,7 +1486,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         currentWorkspace = ws;
         _wsPanel.workspace = ws;
         requestActionsUpdate();
-        if (ws && ws.startupProject && ws.startupProject.mainSourceFile) {
+        // Open main file for project
+        if (ws && ws.startupProject && ws.startupProject.mainSourceFile 
+            && (currentWorkspace.files == null || currentWorkspace.files.length == 0)) {
             openSourceFile(ws.startupProject.mainSourceFile.filename);
             _tabs.setFocus();
         }
@@ -1556,8 +1565,19 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
     /// return false to prevent closing
     bool onCanClose() {
         askForUnsavedEdits(delegate() {
-            if (currentWorkspace)
+            if (currentWorkspace) {
+                // Remember opened files
+                string[] files;
+                for (auto i = 0; i < _tabs.tabCount(); i++)
+                {
+                    auto edit = cast(DSourceEdit)_tabs.tabBody(i);
+                    if (edit !is null)
+                        files ~= edit.filename();
+                }
+                currentWorkspace.files(files);
+                // saving workspace
                 currentWorkspace.save();
+            }
             window.close();
         });
         return false;

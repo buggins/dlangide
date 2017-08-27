@@ -17,6 +17,8 @@ class WorkspaceSettings : SettingsFile {
 
     private Breakpoint[] _breakpoints;
     private EditorBookmark[] _bookmarks;
+    /// Last opened files in workspace
+    private string[] _files;
 
     private string _startupProjectName;
     @property string startupProjectName() {
@@ -27,6 +29,25 @@ class WorkspaceSettings : SettingsFile {
             _startupProjectName = s;
             _setting["startupProject"] = s;
             save();
+        }
+    }
+
+    /// Last opened files in workspace    
+    @property string[] files() {
+        return _files;
+    }
+    
+    /// Last opened files in workspace
+    @property void files(string[] fs) {
+        _files = fs;
+        // Save to settings file
+        Setting obj = _setting.settingByPath("files", SettingType.ARRAY);
+        obj.clear(SettingType.ARRAY);
+        int index = 0;
+        foreach(file; fs) {
+            Setting single = new Setting();
+            single.setString("file", file);
+            obj[index++] = single;
         }
     }
 
@@ -151,6 +172,7 @@ class WorkspaceSettings : SettingsFile {
     /// override to do something after loading - e.g. set defaults
     override void afterLoad() {
         _startupProjectName = _setting.getString("startupProject");
+        // Loading breakpoints
         Setting obj = _setting.settingByPath("breakpoints", SettingType.ARRAY);
         _breakpoints = null;
         int maxBreakpointId = 0;
@@ -168,6 +190,7 @@ class WorkspaceSettings : SettingsFile {
             _breakpoints ~= bp;
         }
         _nextBreakpointId = maxBreakpointId + 1;
+        // Loading bookmarks
         obj = _setting.settingByPath("bookmarks", SettingType.ARRAY);
         _bookmarks = null;
         for (int i = 0; i < obj.length; i++) {
@@ -178,6 +201,13 @@ class WorkspaceSettings : SettingsFile {
             bp.projectFilePath = item.getString("projectFilePath");
             bp.line = cast(int)item.getInteger("line");
             _bookmarks ~= bp;
+        }
+        // Loading files
+        _files = null;
+        obj = _setting.settingByPath("files", SettingType.ARRAY);
+        for (int i = 0; i < obj.length; i++) {
+            Setting item = obj[i];
+            _files ~= item.getString("file");
         }
     }
 

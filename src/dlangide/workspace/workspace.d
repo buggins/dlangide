@@ -96,6 +96,16 @@ class Workspace : WorkspaceItem {
         _frame.setProjectConfigurations(project.configurations.keys.map!(k => k.to!dstring).array); 
         _settings.startupProjectName = toUTF8(project.name);
     }
+    
+    /// Last opened files in workspace
+    @property string[] files() {
+        return _settings.files();
+    }
+    
+    /// Last opened files in workspace
+    @property void files(string[] fs) {
+        _settings.files(fs);
+    }
 
     /// setups currrent project configuration by name
     void setStartupProjectConfiguration(string conf)
