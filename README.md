@@ -82,6 +82,14 @@ Keywan Ghadami improved it to use DCD as a library.
 Now DCD is embedded into DlangIDE, and no separate executables are needed.
 
 
+Importing of existing project
+=============================
+
+DlangIDE supports only DUB project format.
+
+To import existing DUB project, use menu item "File" / "Open project or workspace" and select dub.json or dub.sdl of your project to import.
+
+
 Debugger support
 ================
 
