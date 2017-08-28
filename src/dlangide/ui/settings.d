@@ -65,10 +65,6 @@ SettingsPage createSettingsPages() {
     // Root page
     SettingsPage res = new SettingsPage("", UIString.fromRaw(""d));
 
-    // Common page
-    SettingsPage common = res.addChild("common", UIString.fromId("OPTION_COMMON"c));
-    common.addCheckbox("common/autoOpenLastProject", UIString.fromId("OPTION_AUTO_OPEN_LAST_PROJECT"c));
-    
     // UI settings page
     SettingsPage ui = res.addChild("interface", UIString.fromId("OPTION_INTERFACE"c));
     ui.addStringComboBox("interface/theme", UIString.fromId("OPTION_THEME"c), [
@@ -133,6 +129,10 @@ SettingsPage createSettingsPages() {
     texted.addCheckbox("editors/textEditor/smartIndentsAfterPaste", UIString.fromId("OPTION_SMART_INDENTS_PASTE"c));
     texted.addCheckbox("editors/textEditor/showWhiteSpaceMarks", UIString.fromId("OPTION_SHOW_SPACES"c));
     texted.addCheckbox("editors/textEditor/showTabPositionMarks", UIString.fromId("OPTION_SHOW_TABS"c));
+
+    // Common page
+    SettingsPage common = res.addChild("common", UIString.fromId("OPTION_COMMON"c));
+    common.addCheckbox("common/autoOpenLastProject", UIString.fromId("OPTION_AUTO_OPEN_LAST_PROJECT"c));
 
 
     SettingsPage dlang = res.addChild("dlang", UIString.fromRaw("D"d));

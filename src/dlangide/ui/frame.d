@@ -1370,8 +1370,10 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             currentTheme.fontSize = settings.uiFontSize;
             needUpdateTheme = true;
         }
-        if (needUpdateTheme)
+        if (needUpdateTheme) {
+            Log.d("updating theme after UI font change");
             Platform.instance.onThemeChanged();
+        }
         requestLayout();
     }
 
