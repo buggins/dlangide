@@ -72,11 +72,14 @@ class DCDTask {
         if (_cancelled)
             return;
         createRequest();
+        if (_cancelled)
+            return;
         performRequest();
         synchronized(this) {
             if (_cancelled)
                 return;
-            _guiExecutor.executeInUiThread(&postResults);
+            if (_guiExecutor)
+                _guiExecutor.executeInUiThread(&postResults);
         }
     }
 }
@@ -181,6 +184,29 @@ class DCDInterface : Thread {
             return content[start .. pos] ~ "|" ~ content[pos .. end];
         }
         return "";
+    }
+
+    /// DCD doc comments task
+    class ModuleCacheWarmupTask : DCDTask {
+
+        this(CustomEventTarget guiExecutor, string[] importPaths) {
+            super(guiExecutor, importPaths, null, null, 0);
+        }
+
+        override void performRequest() {
+            debug(DCD) Log.d("DCD - warm up module cache with import paths ", _importPaths);
+            getModuleCache(_importPaths);
+            debug(DCD) Log.d("DCD - module cache warm up finished");
+        }
+        override void postResults() {
+        }
+    }
+
+    DCDTask warmUp(string[] importPaths) {
+        debug(DCD) Log.d("DCD warmUp: ", importPaths);
+        ModuleCacheWarmupTask task = new ModuleCacheWarmupTask(null, importPaths);
+        _queue.put(task);
+        return task;
     }
 
     /// DCD doc comments task

@@ -1325,6 +1325,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         if (!project)
             return;
         currentWorkspace.startupProject = project;
+        warmUpImportPaths(project);
         if (_wsPanel)
             _wsPanel.updateDefault();
     }
@@ -1394,7 +1395,13 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         }
         const auto msg = UIString.fromId("MSG_OPENED_PROJECT"c);
         _logPanel.logLine(toUTF32("Project file " ~ project.filename ~  " is opened ok"));
+        
+        warmUpImportPaths(project);
         return true;
+    }
+
+    public void warmUpImportPaths(Project project) {
+        dcdInterface.warmUp(project.importPaths);
     }
 
     void openFileOrWorkspace(string filename) {
@@ -1402,7 +1409,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         if (filename.isWorkspaceFile) {
             Workspace ws = new Workspace(this);
             if (ws.load(filename)) {
-                    askForUnsavedEdits(delegate() {
+                askForUnsavedEdits(delegate() {
                     setWorkspace(ws);
                     hideHomeScreen();
                     // Write workspace to recent workspaces list
@@ -1421,9 +1428,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             const auto msg = UIString.fromId("MSG_TRY_OPEN_PROJECT"c).value;
             _logPanel.logLine(msg ~ toUTF32(" " ~ filename));
             Project project = new Project(currentWorkspace, filename);
-            if (!project.load()) {
-                window.showMessageBox(UIString.fromId("MSG_OPEN_PROJECT"c), UIString.fromId("ERROR_INVALID_WS_OR_PROJECT_FILE"c));
-                _logPanel.logLine("File is not recognized as DlangIDE project or workspace file");
+            if (!loadProject(project)) {
+                //window.showMessageBox(UIString.fromId("MSG_OPEN_PROJECT"c), UIString.fromId("ERROR_INVALID_WS_OR_PROJECT_FILE"c));
+                //_logPanel.logLine("File is not recognized as DlangIDE project or workspace file");
                 return;
             }
             string defWsFile = project.defWorkspaceFile;
@@ -1508,6 +1515,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             _wsPanel.visibility = Visibility.Visible;
             _settings.updateRecentWorkspace(ws.filename);
             _settings.setRecentPath(ws.dir, "FILE_OPEN_WORKSPACE_PATH");
+            if (ws.startupProject) {
+                warmUpImportPaths(ws.startupProject);
+            }
         } else {
             _wsPanel.visibility = Visibility.Gone;
         }
