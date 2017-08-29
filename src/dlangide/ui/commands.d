@@ -46,6 +46,7 @@ enum IDEActions : int {
 
     HelpAbout,
     HelpViewHelp,
+    HelpDonate,
     WindowCloseDocument,
     WindowCloseAllDocuments,
     WindowShowHomeScreen,
@@ -130,6 +131,7 @@ const Action ACTION_EDIT_TOGGLE_BLOCK_COMMENT = (new Action(EditorActions.Toggle
 const Action ACTION_EDIT_PREFERENCES = (new Action(IDEActions.EditPreferences, "MENU_EDIT_PREFERENCES"c, null)).disableByDefault();
 const Action ACTION_HELP_ABOUT = new Action(IDEActions.HelpAbout, "MENU_HELP_ABOUT"c);
 const Action ACTION_HELP_VIEW_HELP = new Action(IDEActions.HelpViewHelp, "MENU_HELP_VIEW_HELP"c);
+const Action ACTION_HELP_DONATE = new Action(IDEActions.HelpDonate, "MENU_HELP_DONATE"c);
 const Action ACTION_WINDOW_CLOSE_DOCUMENT = new Action(IDEActions.WindowCloseDocument, "MENU_WINDOW_CLOSE_DOCUMENT"c, null, KeyCode.KEY_W, KeyFlag.Control);
 const Action ACTION_WINDOW_CLOSE_ALL_DOCUMENTS = new Action(IDEActions.WindowCloseAllDocuments, "MENU_WINDOW_CLOSE_ALL_DOCUMENTS"c);
 const Action ACTION_WINDOW_SHOW_HOME_SCREEN = new Action(IDEActions.WindowShowHomeScreen, "MENU_WINDOW_SHOW_HOME_SCREEN"c);

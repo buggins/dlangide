@@ -11,6 +11,10 @@ import dlangui.core.i18n;
 import std.path;
 import std.utf : toUTF32;
 
+immutable string HELP_PAGE_URL = "https://github.com/buggins/dlangide/wiki";
+immutable string HELP_DONATION_URL = "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=H2ADZV8S6TDHQ";
+
+
 class HomeScreen : ScrollWidget {
     protected IDEFrame _frame;
     protected HorizontalLayout _content;
@@ -66,12 +70,13 @@ class HomeScreen : ScrollWidget {
         _column2.addChild(new UrlImageTextButton(null, UIString.fromId("DUB_REP"c).value, "http://code.dlang.org/"));
         _column2.addChild(new UrlImageTextButton(null, UIString.fromId("DLANG_UI"c).value, "https://github.com/buggins/dlangui"));
         _column2.addChild(new UrlImageTextButton(null, UIString.fromId("DLANG_IDE"c).value, "https://github.com/buggins/dlangide"));
+        _column2.addChild(new UrlImageTextButton(null, UIString.fromId("DLANG_IDE_HELP"c).value, HELP_PAGE_URL));
         _column2.addChild(new UrlImageTextButton(null, UIString.fromId("DLANG_TOUR"c).value, "https://tour.dlang.org/"));
         _column2.addChild(new UrlImageTextButton(null, UIString.fromId("DLANG_VIBED"c).value, "http://vibed.org/"));
         _column2.addChild(new UrlImageTextButton(null, UIString.fromId("DLANG_FORUM"c).value, "http://forum.dlang.org/"));
         _column1.addChild(new VSpacer());
         _column2.addChild((new TextWidget(null, UIString.fromId("DLANG_IDE_DONATE"c))).fontSize(20).textColor(linkColor));
-        _column2.addChild(new UrlImageTextButton(null, UIString.fromId("DLANG_IDE_DONATE_PAYPAL"c).value, "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=H2ADZV8S6TDHQ"));
+        _column2.addChild(new UrlImageTextButton(null, UIString.fromId("DLANG_IDE_DONATE_PAYPAL"c).value, HELP_DONATION_URL));
 
         _column2.addChild(new VSpacer());
         contentWidget = _content;

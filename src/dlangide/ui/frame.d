@@ -44,7 +44,6 @@ import std.array : empty;
 import std.string : split;
 import std.path;
 
-immutable string HELP_PAGE_URL = "https://github.com/buggins/dlangide/wiki";
 // TODO: get version from GIT commit
 //version is now stored in file views/VERSION
 immutable dstring DLANGIDE_VERSION = toUTF32(import("VERSION"));
@@ -733,8 +732,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         //windowItem.add(new Action(30, "MENU_WINDOW_PREFERENCES"));
         windowItem.add(ACTION_WINDOW_CLOSE_DOCUMENT, ACTION_WINDOW_CLOSE_ALL_DOCUMENTS, ACTION_WINDOW_SHOW_HOME_SCREEN);
         MenuItem helpItem = new MenuItem(new Action(4, "MENU_HELP"c));
-        helpItem.add(ACTION_HELP_VIEW_HELP);
-        helpItem.add(ACTION_HELP_ABOUT);
+        helpItem.add(ACTION_HELP_VIEW_HELP, ACTION_HELP_ABOUT, ACTION_HELP_DONATE);
         mainMenuItems.add(fileItem);
         mainMenuItems.add(editItem);
         mainMenuItems.add(projectItem);
@@ -913,6 +911,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     return true;
                 case IDEActions.HelpViewHelp:
                     Platform.instance.openURL(HELP_PAGE_URL);
+                    return true;
+                case IDEActions.HelpDonate:
+                    Platform.instance.openURL(HELP_DONATION_URL);
                     return true;
                 case IDEActions.HelpAbout:
                     //debug {
