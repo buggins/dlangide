@@ -731,8 +731,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
 
         MenuItem windowItem = new MenuItem(new Action(3, "MENU_WINDOW"c));
         //windowItem.add(new Action(30, "MENU_WINDOW_PREFERENCES"));
-        windowItem.add(ACTION_WINDOW_CLOSE_DOCUMENT);
-        windowItem.add(ACTION_WINDOW_CLOSE_ALL_DOCUMENTS);
+        windowItem.add(ACTION_WINDOW_CLOSE_DOCUMENT, ACTION_WINDOW_CLOSE_ALL_DOCUMENTS, ACTION_WINDOW_SHOW_HOME_SCREEN);
         MenuItem helpItem = new MenuItem(new Action(4, "MENU_HELP"c));
         helpItem.add(ACTION_HELP_VIEW_HELP);
         helpItem.add(ACTION_HELP_ABOUT);
@@ -831,6 +830,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             case IDEActions.FileOpen:
             case IDEActions.WindowCloseDocument:
             case IDEActions.WindowCloseAllDocuments:
+            case IDEActions.WindowShowHomeScreen:
             case IDEActions.FileOpenWorkspace:
                 // disable when background operation in progress
                 if (!_currentBackgroundOperation)
@@ -1032,6 +1032,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     askForUnsavedEdits(delegate() {
                         closeAllDocuments();
                     });
+                    return true;
+                case IDEActions.WindowShowHomeScreen:
+                    showHomeScreen();
                     return true;
                 case IDEActions.FileOpenWorkspace:
                     // Already specified workspace
