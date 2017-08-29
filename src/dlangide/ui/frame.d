@@ -1416,6 +1416,11 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             const auto msg = UIString.fromId("MSG_TRY_OPEN_PROJECT"c).value;
             _logPanel.logLine(msg ~ toUTF32(" " ~ filename));
             Project project = new Project(currentWorkspace, filename);
+            if (!project.load()) {
+                window.showMessageBox(UIString.fromId("MSG_OPEN_PROJECT"c), UIString.fromId("ERROR_INVALID_WS_OR_PROJECT_FILE"c));
+                _logPanel.logLine("File is not recognized as DlangIDE project or workspace file");
+                return;
+            }
             string defWsFile = project.defWorkspaceFile;
             if (currentWorkspace) {
                 Project existing = currentWorkspace.findProject(project.filename);
