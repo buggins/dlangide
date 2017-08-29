@@ -666,6 +666,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         _wsPanel.workspaceActionListener = &handleAction;
         _wsPanel.dockAlignment = DockAlignment.Left;
         _dockHost.addDockedWindow(_wsPanel);
+        _wsPanel.visibility = Visibility.Gone;
 
         _logPanel = new OutputPanel("output");
         _logPanel.compilerLogIssueClickHandler = &onCompilerLogIssueClick;
@@ -1504,8 +1505,11 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             _tabs.setFocus();
         }
         if (ws) {
+            _wsPanel.visibility = Visibility.Visible;
             _settings.updateRecentWorkspace(ws.filename);
             _settings.setRecentPath(ws.dir, "FILE_OPEN_WORKSPACE_PATH");
+        } else {
+            _wsPanel.visibility = Visibility.Gone;
         }
 
     }
