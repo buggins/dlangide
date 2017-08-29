@@ -66,6 +66,8 @@ class HomeScreen : ScrollWidget {
         _column2.addChild(new UrlImageTextButton(null, UIString.fromId("DUB_REP"c).value, "http://code.dlang.org/"));
         _column2.addChild(new UrlImageTextButton(null, UIString.fromId("DLANG_UI"c).value, "https://github.com/buggins/dlangui"));
         _column2.addChild(new UrlImageTextButton(null, UIString.fromId("DLANG_IDE"c).value, "https://github.com/buggins/dlangide"));
+        _column2.addChild(new UrlImageTextButton(null, UIString.fromId("DLANG_TOUR"c).value, "https://tour.dlang.org/"));
+    
         _column2.addChild(new VSpacer());
         contentWidget = _content;
     }
