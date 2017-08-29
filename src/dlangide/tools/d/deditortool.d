@@ -138,7 +138,7 @@ class DEditorTool : EditorTool
             dstring[] labels;
             foreach(index, label; output.output) {
                 string iconId;
-                char ch = index < output.completionKinds.length ? output.completionKinds[index] : 0;
+                char ch = label.kind;
                 switch(ch) {
                     case 'c': // - class name
                         iconId = "symbol-class";
@@ -192,12 +192,11 @@ class DEditorTool : EditorTool
                         iconId = "symbol-mixintemplate";
                         break;
                     default:
+                        iconId = "symbol-other";
                         break;
                 }
-                if (!iconId)
-                    iconId = "symbol-other";
                 icons ~= iconId;
-                labels ~= label;
+                labels ~= label.name;
             }
             callback(labels, icons);
             _getCompletionsTask = null;
