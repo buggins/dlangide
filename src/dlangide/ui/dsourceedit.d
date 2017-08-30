@@ -504,17 +504,25 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
             lineCount = 1;
         // TODO
         EditBox widget = new EditBox("docComments");
+        widget.styleId = "POPUP_MENU";
         widget.readOnly = true;
         //TextWidget widget = new TextWidget("docComments");
         //widget.maxLines = lineCount * 2;
         //widget.text = "Test popup"d; //text.dup;
         widget.text = text.dup;
+
+        Point bestSize = widget.fullContentSizeWithBorders();
         //widget.layoutHeight = lineCount * widget.fontSize;
-        widget.minHeight = (lineCount + 1) * widget.fontSize;
-        widget.maxWidth = width * 3 / 4;
-        widget.minWidth = width / 8;
+        if (bestSize.y > height / 3)
+            bestSize.y = height / 3;
+        if (bestSize.x > width * 3 / 4)
+            bestSize.x = width * 3 / 4;
+        widget.minHeight = bestSize.y; //max((lineCount + 1) * widget.fontSize, bestSize.y);
+        widget.maxHeight = bestSize.y;
+
+        widget.maxWidth = bestSize.x; //width * 3 / 4;
+        widget.minWidth = bestSize.x; //width / 8;
        // widget.layoutWidth = width / 3;
-        widget.styleId = "POPUP_MENU";
         widget.hscrollbarMode = ScrollBarMode.Auto;
         widget.vscrollbarMode = ScrollBarMode.Auto;
         uint pos = PopupAlign.Above;
