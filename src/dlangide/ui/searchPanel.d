@@ -30,10 +30,6 @@ class SearchLogWidget : LogWidget {
         onThemeChanged();
     }
 
-    protected dstring _textToHighlight;
-    @property dstring textToHighlight() { return _textToHighlight; }
-    @property void textToHighlight(dstring s) { _textToHighlight = s; }
-
     protected uint _filenameColor = 0x0000C0;
     protected uint _errorColor = 0xFF0000;
     protected uint _warningColor = 0x606000;
@@ -245,7 +241,7 @@ class SearchWidget : TabWidget {
     bool findText(dstring source) {
         Log.d("Finding " ~ source);
         
-        _resultLog.textToHighlight = ""d;
+        _resultLog.setTextToHighlight(""d, false);
         _resultLog.text = ""d;
         _matchedList = [];
         _resultLogMatchIndex = 0;
@@ -289,7 +285,7 @@ class SearchWidget : TabWidget {
             default:
                 assert(0);
         }
-        _resultLog.textToHighlight = source;
+        _resultLog.setTextToHighlight(source, true);
         return true;
     }
     
