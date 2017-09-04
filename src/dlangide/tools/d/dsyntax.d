@@ -653,11 +653,15 @@ class SimpleDSyntaxSupport : SyntaxSupport {
         dstring lineText = _content.line(line);
         TextLineMeasure lineMeasurement = _content.measureLine(line);
         TextLineMeasure prevLineMeasurement = _content.measureLine(prevLine);
+        bool prevLineSpaceOnly = false;
+        if (prevLineMeasurement.empty && prevLineMeasurement.len) {
+            prevLineSpaceOnly = true;
+        }
         while (prevLineMeasurement.empty && prevLine > 0) {
             prevLine--;
             prevLineMeasurement = _content.measureLine(prevLine);
         }
-        if (lineMeasurement.firstNonSpaceX >= 0 && lineMeasurement.firstNonSpaceX < prevLineMeasurement.firstNonSpaceX) {
+        if (lineMeasurement.firstNonSpaceX >= 0 && lineMeasurement.firstNonSpaceX <= prevLineMeasurement.firstNonSpaceX) {
             dstring prevLineText = _content.line(prevLine);
             TokenPropString prevLineTokenProps = _content.lineTokenProps(prevLine);
             dchar lastOpChar = 0;
@@ -674,7 +678,16 @@ class SimpleDSyntaxSupport : SyntaxSupport {
             if (lastOpChar == '{')
                 spacex = _content.nextTab(spacex);
             dstring txt = _content.fillSpace(spacex);
-            EditOperation op2 = new EditOperation(EditAction.Replace, TextRange(TextPosition(line, 0), TextPosition(line, lineMeasurement.firstNonSpace >= 0 ? lineMeasurement.firstNonSpace : 0)), [txt]);
+            dstring[] newContent;
+            auto startPos = TextPosition(line, 0);
+            auto endPos = TextPosition(line, lineMeasurement.firstNonSpace >= 0 ? lineMeasurement.firstNonSpace : 0);
+            if (prevLineSpaceOnly) {
+                // clear spaces from previous line
+                startPos.line--;
+                newContent ~= ""d;
+            }
+            newContent ~= txt;
+            EditOperation op2 = new EditOperation(EditAction.Replace, TextRange(startPos, endPos), newContent);
             _opInProgress = true;
             _content.performOperation(op2, source);
             _opInProgress = false;
