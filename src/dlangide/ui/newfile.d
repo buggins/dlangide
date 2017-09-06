@@ -216,7 +216,7 @@ class NewFileDlg : Dialog {
         if (!exists(_location) || !isDir(_location))
             return setError("Location directory does not exist");
 
-        if (_currentTemplate.isModule) {
+        if (_currentTemplate.kind == FileKind.MODULE || _currentTemplate.kind == FileKind.PACKAGE) {
             string sourcePath, relativePath;
             if (!findSource(_location, sourcePath, relativePath))
                 return setError("Location is outside of source path");
@@ -231,7 +231,12 @@ class NewFileDlg : Dialog {
                     buf ~= ch;
             }
             _packageName = buf.dup;
-            string m = !_packageName.empty ? _packageName ~ '.' ~ _moduleName : _moduleName;
+            string m;
+            if (_currentTemplate.kind == FileKind.MODULE) {
+                m = !_packageName.empty ? _packageName ~ '.' ~ _moduleName : _moduleName;
+            } else {
+                m = _packageName;
+            }
             _edModuleName.text = toUTF32(m);
             _packageName = m;
         } else {
@@ -248,8 +253,11 @@ class NewFileDlg : Dialog {
     private FileCreationResult _result;
     bool createItem() {
         try {
-            if (_currentTemplate.isModule) {
+            if (_currentTemplate.kind == FileKind.MODULE) {
                 string txt = "module " ~ _packageName ~ ";\n\n" ~ _currentTemplate.srccode;
+                write(_fullPathName, txt);
+            } else if (_currentTemplate.kind == FileKind.PACKAGE) {
+                string txt = "package " ~ _packageName ~ ";\n\n" ~ _currentTemplate.srccode;
                 write(_fullPathName, txt);
             } else {
                 write(_fullPathName, _currentTemplate.srccode);
@@ -284,17 +292,27 @@ class NewFileDlg : Dialog {
         _currentTemplateIndex = index;
         _currentTemplate = _templates[index];
         _templateDescription.text = _currentTemplate.description;
+        if (_currentTemplate.kind == FileKind.PACKAGE) {
+            _edFileName.enabled = false;
+            _edFileName.text = "package"d;
+        } else {
+            if (_edFileName.text == "package")
+                _edFileName.text = "newfile";
+            _edFileName.enabled = true;
+        }
         //updateDirLayout();
         validate();
     }
 
     void initTemplates() {
         _templates ~= new ProjectTemplate("Empty module"d, "Empty D module file."d, ".d",
-                    "\n", true);
+                    "\n", FileKind.MODULE);
+        _templates ~= new ProjectTemplate("Package"d, "D package."d, ".d",
+                    "\n", FileKind.PACKAGE);
         _templates ~= new ProjectTemplate("Text file"d, "Empty text file."d, ".txt",
-                    "\n", true);
+                    "\n", FileKind.TEXT);
         _templates ~= new ProjectTemplate("JSON file"d, "Empty json file."d, ".json",
-                    "{\n}\n", true);
+                    "{\n}\n", FileKind.TEXT);
         _templates ~= new ProjectTemplate("Vibe-D Diet Template file"d, "Empty Vibe-D Diet Template."d, ".dt",
                                           q{
 doctype html
@@ -303,8 +321,14 @@ html
         title Hello, World
     body
         h1 Hello World
-}, true);
+}, FileKind.TEXT);
     }
+}
+
+enum FileKind {
+    MODULE,
+    PACKAGE,
+    TEXT,
 }
 
 class ProjectTemplate {
@@ -312,13 +336,13 @@ class ProjectTemplate {
     dstring description;
     string fileExtension;
     string srccode;
-    bool isModule;
-    this(dstring name, dstring description, string fileExtension, string srccode, bool isModule) {
+    FileKind kind;
+    this(dstring name, dstring description, string fileExtension, string srccode, FileKind kind) {
         this.name = name;
         this.description = description;
         this.fileExtension = fileExtension;
         this.srccode = srccode;
-        this.isModule = isModule;
+        this.kind = kind;
     }
 }
 
