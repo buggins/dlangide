@@ -239,6 +239,8 @@ class NewFileDlg : Dialog {
             }
             _edModuleName.text = toUTF32(m);
             _packageName = m;
+            if (_currentTemplate.kind == FileKind.PACKAGE && _packageName.length == 0)
+                return setError("Package should be located in subdirectory");
         } else {
             string projectPath = _project.dir;
             if (!isSubdirOf(_location, projectPath))
@@ -345,4 +347,3 @@ class ProjectTemplate {
         this.kind = kind;
     }
 }
-
