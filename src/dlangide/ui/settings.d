@@ -122,6 +122,8 @@ SettingsPage createSettingsPages() {
 
     // editor font faces
     texted.addStringComboBox("editors/textEditor/fontFace", UIString.fromId("OPTION_FONT_FACE"c), createFaceList(true));
+    texted.addIntComboBox("editors/textEditor/fontSize", UIString.fromId("OPTION_FONT_SIZE"c),
+                      createIntValueList([6,7,8,9,10,11,12,14,16,18,20,22,24,26,28,30,32]));
 
     texted.addNumberEdit("editors/textEditor/tabSize", UIString.fromId("OPTION_TAB"c), 1, 16, 4);
     texted.addCheckbox("editors/textEditor/useSpacesForTabs", UIString.fromId("OPTION_USE_SPACES"c));

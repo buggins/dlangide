@@ -95,6 +95,7 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
     @property IDESettings settings() {
         return _settings;
     }
+    protected int _previousFontSizeSetting;
     void applySettings() {
         if (!_settings)
             return;
@@ -111,6 +112,12 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
             face ~= ",";
         face ~= DEFAULT_SOURCE_EDIT_FONT_FACES;
         fontFace = face;
+        int newFontSizeSetting = _settings.editorFontSize;
+        bool needChangeFontSize = _previousFontSizeSetting == 0 || (_previousFontSizeSetting != newFontSizeSetting && _previousFontSizeSetting.pointsToPixels == fontSize);
+        if (needChangeFontSize) {
+            fontSize = newFontSizeSetting.pointsToPixels;
+            _previousFontSizeSetting = newFontSizeSetting;
+        }
     }
 
     protected EditorTool _editorTool;
