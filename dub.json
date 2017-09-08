@@ -12,7 +12,7 @@
     "stringImportPaths": ["views", "views/res", "views/res/i18n", "views/res/mdpi", "views/res/hdpi"],
 
     "dependencies": {
-        "dlangui": "==0.9.119",
+        "dlangui": "==0.9.120",
         "dcd": "~>0.9.1"
     },
 

@@ -122,6 +122,11 @@ class NewFileDlg : Dialog {
         _edLocation.addFilter(FileFilterEntry(UIString.fromRaw("DlangIDE files"d), "*.dlangidews;*.d;*.dd;*.di;*.ddoc;*.dh;*.json;*.xml;*.ini;*.dt"));
         _edLocation.caption = "Select directory"d;
 
+        _edFileName.editorAction.connect(&onEditorAction);
+        _edFilePath.editorAction.connect(&onEditorAction);
+        _edModuleName.editorAction.connect(&onEditorAction);
+        _edLocation.editorAction.connect(&onEditorAction);
+
         // fill templates
         dstring[] names;
         foreach(t; _templates)
@@ -154,6 +159,23 @@ class NewFileDlg : Dialog {
         addChild(content);
         addChild(createButtonsPanel([ACTION_FILE_NEW_SOURCE_FILE, ACTION_CANCEL], 0, 0));
 
+    }
+
+    /// called after window with dialog is shown
+    override void onShow() {
+        super.onShow();
+        _edFileName.selectAll();
+        _edFileName.setFocus();
+    }
+
+    protected bool onEditorAction(const Action action) {
+        if (action.id == EditorActions.InsertNewLine) {
+            if (!validate())
+                return false;
+            close(_buttonActions[0]);
+            return true;
+        }
+        return false;
     }
 
     StringListWidget _projectTemplateList;
