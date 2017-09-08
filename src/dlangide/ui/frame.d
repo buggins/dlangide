@@ -1119,7 +1119,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     createNewProject(false);
                     return true;
                 case IDEActions.FileNew:
-                    addProjectItem(a.objectParam);
+                    addProjectItem(cast(Object)a.objectParam);
                     return true;
                 case IDEActions.ProjectFolderRemoveItem:
                     removeProjectItem(a.objectParam);
@@ -1233,9 +1233,12 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
 
     }
 
-    void addProjectItem(const Object obj) {
+    void addProjectItem(Object obj) {
         if (currentWorkspace is null)
             return;
+        if (obj is null && _wsPanel !is null) {
+            obj = _wsPanel.selectedProjectItem;
+        }
         Project project;
         ProjectFolder folder;
         if (cast(Project)obj) {

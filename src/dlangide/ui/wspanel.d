@@ -149,6 +149,17 @@ class WorkspacePanel : DockWindow {
         return _workspace;
     }
 
+    /// returns currently selected project item
+    @property ProjectItem selectedProjectItem() {
+        TreeItem ti = _tree.items.selectedItem;
+        if (!ti)
+            return null;
+        Object obj = ti.objectParam;
+        if (!obj)
+            return null;
+        return cast(ProjectItem)obj;
+    }
+
     ProjectSourceFile findSourceFileItem(string filename, bool fullFileName=true) {
         if (_workspace)
             return _workspace.findSourceFileItem(filename, fullFileName);
