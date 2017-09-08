@@ -241,7 +241,7 @@ class SearchWidget : TabWidget {
     bool findText(dstring source) {
         Log.d("Finding " ~ source);
         
-        _resultLog.setTextToHighlight(""d, false);
+        _resultLog.setTextToHighlight(""d, 0);
         _resultLog.text = ""d;
         _matchedList = [];
         _resultLogMatchIndex = 0;
@@ -285,7 +285,7 @@ class SearchWidget : TabWidget {
             default:
                 assert(0);
         }
-        _resultLog.setTextToHighlight(source, true);
+        _resultLog.setTextToHighlight(source, TextSearchFlag.CaseSensitive);
         return true;
     }
     
