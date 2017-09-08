@@ -1233,11 +1233,14 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
 
     }
 
+    /// add new file to project
     void addProjectItem(Object obj) {
         if (currentWorkspace is null)
             return;
-        if (obj is null && _wsPanel !is null) {
+        if (obj is null && _wsPanel !is null && !currentEditorSourceFile) {
             obj = _wsPanel.selectedProjectItem;
+            if (!obj)
+                obj = currentWorkspace.startupProject;
         }
         Project project;
         ProjectFolder folder;
