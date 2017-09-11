@@ -883,7 +883,8 @@ public Keyword findKeyword(Keyword start, Keyword end, dchar * name, int len, re
             }
         }
         if (found) {
-            if (s.length == len - 1 || !isIdentMiddleChar(name[s.length - 1])) {
+            //if (s.length == len - 1 || !isIdentMiddleChar(name[s.length - 1])) {
+            if (s.length == len + 1 || !isIdentMiddleChar(name[s.length - 1])) {
                 pos += s.length - 1;
                 return i;
             }
@@ -3439,5 +3440,8 @@ TEST"
                       checkReal(25.67e-5f, 0),
                       checkEOF()
                   ]);
+    // strange keyword detection: `fork;` or `ind;` keyword in beginning of ident is highlighted
+    testTokenizer("fork;", [checkIdent("fork"),checkOp(OpCode.SEMICOLON),checkEOF()]);
+
 }
 
