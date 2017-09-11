@@ -462,6 +462,15 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
                 else
                     a.state = ACTION_STATE_DISABLE;
                 return true;
+            case IDEActions.FileSaveAs:
+                a.state = ACTION_STATE_ENABLED;
+                return true;
+            case IDEActions.FileSave:
+                if (_content.modified)
+                    a.state = ACTION_STATE_ENABLED;
+                else
+                    a.state = ACTION_STATE_DISABLE;
+                return true;
             default:
                 return super.handleActionStateRequest(a);
         }
