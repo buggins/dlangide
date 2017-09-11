@@ -65,10 +65,6 @@ SettingsPage createSettingsPages() {
     // Root page
     SettingsPage res = new SettingsPage("", UIString.fromRaw(""d));
 
-    // Common page
-    SettingsPage common = res.addChild("common", UIString.fromId("OPTION_COMMON"c));
-    common.addCheckbox("common/autoOpenLastProject", UIString.fromId("OPTION_AUTO_OPEN_LAST_PROJECT"c));
-    
     // UI settings page
     SettingsPage ui = res.addChild("interface", UIString.fromId("OPTION_INTERFACE"c));
     ui.addStringComboBox("interface/theme", UIString.fromId("OPTION_THEME"c), [
@@ -126,6 +122,8 @@ SettingsPage createSettingsPages() {
 
     // editor font faces
     texted.addStringComboBox("editors/textEditor/fontFace", UIString.fromId("OPTION_FONT_FACE"c), createFaceList(true));
+    texted.addIntComboBox("editors/textEditor/fontSize", UIString.fromId("OPTION_FONT_SIZE"c),
+                      createIntValueList([6,7,8,9,10,11,12,14,16,18,20,22,24,26,28,30,32]));
 
     texted.addNumberEdit("editors/textEditor/tabSize", UIString.fromId("OPTION_TAB"c), 1, 16, 4);
     texted.addCheckbox("editors/textEditor/useSpacesForTabs", UIString.fromId("OPTION_USE_SPACES"c));
@@ -133,6 +131,10 @@ SettingsPage createSettingsPages() {
     texted.addCheckbox("editors/textEditor/smartIndentsAfterPaste", UIString.fromId("OPTION_SMART_INDENTS_PASTE"c));
     texted.addCheckbox("editors/textEditor/showWhiteSpaceMarks", UIString.fromId("OPTION_SHOW_SPACES"c));
     texted.addCheckbox("editors/textEditor/showTabPositionMarks", UIString.fromId("OPTION_SHOW_TABS"c));
+
+    // Common page
+    SettingsPage common = res.addChild("common", UIString.fromId("OPTION_COMMON"c));
+    common.addCheckbox("common/autoOpenLastProject", UIString.fromId("OPTION_AUTO_OPEN_LAST_PROJECT"c));
 
 
     SettingsPage dlang = res.addChild("dlang", UIString.fromRaw("D"d));

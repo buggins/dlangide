@@ -24,6 +24,7 @@ class IDESettings : SettingsFile {
         ed.setBooleanDef("showWhiteSpaceMarks", true);
         ed.setBooleanDef("showTabPositionMarks", true);
         ed.setStringDef("fontFace", "Default");
+        ed.setIntegerDef("fontSize", 11);
         Setting ui = uiSettings();
         ui.setStringDef("theme", "ide_theme_default");
         ui.setStringDef("language", "en");
@@ -170,10 +171,10 @@ class IDESettings : SettingsFile {
     @property bool showTabPositionMarks() { return editorSettings.getBoolean("showTabPositionMarks", true); }
     /// set tab position marks enabled flag
     @property IDESettings showTabPositionMarks(bool enabled) { editorSettings.setBoolean("showTabPositionMarks", enabled); return this; }
-    /// string value of font face
+    /// string value of font face in text editors
     @property string editorFontFace() { return editorSettings.getString("fontFace", "Default"); }
-
-    
+    /// int value of font size in text editors
+    @property int editorFontSize() { return cast(int)editorSettings.getInteger("fontSize", 11); }
 
     /// true if smart indents are enabled
     @property bool smartIndentsAfterPaste() { return editorSettings.getBoolean("smartIndentsAfterPaste", true); }

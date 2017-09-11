@@ -63,6 +63,7 @@ class DEditorTool : EditorTool
 
     override void cancelGetDocComments() {
         if (_getDocCommentsTask) {
+            Log.d("Cancelling getDocComments()");
             _getDocCommentsTask.cancel();
             _getDocCommentsTask = null;
         }
@@ -70,6 +71,7 @@ class DEditorTool : EditorTool
 
     override void cancelGoToDefinition() {
         if (_goToDefinitionTask) {
+            Log.d("Cancelling goToDefinition()");
             _goToDefinitionTask.cancel();
             _goToDefinitionTask = null;
         }
@@ -77,6 +79,7 @@ class DEditorTool : EditorTool
 
     override void cancelGetCompletions() {
         if (_getCompletionsTask) {
+            Log.d("Cancelling getCompletions()");
             _getCompletionsTask.cancel();
             _getCompletionsTask = null;
         }
@@ -125,6 +128,7 @@ class DEditorTool : EditorTool
 
     DCDTask _getCompletionsTask;
     override void getCompletions(DSourceEdit editor, TextPosition caretPosition, void delegate(dstring[] completions, string[] icons) callback) {
+        cancelGetCompletions();
         string[] importPaths = editor.importPaths();
 
         string content = toUTF8(editor.text);
@@ -134,7 +138,7 @@ class DEditorTool : EditorTool
             dstring[] labels;
             foreach(index, label; output.output) {
                 string iconId;
-                char ch = index < output.completionKinds.length ? output.completionKinds[index] : 0;
+                char ch = label.kind;
                 switch(ch) {
                     case 'c': // - class name
                         iconId = "symbol-class";
@@ -188,12 +192,11 @@ class DEditorTool : EditorTool
                         iconId = "symbol-mixintemplate";
                         break;
                     default:
+                        iconId = "symbol-other";
                         break;
                 }
-                if (!iconId)
-                    iconId = "symbol-other";
                 icons ~= iconId;
-                labels ~= label;
+                labels ~= label.name;
             }
             callback(labels, icons);
             _getCompletionsTask = null;

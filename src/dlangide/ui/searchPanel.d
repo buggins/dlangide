@@ -30,10 +30,6 @@ class SearchLogWidget : LogWidget {
         onThemeChanged();
     }
 
-    protected dstring _textToHighlight;
-    @property dstring textToHighlight() { return _textToHighlight; }
-    @property void textToHighlight(dstring s) { _textToHighlight = s; }
-
     protected uint _filenameColor = 0x0000C0;
     protected uint _errorColor = 0xFF0000;
     protected uint _warningColor = 0x606000;
@@ -156,6 +152,8 @@ class SearchWidget : TabWidget {
     SearchLogWidget _resultLog;
     int _resultLogMatchIndex;
     ComboBox _searchScope;
+    ImageCheckButton _cbCaseSensitive;
+    ImageCheckButton _cbWholeWords;
 
     protected IDEFrame _frame;
     protected SearchMatchList[] _matchedList;
@@ -210,6 +208,18 @@ class SearchWidget : TabWidget {
         _searchScope = new ComboBox("searchScope", ["File"d, "Project"d, "Dependencies"d, "Everywhere"d]);
         _searchScope.selectedItemIndex = 0;
         _layout.addChild(_searchScope);
+
+        _cbCaseSensitive = new ImageCheckButton("cbCaseSensitive", "find_case_sensitive");
+        _cbCaseSensitive.tooltipText = "EDIT_FIND_CASE_SENSITIVE";
+        _cbCaseSensitive.styleId = "TOOLBAR_BUTTON";
+        _cbCaseSensitive.checked = true;
+        _layout.addChild(_cbCaseSensitive);
+
+        _cbWholeWords = new ImageCheckButton("cbWholeWords", "find_whole_words");
+        _cbWholeWords.tooltipText = "EDIT_FIND_WHOLE_WORDS";
+        _cbWholeWords.styleId = "TOOLBAR_BUTTON";
+        _layout.addChild(_cbWholeWords);
+
         addChild(_layout);
 
         _resultLog = new SearchLogWidget("SearchLogWidget");
@@ -245,7 +255,7 @@ class SearchWidget : TabWidget {
     bool findText(dstring source) {
         Log.d("Finding " ~ source);
         
-        _resultLog.textToHighlight = ""d;
+        _resultLog.setTextToHighlight(""d, 0);
         _resultLog.text = ""d;
         _matchedList = [];
         _resultLogMatchIndex = 0;
@@ -254,9 +264,11 @@ class SearchWidget : TabWidget {
         
         switch (_searchScope.text) {
             case "File":
-                SearchMatchList match = findMatches(_frame.currentEditor.filename, source);
-                if(match.matches.length > 0)
-                    _matchedList ~= match;
+                if (_frame.currentEditor) {
+                    SearchMatchList match = findMatches(_frame.currentEditor.filename, source);
+                    if(match.matches.length > 0)
+                        _matchedList ~= match;
+                }
                 break;
             case "Project":
                foreach(Project project; _frame._wsPanel.workspace.projects) {
@@ -289,7 +301,7 @@ class SearchWidget : TabWidget {
             default:
                 assert(0);
         }
-        _resultLog.textToHighlight = source;
+        _resultLog.setTextToHighlight(source, TextSearchFlag.CaseSensitive);
         return true;
     }
     
@@ -306,23 +318,41 @@ class SearchWidget : TabWidget {
         }
         super.onDraw(buf);
     }
-    
+
+    void checkSearchMode() {
+        if (!_frame.currentEditor && _searchScope.selectedItemIndex == 0)
+            _searchScope.selectedItemIndex = 1;
+    }
+
+    uint makeSearchFlags() {
+        uint res = 0;
+        if (_cbCaseSensitive.checked)
+            res |= TextSearchFlag.CaseSensitive;
+        if (_cbWholeWords.checked)
+            res |= TextSearchFlag.WholeWords;
+        return res;
+    }
+
     //Find the match/matchList that corrosponds to the line in _resultLog
     bool onMatchClick(int line) {
         line++;
         foreach(matchList; _matchedList){
             line--;
             if (line == 0) {
-                _frame.openSourceFile(matchList.filename);
-                _frame.currentEditor.setFocus();
+                if (_frame.openSourceFile(matchList.filename)) {
+                    _frame.currentEditor.setTextToHighlight(_findText.text, makeSearchFlags);
+                    _frame.currentEditor.setFocus();
+                }
                 return true;
             }
             foreach(match; matchList.matches) {
                 line--;
                 if (line == 0) {
-                    _frame.openSourceFile(matchList.filename);
-                    _frame.currentEditor.setCaretPos(match.line, to!int(match.col));
-                    _frame.currentEditor.setFocus();
+                    if (_frame.openSourceFile(matchList.filename)) {
+                        _frame.currentEditor.setCaretPos(match.line, to!int(match.col));
+                        _frame.currentEditor.setTextToHighlight(_findText.text, makeSearchFlags);
+                        _frame.currentEditor.setFocus();
+                    }
                     return true;
                 }
             }

@@ -202,6 +202,17 @@ class ProjectFolder : ProjectItem {
                 _children.remove(i);
             }
         }
+        sortItems();
+    }
+
+    /// predicate for sorting project items
+    static bool compareProjectItemsLess(ProjectItem item1, ProjectItem item2) {
+        return ((item1.isFolder && !item2.isFolder) || ((item1.isFolder == item2.isFolder) && (item1.name < item2.name)));
+    }
+
+    void sortItems() {
+        import std.algorithm.sorting : sort;
+        sort!compareProjectItemsLess(_children.asArray);
     }
 
     string relativeToAbsolutePath(string path) {
@@ -217,6 +228,7 @@ class ProjectFolder : ProjectItem {
         loadItems();
     }
 }
+
 
 /// Project source file
 class ProjectSourceFile : ProjectItem {

@@ -30,9 +30,14 @@ enum DCDResult : int {
     FAIL,
 }
 
+struct CompletionSymbol {
+    dstring name;
+    char kind;
+}
+
 alias DocCommentsResultSet = Tuple!(DCDResult, "result", string[], "docComments");
 alias FindDeclarationResultSet = Tuple!(DCDResult, "result", string, "fileName", ulong, "offset");
-alias CompletionResultSet = Tuple!(DCDResult, "result", dstring[], "output", char[], "completionKinds");
+alias CompletionResultSet = Tuple!(DCDResult, "result", CompletionSymbol[], "output");
 
 
 class DCDTask {
@@ -72,11 +77,14 @@ class DCDTask {
         if (_cancelled)
             return;
         createRequest();
+        if (_cancelled)
+            return;
         performRequest();
         synchronized(this) {
             if (_cancelled)
                 return;
-            _guiExecutor.executeInUiThread(&postResults);
+            if (_guiExecutor)
+                _guiExecutor.executeInUiThread(&postResults);
         }
     }
 }
@@ -184,6 +192,29 @@ class DCDInterface : Thread {
     }
 
     /// DCD doc comments task
+    class ModuleCacheWarmupTask : DCDTask {
+
+        this(CustomEventTarget guiExecutor, string[] importPaths) {
+            super(guiExecutor, importPaths, null, null, 0);
+        }
+
+        override void performRequest() {
+            debug(DCD) Log.d("DCD - warm up module cache with import paths ", _importPaths);
+            getModuleCache(_importPaths);
+            debug(DCD) Log.d("DCD - module cache warm up finished");
+        }
+        override void postResults() {
+        }
+    }
+
+    DCDTask warmUp(string[] importPaths) {
+        debug(DCD) Log.d("DCD warmUp: ", importPaths);
+        ModuleCacheWarmupTask task = new ModuleCacheWarmupTask(null, importPaths);
+        _queue.put(task);
+        return task;
+    }
+
+    /// DCD doc comments task
     class DocCommentsTask : DCDTask {
 
         protected void delegate(DocCommentsResultSet output) _callback;
@@ -275,16 +306,17 @@ class DCDInterface : Thread {
 
             result.result = DCDResult.SUCCESS;
             result.output.length = response.completions.length;
-            result.completionKinds.length = response.completions.length;
             int i=0;
             foreach(s;response.completions) {
                 char type = 0;
                 if (i < response.completionKinds.length)
                     type = response.completionKinds[i];
-                result.completionKinds[i] = type;
-                result.output[i++] = to!dstring(s);
+                result.output[i].kind = type;
+                result.output[i].name = to!dstring(s);
+                i++;
             }
-            debug(DCD) Log.d("DCD output:\n", response.completions);
+            postProcessCompletions(result.output);
+            debug(DCD) Log.d("DCD response:\n", response, "\nCompletion result:\n", result.output);
         }
         override void postResults() {
             _callback(result);
@@ -299,6 +331,87 @@ class DCDInterface : Thread {
         return task;
     }
 
+}
+
+int completionTypePriority(char t) {
+    switch(t) {
+        case 'c': // - class name
+            return 10;
+        case 'i': // - interface name
+            return 10;
+        case 's': // - struct name
+            return 10;
+        case 'u': // - union name
+            return 10;
+        case 'v': // - variable name
+            return 5;
+        case 'm': // - member variable name
+            return 3;
+        case 'k': // - keyword, built-in version, scope statement
+            return 20;
+        case 'f': // - function or method
+            return 2;
+        case 'g': // - enum name
+            return 9;
+        case 'e': // - enum member
+            return 8;
+        case 'P': // - package name
+            return 30;
+        case 'M': // - module name
+            return 20;
+        case 'a': // - array
+            return 15;
+        case 'A': // - associative array
+            return 15;
+        case 'l': // - alias name
+            return 15;
+        case 't': // - template name
+            return 14;
+        case 'T': // - mixin template name
+            return 14;
+        default:
+            return 50;
+    }
+}
+
+int compareCompletionSymbol(ref CompletionSymbol v1, ref CompletionSymbol v2) {
+    import std.algorithm : cmp;
+    int p1 = v1.kind.completionTypePriority;
+    int p2 = v2.kind.completionTypePriority;
+    if (p1 < p2)
+        return -1;
+    if (p1 > p2)
+        return 1;
+    return v1.name.cmp(v2.name);
+}
+
+bool lessCompletionSymbol(ref CompletionSymbol v1, ref CompletionSymbol v2) {
+    return compareCompletionSymbol(v1, v2) < 0;
+}
+
+void postProcessCompletions(ref CompletionSymbol[] completions) {
+    import std.algorithm.sorting : sort;
+    completions.sort!(lessCompletionSymbol);
+    CompletionSymbol[] res;
+    bool hasKeywords = false;
+    bool hasNonKeywords = false;
+    bool[dstring] found;
+    foreach(s; completions) {
+        if (s.kind == 'k')
+            hasKeywords = true;
+        else
+            hasNonKeywords = true;
+    }
+    // remove duplicates; remove keywords if non-keyword items are found
+    foreach(s; completions) {
+        if (!(s.name in found)) {
+            found[s.name] = true;
+            if (s.kind != 'k' || !hasNonKeywords) {
+                res ~= s;
+            }
+        }
+    }
+    completions = res;
 }
 
 

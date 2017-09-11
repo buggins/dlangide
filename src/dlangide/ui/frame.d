@@ -44,7 +44,6 @@ import std.array : empty;
 import std.string : split;
 import std.path;
 
-immutable string HELP_PAGE_URL = "https://github.com/buggins/dlangide/wiki";
 // TODO: get version from GIT commit
 //version is now stored in file views/VERSION
 immutable dstring DLANGIDE_VERSION = toUTF32(import("VERSION"));
@@ -667,6 +666,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         _wsPanel.workspaceActionListener = &handleAction;
         _wsPanel.dockAlignment = DockAlignment.Left;
         _dockHost.addDockedWindow(_wsPanel);
+        _wsPanel.visibility = Visibility.Gone;
 
         _logPanel = new OutputPanel("output");
         _logPanel.compilerLogIssueClickHandler = &onCompilerLogIssueClick;
@@ -731,11 +731,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
 
         MenuItem windowItem = new MenuItem(new Action(3, "MENU_WINDOW"c));
         //windowItem.add(new Action(30, "MENU_WINDOW_PREFERENCES"));
-        windowItem.add(ACTION_WINDOW_CLOSE_DOCUMENT);
-        windowItem.add(ACTION_WINDOW_CLOSE_ALL_DOCUMENTS);
+        windowItem.add(ACTION_WINDOW_CLOSE_DOCUMENT, ACTION_WINDOW_CLOSE_ALL_DOCUMENTS, ACTION_WINDOW_SHOW_HOME_SCREEN);
         MenuItem helpItem = new MenuItem(new Action(4, "MENU_HELP"c));
-        helpItem.add(ACTION_HELP_VIEW_HELP);
-        helpItem.add(ACTION_HELP_ABOUT);
+        helpItem.add(ACTION_HELP_VIEW_HELP, ACTION_HELP_ABOUT, ACTION_HELP_DONATE);
         mainMenuItems.add(fileItem);
         mainMenuItems.add(editItem);
         mainMenuItems.add(projectItem);
@@ -831,6 +829,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             case IDEActions.FileOpen:
             case IDEActions.WindowCloseDocument:
             case IDEActions.WindowCloseAllDocuments:
+            case IDEActions.WindowShowHomeScreen:
             case IDEActions.FileOpenWorkspace:
                 // disable when background operation in progress
                 if (!_currentBackgroundOperation)
@@ -913,6 +912,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     return true;
                 case IDEActions.HelpViewHelp:
                     Platform.instance.openURL(HELP_PAGE_URL);
+                    return true;
+                case IDEActions.HelpDonate:
+                    Platform.instance.openURL(HELP_DONATION_URL);
                     return true;
                 case IDEActions.HelpAbout:
                     //debug {
@@ -1033,6 +1035,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                         closeAllDocuments();
                     });
                     return true;
+                case IDEActions.WindowShowHomeScreen:
+                    showHomeScreen();
+                    return true;
                 case IDEActions.FileOpenWorkspace:
                     // Already specified workspace
                     if (!a.stringParam.empty) {
@@ -1103,8 +1108,11 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     _logPanel.getTabs.selectTab("search");
                     if(searchPanel !is null) { 
                         searchPanel.focus();
-                        dstring selectedText = currentEditor.getSelectedText();
+                        dstring selectedText;
+                        if (currentEditor)
+                            selectedText = currentEditor.getSelectedText();
                         searchPanel.setSearchText(selectedText);
+                        searchPanel.checkSearchMode();
                     }
                     return true;
                 case IDEActions.FileNewWorkspace:
@@ -1114,7 +1122,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     createNewProject(false);
                     return true;
                 case IDEActions.FileNew:
-                    addProjectItem(a.objectParam);
+                    addProjectItem(cast(Object)a.objectParam);
                     return true;
                 case IDEActions.ProjectFolderRemoveItem:
                     removeProjectItem(a.objectParam);
@@ -1228,9 +1236,15 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
 
     }
 
-    void addProjectItem(const Object obj) {
+    /// add new file to project
+    void addProjectItem(Object obj) {
         if (currentWorkspace is null)
             return;
+        if (obj is null && _wsPanel !is null && !currentEditorSourceFile) {
+            obj = _wsPanel.selectedProjectItem;
+            if (!obj)
+                obj = currentWorkspace.startupProject;
+        }
         Project project;
         ProjectFolder folder;
         if (cast(Project)obj) {
@@ -1320,6 +1334,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         if (!project)
             return;
         currentWorkspace.startupProject = project;
+        warmUpImportPaths(project);
         if (_wsPanel)
             _wsPanel.updateDefault();
     }
@@ -1370,8 +1385,10 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             currentTheme.fontSize = settings.uiFontSize;
             needUpdateTheme = true;
         }
-        if (needUpdateTheme)
+        if (needUpdateTheme) {
+            Log.d("updating theme after UI font change");
             Platform.instance.onThemeChanged();
+        }
         requestLayout();
     }
 
@@ -1387,7 +1404,13 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         }
         const auto msg = UIString.fromId("MSG_OPENED_PROJECT"c);
         _logPanel.logLine(toUTF32("Project file " ~ project.filename ~  " is opened ok"));
+        
+        warmUpImportPaths(project);
         return true;
+    }
+
+    public void warmUpImportPaths(Project project) {
+        dcdInterface.warmUp(project.importPaths);
     }
 
     void openFileOrWorkspace(string filename) {
@@ -1395,7 +1418,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         if (filename.isWorkspaceFile) {
             Workspace ws = new Workspace(this);
             if (ws.load(filename)) {
-                    askForUnsavedEdits(delegate() {
+                askForUnsavedEdits(delegate() {
                     setWorkspace(ws);
                     hideHomeScreen();
                     // Write workspace to recent workspaces list
@@ -1425,6 +1448,11 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             const auto msg = UIString.fromId("MSG_TRY_OPEN_PROJECT"c).value;
             _logPanel.logLine(msg ~ toUTF32(" " ~ filename));
             Project project = new Project(currentWorkspace, filename);
+            if (!loadProject(project)) {
+                //window.showMessageBox(UIString.fromId("MSG_OPEN_PROJECT"c), UIString.fromId("ERROR_INVALID_WS_OR_PROJECT_FILE"c));
+                //_logPanel.logLine("File is not recognized as DlangIDE project or workspace file");
+                return;
+            }
             string defWsFile = project.defWorkspaceFile;
             if (currentWorkspace) {
                 Project existing = currentWorkspace.findProject(project.filename);
@@ -1504,8 +1532,14 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             _tabs.setFocus();
         }
         if (ws) {
+            _wsPanel.visibility = Visibility.Visible;
             _settings.updateRecentWorkspace(ws.filename);
             _settings.setRecentPath(ws.dir, "FILE_OPEN_WORKSPACE_PATH");
+            if (ws.startupProject) {
+                warmUpImportPaths(ws.startupProject);
+            }
+        } else {
+            _wsPanel.visibility = Visibility.Gone;
         }
 
     }
