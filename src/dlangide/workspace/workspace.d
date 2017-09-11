@@ -98,12 +98,12 @@ class Workspace : WorkspaceItem {
     }
     
     /// Last opened files in workspace
-    @property string[] files() {
+    @property WorkspaceFile[] files() {
         return _settings.files();
     }
     
     /// Last opened files in workspace
-    @property void files(string[] fs) {
+    @property void files(WorkspaceFile[] fs) {
         _settings.files(fs);
     }
 

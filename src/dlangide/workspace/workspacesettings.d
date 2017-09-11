@@ -18,7 +18,7 @@ class WorkspaceSettings : SettingsFile {
     private Breakpoint[] _breakpoints;
     private EditorBookmark[] _bookmarks;
     /// Last opened files in workspace
-    private string[] _files;
+    private WorkspaceFile[] _files;
 
     private string _startupProjectName;
     @property string startupProjectName() {
@@ -33,12 +33,12 @@ class WorkspaceSettings : SettingsFile {
     }
 
     /// Last opened files in workspace    
-    @property string[] files() {
+    @property WorkspaceFile[] files() {
         return _files;
     }
     
     /// Last opened files in workspace
-    @property void files(string[] fs) {
+    @property void files(WorkspaceFile[] fs) {
         _files = fs;
         // Save to settings file
         Setting obj = _setting.settingByPath("files", SettingType.ARRAY);
@@ -46,7 +46,9 @@ class WorkspaceSettings : SettingsFile {
         int index = 0;
         foreach(file; fs) {
             Setting single = new Setting();
-            single.setString("file", file);
+            single.setString("file", file.filename);
+            single.setInteger("column", file.column);
+            single.setInteger("row", file.row);
             obj[index++] = single;
         }
     }
@@ -207,7 +209,11 @@ class WorkspaceSettings : SettingsFile {
         obj = _setting.settingByPath("files", SettingType.ARRAY);
         for (int i = 0; i < obj.length; i++) {
             Setting item = obj[i];
-            _files ~= item.getString("file");
+            WorkspaceFile file = new WorkspaceFile;
+            file.filename(item.getString("file"));
+            file.column(cast(int)item.getInteger("column"));
+            file.row(cast(int)item.getInteger("row"));
+            _files ~= file;
         }
     }
 
@@ -216,3 +222,33 @@ class WorkspaceSettings : SettingsFile {
 
 }
 
+/// Description for workspace file
+class WorkspaceFile {
+    /// File name with full path
+    private string _filename;
+    /// Cursor position column
+    private int _column;
+    /// Cursor position row
+    private int _row;
+    
+    @property string filename() {
+        return _filename;
+    }
+    @property void filename(string _fn) {
+        this._filename = _fn;
+    }
+    
+    @property int column() {
+        return _column;
+    }
+    @property void column(int col) {
+        _column = col;
+    }
+     
+    @property int row() {
+        return _row;
+    }
+    @property void row(int r) {
+        _row = r;
+    }
+}

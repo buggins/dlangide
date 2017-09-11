@@ -410,7 +410,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             _tabs.renameTab(index, name);
         }
     }
-
+    
     bool openSourceFile(string filename, ProjectSourceFile file = null, bool activate = true) {
         if (!file && !filename)
             return false;
@@ -1401,9 +1401,20 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     // Write workspace to recent workspaces list
                     _settings.updateRecentWorkspace(filename);
                     // All was opened, attempt to restore files
-                    const string[] files = currentWorkspace.files();
-                    for (int i; i < files.length; i++)
-                        openSourceFile(files[i]);
+                    WorkspaceFile[] files = currentWorkspace.files();
+                    for (int i; i < files.length; i++) 
+                    with (files[i])
+                    {
+                        // Opening file
+                        if (openSourceFile(filename))
+                        {
+                            auto index = _tabs.tabIndex(filename);
+                            // file is opened in tab
+                            auto source = cast(DSourceEdit)_tabs.tabBody(filename);
+                            // Caret position
+                            source.setCaretPos(column, row);
+                        }
+                    }
                 });
             } else {
                 window.showMessageBox(UIString.fromId("ERROR_OPEN_WORKSPACE"c).value, UIString.fromId("ERROR_OPENING_WORKSPACE"c).value);
@@ -1567,12 +1578,17 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         askForUnsavedEdits(delegate() {
             if (currentWorkspace) {
                 // Remember opened files
-                string[] files;
+                WorkspaceFile[] files;
                 for (auto i = 0; i < _tabs.tabCount(); i++)
                 {
                     auto edit = cast(DSourceEdit)_tabs.tabBody(i);
-                    if (edit !is null)
-                        files ~= edit.filename();
+                    if (edit !is null) {
+                        auto file = new WorkspaceFile();
+                        file.filename = edit.filename();
+                        file.row = edit.caretPos.pos;
+                        file.column = edit.caretPos.line;
+                        files ~= file;
+                    }
                 }
                 currentWorkspace.files(files);
                 // saving workspace
