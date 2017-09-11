@@ -887,6 +887,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                 else
                     a.state = ACTION_STATE_DISABLE;
                 return true;
+            case IDEActions.FindInFiles:
+                a.state = currentWorkspace !is null ? ACTION_STATE_ENABLED : ACTION_STATE_DISABLE;
+                return true;
             default:
                 return super.handleActionStateRequest(a);
         }
@@ -1094,8 +1097,12 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     setStartupProject(cast(Project)a.objectParam);
                     return true;
                 case IDEActions.FindInFiles:
-                    Log.d("Opening Search Field");
-                       import dlangide.ui.searchPanel;
+                    Log.d("Opening Search In Files panel");
+                    if (!currentWorkspace) {
+                        Log.d("No workspace is opened");
+                        return true;
+                    }
+                    import dlangide.ui.searchPanel;
                     int searchPanelIndex = _logPanel.getTabs.tabIndex("search");
                     SearchWidget searchPanel = null;
                     if(searchPanelIndex == -1) {

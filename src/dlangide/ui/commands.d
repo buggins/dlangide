@@ -144,4 +144,4 @@ const Action ACTION_GO_TO_DEFINITION = (new Action(IDEActions.GoToDefinition,  "
 const Action ACTION_GET_COMPLETIONS = (new Action(IDEActions.GetCompletionSuggestions,  "SHOW_COMPLETIONS"c, ""c, KeyCode.KEY_G, KeyFlag.Control|KeyFlag.Shift)).addAccelerator(KeyCode.SPACE, KeyFlag.Control).disableByDefault();
 const Action ACTION_GET_PAREN_COMPLETION = (new Action(IDEActions.GetParenCompletion,  "SHOW_PAREN_COMPLETION"c, ""c, KeyCode.SPACE, KeyFlag.Control|KeyFlag.Shift)).disableByDefault();
 
-const Action ACTION_FIND_TEXT = (new Action(IDEActions.FindInFiles,  "FIND_IN_FILES"c, "edit-find"c, KeyCode.KEY_F, KeyFlag.Control | KeyFlag.Shift));
+const Action ACTION_FIND_TEXT = (new Action(IDEActions.FindInFiles,  "FIND_IN_FILES"c, "edit-find"c, KeyCode.KEY_F, KeyFlag.Control | KeyFlag.Shift)).disableByDefault();

@@ -194,10 +194,11 @@ class SearchWidget : TabWidget {
         
         _layout = new HorizontalLayout();
         _layout.addChild(new TextWidget("FindLabel", "Find: "d));
-        
+        _layout.layoutWidth = FILL_PARENT;
+
         _findText = new EditLine();
         _findText.padding(Rect(5,4,50,4));
-        _findText.layoutWidth(400);
+        _findText.layoutWidth = FILL_PARENT;
         _findText.editorAction = &onEditorAction; // to handle Enter key press in editor
         _layout.addChild(_findText);
         
@@ -205,6 +206,8 @@ class SearchWidget : TabWidget {
         goButton.click = &onFindButtonPressed;
         _layout.addChild(goButton);
         
+        _layout.addChild(new HSpacer);
+
         _searchScope = new ComboBox("searchScope", ["File"d, "Project"d, "Dependencies"d, "Everywhere"d]);
         _searchScope.selectedItemIndex = 0;
         _layout.addChild(_searchScope);
@@ -257,6 +260,10 @@ class SearchWidget : TabWidget {
         
         _resultLog.setTextToHighlight(""d, 0);
         _resultLog.text = ""d;
+
+        if (currentWorkspace is null)
+            return false;
+
         _matchedList = [];
         _resultLogMatchIndex = 0;
         
