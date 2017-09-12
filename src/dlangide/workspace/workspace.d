@@ -270,9 +270,9 @@ class Workspace : WorkspaceItem {
                 if (df)
                     _description ~= p.description ~ " / ";
             }
-            if (!_name.empty) // cut off last comma
+            if (nf && !_name.empty) // cut off last comma
                 _name = _name[ 0 .. $ - 1 ];
-            if (!_description.empty) // cut off last delimiter
+            if (df && !_description.empty) // cut off last delimiter
                 _description = _description[ 0 .. $ - 3 ]; 
         }
         _workspaceFile.setString("name", toUTF8(_name));
