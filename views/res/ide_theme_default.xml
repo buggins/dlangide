@@ -23,6 +23,10 @@
     <drawable id="btn_check" value="btn_check"/>
     <style id="TERMINAL" parent="EDIT_BOX_NO_FRAME"
     />
+
+    <style id="TOOLBAR_HOST"
+        backgroundImageId="#eceffa"
+        />
   
 
 </theme>
