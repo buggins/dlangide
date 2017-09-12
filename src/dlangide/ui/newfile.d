@@ -246,12 +246,18 @@ class NewFileDlg : Dialog {
                 return setError("Invalid file name");
             _moduleName = filename;
             char[] buf;
-            foreach(ch; relativePath) {
+            foreach(c; relativePath) {
+                char ch = c;
                 if (ch == '/' || ch == '\\')
-                    buf ~= '.';
-                else
-                    buf ~= ch;
+                    ch = '.';
+                else if (ch == '.')
+                    ch = '_';
+                if (ch == '.' && (buf.length == 0 || buf[$-1] == '.'))
+                    continue; // skip duplicate .
+                buf ~= ch;
             }
+            if (buf.length && buf[$-1] == '.')
+                buf.length--;
             _packageName = buf.dup;
             string m;
             if (_currentTemplate.kind == FileKind.MODULE) {
@@ -281,7 +287,7 @@ class NewFileDlg : Dialog {
                 string txt = "module " ~ _packageName ~ ";\n\n" ~ _currentTemplate.srccode;
                 write(_fullPathName, txt);
             } else if (_currentTemplate.kind == FileKind.PACKAGE) {
-                string txt = "package " ~ _packageName ~ ";\n\n" ~ _currentTemplate.srccode;
+                string txt = "module " ~ _packageName ~ ";\n\n" ~ _currentTemplate.srccode;
                 write(_fullPathName, txt);
             } else {
                 write(_fullPathName, _currentTemplate.srccode);

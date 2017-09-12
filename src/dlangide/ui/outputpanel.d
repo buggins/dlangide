@@ -270,6 +270,10 @@ class OutputPanel : DockWindow {
         return null;
     }
 
+    void onTabClose(string tabId) {
+        Log.d("OutputPanel onTabClose ", tabId);
+    }
+
     override protected Widget createBodyWidget() {
         layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT);
         _tabs = new TabWidget("OutputPanelTabs", Align.Bottom);
@@ -277,6 +281,7 @@ class OutputPanel : DockWindow {
         _tabs.setStyles(STYLE_DOCK_WINDOW, STYLE_TAB_DOWN_DARK, STYLE_TAB_DOWN_BUTTON_DARK, STYLE_TAB_UP_BUTTON_DARK_TEXT, STYLE_DOCK_HOST_BODY);
         _tabs.layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT);
         _tabs.tabHost.layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT);
+        _tabs.tabClose = &onTabClose;
 
         _logWidget = new CompilerLogWidget("logwidget");
         _logWidget.readOnly = true;
@@ -285,7 +290,7 @@ class OutputPanel : DockWindow {
         _logWidget.styleId = "EDIT_BOX_NO_FRAME";
 
         //_tabs.tabHost.styleId = STYLE_DOCK_WINDOW_BODY;
-        _tabs.addTab(_logWidget, "Compiler Log"d);
+        _tabs.addTab(_logWidget, "Compiler Log"d, null, true);
         _tabs.selectTab("logwidget");
 
         static if (ENABLE_INTERNAL_TERMINAL) {

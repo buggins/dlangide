@@ -483,6 +483,15 @@ class Project : WorkspaceItem {
         return _builderSourcePaths; 
     }
 
+    /// returns first source folder for project or null if not found
+    ProjectFolder firstSourceFolder() {
+        for(int i = 0; i < _items.childCount; i++) {
+            if (_items.child(i).isFolder)
+                return cast(ProjectFolder)_items.child(i);
+        }
+        return null;
+    }
+
     ProjectSourceFile findSourceFile(string projectFileName, string fullFileName) {
         return _items ? _items.findSourceFile(projectFileName, fullFileName) : null;
     }

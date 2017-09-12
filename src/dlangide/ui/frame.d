@@ -1256,6 +1256,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         ProjectFolder folder;
         if (cast(Project)obj) {
             project = cast(Project)obj;
+            folder = project.firstSourceFolder;
         } else if (cast(ProjectFolder)obj) {
             folder = cast(ProjectFolder)obj;
             project = folder.project;
