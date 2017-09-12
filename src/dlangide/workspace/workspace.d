@@ -202,7 +202,24 @@ class Workspace : WorkspaceItem {
         return null;
     }
 
+    Project findProjectInWorkspace(Project p) {
+        foreach(existing; _projects)
+            if (existing is p || existing.filename == p.filename)
+                return existing;
+        return null;
+    }
+
+    Project findProjectInWorkspace(string projectFilename) {
+        foreach(existing; _projects)
+            if (existing.filename == projectFilename)
+                return existing;
+        return null;
+    }
+
     void addProject(Project p) {
+        if (findProjectInWorkspace(p))
+            return;
+        Log.d("addProject ", p.filename);
         _projects ~= p;
         p.workspace = this;
         fillStartupProject();
@@ -214,6 +231,7 @@ class Workspace : WorkspaceItem {
         Project res = _projects[index];
         for (int j = index; j + 1 < _projects.length; j++)
             _projects[j] = _projects[j + 1];
+        _projects.length = _projects.length - 1;
         return res;
     }
 
@@ -234,12 +252,8 @@ class Workspace : WorkspaceItem {
     }
 
     bool addDependencyProject(Project p) {
-        for (int i = 0; i < _projects.length; i++) {
-            if (_projects[i].filename.equal(p.filename)) {
-                _projects[i] = p;
-                return false;
-            }
-        }
+        if (findProjectInWorkspace(p))
+            return false;
         addProject(p);
         return true;
     }
@@ -322,6 +336,8 @@ class Workspace : WorkspaceItem {
             Log.d("project: ", key, " path:", path);
             if (!isAbsolute(path))
                 path = buildNormalizedPath(_dir, path); //, "dub.json"
+            if (findProjectInWorkspace(path))
+                continue;
             Project project = new Project(this, path);
             _projects ~= project;
             project.load();
