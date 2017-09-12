@@ -448,6 +448,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     editor.editorTool = new DEditorTool(this);
                 else
                     editor.editorTool = new DefaultEditorTool(this);
+                _tabs.layout(_tabs.pos);
             } else {
                 destroy(editor);
                 if (window)
@@ -1156,8 +1157,10 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
     }
 
     void closeWorkspace() {
-        if (currentWorkspace)
+        if (currentWorkspace) {
+            saveListOfOpenedFiles();
             currentWorkspace.save();
+        }
         askForUnsavedEdits(delegate() {
             setWorkspace(null);
             showHomeScreen();
@@ -1421,6 +1424,42 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         dcdInterface.warmUp(project.importPaths);
     }
 
+    void restoreListOfOpenedFiles() {
+        // All was opened, attempt to restore files
+        WorkspaceFile[] files = currentWorkspace.files();
+        for (int i; i < files.length; i++) 
+            with (files[i])
+            {
+                // Opening file
+                if (openSourceFile(filename))
+                {
+                    auto index = _tabs.tabIndex(filename);
+                    // file is opened in tab
+                    auto source = cast(DSourceEdit)_tabs.tabBody(filename);
+                    // Caret position
+                    source.setCaretPos(column, row, true, true);
+                }
+            }
+    }
+
+    void saveListOfOpenedFiles() {
+        WorkspaceFile[] files;
+        for (auto i = 0; i < _tabs.tabCount(); i++)
+        {
+            auto edit = cast(DSourceEdit)_tabs.tabBody(i);
+            if (edit !is null) {
+                auto file = new WorkspaceFile();
+                file.filename = edit.filename();
+                file.row = edit.caretPos.pos;
+                file.column = edit.caretPos.line;
+                files ~= file;
+            }
+        }
+        currentWorkspace.files(files);
+        // saving workspace
+        currentWorkspace.save();
+    }
+
     void openFileOrWorkspace(string filename) {
         // Open DlangIDE workspace file
         if (filename.isWorkspaceFile) {
@@ -1431,21 +1470,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     hideHomeScreen();
                     // Write workspace to recent workspaces list
                     _settings.updateRecentWorkspace(filename);
-                    // All was opened, attempt to restore files
-                    WorkspaceFile[] files = currentWorkspace.files();
-                    for (int i; i < files.length; i++) 
-                    with (files[i])
-                    {
-                        // Opening file
-                        if (openSourceFile(filename))
-                        {
-                            auto index = _tabs.tabIndex(filename);
-                            // file is opened in tab
-                            auto source = cast(DSourceEdit)_tabs.tabBody(filename);
-                            // Caret position
-                            source.setCaretPos(column, row);
-                        }
-                    }
+                    restoreListOfOpenedFiles();
                 });
             } else {
                 window.showMessageBox(UIString.fromId("ERROR_OPEN_WORKSPACE"c).value, UIString.fromId("ERROR_OPENING_WORKSPACE"c).value);
@@ -1620,21 +1645,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         askForUnsavedEdits(delegate() {
             if (currentWorkspace) {
                 // Remember opened files
-                WorkspaceFile[] files;
-                for (auto i = 0; i < _tabs.tabCount(); i++)
-                {
-                    auto edit = cast(DSourceEdit)_tabs.tabBody(i);
-                    if (edit !is null) {
-                        auto file = new WorkspaceFile();
-                        file.filename = edit.filename();
-                        file.row = edit.caretPos.pos;
-                        file.column = edit.caretPos.line;
-                        files ~= file;
-                    }
-                }
-                currentWorkspace.files(files);
-                // saving workspace
-                currentWorkspace.save();
+                saveListOfOpenedFiles();
             }
             window.close();
         });
