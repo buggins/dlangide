@@ -107,6 +107,27 @@ class Workspace : WorkspaceItem {
         _settings.files(fs);
     }
 
+    /// read list of expanded items from settings
+    @property string[] expandedItems() {
+        return _settings.expandedItems();
+    }
+
+    /// update list of expanded items in settings
+    @property void expandedItems(string[] items) {
+        _settings.expandedItems(items);
+    }
+
+    /// last selected workspace item in workspace explorer
+    @property string selectedWorkspaceItem() {
+        return _settings.selectedWorkspaceItem;
+    }
+
+    /// update last selected workspace item in workspace explorer
+    @property void selectedWorkspaceItem(string item) {
+        if (_settings.selectedWorkspaceItem != item)
+            _settings.selectedWorkspaceItem = item;
+    }
+
     /// setups currrent project configuration by name
     void setStartupProjectConfiguration(string conf)
     {

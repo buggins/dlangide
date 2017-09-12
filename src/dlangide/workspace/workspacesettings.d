@@ -53,6 +53,30 @@ class WorkspaceSettings : SettingsFile {
         }
     }
 
+    /// list of expanded workspace explorer items
+    @property string[] expandedItems() {
+        Setting obj = _setting.settingByPath("expandedItems", SettingType.ARRAY);
+        return obj.strArray;
+    }
+
+    /// update list of expanded workspace explorer items
+    @property void expandedItems(string[] items) {
+        Setting obj = _setting.settingByPath("expandedItems", SettingType.ARRAY);
+        obj.strArray = items;
+    }
+
+    /// last selected workspace item in workspace explorer
+    @property string selectedWorkspaceItem() {
+        Setting obj = _setting.settingByPath("selectedWorkspaceItem", SettingType.STRING);
+        return obj.str;
+    }
+
+    /// update last selected workspace item in workspace explorer
+    @property void selectedWorkspaceItem(string item) {
+        Setting obj = _setting.settingByPath("selectedWorkspaceItem", SettingType.STRING);
+        obj.str = item;
+    }
+
     /// get all breakpoints for project (for specified source file only, if specified)
     Breakpoint[] getProjectBreakpoints(string projectName, string projectFilePath) {
         Breakpoint[] res;

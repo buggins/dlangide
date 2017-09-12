@@ -53,6 +53,15 @@ class WorkspacePanel : DockWindow {
     void onTreeItemSelected(TreeItems source, TreeItem selectedItem, bool activated) {
         if (!selectedItem)
             return;
+        if (_workspace) {
+            // save selected item id
+            ProjectItem item = cast(ProjectItem)selectedItem.objectParam;
+            if (item) {
+                string id = item.filename;
+                if (id)
+                    _workspace.selectedWorkspaceItem = id;
+            }
+        }
         if (selectedItem.intParam == ProjectItemType.SourceFile) {
             // file selected
             if (sourceFileSelectionListener.assigned) {
@@ -70,6 +79,7 @@ class WorkspacePanel : DockWindow {
         _tree = new TreeWidget("wstree");
         _tree.layoutHeight(FILL_PARENT).layoutHeight(FILL_PARENT);
         _tree.selectionChange = &onTreeItemSelected;
+        _tree.expandedChange.connect(&onTreeExpandedStateChange);
         _tree.fontSize = 16;
         _tree.noCollapseForSingleTopLevelItem = true;
         _tree.popupMenu = &onTreeItemPopupMenu;
@@ -173,6 +183,10 @@ class WorkspacePanel : DockWindow {
                 TreeItem p = root.newChild(child.filename, child.name, "folder");
                 p.intParam = ProjectItemType.SourceFolder;
                 p.objectParam = child;
+                if (restoreItemState(child.filename))
+                    p.expand();
+                else
+                    p.collapse();
                 addProjectItems(p, child);
             } else {
                 string icon = "text-other";
@@ -201,7 +215,55 @@ class WorkspacePanel : DockWindow {
         _tree.items.setDefaultItem(defaultItem);
     }
 
+    protected bool[string] _itemStates;
+    protected bool _itemStatesDirty;
+    protected void readExpandedStateFromWorkspace() {
+        _itemStates.clear();
+        if (_workspace) {
+            string[] items = _workspace.expandedItems;
+            foreach(item; items)
+                _itemStates[item] = true;
+        }
+    }
+    protected void saveItemState(string itemPath, bool expanded) {
+        bool changed = restoreItemState(itemPath) != expanded;
+        if (!_itemStatesDirty && changed)
+            _itemStatesDirty = true;
+        if (changed) {
+            if (expanded) {
+                _itemStates[itemPath] = true;
+            } else {
+                _itemStates.remove(itemPath);
+            }
+            string[] items;
+            items.assumeSafeAppend;
+            foreach(k,v; _itemStates) {
+                items ~= k;
+            }
+            _workspace.expandedItems = items;
+        }
+        debug Log.d("stored Expanded state ", expanded, " for ", itemPath);
+    }
+    protected bool restoreItemState(string itemPath) {
+        if (auto p = itemPath in _itemStates) {
+            debug Log.d("restored Expanded state for ", itemPath);
+            return *p;
+        }
+        return false;
+    }
+
+    void onTreeExpandedStateChange(TreeItems source, TreeItem item) {
+        bool expanded = item.expanded;
+        ProjectItem prjItem = cast(ProjectItem)item.objectParam;
+        if (prjItem) {
+            string fn = prjItem.filename;
+            debug Log.d("onTreeExpandedStateChange expanded=", expanded, " fn=", fn);
+            saveItemState(fn, expanded);
+        }
+    }
+
     void reloadItems() {
+        _tree.expandedChange.disconnect(&onTreeExpandedStateChange);
         _tree.clearAllItems();
         if (_workspace) {
             TreeItem defaultItem = null;
@@ -211,6 +273,10 @@ class WorkspacePanel : DockWindow {
                 TreeItem p = root.newChild(project.filename, project.name, project.isDependency ? "project-d-dependency" : "project-d");
                 p.intParam = ProjectItemType.Project;
                 p.objectParam = project;
+                if (restoreItemState(project.filename))
+                    p.expand();
+                else
+                    p.collapse();
                 if (project && _workspace.startupProject is project)
                     defaultItem = p;
                 addProjectItems(p, project.items);
@@ -219,24 +285,31 @@ class WorkspacePanel : DockWindow {
         } else {
             _tree.items.newChild("none", "No workspace"d, "project-development");
         }
-        _tree.onTreeContentChange(null);
-        if (_workspace) {
-            TreeItem root = _tree.items.child(0);
-            for (int i = 0; i < root.childCount; i++) {
-                TreeItem child = root.child(i);
-                if (child.intParam == ProjectItemType.Project) {
-                    Object obj = child.objectParam;
-                    Project prj = cast(Project)obj;
-                    if (prj && prj.isDependency)
-                        child.collapse();
+        _tree.expandedChange.connect(&onTreeExpandedStateChange);
+
+        // expand default project if no information about expanded items
+        if (!_itemStates.length) {
+            if (_workspace && _workspace.startupProject) {
+                string fn = _workspace.startupProject.filename;
+                TreeItem startupProjectItem = _tree.items.findItemById(fn);
+                if (startupProjectItem) {
+                    startupProjectItem.expand();
+                    saveItemState(fn, true);
                 }
             }
         }
+        if (_workspace) {
+            // restore selection
+            string id = _workspace.selectedWorkspaceItem;
+            _tree.selectItem(id);
+        }
+
         updateDefault();
     }
 
     @property void workspace(Workspace w) {
         _workspace = w;
+        readExpandedStateFromWorkspace();
         reloadItems();
     }
 
