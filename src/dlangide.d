@@ -105,6 +105,8 @@ extern (C) int UIAppMain(string[] args) {
 
         // show window
         window.show();
+        // restore window state, size, position
+        frame.restoreUIStateOnStartup();
 
         //jsonTest();
 

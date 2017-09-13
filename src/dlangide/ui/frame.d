@@ -830,8 +830,6 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                 return true;
             case IDEActions.FileExit:
             case IDEActions.FileOpen:
-            case IDEActions.WindowCloseDocument:
-            case IDEActions.WindowCloseAllDocuments:
             case IDEActions.WindowShowHomeScreen:
             case IDEActions.FileOpenWorkspace:
                 // disable when background operation in progress
@@ -893,6 +891,15 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             case IDEActions.FindInFiles:
                 a.state = currentWorkspace !is null ? ACTION_STATE_ENABLED : ACTION_STATE_DISABLE;
                 return true;
+            case IDEActions.CloseWorkspace:
+                a.state = (currentWorkspace !is null && !_currentBackgroundOperation) ? ACTION_STATE_ENABLED : ACTION_STATE_DISABLE;
+                return true;
+            case IDEActions.WindowCloseDocument:
+            case IDEActions.WindowCloseAllDocuments:
+            case IDEActions.FileSaveAll:
+            case IDEActions.FileSaveAs:
+                a.state = (currentEditor !is null && !_currentBackgroundOperation) ? ACTION_STATE_ENABLED : ACTION_STATE_DISABLE;
+                return true;
             default:
                 return super.handleActionStateRequest(a);
         }
@@ -926,8 +933,11 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     //debug {
                     //    testDCDFailAfterThreadCreation();
                     //}
+                    dstring msg = "DLangIDE\n(C) Vadim Lopatin, 2014-2017\nhttp://github.com/buggins/dlangide\n" 
+                        ~ "IDE for D programming language written in D\nUses DlangUI library " 
+                        ~ DLANGUI_VERSION ~ " for GUI"d;
                     window.showMessageBox(UIString.fromId("ABOUT"c) ~ " " ~ DLANGIDE_VERSION,
-                                          UIString.fromRaw("DLangIDE\n(C) Vadim Lopatin, 2014-2017\nhttp://github.com/buggins/dlangide\nIDE for D programming language written in D\nUses DlangUI library for GUI"d));
+                                          UIString.fromRaw(msg));
                     return true;
                 case StandardAction.OpenUrl:
                     platform.openURL(a.stringParam);
@@ -1382,7 +1392,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         if (!project)
             return;
         Setting s = project.settings.copySettings();
-        SettingsDialog dlg = new SettingsDialog(UIString.fromRaw(project.name ~ " settings"d), window, s, createProjectSettingsPages());
+        SettingsDialog dlg = new SettingsDialog(UIString.fromRaw(project.name ~ " - "d ~ UIString.fromId("HEADER_PROJECT_SETTINGS"c)), window, s, createProjectSettingsPages());
         dlg.dialogResult = delegate(Dialog dlg, const Action result) {
             if (result.id == ACTION_APPLY.id) {
                 //Log.d("settings after edit:\n", s.toJSON(true));
@@ -1664,6 +1674,10 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         }
     }
 
+    void restoreUIStateOnStartup() {
+        window.restoreWindowState(_settings.uiState);
+    }
+
     /// return false to prevent closing
     bool onCanClose() {
         askForUnsavedEdits(delegate() {
@@ -1677,6 +1691,8 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
     }
     /// called when main window is closing
     void onWindowClose() {
+        window.saveWindowState(_settings.uiState);
+        _settings.save();
         Log.i("onWindowClose()");
         stopExecution();
     }

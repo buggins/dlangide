@@ -302,5 +302,10 @@ class IDESettings : SettingsFile {
         Setting obj =_setting.objectByPath("common", true);
         obj.setBoolean("autoOpenLastProject", value);
     }
+
+    /// for saving window state, position, and other UI states
+    @property Setting uiState() {
+        return _setting.objectByPath("uiState", true);
+    }
 }
 
