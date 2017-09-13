@@ -828,8 +828,6 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                 return true;
             case IDEActions.FileExit:
             case IDEActions.FileOpen:
-            case IDEActions.WindowCloseDocument:
-            case IDEActions.WindowCloseAllDocuments:
             case IDEActions.WindowShowHomeScreen:
             case IDEActions.FileOpenWorkspace:
                 // disable when background operation in progress
@@ -890,6 +888,15 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                 return true;
             case IDEActions.FindInFiles:
                 a.state = currentWorkspace !is null ? ACTION_STATE_ENABLED : ACTION_STATE_DISABLE;
+                return true;
+            case IDEActions.CloseWorkspace:
+                a.state = (currentWorkspace !is null && !_currentBackgroundOperation) ? ACTION_STATE_ENABLED : ACTION_STATE_DISABLE;
+                return true;
+            case IDEActions.WindowCloseDocument:
+            case IDEActions.WindowCloseAllDocuments:
+            case IDEActions.FileSaveAll:
+            case IDEActions.FileSaveAs:
+                a.state = (currentEditor !is null && !_currentBackgroundOperation) ? ACTION_STATE_ENABLED : ACTION_STATE_DISABLE;
                 return true;
             default:
                 return super.handleActionStateRequest(a);
