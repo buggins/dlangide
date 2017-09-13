@@ -709,7 +709,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         editItem.add(ACTION_EDIT_PREFERENCES);
 
         MenuItem navItem = new MenuItem(new Action(21, "MENU_NAVIGATE"));
-        navItem.add(ACTION_GO_TO_DEFINITION, ACTION_GET_COMPLETIONS, ACTION_GET_DOC_COMMENTS, ACTION_GET_PAREN_COMPLETION, ACTION_EDITOR_GOTO_PREVIOUS_BOOKMARK, ACTION_EDITOR_GOTO_NEXT_BOOKMARK);
+        navItem.add(ACTION_GO_TO_DEFINITION, ACTION_GET_COMPLETIONS, ACTION_GET_DOC_COMMENTS, 
+            ACTION_GET_PAREN_COMPLETION, ACTION_EDITOR_GOTO_PREVIOUS_BOOKMARK, 
+            ACTION_EDITOR_GOTO_NEXT_BOOKMARK, ACTION_GO_TO_LINE);
 
         MenuItem projectItem = new MenuItem(new Action(21, "MENU_PROJECT"));
         projectItem.add(ACTION_PROJECT_SET_STARTUP, ACTION_PROJECT_REFRESH, ACTION_PROJECT_UPDATE_DEPENDENCIES, ACTION_PROJECT_SETTINGS);
@@ -1078,6 +1080,28 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     if (currentEditor) {
                         Log.d("Trying to go to definition.");
                         currentEditor.editorTool.goToDefinition(currentEditor(), currentEditor.caretPos);
+                    }
+                    return true;
+                case IDEActions.GotoLine:
+                    // Go to line without editor is meaningless command
+                    if (currentEditor) {
+                        Log.d("Go to line");
+                        // Ask user for line
+                        window.showInputBox(UIString.fromId("GO_TO_LINE"c), UIString.fromId("GO_TO_LINE"c), ""d, delegate(dstring s) {
+                            try {
+                                auto num = to!uint(s);
+                                // Check line existence
+                                if (num < 1 || num > currentEditor.content.length) {
+                                    window.showMessageBox(UIString.fromId("ERROR"c), UIString.fromId("ERROR_NO_SUCH_LINE"c));
+                                    return;
+                                }
+                                // Go to line
+                                currentEditor.setCaretPos(num - 1, 0);
+                            }
+                            catch (ConvException e) {
+                                window.showMessageBox(UIString.fromId("ERROR"c), UIString.fromId("ERROR_INVALID_NUMBER"c));
+                            }
+                        });
                     }
                     return true;
                 case IDEActions.GetDocComments:
