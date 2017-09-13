@@ -1358,7 +1358,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         if (!project)
             return;
         Setting s = project.settings.copySettings();
-        SettingsDialog dlg = new SettingsDialog(UIString.fromRaw(project.name ~ " settings"d), window, s, createProjectSettingsPages());
+        SettingsDialog dlg = new SettingsDialog(UIString.fromRaw(project.name ~ " - "d ~ UIString.fromId("HEADER_PROJECT_SETTINGS"c)), window, s, createProjectSettingsPages());
         dlg.dialogResult = delegate(Dialog dlg, const Action result) {
             if (result.id == ACTION_APPLY.id) {
                 //Log.d("settings after edit:\n", s.toJSON(true));
