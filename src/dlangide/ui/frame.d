@@ -898,6 +898,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             case IDEActions.WindowCloseAllDocuments:
             case IDEActions.FileSaveAll:
             case IDEActions.FileSaveAs:
+            case IDEActions.GotoLine:
                 a.state = (currentEditor !is null && !_currentBackgroundOperation) ? ACTION_STATE_ENABLED : ACTION_STATE_DISABLE;
                 return true;
             default:
@@ -1092,13 +1093,16 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                                 auto num = to!uint(s);
                                 // Check line existence
                                 if (num < 1 || num > currentEditor.content.length) {
+                                    currentEditor.setFocus();
                                     window.showMessageBox(UIString.fromId("ERROR"c), UIString.fromId("ERROR_NO_SUCH_LINE"c));
                                     return;
                                 }
                                 // Go to line
                                 currentEditor.setCaretPos(num - 1, 0);
+                                currentEditor.setFocus();
                             }
                             catch (ConvException e) {
+                                currentEditor.setFocus();
                                 window.showMessageBox(UIString.fromId("ERROR"c), UIString.fromId("ERROR_INVALID_NUMBER"c));
                             }
                         });
