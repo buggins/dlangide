@@ -1650,6 +1650,10 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         }
     }
 
+    void restoreUIStateOnStartup() {
+        window.restoreWindowState(_settings.uiState);
+    }
+
     /// return false to prevent closing
     bool onCanClose() {
         askForUnsavedEdits(delegate() {
@@ -1663,6 +1667,8 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
     }
     /// called when main window is closing
     void onWindowClose() {
+        window.saveWindowState(_settings.uiState);
+        _settings.save();
         Log.i("onWindowClose()");
         stopExecution();
     }
