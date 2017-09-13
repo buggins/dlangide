@@ -19,7 +19,6 @@ d:
   - dmd
   - dmd-beta
   - ldc
-  - ldc-beta
 
 # No-one cares about OS X x86
 matrix:
@@ -30,6 +29,10 @@ matrix:
       env: ARCH=x86 CONFIG=minimal
     - os: osx
       env: ARCH=x86 CONFIG=console
+    - os: osx
+      env: ARCH=x86_64 CONFIG=console
+    - os: osx
+      env: ARCH=x86_64 CONFIG=minimal
 
 # Sort out packages
 install:
