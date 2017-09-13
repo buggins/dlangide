@@ -13,7 +13,7 @@ public import dlangide.workspace.workspacesettings;
 StringListValue[] createFaceList(bool monospaceFirst) {
     StringListValue[] faces;
     faces.assumeSafeAppend();
-    faces ~= StringListValue("Default", "OPTION_DEFAULT"c);
+    faces ~= StringListValue("Default", UIString.fromId("OPTION_DEFAULT"c));
     import dlangui.graphics.fonts;
     import std.utf : toUTF32;
     FontFaceProps[] allFaces = FontManager.instance.getFaces();
@@ -153,7 +153,7 @@ SettingsPage createSettingsPages() {
     SettingsPage terminal = dlang.addChild("dlang/terminal", UIString.fromId("OPTION_TERMINAL"c));
     terminal.addExecutableFileNameEdit("dlang/terminal/executable", UIString.fromId("OPTION_TERMINAL_EXECUTABLE"c), "xterm");
 
-    SettingsPage toolchains = dlang.addChild("dlang/toolchains", UIString.fromId("OPTION_TOOLCHANS"c));
+    SettingsPage toolchains = dlang.addChild("dlang/toolchains", UIString.fromId("OPTION_TOOLCHAINS"c));
     SettingsPage dmdtoolchain = toolchains.addChild("dlang/toolchains/dmd", UIString.fromRaw("DMD"d));
     dmdtoolchain.addExecutableFileNameEdit("dlang/toolchains/dmd/executable", UIString.fromId("OPTION_DMD_EXECUTABLE"c), "dmd");
     dmdtoolchain.addStringEdit("dlang/toolchains/dmd/dub_additional_params", UIString.fromId("OPTION_DUB_ADDITIONAL_PARAMS"c), "");
@@ -174,27 +174,27 @@ SettingsPage createSettingsPages() {
 SettingsPage createProjectSettingsPages() {
     SettingsPage res = new SettingsPage("", UIString.fromRaw(""d));
 
-    SettingsPage build = res.addChild("build", UIString.fromRaw("Build"d));
-    build.addStringComboBox("build/toolchain", UIString.fromRaw("Toolchain"d), [
-            StringListValue("default", "Default"d), 
+    SettingsPage build = res.addChild("build", UIString.fromId("OPTION_BUILD"c));
+    build.addStringComboBox("build/toolchain", UIString.fromId("OPTION_TOOLCHAIN"c), [
+            StringListValue("default", UIString.fromId("OPTION_DEFAULT"c)), 
             StringListValue("dmd", "DMD"d), 
             StringListValue("ldc", "LDC"d), 
             StringListValue("ldmd", "LDMD"d), 
             StringListValue("gdc", "GDC"d)]);
-    build.addStringComboBox("build/arch", UIString.fromRaw("Architecture"d), [
-            StringListValue("default", "Default"d), 
+    build.addStringComboBox("build/arch", UIString.fromId("OPTION_ARCHITECTURE"c), [
+            StringListValue("default", UIString.fromId("OPTION_DEFAULT"c)), 
             StringListValue("x86", "x86"d), 
             StringListValue("x86_64", "x86_64"d),
             StringListValue("arm", "arm"d),
             StringListValue("arm64", "arm64"d),
     ]);
-    build.addCheckbox("build/verbose", UIString.fromRaw("Verbose"d), true);
-    build.addStringEdit("build/dub_additional_params", UIString.fromRaw("DUB additional params"d), "");
+    build.addCheckbox("build/verbose", UIString.fromId("OPTION_VERBOSE"c), true);
+    build.addStringEdit("build/dub_additional_params", UIString.fromId("OPTION_DUB_ADDITIONAL_PARAMS"c), "");
 
-    SettingsPage dbg = res.addChild("debug", UIString.fromRaw("Run and Debug"d));
-    dbg.addStringEdit("debug/run_args", UIString.fromRaw("Command line args"d), "");
-    dbg.addDirNameEdit("debug/working_dir", UIString.fromRaw("Working directory"d), "");
-    dbg.addCheckbox("debug/external_console", UIString.fromRaw("Run in external console"d), false);
+    SettingsPage dbg = res.addChild("debug", UIString.fromId("OPTION_RUN_DEBUG"c));
+    dbg.addStringEdit("debug/run_args", UIString.fromId("OPTION_COMMAND_LINE"c), "");
+    dbg.addDirNameEdit("debug/working_dir", UIString.fromId("OPTION_WORKING_DIR"c), "");
+    dbg.addCheckbox("debug/external_console", UIString.fromId("OPTION_RUN_IN_EXTERNAL_CONSOLE"c), false);
 
     return res;
 }
