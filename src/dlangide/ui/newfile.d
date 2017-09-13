@@ -39,7 +39,7 @@ class NewFileDlg : Dialog {
     ProjectFolder _folder;
     string[] _sourcePaths;
     this(IDEFrame parent, Project currentProject, ProjectFolder folder) {
-        super(UIString.fromRaw("New source file"d), parent.window, 
+        super(UIString.fromId("OPTION_NEW_SOURCE_FILE"c), parent.window, 
               DialogFlag.Modal | DialogFlag.Resizable | DialogFlag.Popup, 500, 400);
         _ide = parent;
         _icon = "dlangui-logo1";
@@ -68,7 +68,7 @@ class NewFileDlg : Dialog {
                             VerticalLayout {
                                 margins: 5
                                 layoutWidth: 50%; layoutHeight: fill
-                                TextWidget { text: "Project template" }
+                                TextWidget { text: OPTION_PROJECT_TEMPLATE }
                                 StringListWidget { 
                                     id: projectTemplateList 
                                     layoutWidth: wrap; layoutHeight: fill
@@ -77,7 +77,7 @@ class NewFileDlg : Dialog {
                             VerticalLayout {
                                 margins: 5
                                 layoutWidth: 50%; layoutHeight: fill
-                                TextWidget { text: "Template description" }
+                                TextWidget { text: OPTION_TEMPLATE_DESCR }
                                 EditBox { 
                                     id: templateDescription; readOnly: true 
                                     layoutWidth: fill; layoutHeight: fill
@@ -88,13 +88,13 @@ class NewFileDlg : Dialog {
                             margins: 5
                             colCount: 2
                             layoutWidth: fill; layoutHeight: wrap
-                            TextWidget { text: "Name" }
+                            TextWidget { text: NAME }
                             EditLine { id: edName; text: "newfile"; layoutWidth: fill }
-                            TextWidget { text: "Location" }
+                            TextWidget { text: LOCATION }
                             DirEditLine { id: edLocation; layoutWidth: fill }
-                            TextWidget { text: "Module name" }
+                            TextWidget { text: OPTION_MODULE_NAME }
                             EditLine { id: edModuleName; text: ""; layoutWidth: fill; readOnly: true }
-                            TextWidget { text: "File path" }
+                            TextWidget { text: OPTION_FILE_PATH }
                             EditLine { id: edFilePath; text: ""; layoutWidth: fill; readOnly: true }
                         }
                         TextWidget { id: statusText; text: ""; layoutWidth: fill; textColor: #FF0000 }
@@ -119,7 +119,7 @@ class NewFileDlg : Dialog {
         _edLocation.filetypeIcons["dub.json"] = "project-d";
         _edLocation.filetypeIcons["package.json"] = "project-d";
         _edLocation.filetypeIcons[".dlangidews"] = "project-development";
-        _edLocation.addFilter(FileFilterEntry(UIString.fromRaw("DlangIDE files"d), "*.dlangidews;*.d;*.dd;*.di;*.ddoc;*.dh;*.json;*.xml;*.ini;*.dt"));
+        _edLocation.addFilter(FileFilterEntry(UIString.fromId("IDE_FILES"c), "*.dlangidews;*.d;*.dd;*.di;*.ddoc;*.dh;*.json;*.xml;*.ini;*.dt"));
         _edLocation.caption = "Select directory"d;
 
         _edFileName.editorAction.connect(&onEditorAction);
@@ -304,11 +304,11 @@ class NewFileDlg : Dialog {
         Action newaction = action.clone();
         if (action.id == IDEActions.FileNew) {
             if (!validate()) {
-                window.showMessageBox(UIString.fromRaw("Error"d), UIString.fromRaw("Invalid parameters"));
+                window.showMessageBox(UIString.fromId("ERROR"c), UIString.fromId("ERROR_INVALID_PARAMETERS"c));
                 return;
             }
             if (!createItem()) {
-                window.showMessageBox(UIString.fromRaw("Error"d), UIString.fromRaw("Failed to create project item"));
+                window.showMessageBox(UIString.fromId("ERROR"c), UIString.fromId("ERROR_INVALID_PARAMETERS"c));
                 return;
             }
             newaction.objectParam = _result;

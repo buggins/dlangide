@@ -220,17 +220,17 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         import std.file;
         stopExecution();
         if (!project) {
-            window.showMessageBox(UIString.fromRaw("Cannot debug project"d), UIString.fromRaw("Startup project is not specified"d));
+            window.showMessageBox(UIString.fromId("ERROR_CANNOT_DEBUG_PROJECT"c), UIString.fromId("ERROR_STARTUP_PROJECT_ABSENT"c));
             return;
         }
         string executableFileName = project.executableFileName;
         if (!executableFileName || !exists(executableFileName) || !isFile(executableFileName)) {
-            window.showMessageBox(UIString.fromRaw("Cannot debug project"d), UIString.fromRaw("Cannot find executable file"d));
+            window.showMessageBox(UIString.fromId("ERROR_CANNOT_DEBUG_PROJECT"c), UIString.fromId("ERROR_CANNOT_FIND_EXEC"c));
             return;
         }
         string debuggerExecutable = _settings.debuggerExecutable;
         if (debuggerExecutable.empty) {
-            window.showMessageBox(UIString.fromRaw("Cannot debug project"d), UIString.fromRaw("No debugger executable specified in settings"d));
+            window.showMessageBox(UIString.fromId("ERROR_CANNOT_DEBUG_PROJECT"c), UIString.fromId("ERROR_NO_DEBUGGER"c));
             return;
         }
 
@@ -250,7 +250,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         if (!project)
             project = currentWorkspace.startupProject;
         if (!project) {
-            window.showMessageBox(UIString.fromRaw("Cannot run project"d), UIString.fromRaw("Startup project is not specified"d));
+            window.showMessageBox(UIString.fromId("ERROR_CANNOT_RUN_PROJECT"c), UIString.fromId("ERROR_CANNOT_RUN_PROJECT"c));
             return;
         }
         buildProject(BuildOperation.Build, project, delegate(int result) {
@@ -267,12 +267,12 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         import std.file;
         stopExecution();
         if (!project) {
-            window.showMessageBox(UIString.fromRaw("Cannot run project"d), UIString.fromRaw("Startup project is not specified"d));
+            window.showMessageBox(UIString.fromId("ERROR_CANNOT_RUN_PROJECT"c), UIString.fromId("ERROR_STARTUP_PROJECT_ABSENT"c));
             return;
         }
         string executableFileName = project.executableFileName;
         if (!executableFileName || !exists(executableFileName) || !isFile(executableFileName)) {
-            window.showMessageBox(UIString.fromRaw("Cannot run project"d), UIString.fromRaw("Cannot find executable file"d));
+            window.showMessageBox(UIString.fromId("ERROR_CANNOT_RUN_PROJECT"c), UIString.fromId("ERROR_CANNOT_FIND_EXEC"c));
             return;
         }
         auto program = new ProgramExecutionNoDebug;
@@ -582,7 +582,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         }
         string tabId = ed.id;
         // tab content is modified - ask for confirmation
-        auto header = UIString.fromRaw("HEADER_CLOSE_FILE"c);
+        auto header = UIString.fromId("HEADER_CLOSE_FILE"c);
         window.showMessageBox(header ~ " " ~ toUTF32(baseName(tabId)), UIString.fromId("MSG_FILE_CONTENT_CHANGED"c), 
                               [ACTION_SAVE, ACTION_SAVE_ALL, ACTION_DISCARD_CHANGES, ACTION_DISCARD_ALL, ACTION_CANCEL], 
                               0, delegate(const Action result) {
@@ -1234,8 +1234,8 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         Project project = srcfile.project;
         if (!project)
             return;
-        window.showMessageBox(UIString.fromRaw("Remove file"d), 
-                UIString.fromRaw("Do you want to remove file "d ~ srcfile.name ~ "?"), 
+        window.showMessageBox(UIString.fromId("HEADER_REMOVE_FILE"c), 
+                UIString.fromId("QUESTION_REMOVE_FILE"c) ~ " " ~ srcfile.name ~ "?", 
                 [ACTION_YES, ACTION_NO], 
                 1, delegate(const Action result) {
                     if (result == StandardAction.Yes) {
@@ -1368,7 +1368,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         if (!project)
             return;
         Setting s = project.settings.copySettings();
-        SettingsDialog dlg = new SettingsDialog(UIString.fromRaw(project.name ~ " settings"d), window, s, createProjectSettingsPages());
+        SettingsDialog dlg = new SettingsDialog(UIString.fromRaw(project.name ~ " - "d ~ UIString.fromId("HEADER_PROJECT_SETTINGS"c)), window, s, createProjectSettingsPages());
         dlg.dialogResult = delegate(Dialog dlg, const Action result) {
             if (result.id == ACTION_APPLY.id) {
                 //Log.d("settings after edit:\n", s.toJSON(true));
