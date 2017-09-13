@@ -931,8 +931,11 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     //debug {
                     //    testDCDFailAfterThreadCreation();
                     //}
+                    dstring msg = "DLangIDE\n(C) Vadim Lopatin, 2014-2017\nhttp://github.com/buggins/dlangide\n" 
+                        ~ "IDE for D programming language written in D\nUses DlangUI library " 
+                        ~ DLANGUI_VERSION ~ " for GUI"d;
                     window.showMessageBox(UIString.fromId("ABOUT"c) ~ " " ~ DLANGIDE_VERSION,
-                                          UIString.fromRaw("DLangIDE\n(C) Vadim Lopatin, 2014-2017\nhttp://github.com/buggins/dlangide\nIDE for D programming language written in D\nUses DlangUI library for GUI"d));
+                                          UIString.fromRaw(msg));
                     return true;
                 case StandardAction.OpenUrl:
                     platform.openURL(a.stringParam);
