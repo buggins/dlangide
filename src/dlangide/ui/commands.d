@@ -62,6 +62,7 @@ enum IDEActions : int {
     GetCompletionSuggestions,
     GetDocComments,
     GetParenCompletion,
+    GotoLine,
 
     InsertCompletion,
     FindInFiles,
@@ -143,5 +144,6 @@ const Action ACTION_GET_DOC_COMMENTS = (new Action(IDEActions.GetDocComments,  "
 const Action ACTION_GO_TO_DEFINITION = (new Action(IDEActions.GoToDefinition,  "GO_TO_DEFINITION"c, ""c, KeyCode.KEY_G, KeyFlag.Control)).addAccelerator(KeyCode.F12, 0).disableByDefault();
 const Action ACTION_GET_COMPLETIONS = (new Action(IDEActions.GetCompletionSuggestions,  "SHOW_COMPLETIONS"c, ""c, KeyCode.KEY_G, KeyFlag.Control|KeyFlag.Shift)).addAccelerator(KeyCode.SPACE, KeyFlag.Control).disableByDefault();
 const Action ACTION_GET_PAREN_COMPLETION = (new Action(IDEActions.GetParenCompletion,  "SHOW_PAREN_COMPLETION"c, ""c, KeyCode.SPACE, KeyFlag.Control|KeyFlag.Shift)).disableByDefault();
+const Action ACTION_GO_TO_LINE = (new Action(IDEActions.GotoLine,  "GO_TO_LINE"c, ""c, KeyCode.KEY_L,  KeyFlag.Control|KeyFlag.Option)).disableByDefault();;
 
 const Action ACTION_FIND_TEXT = (new Action(IDEActions.FindInFiles,  "FIND_IN_FILES"c, "edit-find"c, KeyCode.KEY_F, KeyFlag.Control | KeyFlag.Shift)).disableByDefault();

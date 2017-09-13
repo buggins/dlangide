@@ -220,17 +220,17 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         import std.file;
         stopExecution();
         if (!project) {
-            window.showMessageBox(UIString.fromRaw("Cannot debug project"d), UIString.fromRaw("Startup project is not specified"d));
+            window.showMessageBox(UIString.fromId("ERROR_CANNOT_DEBUG_PROJECT"c), UIString.fromId("ERROR_STARTUP_PROJECT_ABSENT"c));
             return;
         }
         string executableFileName = project.executableFileName;
         if (!executableFileName || !exists(executableFileName) || !isFile(executableFileName)) {
-            window.showMessageBox(UIString.fromRaw("Cannot debug project"d), UIString.fromRaw("Cannot find executable file"d));
+            window.showMessageBox(UIString.fromId("ERROR_CANNOT_DEBUG_PROJECT"c), UIString.fromId("ERROR_CANNOT_FIND_EXEC"c));
             return;
         }
         string debuggerExecutable = _settings.debuggerExecutable;
         if (debuggerExecutable.empty) {
-            window.showMessageBox(UIString.fromRaw("Cannot debug project"d), UIString.fromRaw("No debugger executable specified in settings"d));
+            window.showMessageBox(UIString.fromId("ERROR_CANNOT_DEBUG_PROJECT"c), UIString.fromId("ERROR_NO_DEBUGGER"c));
             return;
         }
 
@@ -250,7 +250,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         if (!project)
             project = currentWorkspace.startupProject;
         if (!project) {
-            window.showMessageBox(UIString.fromRaw("Cannot run project"d), UIString.fromRaw("Startup project is not specified"d));
+            window.showMessageBox(UIString.fromId("ERROR_CANNOT_RUN_PROJECT"c), UIString.fromId("ERROR_CANNOT_RUN_PROJECT"c));
             return;
         }
         buildProject(BuildOperation.Build, project, delegate(int result) {
@@ -267,12 +267,12 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         import std.file;
         stopExecution();
         if (!project) {
-            window.showMessageBox(UIString.fromRaw("Cannot run project"d), UIString.fromRaw("Startup project is not specified"d));
+            window.showMessageBox(UIString.fromId("ERROR_CANNOT_RUN_PROJECT"c), UIString.fromId("ERROR_STARTUP_PROJECT_ABSENT"c));
             return;
         }
         string executableFileName = project.executableFileName;
         if (!executableFileName || !exists(executableFileName) || !isFile(executableFileName)) {
-            window.showMessageBox(UIString.fromRaw("Cannot run project"d), UIString.fromRaw("Cannot find executable file"d));
+            window.showMessageBox(UIString.fromId("ERROR_CANNOT_RUN_PROJECT"c), UIString.fromId("ERROR_CANNOT_FIND_EXEC"c));
             return;
         }
         auto program = new ProgramExecutionNoDebug;
@@ -582,7 +582,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         }
         string tabId = ed.id;
         // tab content is modified - ask for confirmation
-        auto header = UIString.fromRaw("HEADER_CLOSE_FILE"c);
+        auto header = UIString.fromId("HEADER_CLOSE_FILE"c);
         window.showMessageBox(header ~ " " ~ toUTF32(baseName(tabId)), UIString.fromId("MSG_FILE_CONTENT_CHANGED"c), 
                               [ACTION_SAVE, ACTION_SAVE_ALL, ACTION_DISCARD_CHANGES, ACTION_DISCARD_ALL, ACTION_CANCEL], 
                               0, delegate(const Action result) {
@@ -709,7 +709,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         editItem.add(ACTION_EDIT_PREFERENCES);
 
         MenuItem navItem = new MenuItem(new Action(21, "MENU_NAVIGATE"));
-        navItem.add(ACTION_GO_TO_DEFINITION, ACTION_GET_COMPLETIONS, ACTION_GET_DOC_COMMENTS, ACTION_GET_PAREN_COMPLETION, ACTION_EDITOR_GOTO_PREVIOUS_BOOKMARK, ACTION_EDITOR_GOTO_NEXT_BOOKMARK);
+        navItem.add(ACTION_GO_TO_DEFINITION, ACTION_GET_COMPLETIONS, ACTION_GET_DOC_COMMENTS, 
+            ACTION_GET_PAREN_COMPLETION, ACTION_EDITOR_GOTO_PREVIOUS_BOOKMARK, 
+            ACTION_EDITOR_GOTO_NEXT_BOOKMARK, ACTION_GO_TO_LINE);
 
         MenuItem projectItem = new MenuItem(new Action(21, "MENU_PROJECT"));
         projectItem.add(ACTION_PROJECT_SET_STARTUP, ACTION_PROJECT_REFRESH, ACTION_PROJECT_UPDATE_DEPENDENCIES, ACTION_PROJECT_SETTINGS);
@@ -1070,6 +1072,28 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                         currentEditor.editorTool.goToDefinition(currentEditor(), currentEditor.caretPos);
                     }
                     return true;
+                case IDEActions.GotoLine:
+                    // Go to line without editor is meaningless command
+                    if (currentEditor) {
+                        Log.d("Go to line");
+                        // Ask user for line
+                        window.showInputBox(UIString.fromId("GO_TO_LINE"c), UIString.fromId("GO_TO_LINE"c), ""d, delegate(dstring s) {
+                            try {
+                                auto num = to!uint(s);
+                                // Check line existence
+                                if (num < 1 || num > currentEditor.content.length) {
+                                    window.showMessageBox(UIString.fromId("ERROR"c), UIString.fromId("ERROR_NO_SUCH_LINE"c));
+                                    return;
+                                }
+                                // Go to line
+                                currentEditor.setCaretPos(num - 1, 0);
+                            }
+                            catch (ConvException e) {
+                                window.showMessageBox(UIString.fromId("ERROR"c), UIString.fromId("ERROR_INVALID_NUMBER"c));
+                            }
+                        });
+                    }
+                    return true;
                 case IDEActions.GetDocComments:
                     Log.d("Trying to get doc comments.");
                     currentEditor.editorTool.getDocComments(currentEditor, currentEditor.caretPos, delegate(string[] results) {
@@ -1224,8 +1248,8 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         Project project = srcfile.project;
         if (!project)
             return;
-        window.showMessageBox(UIString.fromRaw("Remove file"d), 
-                UIString.fromRaw("Do you want to remove file "d ~ srcfile.name ~ "?"), 
+        window.showMessageBox(UIString.fromId("HEADER_REMOVE_FILE"c), 
+                UIString.fromId("QUESTION_REMOVE_FILE"c) ~ " " ~ srcfile.name ~ "?", 
                 [ACTION_YES, ACTION_NO], 
                 1, delegate(const Action result) {
                     if (result == StandardAction.Yes) {
