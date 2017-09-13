@@ -38,7 +38,7 @@ class NewProjectDlg : Dialog {
     IDEFrame _ide;
 
     this(IDEFrame parent, bool newWorkspace, Workspace currentWorkspace, string dir) {
-        super(newWorkspace ? UIString.fromRaw("New Workspace"d) : UIString.fromRaw("New Project"d), parent.window, 
+        super(newWorkspace ? UIString.fromId("OPTION_NEW_WORKSPACE"c) : UIString.fromId("OPTION_NEW_PROJECT"c), parent.window, 
               DialogFlag.Modal | DialogFlag.Resizable | DialogFlag.Popup, 500, 400);
         _ide = parent;
         _icon = "dlangui-logo1";
@@ -63,7 +63,7 @@ class NewProjectDlg : Dialog {
                             VerticalLayout {
                                 margins: 5
                                 layoutWidth: 25%; layoutHeight: fill
-                                TextWidget { text: "Project template" }
+                                TextWidget { text: OPTION_PROJECT_TEMPLATE }
                                 StringListWidget { 
                                     id: projectTemplateList 
                                     layoutWidth: wrap; layoutHeight: fill
@@ -72,7 +72,7 @@ class NewProjectDlg : Dialog {
                             VerticalLayout {
                                 margins: 5
                                 layoutWidth: 40%; layoutHeight: fill
-                                TextWidget { text: "Template description" }
+                                TextWidget { text: OPTION_TEMPLATE_DESCR }
                                 EditBox { 
                                     id: templateDescription; readOnly: true 
                                     layoutWidth: fill; layoutHeight: fill
@@ -81,7 +81,7 @@ class NewProjectDlg : Dialog {
                             VerticalLayout {
                                 layoutWidth: 35%; layoutHeight: fill
                                 margins: 5
-                                TextWidget { text: "Directory layout" }
+                                TextWidget { text: OPTION_DIRECTORY_LAYOUT }
                                 EditBox { 
                                     id: directoryLayout; readOnly: true
                                     layoutWidth: fill; layoutHeight: fill
@@ -93,16 +93,16 @@ class NewProjectDlg : Dialog {
                             colCount: 2
                             layoutWidth: fill; layoutHeight: wrap
                             TextWidget { text: "" }
-                            CheckBox { id: cbCreateWorkspace; text: "Create new solution"; checked: true }
-                            TextWidget { text: "Workspace name" }
+                            CheckBox { id: cbCreateWorkspace; text: OPTION_CREATE_NEW_SOLUTION; checked: true }
+                            TextWidget { text: OPTION_WORKSPACE_NAME }
                             EditLine { id: edWorkspaceName; text: "newworkspace"; layoutWidth: fill }
                             TextWidget { text: "" }
-                            CheckBox { id: cbCreateWorkspaceSubdir; text: "Create subdirectory for workspace"; checked: true }
-                            TextWidget { text: "Project name" }
+                            CheckBox { id: cbCreateWorkspaceSubdir; text: OPTION_CREATE_SUBDIRECTORY_FOR_WORKSPACE; checked: true }
+                            TextWidget { text: OPTION_PROJECT_NAME }
                             EditLine { id: edProjectName; text: "newproject"; layoutWidth: fill }
                             TextWidget { text: "" }
-                            CheckBox { id: cbCreateSubdir; text: "Create subdirectory for project"; checked: true }
-                            TextWidget { text: "Location" }
+                            CheckBox { id: cbCreateSubdir; text: OPTION_CREATE_SUBDIRECTORY_FOR_PROJECT; checked: true }
+                            TextWidget { text: LOCATION }
                             DirEditLine { id: edLocation; layoutWidth: fill }
                         }
                         TextWidget { id: statusText; text: ""; layoutWidth: fill }
@@ -130,8 +130,8 @@ class NewProjectDlg : Dialog {
         _edLocation.filetypeIcons["dub.json"] = "project-d";
         _edLocation.filetypeIcons["package.json"] = "project-d";
         _edLocation.filetypeIcons[".dlangidews"] = "project-development";
-        _edLocation.addFilter(FileFilterEntry(UIString.fromRaw("DlangIDE files"d), "*.dlangidews;*.d;*.dd;*.di;*.ddoc;*.dh;*.json;*.xml;*.ini"));
-        _edLocation.caption = "Select directory"d;
+        _edLocation.addFilter(FileFilterEntry(UIString.fromId("IDE_FILES"c), "*.dlangidews;*.d;*.dd;*.di;*.ddoc;*.dh;*.json;*.xml;*.ini"));
+        _edLocation.caption = UIString.fromId("MSG_SELECT_DIR"c);
 
         if (_currentWorkspace) {
             _workspaceName = toUTF8(_currentWorkspace.name);
@@ -273,14 +273,14 @@ class NewProjectDlg : Dialog {
         if (action.id == IDEActions.FileNewWorkspace || action.id == IDEActions.FileNewProject) {
             if (!exists(_location)) {
                 // show message box with OK and CANCEL buttons, cancel by default, and handle its result
-                window.showMessageBox(UIString.fromRaw("Cannot create project"d), UIString.fromRaw("The target location does not exist.\nDo you want to create the target directory?"), [ACTION_YES, ACTION_CANCEL], 1, delegate(const Action a) {
+                window.showMessageBox(UIString.fromId("ERROR_CANNOT_CREATE_PROJECT"c), UIString.fromId("QUESTION_CREATE_DIR"c), [ACTION_YES, ACTION_CANCEL], 1, delegate(const Action a) {
                     if (a.id == StandardAction.Yes) {
                         try {
                             mkdirRecurse(_location);
                             close(action);
                         } catch (Exception e) {
                             setError("Cannot create target location");
-                            window.showMessageBox(UIString.fromRaw("Cannot create project"d), UIString.fromRaw(getError()));
+                            window.showMessageBox(UIString.fromId("ERROR_CANNOT_CREATE_PROJECT"c), UIString.fromRaw(getError()));
                         }
                     }
                     return true;
@@ -288,11 +288,11 @@ class NewProjectDlg : Dialog {
                 return;
             }
             if (!validate()) {
-                window.showMessageBox(UIString.fromRaw("Cannot create project"d), UIString.fromRaw(getError()));
+                window.showMessageBox(UIString.fromId("ERROR_CANNOT_CREATE_PROJECT"c), UIString.fromRaw(getError()));
                 return;
             }
             if (!createProject()) {
-                window.showMessageBox(UIString.fromRaw("Cannot create project"d), UIString.fromRaw("Failed to create project"));
+                window.showMessageBox(UIString.fromId("ERROR_CANNOT_CREATE_PROJECT"c), UIString.fromId("ERROR_FAILED_CREATE_PROJECT"c));
                 return;
             }
             newaction.objectParam = _result;
@@ -496,8 +496,8 @@ extern (C) int UIAppMain(string[] args) {
     };
     // show message box with content of editors
     window.mainWidget.childById!Button("btnOk").click = delegate(Widget w) {
-        window.showMessageBox(UIString.fromRaw("Ok button pressed"d), 
-                              UIString.fromRaw("Editors content\nEdit1: "d ~ edit1.text ~ "\nEdit2: "d ~ edit2.text));
+        window.showMessageBox(UIString.fromId("MSG_OK_BUTTON"c), 
+                              UIString.fromId("EDITOR_CONTENT"c) ~ "\nEdit1: "d ~ edit1.text ~ "\nEdit2: "d ~ edit2.text);
         return true;
     };
 
