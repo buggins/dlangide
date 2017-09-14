@@ -238,6 +238,7 @@ class OutputPanel : DockWindow {
     @property TabWidget getTabs() { return _tabs;}
 
     void activateLogTab() {
+        ensureLogVisible();
         _tabs.selectTab("logwidget");
     }
 
@@ -272,6 +273,14 @@ class OutputPanel : DockWindow {
 
     void onTabClose(string tabId) {
         Log.d("OutputPanel onTabClose ", tabId);
+        if (tabId == "search") {
+            _tabs.removeTab(tabId);
+        }
+    }
+
+    bool onCloseButton(Widget source) {
+        visibility = Visibility.Gone;
+        return true;
     }
 
     override protected Widget createBodyWidget() {
@@ -282,6 +291,10 @@ class OutputPanel : DockWindow {
         _tabs.layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT);
         _tabs.tabHost.layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT);
         _tabs.tabClose = &onTabClose;
+        _tabs.tabControl.moreButtonIcon = "close";
+        _tabs.tabControl.enableMoreButton = true;
+        _tabs.tabControl.autoMoreButtonMenu = false;
+        _tabs.tabControl.moreButtonClick = &onCloseButton;
 
         _logWidget = new CompilerLogWidget("logwidget");
         _logWidget.readOnly = true;
@@ -290,7 +303,7 @@ class OutputPanel : DockWindow {
         _logWidget.styleId = "EDIT_BOX_NO_FRAME";
 
         //_tabs.tabHost.styleId = STYLE_DOCK_WINDOW_BODY;
-        _tabs.addTab(_logWidget, "Compiler Log"d, null, true);
+        _tabs.addTab(_logWidget, "Compiler Log"d, null, false);
         _tabs.selectTab("logwidget");
 
         static if (ENABLE_INTERNAL_TERMINAL) {
@@ -343,7 +356,15 @@ class OutputPanel : DockWindow {
 
     //TODO: Refactor OutputPanel to expose CompilerLogWidget
 
+    void ensureLogVisible() {
+        if (visibility == Visibility.Gone) {
+            visibility = Visibility.Visible;
+            parent.layout(parent.pos);
+        }
+    }
+
     void appendText(string category, dstring msg) {
+        ensureLogVisible();
         _logWidget.appendText(msg);
     }
 
