@@ -176,13 +176,6 @@ class SearchWidget : TabWidget {
         _findText.text = txt;
     }
 
-    protected bool onEditorAction(const Action action) {
-        if (action.id == EditorActions.InsertNewLine) {
-            return onFindButtonPressed(this);
-        }
-        return false;
-    }
-
     this(string ID, IDEFrame frame) {
         super(ID);
         _frame = frame;
@@ -199,7 +192,10 @@ class SearchWidget : TabWidget {
         _findText = new EditLine();
         _findText.padding(Rect(5,4,50,4));
         _findText.layoutWidth = FILL_PARENT;
-        _findText.editorAction = &onEditorAction; // to handle Enter key press in editor
+        // to handle Enter key press in editor
+        _findText.enterKey = delegate (EditWidgetBase editor) {
+            return onFindButtonPressed(this);
+        };
         _layout.addChild(_findText);
         
         auto goButton = new ImageButton("findTextButton", "edit-find");

@@ -122,10 +122,10 @@ class NewFileDlg : Dialog {
         _edLocation.addFilter(FileFilterEntry(UIString.fromId("IDE_FILES"c), "*.dlangidews;*.d;*.dd;*.di;*.ddoc;*.dh;*.json;*.xml;*.ini;*.dt"));
         _edLocation.caption = "Select directory"d;
 
-        _edFileName.editorAction.connect(&onEditorAction);
-        _edFilePath.editorAction.connect(&onEditorAction);
-        _edModuleName.editorAction.connect(&onEditorAction);
-        _edLocation.editorAction.connect(&onEditorAction);
+        _edFileName.enterKey.connect(&onEnterKey);
+        _edFilePath.enterKey.connect(&onEnterKey);
+        _edModuleName.enterKey.connect(&onEnterKey);
+        _edLocation.enterKey.connect(&onEnterKey);
 
         // fill templates
         dstring[] names;
@@ -168,14 +168,11 @@ class NewFileDlg : Dialog {
         _edFileName.setFocus();
     }
 
-    protected bool onEditorAction(const Action action) {
-        if (action.id == EditorActions.InsertNewLine) {
-            if (!validate())
-                return false;
-            close(_buttonActions[0]);
-            return true;
-        }
-        return false;
+    protected bool onEnterKey(EditWidgetBase editor) {
+        if (!validate())
+            return false;
+        close(_buttonActions[0]);
+        return true;
     }
 
     StringListWidget _projectTemplateList;
