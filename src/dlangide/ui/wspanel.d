@@ -319,4 +319,24 @@ class WorkspacePanel : DockWindow {
             return workspaceActionListener(a);
         return false;
     }
+
+    override protected bool onCloseButtonClick(Widget source) {
+        hide();
+        return true;
+    }
+
+    /// hide workspace panel
+    void hide() {
+        visibility = Visibility.Gone;
+        parent.layout(parent.pos);
+    }
+
+    // activate workspace panel if hidden
+    void activate() {
+        if (visibility == Visibility.Gone) {
+            visibility = Visibility.Visible;
+            parent.layout(parent.pos);
+        }
+        setFocus();
+    }
 }

@@ -463,6 +463,10 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         return true;
     }
 
+    void showWorkspaceExplorer() {
+        _wsPanel.activate();
+    }
+
     static immutable HOME_SCREEN_ID = "HOME_SCREEN";
     void showHomeScreen() {
         int index = _tabs.tabIndex(HOME_SCREEN_ID);
@@ -734,7 +738,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
 
         MenuItem windowItem = new MenuItem(new Action(3, "MENU_WINDOW"c));
         //windowItem.add(new Action(30, "MENU_WINDOW_PREFERENCES"));
-        windowItem.add(ACTION_WINDOW_CLOSE_DOCUMENT, ACTION_WINDOW_CLOSE_ALL_DOCUMENTS, ACTION_WINDOW_SHOW_HOME_SCREEN);
+        windowItem.add(ACTION_WINDOW_CLOSE_DOCUMENT, ACTION_WINDOW_CLOSE_ALL_DOCUMENTS, ACTION_WINDOW_SHOW_HOME_SCREEN, ACTION_WINDOW_SHOW_WORKSPACE_EXPLORER);
         MenuItem helpItem = new MenuItem(new Action(4, "MENU_HELP"c));
         helpItem.add(ACTION_HELP_VIEW_HELP, ACTION_HELP_ABOUT, ACTION_HELP_DONATE);
         mainMenuItems.add(fileItem);
@@ -827,6 +831,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
     override bool handleActionStateRequest(const Action a) {
         switch (a.id) {
             case IDEActions.EditPreferences:
+                return true;
+            case IDEActions.WindowShowWorkspaceExplorer:
+                a.state = currentWorkspace !is null ? ACTION_STATE_ENABLED : ACTION_STATE_DISABLE;
                 return true;
             case IDEActions.FileExit:
             case IDEActions.FileOpen:
@@ -1054,6 +1061,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     return true;
                 case IDEActions.WindowShowHomeScreen:
                     showHomeScreen();
+                    return true;
+                case IDEActions.WindowShowWorkspaceExplorer:
+                    showWorkspaceExplorer();
                     return true;
                 case IDEActions.FileOpenWorkspace:
                     // Already specified workspace
@@ -1603,14 +1613,14 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             _tabs.setFocus();
         }
         if (ws) {
-            _wsPanel.visibility = Visibility.Visible;
+            _wsPanel.activate();
             _settings.updateRecentWorkspace(ws.filename);
             _settings.setRecentPath(ws.dir, "FILE_OPEN_WORKSPACE_PATH");
             if (ws.startupProject) {
                 warmUpImportPaths(ws.startupProject);
             }
         } else {
-            _wsPanel.visibility = Visibility.Gone;
+            _wsPanel.hide();
         }
 
     }
