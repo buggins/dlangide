@@ -76,7 +76,7 @@ class WorkspacePanel : DockWindow {
     }
 
     override protected Widget createBodyWidget() {
-        _tree = new TreeWidget("wstree");
+        _tree = new TreeWidget("wstree", ScrollBarMode.Auto, ScrollBarMode.Auto);
         _tree.layoutHeight(FILL_PARENT).layoutHeight(FILL_PARENT);
         _tree.selectionChange = &onTreeItemSelected;
         _tree.expandedChange.connect(&onTreeExpandedStateChange);

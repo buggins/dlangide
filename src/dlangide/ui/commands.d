@@ -137,7 +137,7 @@ const Action ACTION_HELP_DONATE = new Action(IDEActions.HelpDonate, "MENU_HELP_D
 const Action ACTION_WINDOW_CLOSE_DOCUMENT = new Action(IDEActions.WindowCloseDocument, "MENU_WINDOW_CLOSE_DOCUMENT"c, null, KeyCode.KEY_W, KeyFlag.Control).disableByDefault();
 const Action ACTION_WINDOW_CLOSE_ALL_DOCUMENTS = new Action(IDEActions.WindowCloseAllDocuments, "MENU_WINDOW_CLOSE_ALL_DOCUMENTS"c).disableByDefault();
 const Action ACTION_WINDOW_SHOW_HOME_SCREEN = new Action(IDEActions.WindowShowHomeScreen, "MENU_WINDOW_SHOW_HOME_SCREEN"c);
-const Action ACTION_WINDOW_SHOW_WORKSPACE_EXPLORER = new Action(IDEActions.WindowShowWorkspaceExplorer, "MENU_WINDOW_SHOW_WORKSPACE_EXPLORER"c);
+const Action ACTION_WINDOW_SHOW_WORKSPACE_EXPLORER = new Action(IDEActions.WindowShowWorkspaceExplorer, "MENU_WINDOW_SHOW_WORKSPACE_EXPLORER"c).disableByDefault();;
 
 const Action ACTION_CREATE_NEW_WORKSPACE = new Action(IDEActions.CreateNewWorkspace, "OPTION_CREATE_NEW_WORKSPACE"c);
 const Action ACTION_ADD_TO_CURRENT_WORKSPACE = new Action(IDEActions.AddToCurrentWorkspace, "OPTION_ADD_TO_CURRENT_WORKSPACE"c);
