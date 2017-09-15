@@ -738,7 +738,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
 
         MenuItem windowItem = new MenuItem(new Action(3, "MENU_WINDOW"c));
         //windowItem.add(new Action(30, "MENU_WINDOW_PREFERENCES"));
-        windowItem.add(ACTION_WINDOW_CLOSE_DOCUMENT, ACTION_WINDOW_CLOSE_ALL_DOCUMENTS, ACTION_WINDOW_SHOW_HOME_SCREEN, ACTION_WINDOW_SHOW_WORKSPACE_EXPLORER, ACTION_WINDOW_SHOW_LOG_WINDOW);
+        windowItem.add(ACTION_WINDOW_CLOSE_DOCUMENT, ACTION_WINDOW_CLOSE_ALL_DOCUMENTS);
+        windowItem.addSeparator();
+        windowItem.add(ACTION_WINDOW_SHOW_HOME_SCREEN, ACTION_WINDOW_SHOW_WORKSPACE_EXPLORER, ACTION_WINDOW_SHOW_LOG_WINDOW);
         MenuItem helpItem = new MenuItem(new Action(4, "MENU_HELP"c));
         helpItem.add(ACTION_HELP_VIEW_HELP, ACTION_HELP_ABOUT, ACTION_HELP_DONATE);
         mainMenuItems.add(fileItem);

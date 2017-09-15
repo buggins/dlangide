@@ -50,6 +50,8 @@ class CompilerLogWidget : LogWidget {
     /// forward to super c'tor
     this(string ID) {
         super(ID);
+        _hscrollbarMode = ScrollBarMode.Auto;
+        _vscrollbarMode = ScrollBarMode.Auto;
         //auto match2 = matchFirst("file.d(123,234): Error: bla bla"d, ctr2);
         //if (!match2.empty) {
         //    Log.d("found");
@@ -244,6 +246,7 @@ class OutputPanel : DockWindow {
 
     void activateTerminalTab(bool clear = false) {
         static if (ENABLE_INTERNAL_TERMINAL) {
+            ensureLogVisible();
             _tabs.selectTab("TERMINAL");
             if (clear)
                 _terminalWidget.resetTerminal();

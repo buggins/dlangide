@@ -39,6 +39,8 @@ interface BookmarkListChangeListener {
 class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
     this(string ID) {
         super(ID);
+        _hscrollbarMode = ScrollBarMode.Auto;
+        _vscrollbarMode = ScrollBarMode.Auto;
         static if (BACKEND_GUI) {
             styleId = null;
             backgroundColor = style.customColor("edit_background");
