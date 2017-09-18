@@ -1,5 +1,6 @@
 module dlangide.ui.wspanel;
 
+import std.string;
 import dlangui;
 import dlangide.workspace.workspace;
 import dlangide.workspace.project;
@@ -176,6 +177,7 @@ class WorkspacePanel : DockWindow {
         return null;
     }
 
+    /// Adding elements to the tree
     void addProjectItems(TreeItem root, ProjectItem items) {
         for (int i = 0; i < items.childCount; i++) {
             ProjectItem child = items.child(i);
@@ -225,6 +227,8 @@ class WorkspacePanel : DockWindow {
                 _itemStates[item] = true;
         }
     }
+
+    /// Saving items collapse/expand state
     protected void saveItemState(string itemPath, bool expanded) {
         bool changed = restoreItemState(itemPath) != expanded;
         if (!_itemStatesDirty && changed)
@@ -244,10 +248,19 @@ class WorkspacePanel : DockWindow {
         }
         debug Log.d("stored Expanded state ", expanded, " for ", itemPath);
     }
+    /// Is need to expand item?
     protected bool restoreItemState(string itemPath) {
         if (auto p = itemPath in _itemStates) {
-            debug Log.d("restored Expanded state for ", itemPath);
-            return *p;
+            // Item itself must expand, but upper items may be collapsed
+            auto path = itemPath;
+            while (path.length > 0 && !path.endsWith("src") && path in _itemStates) {
+                auto pos = lastIndexOf(path, '/');
+                path = pos > -1 ? path[ 0 ..  pos ] : "";
+            }
+            if (path.length == 0 || path.endsWith("src")) {
+                debug Log.d("restored Expanded state for ", itemPath);
+                return *p;
+            }
         }
         return false;
     }
