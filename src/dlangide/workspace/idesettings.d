@@ -172,6 +172,7 @@ class IDESettings : SettingsFile {
     /// set tab position marks enabled flag
     @property IDESettings showTabPositionMarks(bool enabled) { editorSettings.setBoolean("showTabPositionMarks", enabled); return this; }
     /// string value of font face in text editors
+
     @property string editorFontFace() { return editorSettings.getString("fontFace", "Default"); }
     /// int value of font size in text editors
     @property int editorFontSize() { return cast(int)editorSettings.getInteger("fontSize", 11); }

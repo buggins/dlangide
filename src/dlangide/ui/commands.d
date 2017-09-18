@@ -70,6 +70,9 @@ enum IDEActions : int {
     InsertCompletion,
     FindInFiles,
     CloseWorkspace,
+
+    ViewToggleWhitespaceMarks,
+    ViewToggleTabPositionMarks,
 }
 
 __gshared static this() {
@@ -133,6 +136,10 @@ const Action ACTION_EDIT_UNINDENT = (new Action(EditorActions.Unindent, "MENU_ED
 const Action ACTION_EDIT_TOGGLE_LINE_COMMENT = (new Action(EditorActions.ToggleLineComment, "MENU_EDIT_TOGGLE_LINE_COMMENT"c, null, KeyCode.KEY_DIVIDE, KeyFlag.Control)).disableByDefault();
 const Action ACTION_EDIT_TOGGLE_BLOCK_COMMENT = (new Action(EditorActions.ToggleBlockComment, "MENU_EDIT_TOGGLE_BLOCK_COMMENT"c, null, KeyCode.KEY_DIVIDE, KeyFlag.Control|KeyFlag.Shift)).disableByDefault();
 const Action ACTION_EDIT_PREFERENCES = (new Action(IDEActions.EditPreferences, "MENU_EDIT_PREFERENCES"c, null)).disableByDefault();
+
+const Action ACTION_VIEW_TOGGLE_SHOW_WHITESPACES = (new Action(IDEActions.ViewToggleWhitespaceMarks, "MENU_VIEW_SHOW_WHITESPACE_MARKS"c, null));
+const Action ACTION_VIEW_TOGGLE_TAB_POSITIONS = (new Action(IDEActions.ViewToggleTabPositionMarks, "MENU_VIEW_SHOW_TAB_POSITIONS"c, null));
+
 const Action ACTION_HELP_ABOUT = new Action(IDEActions.HelpAbout, "MENU_HELP_ABOUT"c);
 const Action ACTION_HELP_VIEW_HELP = new Action(IDEActions.HelpViewHelp, "MENU_HELP_VIEW_HELP"c);
 const Action ACTION_HELP_DONATE = new Action(IDEActions.HelpDonate, "MENU_HELP_DONATE"c);

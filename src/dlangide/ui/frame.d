@@ -709,8 +709,13 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         MenuItem editItemAdvanced = new MenuItem(new Action(221, "MENU_EDIT_ADVANCED"));
         editItemAdvanced.add(ACTION_EDIT_INDENT, ACTION_EDIT_UNINDENT, ACTION_EDIT_TOGGLE_LINE_COMMENT, ACTION_EDIT_TOGGLE_BLOCK_COMMENT);
         editItem.add(editItemAdvanced);
-
         editItem.add(ACTION_EDIT_PREFERENCES);
+
+        MenuItem viewItem = new MenuItem(new Action(3, "MENU_VIEW"));
+        viewItem.add(ACTION_WINDOW_SHOW_HOME_SCREEN, ACTION_WINDOW_SHOW_WORKSPACE_EXPLORER, ACTION_WINDOW_SHOW_LOG_WINDOW);
+        viewItem.addSeparator();
+        viewItem.addCheck(ACTION_VIEW_TOGGLE_SHOW_WHITESPACES);
+        viewItem.addCheck(ACTION_VIEW_TOGGLE_TAB_POSITIONS);
 
         MenuItem navItem = new MenuItem(new Action(21, "MENU_NAVIGATE"));
         navItem.add(ACTION_GO_TO_DEFINITION, ACTION_GET_COMPLETIONS, ACTION_GET_DOC_COMMENTS, 
@@ -739,12 +744,12 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         MenuItem windowItem = new MenuItem(new Action(3, "MENU_WINDOW"c));
         //windowItem.add(new Action(30, "MENU_WINDOW_PREFERENCES"));
         windowItem.add(ACTION_WINDOW_CLOSE_DOCUMENT, ACTION_WINDOW_CLOSE_ALL_DOCUMENTS);
-        windowItem.addSeparator();
-        windowItem.add(ACTION_WINDOW_SHOW_HOME_SCREEN, ACTION_WINDOW_SHOW_WORKSPACE_EXPLORER, ACTION_WINDOW_SHOW_LOG_WINDOW);
+
         MenuItem helpItem = new MenuItem(new Action(4, "MENU_HELP"c));
         helpItem.add(ACTION_HELP_VIEW_HELP, ACTION_HELP_ABOUT, ACTION_HELP_DONATE);
         mainMenuItems.add(fileItem);
         mainMenuItems.add(editItem);
+        mainMenuItems.add(viewItem);
         mainMenuItems.add(projectItem);
         mainMenuItems.add(navItem);
         mainMenuItems.add(buildItem);
@@ -910,6 +915,12 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             case IDEActions.GotoLine:
                 a.state = (currentEditor !is null && !_currentBackgroundOperation) ? ACTION_STATE_ENABLED : ACTION_STATE_DISABLE;
                 return true;
+            case IDEActions.ViewToggleWhitespaceMarks:
+                a.state = _settings.showWhiteSpaceMarks ? ACTION_STATE_CHECKED : ACTION_STATE_ENABLED;
+                return true;
+            case IDEActions.ViewToggleTabPositionMarks:
+                a.state = _settings.showTabPositionMarks ? ACTION_STATE_CHECKED : ACTION_STATE_ENABLED;
+                return true;
             default:
                 return super.handleActionStateRequest(a);
         }
@@ -1069,6 +1080,16 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     return true;
                 case IDEActions.WindowShowLogWindow:
                     _logPanel.activateLogTab();
+                    return true;
+                case IDEActions.ViewToggleWhitespaceMarks:
+                    _settings.showWhiteSpaceMarks = !_settings.showWhiteSpaceMarks;
+                    _settings.save();
+                    applySettings(_settings);
+                    return true;
+                case IDEActions.ViewToggleTabPositionMarks:
+                    _settings.showTabPositionMarks = !_settings.showTabPositionMarks;
+                    _settings.save();
+                    applySettings(_settings);
                     return true;
                 case IDEActions.FileOpenWorkspace:
                     // Already specified workspace
