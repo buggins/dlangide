@@ -705,7 +705,10 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
 
         MenuItem editItem = new MenuItem(new Action(2, "MENU_EDIT"));
         editItem.add(ACTION_EDIT_COPY, ACTION_EDIT_PASTE, 
-                     ACTION_EDIT_CUT, ACTION_EDIT_UNDO, ACTION_EDIT_REDO, ACTION_FIND_TEXT, ACTION_EDITOR_TOGGLE_BOOKMARK);
+                     ACTION_EDIT_CUT, ACTION_EDIT_UNDO, ACTION_EDIT_REDO);
+        editItem.addSeparator();
+        editItem.add(ACTION_EDITOR_FIND, ACTION_EDITOR_FIND_NEXT, ACTION_EDITOR_FIND_PREV, ACTION_EDITOR_REPLACE, ACTION_FIND_TEXT, ACTION_EDITOR_TOGGLE_BOOKMARK);
+        editItem.addSeparator();
         MenuItem editItemAdvanced = new MenuItem(new Action(221, "MENU_EDIT_ADVANCED"));
         editItemAdvanced.add(ACTION_EDIT_INDENT, ACTION_EDIT_UNINDENT, ACTION_EDIT_TOGGLE_LINE_COMMENT, ACTION_EDIT_TOGGLE_BLOCK_COMMENT);
         editItem.add(editItemAdvanced);
@@ -913,6 +916,10 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             case IDEActions.FileSaveAll:
             case IDEActions.FileSaveAs:
             case IDEActions.GotoLine:
+            case EditorActions.Find:
+            case EditorActions.FindNext:
+            case EditorActions.FindPrev:
+            case EditorActions.Replace:
                 a.state = (currentEditor !is null && !_currentBackgroundOperation) ? ACTION_STATE_ENABLED : ACTION_STATE_DISABLE;
                 return true;
             case IDEActions.ViewToggleWhitespaceMarks:
