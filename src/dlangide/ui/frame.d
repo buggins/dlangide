@@ -928,6 +928,10 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             case IDEActions.ViewToggleTabPositionMarks:
                 a.state = _settings.showTabPositionMarks ? ACTION_STATE_CHECKED : ACTION_STATE_ENABLED;
                 return true;
+            case IDEActions.ProjectFolderExpandAll:
+            case IDEActions.ProjectFolderCollapseAll:
+                a.state = currentWorkspace !is null ? ACTION_STATE_ENABLED : ACTION_STATE_DISABLE;
+                return true;
             default:
                 return super.handleActionStateRequest(a);
         }
@@ -1219,6 +1223,12 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     return true;
                 case IDEActions.ProjectFolderRefresh:
                     refreshProjectItem(a.objectParam);
+                    return true;
+                case IDEActions.ProjectFolderExpandAll:
+                    _wsPanel.expandAll(a);
+                    return true;
+                case IDEActions.ProjectFolderCollapseAll:
+                    _wsPanel.collapseAll(a);
                     return true;
                 case IDEActions.CloseWorkspace:
                     closeWorkspace();

@@ -86,8 +86,11 @@ class WorkspacePanel : DockWindow {
         _tree.popupMenu = &onTreeItemPopupMenu;
 
         _workspacePopupMenu = new MenuItem();
-        _workspacePopupMenu.add(ACTION_PROJECT_FOLDER_REFRESH, 
-                                ACTION_FILE_WORKSPACE_CLOSE);
+        _workspacePopupMenu.add(ACTION_PROJECT_FOLDER_REFRESH,
+                                ACTION_FILE_WORKSPACE_CLOSE,
+                                ACTION_PROJECT_FOLDER_EXPAND_ALL,
+                                ACTION_PROJECT_FOLDER_COLLAPSE_ALL
+                                );
 
         _projectPopupMenu = new MenuItem();
         _projectPopupMenu.add(ACTION_PROJECT_SET_STARTUP,
@@ -100,19 +103,22 @@ class WorkspacePanel : DockWindow {
                               ACTION_PROJECT_UPDATE_DEPENDENCIES,
                               ACTION_PROJECT_REVEAL_IN_EXPLORER,
                               ACTION_PROJECT_SETTINGS,
+                              ACTION_PROJECT_FOLDER_EXPAND_ALL,
+                              ACTION_PROJECT_FOLDER_COLLAPSE_ALL
                               //ACTION_PROJECT_FOLDER_REMOVE_ITEM
                               );
 
         _folderPopupMenu = new MenuItem();
-        _folderPopupMenu.add(ACTION_FILE_NEW_SOURCE_FILE, ACTION_PROJECT_FOLDER_REFRESH, ACTION_PROJECT_FOLDER_OPEN_ITEM, 
+        _folderPopupMenu.add(ACTION_FILE_NEW_SOURCE_FILE, ACTION_PROJECT_FOLDER_REFRESH, ACTION_PROJECT_FOLDER_OPEN_ITEM,
+                             ACTION_PROJECT_FOLDER_EXPAND_ALL, ACTION_PROJECT_FOLDER_COLLAPSE_ALL
                              //ACTION_PROJECT_FOLDER_REMOVE_ITEM, 
                              //ACTION_PROJECT_FOLDER_RENAME_ITEM
                              );
 
         _filePopupMenu = new MenuItem();
-        _filePopupMenu.add(ACTION_FILE_NEW_SOURCE_FILE, ACTION_PROJECT_FOLDER_REFRESH, 
-                           ACTION_PROJECT_FOLDER_OPEN_ITEM, 
-                           ACTION_PROJECT_FOLDER_REMOVE_ITEM, 
+        _filePopupMenu.add(ACTION_FILE_NEW_SOURCE_FILE, ACTION_PROJECT_FOLDER_REFRESH,
+                           ACTION_PROJECT_FOLDER_OPEN_ITEM,
+                           ACTION_PROJECT_FOLDER_REMOVE_ITEM,
                            //ACTION_PROJECT_FOLDER_RENAME_ITEM
                            );
         return _tree;
@@ -123,6 +129,7 @@ class WorkspacePanel : DockWindow {
     protected MenuItem _folderPopupMenu;
     protected MenuItem _filePopupMenu;
     protected string _popupMenuSelectedItemId;
+    protected TreeItem _popupMenuSelectedItem;
     protected void onPopupMenuItem(MenuItem item) {
         if (item.action)
             handleAction(item.action);
@@ -131,6 +138,7 @@ class WorkspacePanel : DockWindow {
     protected MenuItem onTreeItemPopupMenu(TreeItems source, TreeItem selectedItem) {
         MenuItem menu = null;
         _popupMenuSelectedItemId = selectedItem.id;
+        _popupMenuSelectedItem = selectedItem;
         if (selectedItem.intParam == ProjectItemType.SourceFolder) {
             menu = _folderPopupMenu;
         } else if (selectedItem.intParam == ProjectItemType.SourceFile) {
@@ -215,6 +223,20 @@ class WorkspacePanel : DockWindow {
             }
         }
         _tree.items.setDefaultItem(defaultItem);
+    }
+
+    void expandAll(const Action a) {
+        if (!_workspace)
+            return;
+        if (_popupMenuSelectedItem)
+            _popupMenuSelectedItem.expandAll();
+    }
+
+    void collapseAll(const Action a) {
+        if (!_workspace)
+            return;
+        if (_popupMenuSelectedItem)
+            _popupMenuSelectedItem.collapseAll();
     }
 
     protected bool[string] _itemStates;

@@ -60,6 +60,8 @@ enum IDEActions : int {
     ProjectFolderOpenItem,
     ProjectFolderRenameItem,
     ProjectFolderRefresh,
+    ProjectFolderExpandAll,
+    ProjectFolderCollapseAll,
 
     GoToDefinition,
     GetCompletionSuggestions,
@@ -86,6 +88,9 @@ const Action ACTION_PROJECT_FOLDER_OPEN_ITEM = new Action(IDEActions.ProjectFold
 const Action ACTION_PROJECT_FOLDER_REMOVE_ITEM = new Action(IDEActions.ProjectFolderRemoveItem, "MENU_PROJECT_FOLDER_REMOVE_ITEM"c);
 const Action ACTION_PROJECT_FOLDER_RENAME_ITEM = new Action(IDEActions.ProjectFolderRenameItem, "MENU_PROJECT_FOLDER_RENAME_ITEM"c);
 const Action ACTION_PROJECT_FOLDER_REFRESH = new Action(IDEActions.ProjectFolderRefresh, "MENU_PROJECT_FOLDER_REFRESH"c);
+const Action ACTION_PROJECT_FOLDER_EXPAND_ALL = new Action(IDEActions.ProjectFolderExpandAll, "MENU_PROJECT_FOLDER_EXPAND_ALL"c);
+const Action ACTION_PROJECT_FOLDER_COLLAPSE_ALL = new Action(IDEActions.ProjectFolderCollapseAll, "MENU_PROJECT_FOLDER_COLLAPSE_ALL"c);
+
 const Action ACTION_FILE_WORKSPACE_CLOSE = new Action(IDEActions.CloseWorkspace, "MENU_FILE_WORKSPACE_CLOSE"c).disableByDefault();
 
 const Action ACTION_FILE_NEW_SOURCE_FILE = new Action(IDEActions.FileNew, "MENU_FILE_NEW_SOURCE_FILE"c, "document-new", KeyCode.KEY_N, KeyFlag.Control);
