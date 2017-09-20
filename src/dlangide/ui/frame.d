@@ -431,7 +431,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             // open new file
             DSourceEdit editor = new DSourceEdit(filename);
             if (file ? editor.load(file) : editor.load(filename)) {
-                _tabs.addTab(editor, toUTF32(baseName(filename)), null, true);
+                _tabs.addTab(editor, toUTF32(baseName(filename)), null, true, filename.toUTF32);
                 index = _tabs.tabIndex(filename);
                 TabItem tab = _tabs.tab(filename);
                 tab.objectParam = file;
