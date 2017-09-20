@@ -503,7 +503,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                 _wsPanel.selectItem(file);
                 focusEditor(file.filename);
             }
-            window.windowCaption(tab.text.value ~ " - "d ~ frameWindowCaptionSuffix);
+            //window.windowCaption(tab.text.value ~ " - "d ~ frameWindowCaptionSuffix);
+        } else {
+            //window.windowCaption(frameWindowCaptionSuffix);
         }
         requestActionsUpdate();
     }
@@ -1663,7 +1665,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             if (ws.startupProject) {
                 warmUpImportPaths(ws.startupProject);
             }
+            window.windowCaption(ws.name ~ " - "d ~ frameWindowCaptionSuffix);
         } else {
+            window.windowCaption(frameWindowCaptionSuffix);
             _wsPanel.hide();
         }
 

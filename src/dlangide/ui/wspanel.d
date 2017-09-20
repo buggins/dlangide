@@ -267,13 +267,15 @@ class WorkspacePanel : DockWindow {
                 items ~= k;
             }
             _workspace.expandedItems = items;
+            debug Log.d("stored Expanded state ", expanded, " for ", itemPath);
         }
-        debug Log.d("stored Expanded state ", expanded, " for ", itemPath);
     }
     /// Is need to expand item?
     protected bool restoreItemState(string itemPath) {
         if (auto p = itemPath in _itemStates) {
             // Item itself must expand, but upper items may be collapsed
+            return *p;
+            /*
             auto path = itemPath;
             while (path.length > 0 && !path.endsWith("src") && path in _itemStates) {
                 auto pos = lastIndexOf(path, '/');
@@ -283,6 +285,7 @@ class WorkspacePanel : DockWindow {
                 debug Log.d("restored Expanded state for ", itemPath);
                 return *p;
             }
+            */
         }
         return false;
     }
@@ -299,7 +302,9 @@ class WorkspacePanel : DockWindow {
 
     void reloadItems() {
         _tree.expandedChange.disconnect(&onTreeExpandedStateChange);
+        _tree.selectionChange.disconnect(&onTreeItemSelected);
         _tree.clearAllItems();
+
         if (_workspace) {
             TreeItem defaultItem = null;
             TreeItem root = _tree.items.newChild(_workspace.filename, _workspace.name, "project-development");
@@ -321,6 +326,7 @@ class WorkspacePanel : DockWindow {
             _tree.items.newChild("none", "No workspace"d, "project-development");
         }
         _tree.expandedChange.connect(&onTreeExpandedStateChange);
+        _tree.selectionChange.connect(&onTreeItemSelected);
 
         // expand default project if no information about expanded items
         if (!_itemStates.length) {
