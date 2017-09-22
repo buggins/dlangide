@@ -580,6 +580,11 @@ dstring getOpNameD(OpCode op) pure nothrow {
 
 enum Keyword : ubyte {
     NONE,
+
+    AT_DISABLE, //"@disable",
+    AT_NOGC, //"@nogc",
+    AT_PROPERTY, //"@property",
+
     ABSTRACT,
     ALIAS,
     ALIGN,
@@ -667,6 +672,7 @@ enum Keyword : ubyte {
     REF,
     RETURN,
 
+    SAFE,
     SCOPE,
     SHARED,
     SHORT,
@@ -675,11 +681,13 @@ enum Keyword : ubyte {
     SUPER,
     SWITCH,
     SYNCHRONIZED,
+    SYSTEM,
 
     TEMPLATE,
     THIS,
     THROW,
     TRUE,
+    TRUSTED,
     TRY,
     TYPEDEF,
     TYPEID,
@@ -724,6 +732,11 @@ enum Keyword : ubyte {
 
 immutable dstring[] KEYWORD_STRINGS = [
     "",
+
+    "@disable",
+    "@nogc",
+    "@property",
+
     "abstract",
     "alias",
     "align",
@@ -811,6 +824,7 @@ immutable dstring[] KEYWORD_STRINGS = [
     "ref",
     "return",
 
+    "safe",
     "scope",
     "shared",
     "short",
@@ -819,11 +833,13 @@ immutable dstring[] KEYWORD_STRINGS = [
     "super",
     "switch",
     "synchronized",
+    "system",
 
     "template",
     "this",
     "throw",
     "true",
+    "trusted",
     "try",
     "typedef",
     "typeid",
@@ -2142,10 +2158,14 @@ class Tokenizer
     }
 
     protected Keyword detectKeyword(dchar ch) {
-        if (ch > 'z')
+        if (ch < '@' || ch > 'z')
             return Keyword.NONE;
         int len = _len - _pos;
         switch (cast(ubyte)ch) {
+            //    AT_DISABLE
+            //    AT_NOGC
+            //    AT_PROPERTY
+            case '@': return findKeyword(Keyword.AT_DISABLE, Keyword.AT_PROPERTY, _lineText.ptr + _pos, len, _pos);
             //    ABSTRACT,
             //    ALIAS,
             //    ALIGN,
@@ -2246,7 +2266,8 @@ class Tokenizer
             //    REF,
             //    RETURN,
             case 'r': return findKeyword(Keyword.REAL, Keyword.RETURN, _lineText.ptr + _pos, len, _pos);
-                
+
+            //    SAFE
             //    SCOPE,
             //    SHARED,
             //    SHORT,
@@ -2255,7 +2276,8 @@ class Tokenizer
             //    SUPER,
             //    SWITCH,
             //    SYNCHRONIZED,
-            case 's': return findKeyword(Keyword.SCOPE, Keyword.SYNCHRONIZED, _lineText.ptr + _pos, len, _pos);
+            //    SYSTEM
+            case 's': return findKeyword(Keyword.SAFE, Keyword.SYSTEM, _lineText.ptr + _pos, len, _pos);
                 
             //    TEMPLATE,
             //    THIS,
@@ -2787,7 +2809,7 @@ class Tokenizer
         if (ch == '.' && next >= '0' && next <= '9') // .123
             return processDecFloatSecondPart(0);
                 
-        if (ch == '_' || isUniversalAlpha(ch)) {
+        if (ch == '_' || ch == '@' || isUniversalAlpha(ch)) {
             // start of identifier or keyword?
             Keyword keyword = detectKeyword(ch);
             if (keyword != Keyword.NONE) {
