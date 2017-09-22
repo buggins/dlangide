@@ -30,7 +30,7 @@ import dlangide.ui.debuggerui;
 import dlangide.workspace.workspace;
 import dlangide.workspace.project;
 import dlangide.builders.builder;
-import dlangide.tools.editorTool;
+import dlangide.tools.editortool;
 
 import ddebug.common.execution;
 import ddebug.common.nodebug;
@@ -1176,9 +1176,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     return true;
                 case IDEActions.GetCompletionSuggestions:
                     Log.d("Getting auto completion suggestions.");
-                    currentEditor.editorTool.getCompletions(currentEditor, currentEditor.caretPos, delegate(dstring[] results, string[] icons) {
+                    currentEditor.editorTool.getCompletions(currentEditor, currentEditor.caretPos, delegate(dstring[] results, string[] icons, CompletionTypes type) {
                         if (currentEditor)
-                            currentEditor.showCompletionPopup(results, icons);
+                            currentEditor.showCompletionPopup(results, icons, type);
                     });
                     return true;
                 case IDEActions.EditPreferences:

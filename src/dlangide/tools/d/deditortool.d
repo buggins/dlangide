@@ -1,6 +1,6 @@
-module dlangide.tools.d.deditorTool;
+module dlangide.tools.d.deditortool;
 
-import dlangide.tools.editorTool;
+import dlangide.tools.editortool;
 import dlangide.tools.d.dcdinterface;
 import dlangide.ui.dsourceedit;
 import dlangui.widgets.editors;
@@ -127,7 +127,7 @@ class DEditorTool : EditorTool
     }
 
     DCDTask _getCompletionsTask;
-    override void getCompletions(DSourceEdit editor, TextPosition caretPosition, void delegate(dstring[] completions, string[] icons) callback) {
+    override void getCompletions(DSourceEdit editor, TextPosition caretPosition, void delegate(dstring[] completions, string[] icons, CompletionTypes type) callback) {
         cancelGetCompletions();
         string[] importPaths = editor.importPaths();
 
@@ -198,7 +198,7 @@ class DEditorTool : EditorTool
                 icons ~= iconId;
                 labels ~= label.name;
             }
-            callback(labels, icons);
+            callback(labels, icons, output.type);
             _getCompletionsTask = null;
         });
     }

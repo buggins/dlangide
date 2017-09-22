@@ -21,7 +21,7 @@ import dlangide.workspace.project;
 import dlangide.ui.commands;
 import dlangide.ui.settings;
 import dlangide.tools.d.dsyntax;
-import dlangide.tools.editorTool;
+import dlangide.tools.editortool;
 import ddebug.common.debugger;
 
 import std.algorithm;
@@ -619,10 +619,24 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         _completionPopupMenu = null;
     }
 
-    void showCompletionPopup(dstring[] suggestions, string[] icons) {
+    void showCallTipsPopup(dstring[] suggestions) {
+        // TODO: replace this temp solution
+        string[] list;
+        foreach(s; suggestions) {
+            list ~= s.toUTF8;
+        }
+        showDocCommentsPopup(list);
+    }
+
+    void showCompletionPopup(dstring[] suggestions, string[] icons, CompletionTypes type) {
 
         if(suggestions.length == 0) {
             setFocus();
+            return;
+        }
+
+        if (type == CompletionTypes.CallTips) {
+            showCallTipsPopup(suggestions);
             return;
         }
 

@@ -35,9 +35,11 @@ struct CompletionSymbol {
     char kind;
 }
 
+import dlangide.tools.editortool : CompletionTypes;
+
 alias DocCommentsResultSet = Tuple!(DCDResult, "result", string[], "docComments");
 alias FindDeclarationResultSet = Tuple!(DCDResult, "result", string, "fileName", ulong, "offset");
-alias CompletionResultSet = Tuple!(DCDResult, "result", CompletionSymbol[], "output");
+alias CompletionResultSet = Tuple!(DCDResult, "result", CompletionSymbol[], "output", CompletionTypes, "type");
 
 
 class DCDTask {
@@ -315,7 +317,12 @@ class DCDInterface : Thread {
                 result.output[i].name = to!dstring(s);
                 i++;
             }
-            postProcessCompletions(result.output);
+            if (response.completionType == "calltips") {
+                result.type = CompletionTypes.CallTips;
+            } else {
+                result.type = CompletionTypes.IdentifierList;
+                postProcessCompletions(result.output);
+            }
             debug(DCD) Log.d("DCD response:\n", response, "\nCompletion result:\n", result.output);
         }
         override void postResults() {
