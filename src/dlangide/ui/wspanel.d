@@ -35,6 +35,9 @@ class WorkspacePanel : DockWindow {
         workspace = null;
         //layoutWidth = 200;
         _caption.text = "Workspace Explorer"d;
+        acceleratorMap.add([ACTION_PROJECT_FOLDER_EXPAND_ALL, ACTION_PROJECT_FOLDER_COLLAPSE_ALL,
+            ACTION_PROJECT_FOLDER_REFRESH, ACTION_PROJECT_FOLDER_RENAME_ITEM,
+            ACTION_PROJECT_FOLDER_REMOVE_ITEM, ACTION_PROJECT_FOLDER_OPEN_ITEM]);
     }
 
     bool selectItem(ProjectItem projectItem) {
@@ -223,6 +226,21 @@ class WorkspacePanel : DockWindow {
             }
         }
         _tree.items.setDefaultItem(defaultItem);
+    }
+
+    /// map key to action
+    override Action findKeyAction(uint keyCode, uint flags) {
+        Action action = _acceleratorMap.findByKey(keyCode, flags);
+        if (action) {
+            if (TreeItem ti = _tree.items.selectedItem) {
+                _popupMenuSelectedItem = ti;
+                action.objectParam = ti.objectParam;
+            } else {
+                return null;
+            }
+            return action;
+        }
+        return super.findKeyAction(keyCode, flags);
     }
 
     void expandAll(const Action a) {
