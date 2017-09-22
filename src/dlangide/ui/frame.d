@@ -973,6 +973,12 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     window.showMessageBox(UIString.fromId("ABOUT"c) ~ " " ~ DLANGIDE_VERSION,
                                           UIString.fromRaw(msg));
                     return true;
+                case IDEActions.ProjectFolderOpenItem:
+                    ProjectItem item = cast(ProjectItem)a.objectParam;
+                    if (item && !item.isFolder) {
+                        openSourceFile(item.filename);
+                    }
+                    return true;
                 case StandardAction.OpenUrl:
                     platform.openURL(a.stringParam);
                     return true;
@@ -1324,15 +1330,15 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                 1, delegate(const Action result) {
                     if (result == StandardAction.Yes) {
                         // save and close
+                        import std.file : remove;
+                        closeTab(srcfile.filename);
                         try {
-                            import std.file : remove;
-                            closeTab(srcfile.filename);
                             remove(srcfile.filename);
-                            project.refresh();
-                            refreshWorkspace();
                         } catch (Exception e) {
-                            Log.e("Error while removing file");
+                            Log.e("Cannot remove file");
                         }
+                        project.refresh();
+                        refreshWorkspace();
                     }
                     // else ignore
                     return true;

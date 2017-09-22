@@ -433,7 +433,7 @@ void handleRequest(HTTPServerRequest req,
 immutable string DUB_JSON_VIBED_HELLOWORLD = q{
 {
     "dependencies": {
-        "vibe-d": "~>0.7.30-rc.1"
+        "vibe-d": "~>0.8.1"
     },
     "versions": ["VibeDefaultMain"]
 }
