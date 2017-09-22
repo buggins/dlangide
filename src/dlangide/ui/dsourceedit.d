@@ -3,6 +3,7 @@ module dlangide.ui.dsourceedit;
 import dlangui.core.logger;
 import dlangui.core.signals;
 import dlangui.graphics.drawbuf;
+import dlangui.widgets.widget;
 import dlangui.widgets.editors;
 import dlangui.widgets.srcedit;
 import dlangui.widgets.menu;
@@ -489,8 +490,28 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         });
     }
 
+    /// returns widget visibility (Visible, Invisible, Gone)
+    override @property Visibility visibility() { return super.visibility; }
+    /// sets widget visibility (Visible, Invisible, Gone)
+    override @property Widget visibility(Visibility visible) {
+        super.visibility(visible);
+        if (visible != Visibility.Visible)
+            cancelEditorToolTasks();
+        return this;
+    }
+
+    void cancelEditorToolTasks() {
+        if (editorTool) {
+            editorTool.cancelGoToDefinition();
+            editorTool.cancelGetDocComments();
+            editorTool.cancelGetCompletions();
+        }
+    }
+
     PopupWidget _docsPopup;
     void showDocCommentsPopup(string[] comments, Point pt = Point(-1, -1)) {
+        if (!visible)
+            return;
         if (comments.length == 0)
             return;
         if (pt.x < 0 || pt.y < 0) {
