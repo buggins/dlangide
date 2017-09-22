@@ -529,20 +529,28 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         //widget.text = "Test popup"d; //text.dup;
         widget.text = text.dup;
 
+        widget.hscrollbarMode = ScrollBarMode.Invisible;
+        widget.vscrollbarMode = ScrollBarMode.Invisible;
         Point bestSize = widget.fullContentSizeWithBorders();
+        bestSize.x += 5.pointsToPixels;
+        //bestSize.y += 8.pointsToPixels;
         //widget.layoutHeight = lineCount * widget.fontSize;
-        if (bestSize.y > height / 3)
+        if (bestSize.y > height / 3) {
             bestSize.y = height / 3;
-        if (bestSize.x > width * 3 / 4)
+            bestSize.x += 30.pointsToPixels;
+            widget.vscrollbarMode = ScrollBarMode.Visible;
+        }
+        if (bestSize.x > width * 3 / 4) {
             bestSize.x = width * 3 / 4;
+            bestSize.y += 30.pointsToPixels;
+            widget.hscrollbarMode = ScrollBarMode.Visible;
+        }
         widget.minHeight = bestSize.y; //max((lineCount + 1) * widget.fontSize, bestSize.y);
         widget.maxHeight = bestSize.y;
 
         widget.maxWidth = bestSize.x; //width * 3 / 4;
         widget.minWidth = bestSize.x; //width / 8;
        // widget.layoutWidth = width / 3;
-        widget.hscrollbarMode = ScrollBarMode.Auto;
-        widget.vscrollbarMode = ScrollBarMode.Auto;
         uint pos = PopupAlign.Above;
         if (pt.y < top + height / 4)
             pos = PopupAlign.Below;
