@@ -633,10 +633,37 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
 
         dstring prefix = identPrefixUnderCursor();
         _completionPopupMenu = new CompletionPopupMenu(this, suggestions, icons, prefix);
+
         int yOffset = font.height;
-        _completionPopup = window.showPopup(_completionPopupMenu, this, PopupAlign.Point | PopupAlign.Right,
-                                             textPosToClient(_caretPos).left + left + _leftPaneWidth,
-                                             textPosToClient(_caretPos).top + top + margins.top + yOffset);
+        int popupPositionX = textPosToClient(_caretPos).left + left + _leftPaneWidth;
+        int popupPositionY = textPosToClient(_caretPos).top + top + margins.top;
+        uint popupAlign = PopupAlign.Point | PopupAlign.Right;
+        int spaceBelow = window.mainWidget.pos.bottom - (popupPositionY + yOffset);
+        int spaceAbove = popupPositionY - clientRect.top;
+        int space = spaceBelow;
+        if (spaceBelow < clientRect.height / 4) {
+            // show popup above
+            space = spaceAbove;
+            popupAlign |= PopupAlign.Above;
+            yOffset = 0;
+        }
+        Point bestSize = _completionPopupMenu.fullContentSizeWithBorders();
+        if (bestSize.y > space) {
+            bestSize.y = space;
+        }
+        if (bestSize.x > width * 3 / 4) {
+            bestSize.x = width * 3 / 4;
+        }
+        _completionPopupMenu.minHeight = bestSize.y; //max((lineCount + 1) * widget.fontSize, bestSize.y);
+        _completionPopupMenu.maxHeight = bestSize.y;
+
+        _completionPopupMenu.maxWidth = bestSize.x; //width * 3 / 4;
+        _completionPopupMenu.minWidth = bestSize.x; //width / 8;
+
+
+        _completionPopup = window.showPopup(_completionPopupMenu, this, popupAlign,
+                                             popupPositionX,
+                                             popupPositionY + yOffset);
         _completionPopup.setFocus();
         _completionPopup.popupClosed = delegate(PopupWidget source) { 
             setFocus();
@@ -644,7 +671,7 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         };
         _completionPopup.flags = PopupFlags.CloseOnClickOutside;
 
-        Log.d("Showing popup at ", textPosToClient(_caretPos).left, " ", textPosToClient(_caretPos).top);
+        debug Log.d("Showing popup at ", textPosToClient(_caretPos).left, " ", textPosToClient(_caretPos).top);
         window.update();
     }
 
@@ -730,9 +757,22 @@ class CompletionPopupMenu : PopupMenu {
         _items = updateItems();
         super(_items);
         menuItemAction = _editor;
-        maxHeight(400);
+        //maxHeight(400);
         selectItem(0);
     }
+    
+    Point fullContentSizeWithBorders() {
+        measure(2000.pointsToPixels, 2000.pointsToPixels);
+        Point sz;
+        sz.x = measuredWidth;
+        sz.y = measuredHeight;
+        Rect pad = padding;
+        Rect marg = margins;
+        sz.x += pad.left + pad.right + marg.left + marg.right;
+        sz.y += pad.top + pad.bottom + marg.top + marg.bottom;
+        return sz;
+    }
+
     MenuItem updateItems() {
         MenuItem res = new MenuItem();
         foreach(int i, dstring suggestion ; _suggestions) {
