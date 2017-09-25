@@ -214,9 +214,10 @@ int caretPositionToByteOffset(string content, TextPosition caretPosition) {
     auto bytes = 0;
     foreach(c; content) {
         if(line == caretPosition.line) {
-            if(pos == caretPosition.pos)
+            if(pos >= caretPosition.pos)
                 break;
-            pos++;
+            if ((c & 0xC0) != 0x80)
+                pos++;
         } else if (line > caretPosition.line) {
             break;
         }
@@ -236,7 +237,7 @@ TextPosition byteOffsetToCaret(string content, int byteOffset) {
     int pos = 0;
     TextPosition textPos;
     foreach(c; content) {
-        if(bytes == byteOffset) {
+        if(bytes >= byteOffset) {
             //We all good.
             textPos.line = line;
             textPos.pos = pos;
@@ -249,7 +250,8 @@ TextPosition byteOffsetToCaret(string content, int byteOffset) {
             pos = 0;
         }
         else {
-            pos++;
+            if ((c & 0xC0) != 0x80)
+                pos++;
         }
     }
     return textPos;

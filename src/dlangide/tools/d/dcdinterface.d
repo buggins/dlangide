@@ -186,8 +186,16 @@ class DCDInterface : Thread {
             int end = pos;
             for (int i = 0; start > 0 && content[start - 1] != '\n' && i < 10; i++)
                 start--;
+            // correct utf8 codepoint bounds
+            while(start + 1 < content.length && ((content[start] & 0xC0) == 0x80)) {
+                start++;
+            }
             for (int i = 0; end < content.length - 1 && content[end] != '\n' && i < 10; i++)
                 end++;
+            // correct utf8 codepoint bounds
+            while(end + 1 < content.length && ((content[end] & 0xC0) == 0x80)) {
+                end++;
+            }
             return content[start .. pos] ~ "|" ~ content[pos .. end];
         }
         return "";
