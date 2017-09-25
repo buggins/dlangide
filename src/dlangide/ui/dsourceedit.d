@@ -140,7 +140,8 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
     override bool load(string fn) {
         _projectSourceFile = null;
         bool res = super.load(fn);
-        setSyntaxSupport();
+        if (res)
+            setSyntaxSupport();
         return res;
     }
 

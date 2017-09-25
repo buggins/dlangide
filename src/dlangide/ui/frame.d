@@ -413,6 +413,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
     bool openSourceFile(string filename, ProjectSourceFile file = null, bool activate = true) {
         if (!file && !filename)
             return false;
+
+        filename ~= ".invalid";
+
         if (!file)
             file = _wsPanel.findSourceFileItem(filename, false);
 
@@ -430,7 +433,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         } else {
             // open new file
             DSourceEdit editor = new DSourceEdit(filename);
+            Log.d("trying to open source file ", filename);
             if (file ? editor.load(file) : editor.load(filename)) {
+                Log.d("file ", filename, " is opened ok");
                 _tabs.addTab(editor, toUTF32(baseName(filename)), null, true, filename.toUTF32);
                 index = _tabs.tabIndex(filename);
                 TabItem tab = _tabs.tab(filename);
@@ -450,9 +455,10 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     editor.editorTool = new DefaultEditorTool(this);
                 _tabs.layout(_tabs.pos);
             } else {
+                Log.d("file ", filename, " cannot be opened");
                 destroy(editor);
                 if (window)
-                    window.showMessageBox(UIString.fromId("ERROR_OPEN_FILE"c), UIString.fromId("ERROR_OPENING_FILE"c) ~ " " ~ toUTF32(file.filename));
+                    window.showMessageBox(UIString.fromId("ERROR_OPEN_FILE"c), UIString.fromId("ERROR_OPENING_FILE"c) ~ " " ~ toUTF32(filename));
                 return false;
             }
         }
@@ -1534,8 +1540,12 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                 if (openSourceFile(filename))
                 {
                     auto index = _tabs.tabIndex(filename);
+                    if (index < 0)
+                        continue;
                     // file is opened in tab
                     auto source = cast(DSourceEdit)_tabs.tabBody(filename);
+                    if (!source)
+                        continue;
                     // Caret position
                     source.setCaretPos(column, row, true, true);
                 }
