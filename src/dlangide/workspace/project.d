@@ -54,6 +54,11 @@ class ProjectItem {
 
     @property string filename() { return _filename; }
 
+    @property string directory() {
+        import std.path : dirName;
+        return _filename.dirName;
+    }
+
     @property dstring name() { return _name; }
 
     @property string name8() {

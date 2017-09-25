@@ -44,6 +44,10 @@ class CompilerLogWidget : LogWidget {
 
     Signal!CompilerLogIssueClickHandler compilerLogIssueClickHandler;
 
+    protected string _baseDirectory;
+    @property string baseDirectory() { return _baseDirectory; }
+    @property void baseDirectory(string dir) { _baseDirectory = dir; }
+
     //auto ctr = ctRegex!(r"(.+)\((\d+)\): (Error|Warning|Deprecation): (.+)"d);
     auto ctr = ctRegex!(r"(.+)\((\d+)(?:,(\d+))?\): (Error|Warning|Deprecation): (.+)"d);
 
@@ -160,14 +164,29 @@ class CompilerLogWidget : LogWidget {
         if(!match.empty) {
             dstring filename = match[1];
             import std.conv:to;
-            int row = to!int(match[2]) - 1;
+            int row = 0;
+            try {
+                row = to!int(match[2]) - 1;
+            } catch (Exception e) {
+                row = 0;
+            }
             if (row < 0)
                 row = 0;
             int col = 0;
             if (match[3] && match[3] != "") {
-                col = to!int(match[3]) - 1;
+                try {
+                    col = to!int(match[3]) - 1;
+                } catch (Exception e) {
+                    col = 0;
+                }
                 if (col < 0)
                     col = 0;
+            }
+            if (filename.startsWith("../") || filename.startsWith("..\\")) {
+                import dlangui.core.types : toUTF8;
+                string fn = filename.toUTF8;
+                resolveRelativePath(fn, line);
+                filename = fn.toUTF32;
             }
             return new ErrorPosition(filename, row, col);
         }
@@ -184,6 +203,36 @@ class CompilerLogWidget : LogWidget {
         return null;
     }
 
+    //dlangui ~master: building configuration "default"...
+    string findProjectForLine(int line) {
+        for (int i = line - 1; i >= 0; i--) {
+            dstring s = _content[i];
+            int p = cast(int)s.indexOf(": building configuration "d);
+            if (p >= 0) {
+                int p0 = cast(int)s.indexOf(" ");
+                if (p0 > 0 && p0 < p) {
+                    import dlangui.core.types : toUTF8;
+                    return s[0 .. p0].toUTF8;
+                }
+            }
+        }
+        return null;
+    }
+    
+    void resolveRelativePath(ref string path, int line) {
+        import std.path : getcwd, absolutePath;
+        Log.d("resolveRelativePath ", path, " current directory: ", getcwd);
+        string prjName = findProjectForLine(line);
+        if (prjName) {
+            Log.d("Error is in project ", prjName);
+        }
+        string base = _baseDirectory;
+        if (!base)
+            base = getcwd;
+        // TODO: select proper base
+        path = absolutePath(path, base);
+        Log.d("converted to absolute path: ", path);
+    }
     ///
     override bool onMouseEvent(MouseEvent event) {
 
@@ -224,8 +273,12 @@ class CompilerLogWidget : LogWidget {
                         if (col < 0)
                             col = 0;
                     }
-
-                    compilerLogIssueClickHandler(match[1], row, col);
+                    import dlangui.core.types : toUTF8;
+                    string filename = match[1].toUTF8;
+                    if (filename.startsWith("../") || filename.startsWith("..\\")) {
+                        resolveRelativePath(filename, _caretPos.line);
+                    }
+                    compilerLogIssueClickHandler(filename.toUTF32, row, col);
                 }
             }
 
@@ -247,6 +300,10 @@ class OutputPanel : DockWindow {
     TabWidget _tabs;
 
     @property TabWidget getTabs() { return _tabs;}
+
+    void setLogWidgetBaseDirectory(string baseDir) {
+        _logWidget.baseDirectory = baseDir;
+    }
 
     void activateLogTab() {
         ensureLogVisible();

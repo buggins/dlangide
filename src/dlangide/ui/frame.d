@@ -1710,6 +1710,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             return;
         }
         _logPanel.activateLogTab();
+        string baseDirectory = project.dir;
+        Log.d("build: base directory is ", baseDirectory);
+        _logPanel.setLogWidgetBaseDirectory(baseDirectory);
         if (!listener) {
             if (buildOp == BuildOperation.Upgrade || buildOp == BuildOperation.Build || buildOp == BuildOperation.Rebuild) {
                 listener = delegate(int result) {
