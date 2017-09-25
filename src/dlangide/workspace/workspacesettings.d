@@ -21,6 +21,17 @@ class WorkspaceSettings : SettingsFile {
     private WorkspaceFile[] _files;
 
     private string _startupProjectName;
+    private int _buildConfiguration;
+
+    @property int buildConfiguration() {
+        return _buildConfiguration;
+    }
+    @property void buildConfiguration(int config) {
+        _setting.setInteger("buildConfiguration", config);
+        _buildConfiguration = config;
+        save();
+    }
+
     @property string startupProjectName() {
         return _startupProjectName;
     }
@@ -239,6 +250,11 @@ class WorkspaceSettings : SettingsFile {
             file.row(cast(int)item.getInteger("row"));
             _files ~= file;
         }
+        _buildConfiguration = cast(int)_setting.getInteger("buildConfiguration", 0);
+        if (_buildConfiguration < 0)
+            _buildConfiguration = 0;
+        if (_buildConfiguration > 2)
+            _buildConfiguration = 2;
     }
 
     override void updateDefaults() {

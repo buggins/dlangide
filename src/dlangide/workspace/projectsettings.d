@@ -43,6 +43,14 @@ class ProjectSettings : SettingsFile {
         return res;
     }
 
+    @property string projectConfiguration() {
+        return buildSettings.getString("configuration", "default");
+    }
+
+    @property void projectConfiguration(string newConfiguration) {
+        buildSettings.setString("configuration", newConfiguration);
+    }
+
     @property bool buildVerbose() {
         return buildSettings.getBoolean("verbose", false);
     }

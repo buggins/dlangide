@@ -56,8 +56,6 @@ class Workspace : WorkspaceItem {
     protected WorkspaceSettings _settings;
     
     protected IDEFrame _frame;
-    protected BuildConfiguration _buildConfiguration;
-    protected ProjectConfiguration _projectConfiguration = ProjectConfiguration.DEFAULT;
     
     this(IDEFrame frame, string fname = WORKSPACE_EXTENSION) {
         super(fname);
@@ -82,19 +80,23 @@ class Workspace : WorkspaceItem {
 
     @property Project[] projects() { return _projects; }
 
-    @property BuildConfiguration buildConfiguration() { return _buildConfiguration; }
-    @property void buildConfiguration(BuildConfiguration config) { _buildConfiguration = config; }
+    @property BuildConfiguration buildConfiguration() {
+        return cast(BuildConfiguration)_settings.buildConfiguration;
+    }
 
-    @property ProjectConfiguration projectConfiguration() { return _projectConfiguration; }
-    @property void projectConfiguration(ProjectConfiguration config) { _projectConfiguration = config; }
-     
+    @property void buildConfiguration(BuildConfiguration config) {
+        _settings.buildConfiguration = cast(int)config;
+    }
+
     protected Project _startupProject;
 
     @property Project startupProject() { return _startupProject; }
     @property void startupProject(Project project) { 
+        if (_startupProject is project)
+            return;
         _startupProject = project;
-        _frame.setProjectConfigurations(project.configurations.keys.map!(k => k.to!dstring).array); 
         _settings.startupProjectName = toUTF8(project.name);
+        _frame.updateProjectConfigurations();
     }
     
     /// Last opened files in workspace
@@ -131,8 +133,8 @@ class Workspace : WorkspaceItem {
     /// setups currrent project configuration by name
     void setStartupProjectConfiguration(string conf)
     {
-        if(_startupProject && conf in _startupProject.configurations) {
-            _projectConfiguration = _startupProject.configurations[conf];
+        if(_startupProject) {
+            _startupProject.projectConfiguration = conf;
         }
     }
 

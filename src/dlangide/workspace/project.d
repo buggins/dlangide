@@ -360,20 +360,23 @@ struct ProjectConfiguration {
     }
     
     /// parsing from setting file
-    static ProjectConfiguration[string] load(Setting s)
+    static ProjectConfiguration[] load(Setting s)
     {
-        ProjectConfiguration[string] res = [DEFAULT_NAME: DEFAULT];
+        ProjectConfiguration[] res;
         Setting configs = s.objectByPath("configurations");
-        if(configs is null || configs.type != SettingType.ARRAY) 
+        if(configs is null || configs.type != SettingType.ARRAY) {
+            res ~= DEFAULT;
             return res;
-        
+        }
+
         foreach(conf; configs) {
             if(!conf.isObject) continue;
             Type t = Type.Default;
             if(auto typeName = conf.getString("targetType"))
                 t = parseType(typeName);
-            if (string confName = conf.getString("name"))
-                res[confName] = ProjectConfiguration(confName, t);
+            if (string confName = conf.getString("name")) {
+                res ~= ProjectConfiguration(confName, t);
+            }
         }
         return res;
     }
@@ -395,7 +398,43 @@ class Project : WorkspaceItem {
 
     protected string[] _sourcePaths;
     protected string[] _builderSourcePaths;
-    protected ProjectConfiguration[string] _configurations;
+    protected ProjectConfiguration[] _configurations;
+    protected ProjectConfiguration _projectConfiguration = ProjectConfiguration.DEFAULT;
+
+    @property int projectConfigurationIndex() {
+        ProjectConfiguration config = projectConfiguration();
+        foreach(i, value; _configurations) {
+            if (value.name == config.name)
+                return cast(int)i;
+        }
+        return 0;
+    }
+
+    @property ProjectConfiguration projectConfiguration() {
+        if (_configurations.length == 0)
+            return ProjectConfiguration.DEFAULT;
+        string configName = settings.projectConfiguration;
+        foreach(config; _configurations) {
+            if (configName == config.name)
+                return config;
+        }
+        return _configurations[0];
+    }
+
+    @property void projectConfiguration(ProjectConfiguration config) {
+        settings.projectConfiguration = config.name;
+        settings.save();
+    }
+
+    @property void projectConfiguration(string configName) {
+        foreach(name, config; _configurations) {
+            if (configName == config.name) {
+                settings.projectConfiguration = config.name;
+                settings.save();
+                return;
+            }
+        }
+    }
 
     this(Workspace ws, string fname = null, string dependencyVersion = null) {
         super(fname);
@@ -448,9 +487,19 @@ class Project : WorkspaceItem {
     @property string dependencyVersion() { return _dependencyVersion; }
 
     /// returns project configurations
-    @property const(ProjectConfiguration[string]) configurations() const
+    @property const(ProjectConfiguration[]) configurations() const
     {
         return _configurations;
+    }
+
+    /// returns project configurations
+    @property dstring[] configurationNames() const
+    {
+        dstring[] res;
+        res.assumeSafeAppend;
+        foreach(conf; _configurations)
+            res ~= conf.name.toUTF32;
+        return res;
     }
 
     /// direct access to project file (json)

@@ -75,7 +75,7 @@ class BackgroundOperationWatcherTest : BackgroundOperationWatcher {
 /// DIDE app frame
 class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeListener, BookmarkListChangeListener {
 
-    private ToolBarComboBox projectConfigurationCombo;
+    private ToolBarComboBox _projectConfigurationCombo;
     
     MenuItem mainMenuItems;
     WorkspacePanel _wsPanel;
@@ -698,6 +698,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         return _dockHost;
     }
 
+    private MenuItem _projectConfigurationMenuItem;
     /// create main menu
     override protected MainMenu createMainMenu() {
 
@@ -735,9 +736,32 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         projectItem.add(ACTION_PROJECT_SET_STARTUP, ACTION_PROJECT_REFRESH, ACTION_PROJECT_UPDATE_DEPENDENCIES, ACTION_PROJECT_SETTINGS);
 
         MenuItem buildItem = new MenuItem(new Action(22, "MENU_BUILD"));
+        Action configs = ACTION_PROJECT_BUILD_CONFIGURATION.clone;
+        configs.longParam = -1;
+        MenuItem buildConfiguration = new MenuItem(configs);
+        foreach (config; BuildConfiguration.min .. BuildConfiguration.max + 1) {
+            Action a = ACTION_PROJECT_BUILD_CONFIGURATION.clone;
+            a.label = ["Debug"d,"Release"d,"Unittest"d][config];
+            a.longParam = config;
+            MenuItem child = new MenuItem(a);
+            child.type = MenuItemType.Radio;
+            buildConfiguration.add(child);
+        }
+        buildItem.add(buildConfiguration);
+
+        _projectConfigurationMenuItem = new MenuItem(ACTION_PROJECT_CONFIGURATION);
+        Action defaultConfigAction = ACTION_PROJECT_CONFIGURATION.clone;
+        defaultConfigAction.label = "default"d;
+        defaultConfigAction.stringParam = "default";
+        MenuItem defaultConfigItem = new MenuItem(defaultConfigAction);
+        defaultConfigItem.type = MenuItemType.Radio;
+        buildConfiguration.add(defaultConfigItem);
+        buildItem.add(_projectConfigurationMenuItem);
+        buildItem.addSeparator();
+
         buildItem.add(ACTION_WORKSPACE_BUILD, ACTION_WORKSPACE_REBUILD, ACTION_WORKSPACE_CLEAN,
-                     ACTION_PROJECT_BUILD, ACTION_PROJECT_REBUILD, ACTION_PROJECT_CLEAN,
-                     ACTION_RUN_WITH_RDMD);
+                      ACTION_PROJECT_BUILD, ACTION_PROJECT_REBUILD, ACTION_PROJECT_CLEAN,
+                      ACTION_RUN_WITH_RDMD);
 
         MenuItem debugItem = new MenuItem(new Action(23, "MENU_DEBUG"));
         debugItem.add(ACTION_DEBUG_START, ACTION_DEBUG_START_NO_DEBUG, 
@@ -800,6 +824,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         }
     }
 
+    private ToolBarComboBox _cbBuildConfiguration;
     /// create app toolbars
     override protected ToolBarHost createToolbars() {
         ToolBarHost res = new ToolBarHost();
@@ -809,25 +834,20 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
 
         tb.addButtons(ACTION_DEBUG_START);
         
-        projectConfigurationCombo = new ToolBarComboBox("projectConfig", [ProjectConfiguration.DEFAULT_NAME.to!dstring]);//Updateable
-        projectConfigurationCombo.itemClick = delegate(Widget source, int index) {
-            if (currentWorkspace) {
-                currentWorkspace.setStartupProjectConfiguration(projectConfigurationCombo.selectedItem.to!string); 
-            }
-            return true;
-        };
-        projectConfigurationCombo.action = ACTION_PROJECT_CONFIGURATIONS;
-        tb.addControl(projectConfigurationCombo);
+        _projectConfigurationCombo = new ToolBarComboBox("projectConfig", [ProjectConfiguration.DEFAULT_NAME.to!dstring]);//Updateable
+        _projectConfigurationCombo.action = ACTION_PROJECT_CONFIGURATIONS;
+        tb.addControl(_projectConfigurationCombo);
         
-        ToolBarComboBox cbBuildConfiguration = new ToolBarComboBox("buildConfig", ["Debug"d, "Release"d, "Unittest"d]);
-        cbBuildConfiguration.itemClick = delegate(Widget source, int index) {
+        _cbBuildConfiguration = new ToolBarComboBox("buildConfig", ["Debug"d, "Release"d, "Unittest"d]);
+        _cbBuildConfiguration.itemClick = delegate(Widget source, int index) {
             if (currentWorkspace && index < 3) {
                 currentWorkspace.buildConfiguration = [BuildConfiguration.Debug, BuildConfiguration.Release, BuildConfiguration.Unittest][index];
             }
             return true;
         };
-        cbBuildConfiguration.action = ACTION_BUILD_CONFIGURATIONS;
-        tb.addControl(cbBuildConfiguration);
+        _cbBuildConfiguration.action = ACTION_BUILD_CONFIGURATIONS;
+        tb.addControl(_cbBuildConfiguration);
+
         tb.addButtons(ACTION_PROJECT_BUILD, ACTION_SEPARATOR, ACTION_RUN_WITH_RDMD);
 
         tb = res.getOrAddToolbar("Edit");
@@ -880,6 +900,20 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                 // enable when project exists
                 if (currentWorkspace && currentWorkspace.startupProject && !_currentBackgroundOperation)
                     a.state = ACTION_STATE_ENABLED;
+                else
+                    a.state = ACTION_STATE_DISABLE;
+                return true;
+            case IDEActions.BuildSetConfiguration:
+                // enable when project exists
+                if (currentWorkspace && currentWorkspace.startupProject && !_currentBackgroundOperation)
+                    a.state = currentWorkspace.buildConfiguration == a.longParam ? ACTION_STATE_CHECKED : ACTION_STATE_ENABLED;
+                else
+                    a.state = ACTION_STATE_DISABLE;
+                return true;
+            case IDEActions.ProjectSetConfiguration:
+                // enable when project exists
+                if (currentWorkspace && currentWorkspace.startupProject && !_currentBackgroundOperation)
+                    a.state = currentWorkspace.startupProject.projectConfiguration.name == a.stringParam ? ACTION_STATE_CHECKED : ACTION_STATE_ENABLED;
                 else
                     a.state = ACTION_STATE_DISABLE;
                 return true;
@@ -976,6 +1010,22 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                         ~ DLANGUI_VERSION ~ " for GUI"d;
                     window.showMessageBox(UIString.fromId("ABOUT"c) ~ " " ~ DLANGIDE_VERSION,
                                           UIString.fromRaw(msg));
+                    return true;
+                case IDEActions.BuildSetConfiguration:
+                    // set build configuration
+                    if (currentWorkspace && a.longParam >= BuildConfiguration.min && a.longParam <= BuildConfiguration.max) {
+                        if (currentWorkspace.buildConfiguration != a.longParam) {
+                            currentWorkspace.buildConfiguration = cast(BuildConfiguration)a.longParam;
+                            Log.d("Changing build configuration to ", currentWorkspace.buildConfiguration);
+                            _cbBuildConfiguration.selectedItemIndex = currentWorkspace.buildConfiguration;
+                        }
+                    }
+                    return true;
+                case IDEActions.ProjectSetConfiguration:
+                    if (currentWorkspace && currentWorkspace.startupProject && a.stringParam) {
+                        currentWorkspace.startupProject.projectConfiguration = a.stringParam;
+                        updateProjectConfigurations();
+                    }
                     return true;
                 case IDEActions.ProjectFolderOpenItem:
                     ProjectItem item = cast(ProjectItem)a.objectParam;
@@ -1680,9 +1730,14 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                 warmUpImportPaths(ws.startupProject);
             }
             window.windowCaption(ws.name ~ " - "d ~ frameWindowCaptionSuffix);
+            _cbBuildConfiguration.enabled = true;
+            _cbBuildConfiguration.selectedItemIndex = currentWorkspace.buildConfiguration;
+            updateProjectConfigurations();
         } else {
+            _cbBuildConfiguration.enabled = false;
             window.windowCaption(frameWindowCaptionSuffix);
             _wsPanel.hide();
+            updateProjectConfigurations();
         }
 
     }
@@ -1755,7 +1810,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             }
         }
 
-        Builder op = new Builder(this, project, _logPanel, currentWorkspace.projectConfiguration, currentWorkspace.buildConfiguration, buildOp, 
+        Builder op = new Builder(this, project, _logPanel, project.projectConfiguration, currentWorkspace.buildConfiguration, buildOp, 
                                  dubExecutable, dubAdditionalParams,
                                  toolchain,
                                  arch,
@@ -1763,11 +1818,44 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         setBackgroundOperation(op);
     }
     
-    /// updates list of available configurations
-    void setProjectConfigurations(dstring[] items) {
-        projectConfigurationCombo.items = items;
+    void updateProjectConfigurations() {
+        if (currentWorkspace && currentWorkspace.startupProject) {
+            if (_projectConfigurationCombo) {
+                _projectConfigurationCombo.enabled = true;
+                _projectConfigurationCombo.itemClick.clear();
+                dstring[] items = currentWorkspace.startupProject.configurationNames;
+                _projectConfigurationCombo.items = items;
+                _projectConfigurationCombo.selectedItemIndex = currentWorkspace.startupProject.projectConfigurationIndex;
+                _projectConfigurationCombo.itemClick = delegate(Widget source, int index) {
+                    if (currentWorkspace) {
+                        currentWorkspace.setStartupProjectConfiguration(_projectConfigurationCombo.selectedItem.to!string); 
+                    }
+                    return true;
+                };
+            }
+            if (_projectConfigurationMenuItem) {
+                _projectConfigurationMenuItem.clear();
+                foreach (config; currentWorkspace.startupProject.configurations) {
+                    Action a = ACTION_PROJECT_CONFIGURATION.clone;
+                    a.label = config.name.toUTF32;
+                    a.stringParam = config.name;
+                    MenuItem child = new MenuItem(a);
+                    child.type = MenuItemType.Radio;
+                    _projectConfigurationMenuItem.add(child);
+                }
+            }
+        } else {
+            if (_projectConfigurationCombo) {
+                _projectConfigurationCombo.itemClick.clear();
+                _projectConfigurationCombo.enabled = false;
+                _projectConfigurationCombo.items = ["default"d];
+            }
+            if (_projectConfigurationMenuItem) {
+                // TODO
+            }
+        }
     }
-    
+
     /// handle files dropped to application window
     void onFilesDropped(string[] filenames) {
         //Log.d("onFilesDropped(", filenames, ")");

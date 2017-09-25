@@ -31,6 +31,9 @@ enum IDEActions : int {
     ProjectSettings,
     RunWithRdmd,
 
+    BuildSetConfiguration,
+    ProjectSetConfiguration,
+
     DebugStart,
     DebugRestart,
     DebugStartNoDebug,
@@ -116,6 +119,9 @@ const Action ACTION_PROJECT_SETTINGS = (new Action(IDEActions.ProjectSettings, "
 const Action ACTION_PROJECT_REFRESH = new Action(IDEActions.RefreshProject, "MENU_PROJECT_REFRESH"c);
 const Action ACTION_PROJECT_UPDATE_DEPENDENCIES = new Action(IDEActions.UpdateProjectDependencies, "MENU_PROJECT_UPDATE_DEPENDENCIES"c);
 const Action ACTION_RUN_WITH_RDMD = new Action(IDEActions.RunWithRdmd, "MENU_BUILD_RUN_WITH_RDMD"c, "run-rdmd").disableByDefault();
+
+const Action ACTION_PROJECT_BUILD_CONFIGURATION = new Action(IDEActions.BuildSetConfiguration, "MENU_BUILD_CONFIGURATION"c).disableByDefault();
+const Action ACTION_PROJECT_CONFIGURATION = new Action(IDEActions.ProjectSetConfiguration, "MENU_PROJECT_CONFIGURATION"c).disableByDefault();
 
 const Action ACTION_DEBUG_START = new Action(IDEActions.DebugStart, "MENU_DEBUG_START_DEBUGGING"c, "debug-run"c, KeyCode.F5, KeyFlag.Control | KeyFlag.Shift);
 const Action ACTION_DEBUG_START_NO_DEBUG = new Action(IDEActions.DebugStartNoDebug, "MENU_DEBUG_START_NO_DEBUGGING"c, null, KeyCode.F5, KeyFlag.Control);
