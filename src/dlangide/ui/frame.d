@@ -414,8 +414,6 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         if (!file && !filename)
             return false;
 
-        filename ~= ".invalid";
-
         if (!file)
             file = _wsPanel.findSourceFileItem(filename, false);
 
