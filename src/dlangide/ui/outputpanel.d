@@ -206,12 +206,21 @@ class CompilerLogWidget : LogWidget {
             if(!match.empty) {
                 if (compilerLogIssueClickHandler.assigned) {
                     import std.conv:to;
-                    int row = to!int(match[2]) - 1;
+                    int row = 0;
+                    try {
+                        row = to!int(match[2]) - 1;
+                    } catch (Exception e) {
+                        row = 0;
+                    }
                     if (row < 0)
                         row = 0;
                     int col = 0;
                     if (match[3]) {
-                        col = to!int(match[3]) - 1;
+                        try {
+                            col = to!int(match[3]) - 1;
+                        } catch (Exception e) {
+                            col = 0;
+                        }
                         if (col < 0)
                             col = 0;
                     }
