@@ -1698,6 +1698,17 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         Platform.instance.showInFileManager(project.items.filename);
     }
 
+    static bool canWrite(string filename) {
+        import std.stdio : File;
+        try {
+            File f = File(filename, "a");
+            scope(exit) f.close();
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     void buildProject(BuildOperation buildOp, Project project, BuildResultListener listener = null) {
         if (!currentWorkspace) {
             _logPanel.logLine("No workspace is opened");
@@ -1730,6 +1741,20 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         string arch = projectSettings.getArch(_settings);
         string dubExecutable = _settings.dubExecutable;
         string dubAdditionalParams = projectSettings.getDubAdditionalParams(_settings);
+
+        string exeFile = project.executableFileName;
+        if (exeFile && (buildOp == BuildOperation.Build || buildOp == BuildOperation.Rebuild || buildOp == BuildOperation.Clean || buildOp == BuildOperation.Run)) {
+            import std.file : isFile, exists;
+            if (exeFile.exists && exeFile.isFile) {
+                if (!canWrite(exeFile)) {
+                    _logPanel.clear();
+                    _logPanel.logLine("Executable file is in use. Stop runing application before build.");
+                    handleBuildError(-5, project);
+                    return;
+                }
+            }
+        }
+
         Builder op = new Builder(this, project, _logPanel, currentWorkspace.projectConfiguration, currentWorkspace.buildConfiguration, buildOp, 
                                  dubExecutable, dubAdditionalParams,
                                  toolchain,
