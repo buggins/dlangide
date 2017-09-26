@@ -14,6 +14,38 @@ import std.conv;
 
 alias BuildResultListener = void delegate(int);
 
+dstring replaceVars(dstring source, dstring[dstring] valueMap) {
+    if (!valueMap.length)
+        return source; // no var values
+    if (source.indexOf("{") < 0)
+        return source; // no vars
+    dchar[] res;
+    res.assumeSafeAppend;
+    res.reserve(source.length + 10);
+    int varNameStart = -1;
+    for(int i = 0; i < source.length; i++) {
+        dchar ch = source[i];
+        if (ch == '{') {
+            varNameStart = i + 1;
+        } else if (ch == '}') {
+            if (varNameStart >= 0) {
+                dstring varName = source[varNameStart .. i];
+                if (varName.length) {
+                    if (auto value = varName in valueMap) {
+                        res ~= *value;
+                    }
+                }
+            } else {
+                res ~= ch;
+            }
+            varNameStart = -1;
+        } else if (varNameStart < 0) {
+            res ~= ch;
+        } // else it's inside variable name
+    }
+    return cast(dstring)res;
+}
+
 class Builder : BackgroundOperationWatcher {
     protected Project _project;
     protected ExternalProcess _extprocess;
@@ -28,6 +60,7 @@ class Builder : BackgroundOperationWatcher {
     protected int _exitCode = int.min;
     protected string _toolchain;
     protected string _arch;
+    protected dstring _description;
 
     @property Project project() { return _project; }
     @property void project(Project p) { _project = p; }
@@ -52,6 +85,33 @@ class Builder : BackgroundOperationWatcher {
         _arch = arch;
         _extprocess = new ExternalProcess();
         _box = new ProtectedTextStorage();
+        string opDescriptionId;
+        switch(buildOp) with(BuildOperation) {
+            case Build:
+                opDescriptionId = "BUILD_OP_DESCRIPTION_BUILD";
+                break;
+            case Clean:
+                opDescriptionId = "BUILD_OP_DESCRIPTION_CLEAN";
+                break;
+            case Rebuild:
+                opDescriptionId = "BUILD_OP_DESCRIPTION_REBUILD";
+                break;
+            case Run:
+                opDescriptionId = "BUILD_OP_DESCRIPTION_RUN";
+                break;
+            case Upgrade:
+                opDescriptionId = "BUILD_OP_DESCRIPTION_UPGRADE";
+                break;
+            default:
+                break;
+        }
+        if (opDescriptionId) {
+            import dlangui.core.i18n;
+            _description = UIString.fromId(opDescriptionId).value;
+            dstring[dstring] values;
+            values["projectName"d] = project.name;
+            _description = replaceVars(_description, values);
+        }
     }
 
     /// log lines
@@ -62,6 +122,8 @@ class Builder : BackgroundOperationWatcher {
         }
     }
 
+    /// returns description of background operation to show in status line
+    override @property dstring description() { return _description; }
     /// returns icon of background operation to show in status line
     override @property string icon() { return "folder"; }
     /// update background operation status
