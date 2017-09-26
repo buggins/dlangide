@@ -698,20 +698,20 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         _logPanel.appendText(null, dubPath ? ("dub path: "d ~ toUTF32(dubPath) ~ "\n"d) : ("dub is not found! cannot build projects without DUB\n"d));
         _logPanel.appendText(null, rdmdPath ? ("rdmd path: "d ~ toUTF32(rdmdPath) ~ "\n"d) : ("rdmd is not found!\n"d));
         _logPanel.appendText(null, dmdPath ? ("dmd path: "d ~ toUTF32(dmdPath) ~ "\n"d) : ("dmd compiler is not found!\n"d));
-        dumpCompilerPath("DMD", dmdPath);
+        dumpCompilerPath("dmd", dmdPath);
         _logPanel.appendText(null, ldcPath ? ("ldc path: "d ~ toUTF32(ldcPath) ~ "\n"d) : ("ldc compiler is not found!\n"d));
-        dumpCompilerPath("LDC", ldcPath);
+        dumpCompilerPath("ldc", ldcPath);
         _logPanel.appendText(null, gdcPath ? ("gdc path: "d ~ toUTF32(gdcPath) ~ "\n"d) : ("gdc compiler is not found!\n"d));
-        dumpCompilerPath("GDC", gdcPath);
+        dumpCompilerPath("gdc", gdcPath);
     }
-    private void dumpCompilerPath(dstring compilerName, string compiler) {
+    private void dumpCompilerPath(string compilerName, string compiler) {
         if (!compiler)
             return;
         if (compiler) {
-            string[] imports = detectImportPathsForCompiler(compiler);
+            string[] imports = compilerImportPathsCache.getImportPathsFor(compilerName);
             if (imports.length > 0) {
                 Log.d(compilerName, " imports:", imports);
-                _logPanel.appendText(null, compilerName ~ " imports:\n"d);
+                _logPanel.appendText(null, to!dstring(compilerName) ~ " imports:\n"d);
                 foreach(s; imports)
                     _logPanel.appendText(null, "    "d ~ to!dstring(s) ~ "\n"d);
             }
@@ -1601,7 +1601,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
     }
 
     public void warmUpImportPaths(Project project) {
-        dcdInterface.warmUp(project.importPaths);
+        dcdInterface.warmUp(project.importPaths(_settings));
     }
 
     void restoreListOfOpenedFiles() {

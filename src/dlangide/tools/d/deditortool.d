@@ -45,7 +45,7 @@ class DEditorTool : EditorTool
     DCDTask _getDocCommentsTask;
     override void getDocComments(DSourceEdit editor, TextPosition caretPosition, void delegate(string[]) callback) {
         cancelGetDocComments();
-        string[] importPaths = editor.importPaths();
+        string[] importPaths = editor.importPaths(_frame.settings);
         string content = toUTF8(editor.text);
         auto byteOffset = caretPositionToByteOffset(content, caretPosition);
         if (!isAtWord(content, byteOffset))
@@ -88,7 +88,7 @@ class DEditorTool : EditorTool
     DCDTask _goToDefinitionTask;
     override void goToDefinition(DSourceEdit editor, TextPosition caretPosition) {
         cancelGoToDefinition();
-        string[] importPaths = editor.importPaths();
+        string[] importPaths = editor.importPaths(_frame.settings);
         string content = toUTF8(editor.text);
         auto byteOffset = caretPositionToByteOffset(content, caretPosition);
 
@@ -129,7 +129,7 @@ class DEditorTool : EditorTool
     DCDTask _getCompletionsTask;
     override void getCompletions(DSourceEdit editor, TextPosition caretPosition, void delegate(dstring[] completions, string[] icons, CompletionTypes type) callback) {
         cancelGetCompletions();
-        string[] importPaths = editor.importPaths();
+        string[] importPaths = editor.importPaths(_frame.settings);
 
         string content = toUTF8(editor.text);
         auto byteOffset = caretPositionToByteOffset(content, caretPosition);

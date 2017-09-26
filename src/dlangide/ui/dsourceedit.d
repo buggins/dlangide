@@ -214,9 +214,9 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
     }
 
     /// returns project import paths - if file from project is opened in current editor
-    string[] importPaths() {
+    string[] importPaths(IDESettings ideSettings) {
         if (_projectSourceFile)
-            return _projectSourceFile.project.importPaths;
+            return _projectSourceFile.project.importPaths(ideSettings);
         return null;
     }
 

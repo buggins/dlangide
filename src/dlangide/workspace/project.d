@@ -305,29 +305,6 @@ class WorkspaceItem {
     }
 }
 
-/// detect DMD source paths
-string[] dmdSourcePaths() {
-    string[] res;
-
-	if(!includePath.empty){
-		res ~= includePath;
-	}
-
-    version(Windows) {
-        import dlangui.core.files;
-        string dmdPath = findExecutablePath("dmd");
-        if (dmdPath) {
-            string dmdDir = buildNormalizedPath(dirName(dmdPath), "..", "..", "src");
-            res ~= absolutePath(buildNormalizedPath(dmdDir, "druntime", "import"));
-            res ~= absolutePath(buildNormalizedPath(dmdDir, "phobos"));
-        }
-    } else {
-        res ~= "/usr/include/dmd/druntime/import";
-        res ~= "/usr/include/dmd/phobos";
-    }
-    return res;
-}
-
 /// Stores info about project configuration
 struct ProjectConfiguration {
     /// name used to build the project
@@ -384,6 +361,7 @@ struct ProjectConfiguration {
 
 /// DLANGIDE D project
 class Project : WorkspaceItem {
+    import dlangide.workspace.idesettings : IDESettings;
     protected Workspace _workspace;
     protected bool _opened;
     protected ProjectFolder _items;
@@ -397,7 +375,6 @@ class Project : WorkspaceItem {
     protected string _dependencyVersion;
 
     protected string[] _sourcePaths;
-    protected string[] _builderSourcePaths;
     protected ProjectConfiguration[] _configurations;
     protected ProjectConfiguration _projectConfiguration = ProjectConfiguration.DEFAULT;
 
@@ -529,12 +506,12 @@ class Project : WorkspaceItem {
 
     /// returns project's own source paths
     @property string[] sourcePaths() { return _sourcePaths; }
-    /// returns project's own source paths
-    @property string[] builderSourcePaths() { 
-        if (!_builderSourcePaths) {
-            _builderSourcePaths = dmdSourcePaths();
-        }
-        return _builderSourcePaths; 
+    /// returns project's current toolchain import paths
+    string[] builderSourcePaths(IDESettings ideSettings) {
+        string compilerName = settings.getToolchain(ideSettings);
+        if (!compilerName)
+            compilerName = "default";
+        return compilerImportPathsCache.getImportPathsFor(compilerName);
     }
 
     /// returns first source folder for project or null if not found
@@ -556,10 +533,10 @@ class Project : WorkspaceItem {
                 dst ~= item;
         }
     }
-    @property string[] importPaths() {
+    @property string[] importPaths(IDESettings ideSettings) {
         string[] res;
         addUnique(res, sourcePaths);
-        addUnique(res, builderSourcePaths);
+        addUnique(res, builderSourcePaths(ideSettings));
         foreach(dep; _dependencies) {
             addUnique(res, dep.sourcePaths);
         }
@@ -805,7 +782,7 @@ class Project : WorkspaceItem {
             findMainSourceFile();
 
             Log.i("Project source paths: ", sourcePaths);
-            Log.i("Builder source paths: ", builderSourcePaths);
+            //Log.i("Builder source paths: ", builderSourcePaths(_settings));
             if (!_isDependency)
                 loadSelections();
 
@@ -1002,4 +979,100 @@ class EditorBookmark {
     string projectFilePath;
     int line;
     string projectName;
+}
+
+
+string[] splitByLines(string s) {
+    string[] res;
+    int start = 0;
+    for(int i = 0; i <= s.length; i++) {
+        if (i == s.length) {
+            if (start < i)
+                res ~= s[start .. i];
+            break;
+        }
+        if (s[i] == '\r' || s[i] == '\n') {
+            if (start < i)
+                res ~= s[start .. i];
+            start = i + 1;
+        }
+    }
+    return res;
+}
+
+struct CompilerImportPathsCache {
+
+    private static class Entry {
+        string[] list;
+    }
+    private Entry[string] _cache;
+
+    string[] getImportPathsFor(string compiler) {
+        import dlangui.core.files : findExecutablePath;
+        if (!compiler.length)
+            return [];
+        if (auto p = compiler in _cache) {
+            // found in cache
+            return p.list;
+        }
+        Log.d("Searching for compiler path: ", compiler);
+        import std.path : isAbsolute;
+        string compilerPath = compiler;
+        if (compiler == "default") {
+            // try to autodetect default compiler
+            compilerPath = findExecutablePath("dmd");
+            if (!compilerPath)
+                compilerPath = findExecutablePath("ldc");
+            if (!compilerPath)
+                compilerPath = findExecutablePath("gdc");
+        } else if (compilerPath && !compilerPath.isAbsolute)
+            compilerPath = findExecutablePath(compiler);
+        string[] res;
+        if (compilerPath)
+            res = detectImportPathsForCompiler(compilerPath);
+        else
+            Log.w("Compiler executable not found for `", compiler, "`");
+        Entry newItem = new Entry();
+        newItem.list = res;
+        _cache[compiler] = newItem;
+        return res;
+    }
+}
+
+__gshared CompilerImportPathsCache compilerImportPathsCache;
+
+string[] detectImportPathsForCompiler(string compiler) {
+    string[] res;
+    import std.process : pipeProcess, Redirect, wait;
+    import std.string : startsWith, indexOf;
+    import std.path : buildNormalizedPath;
+    import std.file : write, remove;
+    import dlangui.core.files;
+    try {
+        string sourcefilename = appDataPath(".dlangide") ~ PATH_DELIMITER ~ "tmp_dummy_file_to_get_import_paths.d";
+        write(sourcefilename, "import module_that_does_not_exist;\n");
+        auto pipes = pipeProcess([compiler, sourcefilename], Redirect.stdin | Redirect.stdout | Redirect.stderrToStdout, null, Config.suppressConsole);
+        char[4096] buffer;
+        char[] s = pipes.stdout.rawRead(buffer);
+        wait(pipes.pid);
+        //auto ls = execute([compiler, sourcefilename]);
+        remove(sourcefilename);
+        //string s = ls.output;
+        string[] lines = splitByLines(cast(string)s);
+        debug Log.d("compiler output:\n", s);
+        foreach(line; lines) {
+            if (line.startsWith("import path[")) {
+                auto p = line.indexOf("] = ");
+                if (p > 0) {
+                    line = line[p + 4 .. $];
+                    string path = line.buildNormalizedPath;
+                    debug Log.d("import path found: `", path, "`");
+                    res ~= path;
+                }
+            }
+        }
+        return res;
+    } catch (Exception e) {
+        return null;
+    }
 }
