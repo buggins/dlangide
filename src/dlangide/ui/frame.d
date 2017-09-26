@@ -682,6 +682,14 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         _logPanel = new OutputPanel("output");
         _logPanel.compilerLogIssueClickHandler = &onCompilerLogIssueClick;
         _logPanel.appendText(null, "DlangIDE is started\nHINT: Try to open some DUB project\n"d);
+        dumpCompilerPaths();
+
+        _dockHost.addDockedWindow(_logPanel);
+
+        return _dockHost;
+    }
+
+    private void dumpCompilerPaths() {
         string dubPath = findExecutablePath("dub");
         string rdmdPath = findExecutablePath("rdmd");
         string dmdPath = findExecutablePath("dmd");
@@ -690,12 +698,24 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         _logPanel.appendText(null, dubPath ? ("dub path: "d ~ toUTF32(dubPath) ~ "\n"d) : ("dub is not found! cannot build projects without DUB\n"d));
         _logPanel.appendText(null, rdmdPath ? ("rdmd path: "d ~ toUTF32(rdmdPath) ~ "\n"d) : ("rdmd is not found!\n"d));
         _logPanel.appendText(null, dmdPath ? ("dmd path: "d ~ toUTF32(dmdPath) ~ "\n"d) : ("dmd compiler is not found!\n"d));
+        dumpCompilerPath("DMD", dmdPath);
         _logPanel.appendText(null, ldcPath ? ("ldc path: "d ~ toUTF32(ldcPath) ~ "\n"d) : ("ldc compiler is not found!\n"d));
+        dumpCompilerPath("LDC", ldcPath);
         _logPanel.appendText(null, gdcPath ? ("gdc path: "d ~ toUTF32(gdcPath) ~ "\n"d) : ("gdc compiler is not found!\n"d));
-
-        _dockHost.addDockedWindow(_logPanel);
-
-        return _dockHost;
+        dumpCompilerPath("GDC", gdcPath);
+    }
+    private void dumpCompilerPath(dstring compilerName, string compiler) {
+        if (!compiler)
+            return;
+        if (compiler) {
+            string[] imports = detectImportPathsForCompiler(compiler);
+            if (imports.length > 0) {
+                Log.d(compilerName, " imports:", imports);
+                _logPanel.appendText(null, compilerName ~ " imports:\n"d);
+                foreach(s; imports)
+                    _logPanel.appendText(null, "    "d ~ to!dstring(s) ~ "\n"d);
+            }
+        }
     }
 
     private MenuItem _projectConfigurationMenuItem;
