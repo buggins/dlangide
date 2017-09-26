@@ -78,6 +78,8 @@ enum IDEActions : int {
 
     ViewToggleWhitespaceMarks,
     ViewToggleTabPositionMarks,
+    ViewToggleToolbar,
+    ViewToggleStatusbar,
 }
 
 __gshared static this() {
@@ -150,6 +152,8 @@ const Action ACTION_EDIT_PREFERENCES = (new Action(IDEActions.EditPreferences, "
 
 const Action ACTION_VIEW_TOGGLE_SHOW_WHITESPACES = (new Action(IDEActions.ViewToggleWhitespaceMarks, "MENU_VIEW_SHOW_WHITESPACE_MARKS"c, null));
 const Action ACTION_VIEW_TOGGLE_TAB_POSITIONS = (new Action(IDEActions.ViewToggleTabPositionMarks, "MENU_VIEW_SHOW_TAB_POSITIONS"c, null));
+const Action ACTION_VIEW_TOGGLE_TOOLBAR = (new Action(IDEActions.ViewToggleToolbar, "MENU_VIEW_SHOW_TOOLBAR"c, null)).disableByDefault();
+const Action ACTION_VIEW_TOGGLE_STATUSBAR = (new Action(IDEActions.ViewToggleStatusbar, "MENU_VIEW_SHOW_STATUSBAR"c, null)).disableByDefault();
 
 const Action ACTION_HELP_ABOUT = new Action(IDEActions.HelpAbout, "MENU_HELP_ABOUT"c);
 const Action ACTION_HELP_VIEW_HELP = new Action(IDEActions.HelpViewHelp, "MENU_HELP_VIEW_HELP"c);

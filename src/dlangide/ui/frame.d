@@ -724,6 +724,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         MenuItem viewItem = new MenuItem(new Action(3, "MENU_VIEW"));
         viewItem.add(ACTION_WINDOW_SHOW_HOME_SCREEN, ACTION_WINDOW_SHOW_WORKSPACE_EXPLORER, ACTION_WINDOW_SHOW_LOG_WINDOW);
         viewItem.addSeparator();
+        viewItem.addCheck(ACTION_VIEW_TOGGLE_TOOLBAR);
+        viewItem.addCheck(ACTION_VIEW_TOGGLE_STATUSBAR);
+        viewItem.addSeparator();
         viewItem.addCheck(ACTION_VIEW_TOGGLE_SHOW_WHITESPACES);
         viewItem.addCheck(ACTION_VIEW_TOGGLE_TAB_POSITIONS);
 
@@ -764,7 +767,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                       ACTION_RUN_WITH_RDMD);
 
         MenuItem debugItem = new MenuItem(new Action(23, "MENU_DEBUG"));
-        debugItem.add(ACTION_DEBUG_START, ACTION_DEBUG_START_NO_DEBUG, 
+        debugItem.add(ACTION_DEBUG_START, ACTION_DEBUG_START_NO_DEBUG,
                       ACTION_DEBUG_CONTINUE, ACTION_DEBUG_STOP, ACTION_DEBUG_PAUSE,
                       ACTION_DEBUG_RESTART,
                       ACTION_DEBUG_STEP_INTO,
@@ -968,6 +971,12 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             case IDEActions.ViewToggleTabPositionMarks:
                 a.state = _settings.showTabPositionMarks ? ACTION_STATE_CHECKED : ACTION_STATE_ENABLED;
                 return true;
+            case IDEActions.ViewToggleToolbar:
+                a.state = _settings.showToolbar ? ACTION_STATE_CHECKED : ACTION_STATE_ENABLED;
+                return true;
+            case IDEActions.ViewToggleStatusbar:
+                a.state = _settings.showStatusbar ? ACTION_STATE_CHECKED : ACTION_STATE_ENABLED;
+                return true;
             case IDEActions.ProjectFolderExpandAll:
             case IDEActions.ProjectFolderCollapseAll:
                 a.state = currentWorkspace !is null ? ACTION_STATE_ENABLED : ACTION_STATE_DISABLE;
@@ -1161,6 +1170,16 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     return true;
                 case IDEActions.ViewToggleTabPositionMarks:
                     _settings.showTabPositionMarks = !_settings.showTabPositionMarks;
+                    _settings.save();
+                    applySettings(_settings);
+                    return true;
+                case IDEActions.ViewToggleToolbar:
+                    _settings.showToolbar = !_settings.showToolbar;
+                    _settings.save();
+                    applySettings(_settings);
+                    return true;
+                case IDEActions.ViewToggleStatusbar:
+                    _settings.showStatusbar = !_settings.showStatusbar;
                     _settings.save();
                     applySettings(_settings);
                     return true;
@@ -1525,6 +1544,8 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
 
     // Applying settings to tabs/sources and it's opening
     void applySettings(IDESettings settings) {
+        _toolbarHost.visibility = _settings.showToolbar ? Visibility.Visible : Visibility.Gone;
+        _statusLine.visibility = _settings.showStatusbar ? Visibility.Visible : Visibility.Gone;
         for (int i = _tabs.tabCount - 1; i >= 0; i--) {
             DSourceEdit ed = cast(DSourceEdit)_tabs.tabBody(i);
             if (ed) {

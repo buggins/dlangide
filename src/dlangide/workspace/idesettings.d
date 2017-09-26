@@ -33,6 +33,8 @@ class IDESettings : SettingsFile {
         ui.setFloatingDef("fontGamma", 0.8);
         ui.setStringDef("uiFontFace", "Default");
         ui.setIntegerDef("uiFontSize", 10);
+        ui.setBooleanDef("showToolbar", true);
+        ui.setBooleanDef("showStatusbar", true);
         version (Windows) {
             debuggerSettings.setStringDef("executable", "mago-mi");
         } else {
@@ -171,8 +173,18 @@ class IDESettings : SettingsFile {
     @property bool showTabPositionMarks() { return editorSettings.getBoolean("showTabPositionMarks", true); }
     /// set tab position marks enabled flag
     @property IDESettings showTabPositionMarks(bool enabled) { editorSettings.setBoolean("showTabPositionMarks", enabled); return this; }
-    /// string value of font face in text editors
 
+    /// when true, toolbar is visible
+    @property bool showToolbar() { return uiSettings.getBoolean("showToolbar", true); }
+    /// when true, toolbar is visible
+    @property IDESettings showToolbar(bool enabled) { uiSettings.setBoolean("showToolbar", enabled); return this; }
+
+    /// when true, statusbar is visible
+    @property bool showStatusbar() { return uiSettings.getBoolean("showStatusbar", true); }
+    /// when true, statusbar is visible
+    @property IDESettings showStatusbar(bool enabled) { uiSettings.setBoolean("showStatusbar", enabled); return this; }
+
+    /// string value of font face in text editors
     @property string editorFontFace() { return editorSettings.getString("fontFace", "Default"); }
     /// int value of font size in text editors
     @property int editorFontSize() { return cast(int)editorSettings.getInteger("fontSize", 11); }
