@@ -452,6 +452,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                 else
                     editor.editorTool = new DefaultEditorTool(this);
                 _tabs.layout(_tabs.pos);
+                editor.editorStateChange = _statusLine;
             } else {
                 Log.d("file ", filename, " cannot be opened");
                 destroy(editor);
@@ -523,6 +524,8 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
     void closeTab(string tabId) {
         _wsPanel.selectItem(null);
         _tabs.removeTab(tabId);
+        _statusLine.hideEditorState();
+        _tabs.focusSelectedTab();
     }
 
     void renameTab(string oldfilename, string newfilename) {
