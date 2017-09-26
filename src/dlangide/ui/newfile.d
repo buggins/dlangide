@@ -127,6 +127,11 @@ class NewFileDlg : Dialog {
         _edModuleName.enterKey.connect(&onEnterKey);
         _edLocation.enterKey.connect(&onEnterKey);
 
+        _edFileName.setDefaultPopupMenu();
+        _edFilePath.setDefaultPopupMenu();
+        _edModuleName.setDefaultPopupMenu();
+        _edLocation.setDefaultPopupMenu();
+
         // fill templates
         dstring[] names;
         foreach(t; _templates)

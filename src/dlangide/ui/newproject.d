@@ -202,6 +202,10 @@ class NewProjectDlg : Dialog {
             return true;
         };
 
+        _edLocation.setDefaultPopupMenu();
+        _edWorkspaceName.setDefaultPopupMenu();
+        _edProjectName.setDefaultPopupMenu();
+
         addChild(content);
         addChild(createButtonsPanel([_newWorkspace ? ACTION_FILE_NEW_WORKSPACE : ACTION_FILE_NEW_PROJECT, ACTION_CANCEL], 0, 0));
     }
