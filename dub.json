@@ -12,7 +12,7 @@
     "stringImportPaths": ["views"],
 
     "dependencies": {
-        "dlangui": "==0.9.150",
+        "dlangui": "==0.9.151",
         "dsymbol": "~>0.2.9",
         "dcd": "~>0.9.1"
     },
@@ -22,6 +22,10 @@
     ],
 
     "libs-linux": ["z"],
+
+    "versions-windows": [
+        "USE_FREETYPE"
+    ],
 
     "configurations" : [
         {

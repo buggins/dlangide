@@ -71,9 +71,9 @@
   <doXGeneration>1</doXGeneration>
   <xfilename>$(IntDir)\$(TargetName).json</xfilename>
   <debuglevel>0</debuglevel>
-  <debugids>DebugInfo DCD</debugids>
+  <debugids>KeyInput DCD</debugids>
   <versionlevel>0</versionlevel>
-  <versionids>EmbedStandardResources</versionids>
+  <versionids>EmbedStandardResources NO_OPENGL USE_FREETYPE</versionids>
   <dump_source>0</dump_source>
   <mapverbosity>0</mapverbosity>
   <createImplib>0</createImplib>
@@ -111,7 +111,7 @@
   <multiobj>0</multiobj>
   <singleFileCompilation>0</singleFileCompilation>
   <oneobj>0</oneobj>
-  <mscoff>0</mscoff>
+  <mscoff>1</mscoff>
   <trace>0</trace>
   <quiet>0</quiet>
   <verbose>0</verbose>
@@ -174,7 +174,7 @@
   <doXGeneration>1</doXGeneration>
   <xfilename>$(IntDir)\$(TargetName).json</xfilename>
   <debuglevel>0</debuglevel>
-  <debugids>DebugInfo DCD</debugids>
+  <debugids />
   <versionlevel>0</versionlevel>
   <versionids>EmbedStandardResources</versionids>
   <dump_source>0</dump_source>
@@ -277,9 +277,9 @@
   <doXGeneration>1</doXGeneration>
   <xfilename>$(IntDir)\$(TargetName).json</xfilename>
   <debuglevel>0</debuglevel>
-  <debugids>DebugInfo DCD</debugids>
+  <debugids>KeyInput DCD</debugids>
   <versionlevel>0</versionlevel>
-  <versionids>EmbedStandardResources</versionids>
+  <versionids>EmbedStandardResources NO_OPENGL USE_FREETYPE</versionids>
   <dump_source>0</dump_source>
   <mapverbosity>0</mapverbosity>
   <createImplib>0</createImplib>
@@ -317,7 +317,7 @@
   <multiobj>0</multiobj>
   <singleFileCompilation>0</singleFileCompilation>
   <oneobj>0</oneobj>
-  <mscoff>0</mscoff>
+  <mscoff>1</mscoff>
   <trace>0</trace>
   <quiet>0</quiet>
   <verbose>0</verbose>
@@ -380,7 +380,7 @@
   <doXGeneration>1</doXGeneration>
   <xfilename>$(IntDir)\$(TargetName).json</xfilename>
   <debuglevel>0</debuglevel>
-  <debugids>DebugInfo DCD</debugids>
+  <debugids />
   <versionlevel>0</versionlevel>
   <versionids>EmbedStandardResources</versionids>
   <dump_source>0</dump_source>

@@ -32,7 +32,7 @@ class IDESettings : SettingsFile {
         ui.setIntegerDef("minAntialiasedFontSize", 0);
         ui.setFloatingDef("fontGamma", 0.8);
         ui.setStringDef("uiFontFace", "Default");
-        ui.setIntegerDef("uiFontSize", 10);
+        ui.setIntegerDef("uiFontSize", 11);
         ui.setBooleanDef("showToolbar", true);
         ui.setBooleanDef("showStatusbar", true);
         version (Windows) {
