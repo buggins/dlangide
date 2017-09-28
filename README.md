@@ -5,6 +5,18 @@ Dlang IDE
 
 Cross platform D language IDE written using DlangUI library.
 
+Screenshot of Default theme
+
+![screenshot](http://buggins.github.io/dlangui/screenshots/screenshot-dlangide.png "screenshot")
+
+Screenshot of Dark theme
+
+![screenshot](http://buggins.github.io/dlangui/screenshots/screenshot-dlangide-dark.png "screenshot")
+
+Screenshot of console mode (running in windows console)
+
+![screenshot](http://buggins.github.io/dlangui/screenshots/screenshot-dlangide-console-win32.png "screenshot")
+
 Currently supported features:
 
 * Uses DUB (dub.json or dub.sdl) project format
@@ -33,7 +45,6 @@ Source editor features:
 * Select word by mouse double click
 
 
-![screenshot](http://buggins.github.io/dlangui/screenshots/screenshot-dlangide.png "screenshot")
 
 GitHub page: [https://github.com/buggins/dlangide](https://github.com/buggins/dlangide)
 
@@ -42,6 +53,16 @@ Wiki: [https://github.com/buggins/dlangide/wiki](https://github.com/buggins/dlan
 DlangUI project GitHub page: [https://github.com/buggins/dlangui](https://github.com/buggins/dlangui)
 
 Mago debugger GitHub page: [https://github.com/rainers/mago](https://github.com/rainers/mago)
+
+
+
+Simple way to try it (you will need some D compiler and DUB utility):
+
+    dub fetch dlangide && dub run --build=release dlangide
+
+Recent builds with dmd under windows have issues with crash in OPTILINK linker from DMD.
+
+Workaround: add --arch=x86_mscoff or --arch=x86_64
 
 
 Build tools
