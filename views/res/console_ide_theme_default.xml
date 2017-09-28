@@ -42,5 +42,13 @@
     <drawable id="debug-step-over" value="{'↓' #0000FF}"/>
     <drawable id="debug-step-out" value="{'↑' #0000FF}"/>
 
+    <style id="HOME_SCREEN_TITLE"
+        textColor="#2020FF"
+    />
+  
+    <style id="HOME_SCREEN_TITLE2"
+        textColor="#2020FF"
+    />
+
 </theme>
 

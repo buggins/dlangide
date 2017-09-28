@@ -22,4 +22,15 @@
     <color id="build_log_deprecation_color" value="#F05080"/>
 
     <drawable id="btn_check" value="btn_check_dark"/>
+
+    <style id="HOME_SCREEN_TITLE"
+        fontSize="160%"
+        textColor="#60A0FF"
+    />
+  
+    <style id="HOME_SCREEN_TITLE2"
+        fontSize="120%"
+        textColor="#60A0FF"
+    />
+
 </theme>

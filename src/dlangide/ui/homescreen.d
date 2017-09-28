@@ -25,7 +25,6 @@ class HomeScreen : ScrollWidget {
         import dlangide.ui.frame;
         //styleId = STYLE_EDIT_BOX;
         _frame = frame;
-        uint linkColor = currentTheme.customColor("link_color", 0x2020FF);
         _content = new HorizontalLayout("HOME_SCREEN_BODY");
         _content.layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT);
         VerticalLayout _column1 = new VerticalLayout();
@@ -35,11 +34,11 @@ class HomeScreen : ScrollWidget {
         _column2.layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT).padding(Rect(pad, pad, pad, pad));
         _content.addChild(_column1);
         _content.addChild(_column2);
-        _column1.addChild((new TextWidget(null, "Dlang IDE "d ~ DLANGIDE_VERSION)).fontSize(32).textColor(linkColor));
-        _column1.addChild((new TextWidget(null, UIString.fromId("DESCRIPTION"c))).fontSize(20));
-        _column1.addChild((new TextWidget(null, UIString.fromId("COPYRIGHT"c))).fontSize(22).textColor(linkColor));
+        _column1.addChild((new TextWidget(null, "Dlang IDE "d ~ DLANGIDE_VERSION)).styleId("HOME_SCREEN_TITLE"));
+        _column1.addChild((new TextWidget(null, UIString.fromId("DESCRIPTION"c))).styleId("HOME_SCREEN_TITLE2"));
+        _column1.addChild((new TextWidget(null, UIString.fromId("COPYRIGHT"c))).styleId("HOME_SCREEN_TITLE2"));
         _column1.addChild(new VSpacer());
-        _column1.addChild((new TextWidget(null, UIString.fromId("START_WITH"c))).fontSize(20).textColor(linkColor));
+        _column1.addChild((new TextWidget(null, UIString.fromId("START_WITH"c))).styleId("HOME_SCREEN_TITLE"));
         _startItems = new VerticalLayout();
         _recentItems = new VerticalLayout();
         _startItems.addChild(new ImageTextButton(ACTION_FILE_OPEN_WORKSPACE));
@@ -49,7 +48,7 @@ class HomeScreen : ScrollWidget {
         _column1.addChild(new VSpacer());
         
         // Recent workspaces 
-        _column1.addChild((new TextWidget(null, UIString.fromId("RECENT"c))).fontSize(20).textColor(linkColor));
+        _column1.addChild((new TextWidget(null, UIString.fromId("RECENT"c))).styleId("HOME_SCREEN_TITLE"));
         string[] recentWorkspaces = _frame.settings.recentWorkspaces;
         if (recentWorkspaces.length) {
             foreach(fn; recentWorkspaces) {
@@ -65,8 +64,9 @@ class HomeScreen : ScrollWidget {
         
         // Useful links
         _column1.addChild(new VSpacer());
-        _column2.addChild((new TextWidget(null, UIString.fromId("USEFUL_LINKS"c))).fontSize(20).textColor(linkColor));
+        _column2.addChild((new TextWidget(null, UIString.fromId("USEFUL_LINKS"c))).styleId("HOME_SCREEN_TITLE"));
         _column2.addChild(new UrlImageTextButton(null, UIString.fromId("D_LANG"c).value, "http://dlang.org/"));
+        _column2.addChild(new UrlImageTextButton(null, UIString.fromId("DLANG_DOWNLOADS"c).value, "https://dlang.org/download.html"));
         _column2.addChild(new UrlImageTextButton(null, UIString.fromId("DUB_REP"c).value, "http://code.dlang.org/"));
         _column2.addChild(new UrlImageTextButton(null, UIString.fromId("DLANG_UI"c).value, "https://github.com/buggins/dlangui"));
         _column2.addChild(new UrlImageTextButton(null, UIString.fromId("DLANG_IDE"c).value, "https://github.com/buggins/dlangide"));
@@ -75,7 +75,7 @@ class HomeScreen : ScrollWidget {
         _column2.addChild(new UrlImageTextButton(null, UIString.fromId("DLANG_VIBED"c).value, "http://vibed.org/"));
         _column2.addChild(new UrlImageTextButton(null, UIString.fromId("DLANG_FORUM"c).value, "http://forum.dlang.org/"));
         _column1.addChild(new VSpacer());
-        _column2.addChild((new TextWidget(null, UIString.fromId("DLANG_IDE_DONATE"c))).fontSize(20).textColor(linkColor));
+        _column2.addChild((new TextWidget(null, UIString.fromId("DLANG_IDE_DONATE"c))).styleId("HOME_SCREEN_TITLE"));
         _column2.addChild(new UrlImageTextButton(null, UIString.fromId("DLANG_IDE_DONATE_PAYPAL"c).value, HELP_DONATION_URL));
 
         _column2.addChild(new VSpacer());

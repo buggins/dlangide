@@ -26,8 +26,17 @@
 
     <style id="TOOLBAR_HOST"
         backgroundImageId="#eceffa"
-        />
+    />
+
+    <style id="HOME_SCREEN_TITLE"
+        textColor="#2040FF"
+        fontSize="160%"
+    />
   
+    <style id="HOME_SCREEN_TITLE2"
+        textColor="#2040FF"
+        fontSize="120%"
+    />
 
 </theme>
 

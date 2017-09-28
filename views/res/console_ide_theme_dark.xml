@@ -4,4 +4,11 @@
         fontFamily="SansSerif"
 	textColor="#E0E0E0"
 	>
+    <style id="HOME_SCREEN_TITLE"
+        textColor="#60A0FF"
+    />
+  
+    <style id="HOME_SCREEN_TITLE2"
+        textColor="#60A0FF"
+    />
 </theme>
