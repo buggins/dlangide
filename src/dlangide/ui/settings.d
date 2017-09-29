@@ -117,6 +117,17 @@ SettingsPage createSettingsPages() {
                     StringListValue(1700, "1.7   "d), 
                     StringListValue(2000, "2.0   "d)]);
 
+    ui.addIntComboBox("interface/screenDpiOverride", UIString.fromId("OPTION_SCREEN_DPI_OVERRIDE"c), 
+                      [StringListValue(0, UIString.fromId("OPTION_SCREEN_DPI_OVERRIDE_NONE"c).value ~ " ("d ~ to!dstring(systemScreenDPI) ~ ")"d), 
+                      StringListValue(72, "72"d), 
+                      StringListValue(96, "96"d), 
+                      StringListValue(120, "120"d), 
+                      StringListValue(140, "140"d), 
+                      StringListValue(150, "150"d), 
+                      StringListValue(300, "300"d), 
+                      StringListValue(400, "400"d), 
+                      StringListValue(600, "600"d)]);
+
     SettingsPage ed = res.addChild("editors", UIString.fromId("OPTION_EDITORS"c));
     SettingsPage texted = ed.addChild("editors/textEditor", UIString.fromId("OPTION_TEXT_EDITORS"c));
 

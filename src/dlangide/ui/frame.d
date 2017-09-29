@@ -1575,11 +1575,18 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             currentTheme.fontFace = newFontFace;
             needUpdateTheme = true;
         }
+        if (overrideScreenDPI != settings.screenDpiOverride) {
+            overrideScreenDPI = settings.screenDpiOverride;
+            needUpdateTheme = true;
+        }
         if (oldFontSize != settings.uiFontSize) {
             currentTheme.fontSize = settings.uiFontSize;
             needUpdateTheme = true;
         }
         if (needUpdateTheme) {
+            drawableCache.clear();
+            imageCache.checkpoint();
+            imageCache.cleanup();
             Log.d("updating theme after UI font change");
             Platform.instance.onThemeChanged();
         }

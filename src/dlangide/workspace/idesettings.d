@@ -35,6 +35,7 @@ class IDESettings : SettingsFile {
         ui.setIntegerDef("uiFontSize", 11);
         ui.setBooleanDef("showToolbar", true);
         ui.setBooleanDef("showStatusbar", true);
+        ui.setIntegerDef("screenDpiOverride", 0);
         version (Windows) {
             debuggerSettings.setStringDef("executable", "mago-mi");
         } else {
@@ -126,6 +127,17 @@ class IDESettings : SettingsFile {
     /// language
     @property IDESettings uiLanguage(string v) {
         uiSettings.setString("language", limitString(v, AVAILABLE_LANGUAGES));
+        return this;
+    }
+
+    /// to allow overriding detected screen DPI
+    @property int screenDpiOverride() {
+        return cast(int)uiSettings.getInteger("screenDpiOverride", 0);
+    }
+
+    /// to allow overriding detected screen DPI
+    @property IDESettings screenDpiOverride(int newDpi) {
+        uiSettings.setInteger("screenDpiOverride", newDpi);
         return this;
     }
 
