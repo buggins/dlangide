@@ -45,7 +45,7 @@ class WorkspacePanel : DockWindow {
             TreeItem item = _tree.findItemById(projectItem.filename);
             if (item) {
                 if (item.parent && !item.parent.isFullyExpanded)
-                    item.parent.toggleExpand();
+                    _tree.items.toggleExpand(item.parent);
                 _tree.makeItemVisible(item);
                 _tree.selectItem(item);
                 return true;
@@ -92,7 +92,8 @@ class WorkspacePanel : DockWindow {
         _tree.popupMenu = &onTreeItemPopupMenu;
 
         _workspacePopupMenu = new MenuItem();
-        _workspacePopupMenu.add(ACTION_PROJECT_FOLDER_REFRESH,
+        _workspacePopupMenu.add(ACTION_FILE_NEW_PROJECT,
+                                ACTION_PROJECT_FOLDER_REFRESH,
                                 ACTION_FILE_WORKSPACE_CLOSE,
                                 ACTION_PROJECT_FOLDER_EXPAND_ALL,
                                 ACTION_PROJECT_FOLDER_COLLAPSE_ALL
