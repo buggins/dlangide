@@ -25,14 +25,16 @@ enum ENABLE_INTERNAL_TERMINAL_TEST = false;
 
 /// event listener to navigate by error/warning position
 interface CompilerLogIssueClickHandler {
-    bool onCompilerLogIssueClick(dstring filename, int line, int column);
+    bool onCompilerLogIssueClick(dstring projectname, dstring filename, int line, int column);
 }
 
 class ErrorPosition {
+    dstring projectname;
     dstring filename;
     int line;
     int pos;
-    this(dstring fn, int l, int p) {
+    this(dstring pname, dstring fn, int l, int p) {
+        projectname = pname;
         filename = fn;
         line = l;
         pos = p;
@@ -182,14 +184,16 @@ class CompilerLogWidget : LogWidget {
                 if (col < 0)
                     col = 0;
             }
+            dstring projectname = findProjectForLine(line).to!dstring;
             if (filename.startsWith("../") || filename.startsWith("..\\")) {
                 import dlangui.core.types : toUTF8;
                 string fn = filename.toUTF8;
                 resolveRelativePath(fn, line);
                 filename = fn.toUTF32;
             }
-            return new ErrorPosition(filename, row, col);
+            return new ErrorPosition(projectname, filename, row, col);
         }
+    
         return null;
     }
 
@@ -242,49 +246,11 @@ class CompilerLogWidget : LogWidget {
             auto errorPos = errorFromLine(_caretPos.line);
             if (errorPos) {
                 if (compilerLogIssueClickHandler.assigned) {
-                    compilerLogIssueClickHandler(errorPos.filename, errorPos.line, errorPos.pos);
+                    compilerLogIssueClickHandler(errorPos.projectname, errorPos.filename, errorPos.line, errorPos.pos);
                 }
             }
-
-            auto logLine = this.content.line(this._caretPos.line);
-
-            //src\tetris.d(49): Error: found 'return' when expecting ';' following statement
-
-            auto match = matchFirst(logLine, ctr);
-
-            if(!match.empty) {
-                if (compilerLogIssueClickHandler.assigned) {
-                    import std.conv:to;
-                    int row = 0;
-                    try {
-                        row = to!int(match[2]) - 1;
-                    } catch (Exception e) {
-                        row = 0;
-                    }
-                    if (row < 0)
-                        row = 0;
-                    int col = 0;
-                    if (match[3]) {
-                        try {
-                            col = to!int(match[3]) - 1;
-                        } catch (Exception e) {
-                            col = 0;
-                        }
-                        if (col < 0)
-                            col = 0;
-                    }
-                    import dlangui.core.types : toUTF8;
-                    string filename = match[1].toUTF8;
-                    if (filename.startsWith("../") || filename.startsWith("..\\")) {
-                        resolveRelativePath(filename, _caretPos.line);
-                    }
-                    compilerLogIssueClickHandler(filename.toUTF32, row, col);
-                }
-            }
-
-            return true;
+            return false;
         }
-
         return super.onMouseEvent(event);
     }
 }
@@ -457,10 +423,10 @@ class OutputPanel : DockWindow {
         _logWidget.text = ""d;
     }
 
-    private bool onIssueClick(dstring fn, int line, int column)
+    private bool onIssueClick(dstring projectname, dstring fn, int line, int column)
     {
         if (compilerLogIssueClickHandler.assigned) {
-            compilerLogIssueClickHandler(fn, line, column);
+            compilerLogIssueClickHandler(projectname, fn, line, column);
         }
 
         return true;

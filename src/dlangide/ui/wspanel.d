@@ -44,6 +44,9 @@ class WorkspacePanel : DockWindow {
         if (projectItem) {
             TreeItem item = _tree.findItemById(projectItem.filename);
             if (item) {
+                if (item.parent && !item.parent.isFullyExpanded)
+                    item.parent.toggleExpand();
+                _tree.makeItemVisible(item);
                 _tree.selectItem(item);
                 return true;
             }
@@ -182,9 +185,9 @@ class WorkspacePanel : DockWindow {
         return cast(ProjectItem)obj;
     }
 
-    ProjectSourceFile findSourceFileItem(string filename, bool fullFileName=true) {
+    ProjectSourceFile findSourceFileItem(string filename, bool fullFileName=true, dstring projectName=null) {
         if (_workspace)
-            return _workspace.findSourceFileItem(filename, fullFileName);
+            return _workspace.findSourceFileItem(filename, fullFileName, projectName);
         return null;
     }
 

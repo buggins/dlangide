@@ -171,7 +171,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
     protected void handleBuildError(int result, Project project) {
         ErrorPosition err = _logPanel.firstError;
         if (err) {
-            onCompilerLogIssueClick(err.filename, err.line, err.pos);
+            onCompilerLogIssueClick(err.projectname, err.filename, err.line, err.pos);
         }
     }
 
@@ -387,16 +387,21 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
     @property IDESettings settings() { return _settings; }
 
     ///
-    bool onCompilerLogIssueClick(dstring filename, int line, int column)
+    bool onCompilerLogIssueClick(dstring projectname, dstring filename, int line, int column)
     {
-        Log.d("onCompilerLogIssueClick ", filename);
+        Log.d("onCompilerLogIssueClick project=", projectname, " file=", filename, " line=", line, " column=", column);
 
         import std.conv:to;
-        openSourceFile(to!string(filename));
-
-        currentEditor().setCaretPos(line, 0);
-        currentEditor().setCaretPos(line, column);
-
+        string fname = to!string(filename);
+        //import std.path : isAbsolute;
+        ProjectSourceFile sourceFile = _wsPanel.findSourceFileItem(fname, isAbsolute(fname) ? true : false, projectname);
+        if (openSourceFile(fname, sourceFile)) {
+            Log.d("found source file");
+            if (sourceFile)
+                _wsPanel.selectItem(sourceFile);
+            currentEditor().setCaretPos(line, 0);
+            currentEditor().setCaretPos(line, column);
+        }
         return true;
     }
 
