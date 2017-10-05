@@ -897,6 +897,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                 else
                     a.state = ACTION_STATE_DISABLE;
                 return true;
+            case IDEActions.FileNew:
+                a.state = (currentWorkspace && currentWorkspace.startupProject) ? ACTION_STATE_ENABLED : ACTION_STATE_DISABLE;
+                return true;
             case IDEActions.HelpAbout:
             case StandardAction.OpenUrl:
                 // always enabled
