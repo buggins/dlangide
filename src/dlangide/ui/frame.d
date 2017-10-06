@@ -36,6 +36,7 @@ import ddebug.common.execution;
 import ddebug.common.nodebug;
 import ddebug.common.debugger;
 import ddebug.gdb.gdbinterface;
+import dlangide.tools.d.dmdtrace;
 
 import std.conv;
 import std.utf;
@@ -805,6 +806,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                       );
 
 
+        MenuItem toolsItem = new MenuItem(new Action(33, "MENU_TOOLS"c));
+        toolsItem.add(ACTION_TOOLS_OPEN_DMD_TRACE_LOG);
+
         MenuItem windowItem = new MenuItem(new Action(3, "MENU_WINDOW"c));
         //windowItem.add(new Action(30, "MENU_WINDOW_PREFERENCES"));
         windowItem.add(ACTION_WINDOW_CLOSE_DOCUMENT, ACTION_WINDOW_CLOSE_ALL_DOCUMENTS);
@@ -818,6 +822,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         mainMenuItems.add(navItem);
         mainMenuItems.add(buildItem);
         mainMenuItems.add(debugItem);
+        mainMenuItems.add(toolsItem);
         //mainMenuItems.add(viewItem);
         mainMenuItems.add(windowItem);
         mainMenuItems.add(helpItem);
@@ -1002,6 +1007,50 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         }
     }
 
+    static immutable TRACE_LOG_ID = "TRACE_LOG";
+    void showDMDTraceLog(DMDTraceLogParser data) {
+        import dlangide.ui.dmdprofilerview;
+        int index = _tabs.tabIndex(TRACE_LOG_ID);
+        if (index >= 0) {
+            _tabs.removeTab(TRACE_LOG_ID);
+        }
+        DMDProfilerView home = new DMDProfilerView(TRACE_LOG_ID, this, data);
+        _tabs.addTab(home, UIString.fromId("PROFILER_WINDOW"c), null, true);
+        _tabs.selectTab(TRACE_LOG_ID, true);
+    }
+
+    //void showDMDTraceLog()
+    void openDMDTraceLog(string filename) {
+        DMDProfilerLogParserOperation op = new DMDProfilerLogParserOperation(this, filename, _logPanel,
+            delegate(DMDTraceLogParser parser) {
+                if (parser) {
+                    Log.d("Trace log is ready");
+                    showDMDTraceLog(parser);
+                } else {
+                    Log.e("Trace log is failed");
+                    window.showMessageBox(UIString.fromId("ERROR"c), UIString.fromId("ERROR_FAILED_TO_PARSE_FILE"c));
+                }
+            }
+        );
+        setBackgroundOperation(op);
+    }
+
+    void openDMDTraceLog() {
+        UIString caption;
+        caption = UIString.fromId("HEADER_OPEN_DMD_PROFILER_LOG"c);
+        FileDialog dlg = createFileDialog(caption);
+        dlg.addFilter(FileFilterEntry(UIString.fromId("PROFILER_LOG_FILES"c), "*.log"));
+        dlg.path = _settings.getRecentPath("FILE_OPEN_PATH");
+        dlg.dialogResult = delegate(Dialog d, const Action result) {
+            if (result.id == ACTION_OPEN.id) {
+                string filename = result.stringParam;
+                _settings.setRecentPath(dlg.path, "FILE_OPEN_PATH");
+                openDMDTraceLog(filename);
+            }
+        };
+        dlg.show();
+    }
+
     FileDialog createFileDialog(UIString caption, int fileDialogFlags = DialogFlag.Modal | DialogFlag.Resizable | FileDialogFlag.FileMustExist) {
         FileDialog dlg = new FileDialog(caption, window, null, fileDialogFlags);
         dlg.filetypeIcons[".d"] = "text-d";
@@ -1025,6 +1074,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     return true;
                 case IDEActions.HelpDonate:
                     Platform.instance.openURL(HELP_DONATION_URL);
+                    return true;
+                case IDEActions.ToolsOpenDMDTraceLog:
+                    openDMDTraceLog();
                     return true;
                 case IDEActions.HelpAbout:
                     //debug {

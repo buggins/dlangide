@@ -13,6 +13,14 @@ mixin APP_ENTRY_POINT;
 /// entry point for dlangui based application
 extern (C) int UIAppMain(string[] args) {
 
+    //debug(TestDMDTraceParser) {
+    //    import dlangide.tools.d.dmdtrace;
+    //    long start = currentTimeMillis;
+    //    DMDTraceLogParser parser = parseDMDTraceLog("trace.log");
+    //    if (parser) {
+    //        Log.d("trace.log is parsed ok in ", currentTimeMillis - start, " seconds");
+    //    }
+    //}
     debug(TestParser) {
         import ddc.lexer.parser;
         runParserTests();
