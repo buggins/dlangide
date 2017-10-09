@@ -27,16 +27,45 @@ import dlangide.builders.extprocess;
 import dlangui.widgets.appframe;
 import core.thread;
 
+enum TraceSortOrder {
+    BY_FUNCTION_TIME,
+    BY_TOTAL_TIME,
+    BY_CALL_COUNT,
+    BY_NAME,
+}
+
+void sortFunctionNodes(FunctionNode[] nodes, TraceSortOrder sortOrder) {
+    import std.algorithm.sorting : sort;
+    final switch(sortOrder) {
+        case TraceSortOrder.BY_FUNCTION_TIME:
+            sort!((a,b) => a.function_time < b.function_time)(nodes);
+            break;
+        case TraceSortOrder.BY_TOTAL_TIME:
+            sort!((a,b) => a.function_and_descendant_time < b.function_and_descendant_time)(nodes);
+            break;
+        case TraceSortOrder.BY_CALL_COUNT:
+            sort!((a,b) => a.number_of_calls < b.number_of_calls)(nodes);
+            break;
+        case TraceSortOrder.BY_NAME:
+            sort!((a,b) => a.name < b.name)(nodes);
+            break;
+    }
+}
+
 class DMDTraceLogParser {
-    string filename;
-    string content;
-    string[] lines;
-    bool _cancelRequested;
+    private string filename;
+    private string content;
+    private string[] lines;
+    private bool _cancelRequested;
 
     FunctionNode[string] nodes;
+    FunctionNode[] nodesByFunctionTime;
+    FunctionNode[] nodesByTotalTime;
+    FunctionNode[] nodesByCallCount;
+    FunctionNode[] nodesByName;
     //FunctionEdge[string] caller_graph;
     //FunctionEdge[string] called_graph;
-    ulong ticks_per_second;
+    private ulong ticks_per_second;
 
     this(string fname) {
         filename = fname;
@@ -158,7 +187,22 @@ class DMDTraceLogParser {
                 caller = false;
             }
         }
+        makeSorted();
         return true;
+    }
+
+    void makeSorted() {
+        nodesByFunctionTime.reserve(nodes.length);
+        foreach(key, value; nodes) {
+            nodesByFunctionTime ~= value;
+        }
+        nodesByTotalTime = nodesByFunctionTime.dup;
+        nodesByCallCount = nodesByFunctionTime.dup;
+        nodesByName = nodesByFunctionTime.dup;
+        sortFunctionNodes(nodesByFunctionTime, TraceSortOrder.BY_FUNCTION_TIME);
+        sortFunctionNodes(nodesByTotalTime, TraceSortOrder.BY_TOTAL_TIME);
+        sortFunctionNodes(nodesByCallCount, TraceSortOrder.BY_CALL_COUNT);
+        sortFunctionNodes(nodesByName, TraceSortOrder.BY_NAME);
     }
 }
 
