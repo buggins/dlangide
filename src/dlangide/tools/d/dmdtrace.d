@@ -38,13 +38,13 @@ void sortFunctionNodes(FunctionNode[] nodes, TraceSortOrder sortOrder) {
     import std.algorithm.sorting : sort;
     final switch(sortOrder) {
         case TraceSortOrder.BY_FUNCTION_TIME:
-            sort!((a,b) => a.function_time < b.function_time)(nodes);
+            sort!((a,b) => a.function_time > b.function_time)(nodes);
             break;
         case TraceSortOrder.BY_TOTAL_TIME:
-            sort!((a,b) => a.function_and_descendant_time < b.function_and_descendant_time)(nodes);
+            sort!((a,b) => a.function_and_descendant_time > b.function_and_descendant_time)(nodes);
             break;
         case TraceSortOrder.BY_CALL_COUNT:
-            sort!((a,b) => a.number_of_calls < b.number_of_calls)(nodes);
+            sort!((a,b) => a.number_of_calls > b.number_of_calls)(nodes);
             break;
         case TraceSortOrder.BY_NAME:
             sort!((a,b) => a.name < b.name)(nodes);
@@ -65,7 +65,7 @@ class DMDTraceLogParser {
     FunctionNode[] nodesByName;
     //FunctionEdge[string] caller_graph;
     //FunctionEdge[string] called_graph;
-    private ulong ticks_per_second;
+    ulong ticks_per_second;
 
     this(string fname) {
         filename = fname;
@@ -186,6 +186,11 @@ class DMDTraceLogParser {
                 function_only = to!ulong(line[last_tab + 1 .. $]);
                 caller = false;
             }
+        }
+        if (function_name.length != 0)
+        {
+            nodes[text(function_name)] = new FunctionNode(function_name,
+                                                          function_times, function_and_descendant, function_only, caller_graph, called_graph);
         }
         makeSorted();
         return true;
