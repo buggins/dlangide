@@ -63,9 +63,18 @@ Simple way to try it (you will need some D compiler and DUB utility):
     dub fetch dlangide && dub run --build=release dlangide
 
 On Linux and OSX you will need to install libSDL2, which is used as a default backend.
-On Linux it's usually already installed. On OSX, use homebrew or some other package manager to install it.
+On OSX, use homebrew or some other package manager to install it.
 
     brew install sdl2
+
+On Linux it's usually already installed. If not, for debian/ubuntu use:
+
+    sudo apt-get install libsdl2-dev
+
+For RPM based distributions:
+
+    sudo yum install SDL2-devel
+
 
 Recent builds with dmd under windows have issues with crash in OPTILINK linker from DMD.
 
