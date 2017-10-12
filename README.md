@@ -76,6 +76,9 @@ E.g. use homebrew or some other package manager to install it.
 
     brew install sdl2
 
+For troubleshooting of screen DPI detection (e.g. if everything is small on Retina display), 
+you can choose DPI manually in menu Edit / Preferences / Interface : Override screen DPI.
+(This issue will be fixed soon).
 
 Linux build notes
 -----------------
