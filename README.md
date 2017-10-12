@@ -58,16 +58,33 @@ Mago debugger GitHub page: [https://github.com/rainers/mago](https://github.com/
 Try DlangIDE
 ============
 
-Simple way to try it (you will need some D compiler and DUB utility):
+You can use DUB utility and DMD compiler to download, build and run recent version of DlangIDE from GIT repository.
 
-    dub fetch dlangide && dub run --build=release dlangide
+Pre-requisites: install DMD from [https://dlang.org/download.html](https://dlang.org/download.html). In recent DMD packages, DUB utility is included.
 
-On Linux and OSX you will need to install libSDL2, which is used as a default backend.
-On OSX, use homebrew or some other package manager to install it.
+Now you can fetch, build and run DlangIDE:
+
+    dub fetch dlangide
+    dub run --build=release dlangide
+
+OSX build notes
+---------------
+
+On OSX you will need to install libSDL2, which is used as a default backend.
+
+E.g. use homebrew or some other package manager to install it.
 
     brew install sdl2
 
-On Linux it's usually already installed. If not, for debian/ubuntu use:
+
+Linux build notes
+-----------------
+
+On Linux will need to install libSDL2, which is used as a default backend.
+
+If it's not yet installed, install it in order to run DlangIDE.
+
+For debian/ubuntu use:
 
     sudo apt-get install libsdl2-dev
 
@@ -76,16 +93,22 @@ For RPM based distributions:
     sudo yum install SDL2-devel
 
 
+Windows build notes
+-------------------
+
 Recent builds with dmd under windows have issues with crash in OPTILINK linker from DMD.
 
 Workaround: add --arch=x86_mscoff or --arch=x86_64 to DUB commandline
 
+Build 32bit version using microsoft linker and COFF object and library file format:
+
     dub run --build=release --arch=x86_mscoff dlangide
 
+Build 64bit version using microsoft linker:
 
     dub run --build=release --arch=x86_64 dlangide
 
-Note: unlike --arch=x86, both x86_mscoff and x86_64 have a dependency on linker from Visual Studio C++ compiler toolchain.
+Note: unlike default --arch=x86, both x86_mscoff and x86_64 have a dependency on linker from Visual Studio C++ compiler toolchain.
 
 
 Build tools
