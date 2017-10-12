@@ -82,9 +82,10 @@ Workaround: add --arch=x86_mscoff or --arch=x86_64 to DUB commandline
 
     dub run --build=release --arch=x86_mscoff dlangide
 
+
     dub run --build=release --arch=x86_64 dlangide
 
-Both x86_mscoff and x86_64 have a dependency on linker from Visual Studio C++ compiler toolchain.
+Note: unlike --arch=x86, both x86_mscoff and x86_64 have a dependency on linker from Visual Studio C++ compiler toolchain.
 
 
 Build tools
