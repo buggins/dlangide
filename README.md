@@ -55,14 +55,27 @@ DlangUI project GitHub page: [https://github.com/buggins/dlangui](https://github
 Mago debugger GitHub page: [https://github.com/rainers/mago](https://github.com/rainers/mago)
 
 
+Try DlangIDE
+============
 
 Simple way to try it (you will need some D compiler and DUB utility):
 
     dub fetch dlangide && dub run --build=release dlangide
 
+On Linux and OSX you will need to install libSDL2, which is used as a default backend.
+On Linux it's usually already installed. On OSX, use homebrew or some other package manager to install it.
+
+    brew install sdl2
+
 Recent builds with dmd under windows have issues with crash in OPTILINK linker from DMD.
 
-Workaround: add --arch=x86_mscoff or --arch=x86_64
+Workaround: add --arch=x86_mscoff or --arch=x86_64 to DUB commandline
+
+    dub run --build=release --arch=x86_mscoff dlangide
+
+    dub run --build=release --arch=x86_64 dlangide
+
+Both x86_mscoff and x86_64 have a dependency on linker from Visual Studio C++ compiler toolchain.
 
 
 Build tools
