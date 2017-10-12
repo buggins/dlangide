@@ -99,6 +99,10 @@ For RPM based distributions:
 Windows build notes
 -------------------
 
+Pre-built win32 binaries can be found in releases section.
+
+As well, you can build it yourself.
+
 Recent builds with dmd under windows have issues with crash in OPTILINK linker from DMD.
 
 Workaround: add --arch=x86_mscoff or --arch=x86_64 to DUB commandline
