@@ -1644,9 +1644,6 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             needUpdateTheme = true;
         }
         if (needUpdateTheme) {
-            drawableCache.clear();
-            imageCache.checkpoint();
-            imageCache.cleanup();
             Log.d("updating theme after UI font change");
             Platform.instance.onThemeChanged();
         }
