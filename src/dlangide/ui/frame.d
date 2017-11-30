@@ -1367,6 +1367,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                 case IDEActions.FileNew:
                     addProjectItem(cast(Object)a.objectParam);
                     return true;
+                case IDEActions.FileNewDirectory:
+                    //static assert(false);
+                    return true;
                 case IDEActions.ProjectFolderRemoveItem:
                     removeProjectItem(a.objectParam);
                     return true;
@@ -1488,7 +1491,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
     }
 
     /// add new file to project
-    void addProjectItem(Object obj) {
+    private void addProjectItem(Object obj) {
         if (currentWorkspace is null)
             return;
         if (obj is null && _wsPanel !is null && !currentEditorSourceFile) {
@@ -1515,6 +1518,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                 project = srcfile.project;
             }
         }
+        //static assert(false, "hier verdergaan okdoei");
         if (project && folder && project.workspace is currentWorkspace) {
             NewFileDlg dlg = new NewFileDlg(this, project, folder);
             dlg.dialogResult = delegate(Dialog dlg, const Action result) {
