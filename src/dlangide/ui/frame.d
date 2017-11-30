@@ -21,6 +21,7 @@ import dlangide.ui.commands;
 import dlangide.ui.wspanel;
 import dlangide.ui.outputpanel;
 import dlangide.ui.newfile;
+import dlangide.ui.newfolder;
 import dlangide.ui.newproject;
 import dlangide.ui.dsourceedit;
 import dlangide.ui.homescreen;
@@ -1365,10 +1366,10 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     createNewProject(false);
                     return true;
                 case IDEActions.FileNew:
-                    addProjectItem(cast(Object)a.objectParam);
+                    addFile(cast(Object)a.objectParam);
                     return true;
                 case IDEActions.FileNewDirectory:
-                    //static assert(false);
+                    addDirectory(cast(Object)a.objectParam);
                     return true;
                 case IDEActions.ProjectFolderRemoveItem:
                     removeProjectItem(a.objectParam);
@@ -1490,8 +1491,47 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
 
     }
 
+    private void addFile(Object obj) {
+        Dialog createNewFileDialog(Project project, ProjectFolder folder) {
+            NewFileDlg dialog = new NewFileDlg(this, project, folder);
+            dialog.dialogResult = delegate(Dialog dlg, const Action result) {
+                if (result.id == ACTION_FILE_NEW_SOURCE_FILE.id) {
+                    FileCreationResult res = cast(FileCreationResult)result.objectParam;
+                    if (res) {
+                        //res.project.reload();
+                        res.project.refresh();
+                        refreshWorkspace();
+                        if (isSupportedSourceTextFileFormat(res.filename)) {
+                            openSourceFile(res.filename, null, true);
+                        }
+                    }
+                }
+            };
+            return dialog;
+        }
+        addProjectItem(&createNewFileDialog, obj);
+    }
+
+    private void addDirectory(Object obj) {
+        Dialog createNewDirectoryDialog(Project project, ProjectFolder folder) {
+            NewFolderDialog dialog = new NewFolderDialog(this, project, folder);
+            dialog.dialogResult = delegate(Dialog dlg, const Action result) {
+                if(result.id == ACTION_FILE_NEW_DIRECTORY.id) {
+                    FileCreationResult res = cast(FileCreationResult)result.objectParam;
+                    if (res) {
+                        //res.project.reload();
+                        res.project.refresh();
+                        refreshWorkspace();
+                    }
+                }
+            };
+            return dialog;
+        }
+        addProjectItem(&createNewDirectoryDialog, obj);
+    }
+
     /// add new file to project
-    private void addProjectItem(Object obj) {
+    private void addProjectItem(Dialog delegate(Project, ProjectFolder) dialogFactory, Object obj) {
         if (currentWorkspace is null)
             return;
         if (obj is null && _wsPanel !is null && !currentEditorSourceFile) {
@@ -1503,7 +1543,6 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         ProjectFolder folder;
         if (cast(Project)obj) {
             project = cast(Project)obj;
-            folder = project.firstSourceFolder;
         } else if (cast(ProjectFolder)obj) {
             folder = cast(ProjectFolder)obj;
             project = folder.project;
@@ -1518,22 +1557,8 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                 project = srcfile.project;
             }
         }
-        //static assert(false, "hier verdergaan okdoei");
-        if (project && folder && project.workspace is currentWorkspace) {
-            NewFileDlg dlg = new NewFileDlg(this, project, folder);
-            dlg.dialogResult = delegate(Dialog dlg, const Action result) {
-                if (result.id == ACTION_FILE_NEW_SOURCE_FILE.id) {
-                    FileCreationResult res = cast(FileCreationResult)result.objectParam;
-                    if (res) {
-                        //res.project.reload();
-                        res.project.refresh();
-                        refreshWorkspace();
-                        if (isSupportedSourceTextFileFormat(res.filename)) {
-                            openSourceFile(res.filename, null, true);
-                        }
-                    }
-                }
-            };
+        if (project && project.workspace is currentWorkspace) {
+            Dialog dlg = dialogFactory(project, folder);
             dlg.show();
         }
     }
