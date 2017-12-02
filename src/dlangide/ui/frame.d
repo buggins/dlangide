@@ -1138,7 +1138,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                             else
                                 ed.editorTool = new DefaultEditorTool(this);
                             //openSourceFile(filename);
-                            refreshWorkspace();
+                            updateTreeGraph();
                             ProjectSourceFile file = _wsPanel.findSourceFileItem(filename, false);
                             if (file) {
                                 ed.projectSourceFile = file;
@@ -1210,7 +1210,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     buildProject(BuildOperation.Upgrade, cast(Project)a.objectParam);
                     return true;
                 case IDEActions.RefreshProject:
-                    refreshWorkspace();
+                    updateTreeGraph();
                     return true;
                 case IDEActions.RevealProjectInExplorer:
                     revealProjectInExplorer(cast(Project)a.objectParam);
@@ -1437,7 +1437,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         if (cast(Workspace)obj) {
             Workspace ws = cast(Workspace)obj;
             ws.refresh();
-            refreshWorkspace();
+            updateTreeGraph();
         } else if (cast(Project)obj) {
             project = cast(Project)obj;
         } else if (cast(ProjectFolder)obj) {
@@ -1456,7 +1456,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         }
         if (project) {
             project.refresh();
-            refreshWorkspace();
+            updateTreeGraph();
         }
     }
 
@@ -1483,7 +1483,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                             Log.e("Cannot remove file");
                         }
                         project.refresh();
-                        refreshWorkspace();
+                        updateTreeGraph();
                     }
                     // else ignore
                     return true;
@@ -1500,7 +1500,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     if (res) {
                         //res.project.reload();
                         res.project.refresh();
-                        refreshWorkspace();
+                        updateTreeGraph();
                         if (isSupportedSourceTextFileFormat(res.filename)) {
                             openSourceFile(res.filename, null, true);
                         }
@@ -1519,9 +1519,11 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                 if(result.id == ACTION_FILE_NEW_DIRECTORY.id) {
                     FileCreationResult res = cast(FileCreationResult)result.objectParam;
                     if (res) {
-                        //res.project.reload();
-                        res.project.refresh();
-                        refreshWorkspace();
+                        ProjectFolder newFolder = new ProjectFolder(res.filename);
+                        if(folder) {
+                            folder.addChild(newFolder);
+                        }
+                        updateTreeGraph();
                     }
                 }
             };
@@ -1543,6 +1545,12 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         ProjectFolder folder;
         if (cast(Project)obj) {
             project = cast(Project)obj;
+            folder = project.items;
+            import std.stdio;
+            writeln("Root filename:", folder.filename);
+            for(int i = 0; i < folder.childCount; i++) {
+                writeln("Child [", i, "]: ", folder.child(i).filename);
+            }
         } else if (cast(ProjectFolder)obj) {
             folder = cast(ProjectFolder)obj;
             project = folder.project;
@@ -1579,12 +1587,12 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     if (currentWorkspace is null || res.workspace !is currentWorkspace) {
                         // open new workspace
                         setWorkspace(res.workspace);
-                        refreshWorkspace();
+                        updateTreeGraph();
                         hideHomeScreen();
                     } else {
                         // project added to current workspace
                         loadProject(res.project);
-                        refreshWorkspace();
+                        updateTreeGraph();
                         hideHomeScreen();
                     }
                 }
@@ -1786,7 +1794,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                                               currentWorkspace.addProject(project);
                                               loadProject(project);
                                               currentWorkspace.save();
-                                              refreshWorkspace();
+                                              updateTreeGraph();
                                               hideHomeScreen();
                                           }
                                           return true;
@@ -1801,7 +1809,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         }
     }
 
-    void refreshWorkspace() {
+    void updateTreeGraph() {
         _logPanel.logLine("Refreshing workspace");
         _wsPanel.reloadItems();
         closeRemovedDocuments();
@@ -1867,7 +1875,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
     void refreshProject(Project project) {
         if (currentWorkspace && project.loadSelections()) {
             currentWorkspace.cleanupUnusedDependencies();
-            refreshWorkspace();
+            updateTreeGraph();
         }
     }
 
