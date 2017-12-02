@@ -102,7 +102,6 @@ class WorkspacePanel : DockWindow {
         _projectPopupMenu = new MenuItem();
         _projectPopupMenu.add(ACTION_PROJECT_SET_STARTUP,
                               ACTION_PROJECT_FOLDER_REFRESH,
-                              ACTION_FILE_NEW_SOURCE_FILE,
                               //ACTION_FILE_NEW_DIRECTORY,
                               //ACTION_PROJECT_FOLDER_OPEN_ITEM,
                               ACTION_PROJECT_BUILD,
