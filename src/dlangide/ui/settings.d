@@ -62,6 +62,7 @@ StringListValue[] createIntValueList(int[] values, dstring suffix = ""d) {
 
 /// create DlangIDE settings pages tree
 SettingsPage createSettingsPages() {
+    import std.conv : to;
     // Root page
     SettingsPage res = new SettingsPage("", UIString.fromRaw(""d));
 

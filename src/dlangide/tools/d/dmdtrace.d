@@ -219,6 +219,7 @@ private string demangle(string mangled_name) {
     string demangled_name; // = dlangide.tools.d.demangle.demangle(mangled_name);
     //if (demangled_name[0] == '_') { // in the unlikely event that we fail to demangle, fall back to the phobos demangler
         try {
+            static import core.demangle;
             if (demangleBuffer.length < mangled_name.length + 16384)
                 demangleBuffer.length = mangled_name.length * 2 + 16384;
             demangled_name = cast(string)core.demangle.demangle(mangled_name, demangleBuffer[]);

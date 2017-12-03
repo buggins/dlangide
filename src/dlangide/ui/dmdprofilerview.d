@@ -87,6 +87,7 @@ class TraceFuncionGrid : StringGridWidgetBase {
 
     /// get cell text
     override dstring cellText(int col, int row) {
+        import std.conv : to;
         if (row < 0 || row >= _list.length)
             return ""d;
         FunctionNode entry = _list[row];
