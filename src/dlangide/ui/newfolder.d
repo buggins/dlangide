@@ -29,7 +29,8 @@ class NewFolderDialog : Dialog {
 
     this(IDEFrame parent, Project currentProject, ProjectFolder folder) {
         super(UIString.fromId("OPTION_NEW_SOURCE_FILE"c), parent.window, 
-              DialogFlag.Modal | DialogFlag.Resizable | DialogFlag.Popup, 500, 400);
+              DialogFlag.Modal | DialogFlag.Resizable | DialogFlag.Popup, 800, 0);
+		layoutWidth = FILL_PARENT;
         _ide = parent;
         _icon = "dlangui-logo1";
         this._project = currentProject;
@@ -50,7 +51,7 @@ class NewFolderDialog : Dialog {
                     VerticalLayout {
                         id: vlayout
                         padding: Rect { 5, 5, 5, 5 }
-                        layoutWidth: fill; layoutHeight: fill
+                        layoutWidth: fill; layoutHeight: wrap
                         TableLayout {
                             margins: 5
                             colCount: 2
@@ -58,7 +59,7 @@ class NewFolderDialog : Dialog {
                             TextWidget { text: NAME }
                             EditLine { id: edName; text: "newfolder"; layoutWidth: fill }
                             TextWidget { text: OPTION_FILE_PATH }
-                            EditLine { id: edFilePath; text: ""; layoutWidth: fill; readOnly: true }
+                            EditLine { id: edFilePath; text: ""; layoutWidth: wrap; readOnly: true }
                         }
                         TextWidget { id: statusText; text: ""; layoutWidth: fill; textColor: #FF0000 }
                     }
