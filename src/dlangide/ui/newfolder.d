@@ -29,7 +29,7 @@ class NewFolderDialog : Dialog {
 	
 	this(IDEFrame parent, Project currentProject, ProjectFolder folder) {
 		super(UIString.fromId("OPTION_NEW_SOURCE_FILE"c), parent.window, 
-			DialogFlag.Modal | DialogFlag.Resizable | DialogFlag.Popup, 800, 0);
+			DialogFlag.Modal | DialogFlag.Popup, 800, 0);
 		layoutWidth = FILL_PARENT;
 		_ide = parent;
 		_icon = "dlangui-logo1";
@@ -59,7 +59,7 @@ class NewFolderDialog : Dialog {
 							TextWidget { text: NAME }
 							EditLine { id: fileName; text: "newfolder"; layoutWidth: fill }
 							CheckBox { id: makePackage }
-							TextWidget { text: MAKE_PACKAGE}
+							TextWidget { text: OPTION_MAKE_PACKAGE}
 						}
 						TextWidget { id: statusText; text: ""; layoutWidth: fill; textColor: #FF0000 }
 					}
