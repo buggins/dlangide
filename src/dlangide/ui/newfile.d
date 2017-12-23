@@ -198,29 +198,6 @@ class NewFileDlg : Dialog {
     ProjectTemplate _currentTemplate;
     ProjectTemplate[] _templates;
 
-    static bool isSubdirOf(string path, string basePath) {
-        if (path.equal(basePath))
-            return true;
-        if (path.length > basePath.length + 1 && path.startsWith(basePath)) {
-            char ch = path[basePath.length];
-            return ch == '/' || ch == '\\';
-        }
-        return false;
-    }
-
-    bool findSource(string path, ref string sourceFolderPath, ref string relativePath) {
-        foreach(dir; _sourcePaths) {
-            if (isSubdirOf(path, dir)) {
-                sourceFolderPath = dir;
-                relativePath = path[sourceFolderPath.length .. $];
-                if (relativePath.length > 0 && (relativePath[0] == '\\' || relativePath[0] == '/'))
-                    relativePath = relativePath[1 .. $];
-                return true;
-            }
-        }
-        return false;
-    }
-
     bool setError(dstring msg) {
         _statusText.text = msg;
         return msg.empty;
@@ -241,26 +218,13 @@ class NewFileDlg : Dialog {
             return setError("Location directory does not exist");
 
         if (_currentTemplate.kind == FileKind.MODULE || _currentTemplate.kind == FileKind.PACKAGE) {
-            string sourcePath, relativePath;
-            if (!findSource(_location, sourcePath, relativePath))
-                return setError("Location is outside of source path");
-            if (!isValidModuleName(filename))
-                return setError("Invalid file name");
-            _moduleName = filename;
-            char[] buf;
-            foreach(c; relativePath) {
-                char ch = c;
-                if (ch == '/' || ch == '\\')
-                    ch = '.';
-                else if (ch == '.')
-                    ch = '_';
-                if (ch == '.' && (buf.length == 0 || buf[$-1] == '.'))
-                    continue; // skip duplicate .
-                buf ~= ch;
-            }
-            if (buf.length && buf[$-1] == '.')
-                buf.length--;
-            _packageName = buf.dup;
+			string sourcePath, relativePath;
+			if (!findSource(_sourcePaths, _location, sourcePath, relativePath))
+				return setError("Location is outside of source path");
+			if (!isValidModuleName(filename))
+				return setError("Invalid file name");
+			_moduleName = filename; 
+			_packageName = getPackageName(sourcePath, relativePath);
             string m;
             if (_currentTemplate.kind == FileKind.MODULE) {
                 m = !_packageName.empty ? _packageName ~ '.' ~ _moduleName : _moduleName;
@@ -284,20 +248,10 @@ class NewFileDlg : Dialog {
 
     private FileCreationResult _result;
     bool createItem() {
-        try {
-            if (_currentTemplate.kind == FileKind.MODULE) {
-                string txt = "module " ~ _packageName ~ ";\n\n" ~ _currentTemplate.srccode;
-                write(_fullPathName, txt);
-            } else if (_currentTemplate.kind == FileKind.PACKAGE) {
-                string txt = "module " ~ _packageName ~ ";\n\n" ~ _currentTemplate.srccode;
-                write(_fullPathName, txt);
-            } else {
-                write(_fullPathName, _currentTemplate.srccode);
-            }
-        } catch (Exception e) {
-            Log.e("Cannot create file", e);
-            return setError("Cannot create file");
-        }
+		if(!createFile(_fullPathName, _currentTemplate.kind, _packageName, _currentTemplate.srccode)) {
+	        return setError("Cannot create file");
+		}
+		
         _result = new FileCreationResult(_project, _fullPathName);
         return true;
     }
@@ -376,4 +330,68 @@ class ProjectTemplate {
         this.srccode = srccode;
         this.kind = kind;
     }
+}
+
+bool createFile(string fullPathName, FileKind fileKind, string packageName, string sourceCode) {
+	try {
+		if (fileKind == FileKind.MODULE) {
+			string txt = "module " ~ packageName ~ ";\n\n" ~ sourceCode;
+			write(fullPathName, txt);
+		} else if (fileKind == FileKind.PACKAGE) {
+			string txt = "module " ~ packageName ~ ";\n\n" ~ sourceCode;
+			write(fullPathName, txt);
+		} else {
+			write(fullPathName, sourceCode);
+		}
+		return true;
+	}
+	catch(Exception e) 	{
+        Log.e("Cannot create file", e);
+		return false;
+	}
+}
+
+string getPackageName(string path, string[] sourcePaths){
+	string sourcePath, relativePath;
+	if(!findSource(sourcePaths, path, sourcePath, relativePath)) return "";
+	return getPackageName(sourcePath, relativePath);
+}
+
+string getPackageName(string sourcePath, string relativePath){
+
+	char[] buf;
+	foreach(c; relativePath) {
+		char ch = c;
+		if (ch == '/' || ch == '\\')
+			ch = '.';
+		else if (ch == '.')
+			ch = '_';
+		if (ch == '.' && (buf.length == 0 || buf[$-1] == '.'))
+			continue; // skip duplicate .
+		buf ~= ch;
+	}
+	if (buf.length && buf[$-1] == '.')
+		buf.length--;
+	return buf.dup;
+}
+private bool findSource(string[] sourcePaths, string path, ref string sourceFolderPath, ref string relativePath) {
+	foreach(dir; sourcePaths) {
+		if (isSubdirOf(path, dir)) {
+			sourceFolderPath = dir;
+			relativePath = path[sourceFolderPath.length .. $];
+			if (relativePath.length > 0 && (relativePath[0] == '\\' || relativePath[0] == '/'))
+				relativePath = relativePath[1 .. $];
+			return true;
+		}
+	}
+	return false;
+}
+private bool isSubdirOf(string path, string basePath) {
+    if (path.equal(basePath))
+        return true;
+    if (path.length > basePath.length + 1 && path.startsWith(basePath)) {
+        char ch = path[basePath.length];
+        return ch == '/' || ch == '\\';
+    }
+    return false;
 }
