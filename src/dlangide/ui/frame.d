@@ -416,6 +416,13 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             _tabs.renameTab(index, name);
         }
     }
+
+	bool tryOpenSourceFile(string filename) {
+			if (isSupportedSourceTextFileFormat(filename)) {
+				return openSourceFile(filename, null, true);
+			}
+			return false;
+		}
     
     bool openSourceFile(string filename, ProjectSourceFile file = null, bool activate = true) {
         if (!file && !filename)
@@ -1501,9 +1508,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                         //res.project.reload();
                         res.project.refresh();
                         updateTreeGraph();
-                        if (isSupportedSourceTextFileFormat(res.filename)) {
-                            openSourceFile(res.filename, null, true);
-                        }
+						tryOpenSourceFile(res.filename);
                     }
                 }
             };
@@ -1522,6 +1527,10 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                         ProjectFolder newFolder = new ProjectFolder(res.filename);
                         if(folder) {
                             folder.addChild(newFolder);
+							newFolder.refresh();
+							if(newFolder.childCount > 0){
+								tryOpenSourceFile(newFolder.child(0).filename);
+							}
                         }
                         updateTreeGraph();
                     }
