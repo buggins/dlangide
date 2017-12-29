@@ -149,25 +149,25 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
     /// called when program execution is stopped
     protected void onProgramExecutionStatus(ProgramExecution process, ExecutionStatus status, int exitCode) {
         executeInUiThread(delegate() {
-            Log.d("onProgramExecutionStatus process: ", process.executableFile, " status: ", status, " exitCode: ", exitCode);
-            _execution = null;
-            // TODO: update state
-            switch(status) {
-                case ExecutionStatus.Error:
-                    _logPanel.logLine("Cannot run program " ~ process.executableFile);
-                    break;
-                case ExecutionStatus.Finished:
-                    _logPanel.logLine("Program " ~ process.executableFile ~ " finished with exit code " ~ to!string(exitCode));
-                    break;
-                case ExecutionStatus.Killed:
-                    _logPanel.logLine("Program " ~ process.executableFile ~ " is killed");
-                    break;
-                default:
-                    _logPanel.logLine("Program " ~ process.executableFile ~ " is finished");
-                    break;
-            }
-            _statusLine.setBackgroundOperationStatus(null, null);
-        });
+                Log.d("onProgramExecutionStatus process: ", process.executableFile, " status: ", status, " exitCode: ", exitCode);
+                _execution = null;
+                // TODO: update state
+                switch(status) {
+                    case ExecutionStatus.Error:
+                        _logPanel.logLine("Cannot run program " ~ process.executableFile);
+                        break;
+                    case ExecutionStatus.Finished:
+                        _logPanel.logLine("Program " ~ process.executableFile ~ " finished with exit code " ~ to!string(exitCode));
+                        break;
+                    case ExecutionStatus.Killed:
+                        _logPanel.logLine("Program " ~ process.executableFile ~ " is killed");
+                        break;
+                    default:
+                        _logPanel.logLine("Program " ~ process.executableFile ~ " is finished");
+                        break;
+                }
+                _statusLine.setBackgroundOperationStatus(null, null);
+            });
     }
 
     protected void handleBuildError(int result, Project project) {
@@ -187,13 +187,13 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             return;
         }
         buildProject(BuildOperation.Build, project, delegate(int result) {
-            if (!result) {
-                Log.i("Build completed successfully. Starting debug for project.");
-                debugProject(project);
-            } else {
-                handleBuildError(result, project);
-            }
-        });
+                if (!result) {
+                    Log.i("Build completed successfully. Starting debug for project.");
+                    debugProject(project);
+                } else {
+                    handleBuildError(result, project);
+                }
+            });
     }
 
     void debugFinished(ProgramExecution process, ExecutionStatus status, int exitCode) {
@@ -256,13 +256,13 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             return;
         }
         buildProject(BuildOperation.Build, project, delegate(int result) {
-            if (!result) {
-                Log.i("Build completed successfully. Running program...");
-                runProject(project);
-            } else {
-                handleBuildError(result, project);
-            }
-        });
+                if (!result) {
+                    Log.i("Build completed successfully. Running program...");
+                    runProject(project);
+                } else {
+                    handleBuildError(result, project);
+                }
+            });
     }
 
     protected void runProject(Project project) {
@@ -417,12 +417,12 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         }
     }
 
-	bool tryOpenSourceFile(string filename) {
-			if (isSupportedSourceTextFileFormat(filename)) {
-				return openSourceFile(filename, null, true);
-			}
-			return false;
-		}
+    bool tryOpenSourceFile(string filename) {
+        if (isSupportedSourceTextFileFormat(filename)) {
+            return openSourceFile(filename, null, true);
+        }
+        return false;
+    }
     
     bool openSourceFile(string filename, ProjectSourceFile file = null, bool activate = true) {
         if (!file && !filename)
@@ -495,7 +495,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             HomeScreen home = new HomeScreen(HOME_SCREEN_ID, this);
             _tabs.addTab(home, UIString.fromId("HOME"c), null, true);
             _tabs.selectTab(HOME_SCREEN_ID, true);
-             auto _settings = new IDESettings(buildNormalizedPath(settingsDir, "settings.json"));
+            auto _settings = new IDESettings(buildNormalizedPath(settingsDir, "settings.json"));
             // Auto open last workspace, if no workspace specified in command line and autoOpen flag set to true
             const auto recentWorkspaces = settings.recentWorkspaces;
             if (!openedWorkspace && recentWorkspaces.length > 0 && _settings.autoOpenLastProject())
@@ -611,35 +611,35 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         // tab content is modified - ask for confirmation
         auto header = UIString.fromId("HEADER_CLOSE_FILE"c);
         window.showMessageBox(header ~ " " ~ toUTF32(baseName(tabId)), UIString.fromId("MSG_FILE_CONTENT_CHANGED"c), 
-                              [ACTION_SAVE, ACTION_SAVE_ALL, ACTION_DISCARD_CHANGES, ACTION_DISCARD_ALL, ACTION_CANCEL], 
-                              0, delegate(const Action result) {
-                                  if (result == StandardAction.Save) {
-                                      // save and close
-                                      ed.save();
-                                      askForUnsavedEdits(onConfirm);
-                                  } else if (result == StandardAction.DiscardChanges) {
-                                      // close, don't save
-                                      closeTab(tabId);
-                                      closeAllDocuments();
-                                      onConfirm();
-                                  } else if (result == StandardAction.SaveAll) {
-                                      ed.save();
-                                      for(;;) {
-                                          DSourceEdit editor = hasUnsavedEdits();
-                                          if (!editor)
-                                              break;
-                                          editor.save();
-                                      }
-                                      closeAllDocuments();
-                                      onConfirm();
-                                  } else if (result == StandardAction.DiscardAll) {
-                                      // close, don't save
-                                      closeAllDocuments();
-                                      onConfirm();
-                                  }
-                                  // else ignore
-                                  return true;
-                              });
+            [ACTION_SAVE, ACTION_SAVE_ALL, ACTION_DISCARD_CHANGES, ACTION_DISCARD_ALL, ACTION_CANCEL], 
+            0, delegate(const Action result) {
+                if (result == StandardAction.Save) {
+                    // save and close
+                    ed.save();
+                    askForUnsavedEdits(onConfirm);
+                } else if (result == StandardAction.DiscardChanges) {
+                    // close, don't save
+                    closeTab(tabId);
+                    closeAllDocuments();
+                    onConfirm();
+                } else if (result == StandardAction.SaveAll) {
+                    ed.save();
+                    for(;;) {
+                        DSourceEdit editor = hasUnsavedEdits();
+                        if (!editor)
+                            break;
+                        editor.save();
+                    }
+                    closeAllDocuments();
+                    onConfirm();
+                } else if (result == StandardAction.DiscardAll) {
+                    // close, don't save
+                    closeAllDocuments();
+                    onConfirm();
+                }
+                // else ignore
+                return true;
+            });
     }
 
     protected void onTabClose(string tabId) {
@@ -650,19 +650,19 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             if (d && d.content.modified) {
                 // tab content is modified - ask for confirmation
                 window.showMessageBox(UIString.fromId("HEADER_CLOSE_TAB"c), UIString.fromId("MSG_TAB_CONTENT_CHANGED"c) ~ ": " ~ toUTF32(baseName(tabId)), 
-                                      [ACTION_SAVE, ACTION_DISCARD_CHANGES, ACTION_CANCEL], 
-                                      0, delegate(const Action result) {
-                                          if (result == StandardAction.Save) {
-                                              // save and close
-                                              d.save();
-                                              closeTab(tabId);
-                                          } else if (result == StandardAction.DiscardChanges) {
-                                              // close, don't save
-                                              closeTab(tabId);
-                                          }
-                                          // else ignore
-                                          return true;
-                                      });
+                    [ACTION_SAVE, ACTION_DISCARD_CHANGES, ACTION_CANCEL], 
+                    0, delegate(const Action result) {
+                        if (result == StandardAction.Save) {
+                            // save and close
+                            d.save();
+                            closeTab(tabId);
+                        } else if (result == StandardAction.DiscardChanges) {
+                            // close, don't save
+                            closeTab(tabId);
+                        }
+                        // else ignore
+                        return true;
+                    });
             } else {
                 closeTab(tabId);
             }
@@ -745,11 +745,11 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         fileNewItem.add(ACTION_FILE_NEW_SOURCE_FILE, ACTION_FILE_NEW_WORKSPACE, ACTION_FILE_NEW_PROJECT);
         fileItem.add(fileNewItem);
         fileItem.add(ACTION_FILE_OPEN_WORKSPACE, ACTION_FILE_OPEN, 
-                     ACTION_FILE_SAVE, ACTION_FILE_SAVE_AS, ACTION_FILE_SAVE_ALL, ACTION_FILE_WORKSPACE_CLOSE, ACTION_FILE_EXIT);
+            ACTION_FILE_SAVE, ACTION_FILE_SAVE_AS, ACTION_FILE_SAVE_ALL, ACTION_FILE_WORKSPACE_CLOSE, ACTION_FILE_EXIT);
 
         MenuItem editItem = new MenuItem(new Action(2, "MENU_EDIT"));
         editItem.add(ACTION_EDIT_COPY, ACTION_EDIT_PASTE, 
-                     ACTION_EDIT_CUT, ACTION_EDIT_UNDO, ACTION_EDIT_REDO);
+            ACTION_EDIT_CUT, ACTION_EDIT_UNDO, ACTION_EDIT_REDO);
         editItem.addSeparator();
         editItem.add(ACTION_EDITOR_FIND, ACTION_EDITOR_FIND_NEXT, ACTION_EDITOR_FIND_PREV, ACTION_EDITOR_REPLACE, ACTION_FIND_TEXT, ACTION_EDITOR_TOGGLE_BOOKMARK);
         editItem.addSeparator();
@@ -800,20 +800,20 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         buildItem.addSeparator();
 
         buildItem.add(ACTION_WORKSPACE_BUILD, ACTION_WORKSPACE_REBUILD, ACTION_WORKSPACE_CLEAN,
-                      ACTION_PROJECT_BUILD, ACTION_PROJECT_REBUILD, ACTION_PROJECT_CLEAN,
-                      ACTION_RUN_WITH_RDMD);
+            ACTION_PROJECT_BUILD, ACTION_PROJECT_REBUILD, ACTION_PROJECT_CLEAN,
+            ACTION_RUN_WITH_RDMD);
 
         MenuItem debugItem = new MenuItem(new Action(23, "MENU_DEBUG"));
         debugItem.add(ACTION_DEBUG_START, ACTION_DEBUG_START_NO_DEBUG,
-                      ACTION_DEBUG_CONTINUE, ACTION_DEBUG_STOP, ACTION_DEBUG_PAUSE,
-                      ACTION_DEBUG_RESTART,
-                      ACTION_DEBUG_STEP_INTO,
-                      ACTION_DEBUG_STEP_OVER,
-                      ACTION_DEBUG_STEP_OUT,
-                      ACTION_DEBUG_TOGGLE_BREAKPOINT, ACTION_DEBUG_ENABLE_BREAKPOINT, ACTION_DEBUG_DISABLE_BREAKPOINT
-                      );
+            ACTION_DEBUG_CONTINUE, ACTION_DEBUG_STOP, ACTION_DEBUG_PAUSE,
+            ACTION_DEBUG_RESTART,
+            ACTION_DEBUG_STEP_INTO,
+            ACTION_DEBUG_STEP_OVER,
+            ACTION_DEBUG_STEP_OUT,
+            ACTION_DEBUG_TOGGLE_BREAKPOINT, ACTION_DEBUG_ENABLE_BREAKPOINT, ACTION_DEBUG_DISABLE_BREAKPOINT
+            );
 
-
+        
         MenuItem toolsItem = new MenuItem(new Action(33, "MENU_TOOLS"c));
         toolsItem.add(ACTION_TOOLS_OPEN_DMD_TRACE_LOG);
 
@@ -881,14 +881,14 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
 
         tb = res.getOrAddToolbar("Edit");
         tb.addButtons(ACTION_EDIT_COPY, ACTION_EDIT_PASTE, ACTION_EDIT_CUT, ACTION_SEPARATOR,
-                      ACTION_EDIT_UNDO, ACTION_EDIT_REDO, ACTION_EDIT_INDENT, ACTION_EDIT_UNINDENT);
+            ACTION_EDIT_UNDO, ACTION_EDIT_REDO, ACTION_EDIT_INDENT, ACTION_EDIT_UNINDENT);
         tb = res.getOrAddToolbar("Debug");
         tb.addButtons(ACTION_DEBUG_STOP, ACTION_DEBUG_CONTINUE, ACTION_DEBUG_PAUSE,
-                      ACTION_DEBUG_RESTART,
-                      ACTION_DEBUG_STEP_INTO,
-                      ACTION_DEBUG_STEP_OVER,
-                      ACTION_DEBUG_STEP_OUT,
-                      );
+            ACTION_DEBUG_RESTART,
+            ACTION_DEBUG_STEP_INTO,
+            ACTION_DEBUG_STEP_OVER,
+            ACTION_DEBUG_STEP_OUT,
+            );
         return res;
     }
 
@@ -1039,7 +1039,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     window.showMessageBox(UIString.fromId("ERROR"c), UIString.fromId("ERROR_FAILED_TO_PARSE_FILE"c));
                 }
             }
-        );
+            );
         setBackgroundOperation(op);
     }
 
@@ -1092,9 +1092,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     //}
                     dstring msg = "DLangIDE\n(C) Vadim Lopatin, 2014-2017\nhttp://github.com/buggins/dlangide\n" 
                         ~ "IDE for D programming language written in D\nUses DlangUI library " 
-                        ~ DLANGUI_VERSION ~ " for GUI"d;
+                            ~ DLANGUI_VERSION ~ " for GUI"d;
                     window.showMessageBox(UIString.fromId("ABOUT"c) ~ " " ~ DLANGIDE_VERSION,
-                                          UIString.fromRaw(msg));
+                        UIString.fromRaw(msg));
                     return true;
                 case IDEActions.BuildSetConfiguration:
                     // set build configuration
@@ -1227,8 +1227,8 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     return true;
                 case IDEActions.WindowCloseAllDocuments:
                     askForUnsavedEdits(delegate() {
-                        closeAllDocuments();
-                    });
+                            closeAllDocuments();
+                        });
                     return true;
                 case IDEActions.WindowShowHomeScreen:
                     showHomeScreen();
@@ -1293,31 +1293,31 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                         Log.d("Go to line");
                         // Ask user for line
                         window.showInputBox(UIString.fromId("GO_TO_LINE"c), UIString.fromId("GO_TO_LINE"c), ""d, delegate(dstring s) {
-                            try {
-                                auto num = to!uint(s);
-                                // Check line existence
-                                if (num < 1 || num > currentEditor.content.length) {
+                                try {
+                                    auto num = to!uint(s);
+                                    // Check line existence
+                                    if (num < 1 || num > currentEditor.content.length) {
+                                        currentEditor.setFocus();
+                                        window.showMessageBox(UIString.fromId("ERROR"c), UIString.fromId("ERROR_NO_SUCH_LINE"c));
+                                        return;
+                                    }
+                                    // Go to line
+                                    currentEditor.setCaretPos(num - 1, 0);
                                     currentEditor.setFocus();
-                                    window.showMessageBox(UIString.fromId("ERROR"c), UIString.fromId("ERROR_NO_SUCH_LINE"c));
-                                    return;
                                 }
-                                // Go to line
-                                currentEditor.setCaretPos(num - 1, 0);
-                                currentEditor.setFocus();
-                            }
-                            catch (ConvException e) {
-                                currentEditor.setFocus();
-                                window.showMessageBox(UIString.fromId("ERROR"c), UIString.fromId("ERROR_INVALID_NUMBER"c));
-                            }
-                        });
+                                catch (ConvException e) {
+                                    currentEditor.setFocus();
+                                    window.showMessageBox(UIString.fromId("ERROR"c), UIString.fromId("ERROR_INVALID_NUMBER"c));
+                                }
+                            });
                     }
                     return true;
                 case IDEActions.GetDocComments:
                     Log.d("Trying to get doc comments.");
                     currentEditor.editorTool.getDocComments(currentEditor, currentEditor.caretPos, delegate(string[] results) {
-                        if (results.length)
-                            currentEditor.showDocCommentsPopup(results);
-                    });
+                            if (results.length)
+                                currentEditor.showDocCommentsPopup(results);
+                        });
                     return true;
                 case IDEActions.GetParenCompletion:
                     Log.d("Trying to get paren completion.");
@@ -1326,9 +1326,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                 case IDEActions.GetCompletionSuggestions:
                     Log.d("Getting auto completion suggestions.");
                     currentEditor.editorTool.getCompletions(currentEditor, currentEditor.caretPos, delegate(dstring[] results, string[] icons, CompletionTypes type) {
-                        if (currentEditor)
-                            currentEditor.showCompletionPopup(results, icons, type);
-                    });
+                            if (currentEditor)
+                                currentEditor.showCompletionPopup(results, icons, type);
+                        });
                     return true;
                 case IDEActions.EditPreferences:
                     showPreferences();
@@ -1414,9 +1414,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             currentWorkspace.save();
         }
         askForUnsavedEdits(delegate() {
-            setWorkspace(null);
-            showHomeScreen();
-        });
+                setWorkspace(null);
+                showHomeScreen();
+            });
     }
 
     void onBreakpointListChanged(ProjectSourceFile sourcefile, Breakpoint[] breakpoints) {
@@ -1477,24 +1477,24 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         if (!project)
             return;
         window.showMessageBox(UIString.fromId("HEADER_REMOVE_FILE"c), 
-                UIString.fromId("QUESTION_REMOVE_FILE"c) ~ " " ~ srcfile.name ~ "?", 
-                [ACTION_YES, ACTION_NO], 
-                1, delegate(const Action result) {
-                    if (result == StandardAction.Yes) {
-                        // save and close
-                        import std.file : remove;
-                        closeTab(srcfile.filename);
-                        try {
-                            remove(srcfile.filename);
-                        } catch (Exception e) {
-                            Log.e("Cannot remove file");
-                        }
-                        project.refresh();
-                        updateTreeGraph();
+            UIString.fromId("QUESTION_REMOVE_FILE"c) ~ " " ~ srcfile.name ~ "?", 
+            [ACTION_YES, ACTION_NO], 
+            1, delegate(const Action result) {
+                if (result == StandardAction.Yes) {
+                    // save and close
+                    import std.file : remove;
+                    closeTab(srcfile.filename);
+                    try {
+                        remove(srcfile.filename);
+                    } catch (Exception e) {
+                        Log.e("Cannot remove file");
                     }
-                    // else ignore
-                    return true;
-                });
+                    project.refresh();
+                    updateTreeGraph();
+                }
+                // else ignore
+                return true;
+            });
 
     }
 
@@ -1508,7 +1508,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                         //res.project.reload();
                         res.project.refresh();
                         updateTreeGraph();
-						tryOpenSourceFile(res.filename);
+                        tryOpenSourceFile(res.filename);
                     }
                 }
             };
@@ -1527,11 +1527,11 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                         ProjectFolder newFolder = new ProjectFolder(res.filename);
                         if(folder) {
                             folder.addChild(newFolder);
-							folder.sortItems;
-							newFolder.refresh();
-							if(newFolder.childCount > 0){
-								tryOpenSourceFile(newFolder.child(0).filename);
-							}
+                            folder.sortItems;
+                            newFolder.refresh();
+                            if(newFolder.childCount > 0){
+                                tryOpenSourceFile(newFolder.child(0).filename);
+                            }
                         }
                         updateTreeGraph();
                     }
@@ -1723,21 +1723,21 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         WorkspaceFile[] files = currentWorkspace.files();
         for (int i; i < files.length; i++) 
             with (files[i])
+        {
+            // Opening file
+            if (openSourceFile(filename))
             {
-                // Opening file
-                if (openSourceFile(filename))
-                {
-                    auto index = _tabs.tabIndex(filename);
-                    if (index < 0)
-                        continue;
-                    // file is opened in tab
-                    auto source = cast(DSourceEdit)_tabs.tabBody(filename);
-                    if (!source)
-                        continue;
-                    // Caret position
-                    source.setCaretPos(column, row, true, true);
-                }
+                auto index = _tabs.tabIndex(filename);
+                if (index < 0)
+                    continue;
+                // file is opened in tab
+                auto source = cast(DSourceEdit)_tabs.tabBody(filename);
+                if (!source)
+                    continue;
+                // Caret position
+                source.setCaretPos(column, row, true, true);
             }
+        }
     }
 
     void saveListOfOpenedFiles() {
@@ -1764,12 +1764,12 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             Workspace ws = new Workspace(this);
             if (ws.load(filename)) {
                 askForUnsavedEdits(delegate() {
-                    setWorkspace(ws);
-                    hideHomeScreen();
-                    // Write workspace to recent workspaces list
-                    _settings.updateRecentWorkspace(filename);
-                    restoreListOfOpenedFiles();
-                });
+                        setWorkspace(ws);
+                        hideHomeScreen();
+                        // Write workspace to recent workspaces list
+                        _settings.updateRecentWorkspace(filename);
+                        restoreListOfOpenedFiles();
+                    });
             } else {
                 window.showMessageBox(UIString.fromId("ERROR_OPEN_WORKSPACE"c).value, UIString.fromId("ERROR_OPENING_WORKSPACE"c).value);
                 return;
@@ -1794,21 +1794,21 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                 }
                 window.showMessageBox(UIString.fromId("MSG_OPEN_PROJECT"c), UIString.fromId("QUESTION_NEW_WORKSPACE"c),
 
-                                      [ACTION_ADD_TO_CURRENT_WORKSPACE, ACTION_CREATE_NEW_WORKSPACE, ACTION_CANCEL], 0, delegate(const Action result) {
-                                          if (result.id == IDEActions.CreateNewWorkspace) {
-                                              // new ws
-                                              createNewWorkspaceForExistingProject(project);
-                                              hideHomeScreen();
-                                          } else if (result.id == IDEActions.AddToCurrentWorkspace) {
-                                              // add to current
-                                              currentWorkspace.addProject(project);
-                                              loadProject(project);
-                                              currentWorkspace.save();
-                                              updateTreeGraph();
-                                              hideHomeScreen();
-                                          }
-                                          return true;
-                                      });
+                    [ACTION_ADD_TO_CURRENT_WORKSPACE, ACTION_CREATE_NEW_WORKSPACE, ACTION_CANCEL], 0, delegate(const Action result) {
+                        if (result.id == IDEActions.CreateNewWorkspace) {
+                            // new ws
+                            createNewWorkspaceForExistingProject(project);
+                            hideHomeScreen();
+                        } else if (result.id == IDEActions.AddToCurrentWorkspace) {
+                            // add to current
+                            currentWorkspace.addProject(project);
+                            loadProject(project);
+                            currentWorkspace.save();
+                            updateTreeGraph();
+                            hideHomeScreen();
+                        }
+                        return true;
+                    });
             } else {
                 // new workspace file
                 createNewWorkspaceForExistingProject(project);
@@ -1951,10 +1951,10 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         }
 
         Builder op = new Builder(this, project, _logPanel, project.projectConfiguration, currentWorkspace.buildConfiguration, buildOp, 
-                                 dubExecutable, dubAdditionalParams,
-                                 toolchain,
-                                 arch,
-                                 listener);
+            dubExecutable, dubAdditionalParams,
+            toolchain,
+            arch,
+            listener);
         setBackgroundOperation(op);
     }
     
@@ -2013,12 +2013,12 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
     /// return false to prevent closing
     bool onCanClose() {
         askForUnsavedEdits(delegate() {
-            if (currentWorkspace) {
-                // Remember opened files
-                saveListOfOpenedFiles();
-            }
-            window.close();
-        });
+                if (currentWorkspace) {
+                    // Remember opened files
+                    saveListOfOpenedFiles();
+                }
+                window.close();
+            });
         return false;
     }
     /// called when main window is closing
