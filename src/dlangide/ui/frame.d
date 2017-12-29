@@ -1527,6 +1527,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                         ProjectFolder newFolder = new ProjectFolder(res.filename);
                         if(folder) {
                             folder.addChild(newFolder);
+							folder.sortItems;
 							newFolder.refresh();
 							if(newFolder.childCount > 0){
 								tryOpenSourceFile(newFolder.child(0).filename);
