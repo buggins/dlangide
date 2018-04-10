@@ -7,7 +7,7 @@ import dlangui.graphics.fonts;
 import std.algorithm : equal;
 
 const AVAILABLE_THEMES = ["ide_theme_default", "ide_theme_dark"];
-const AVAILABLE_LANGUAGES = ["en", "ru", "es", "cs"];
+const AVAILABLE_LANGUAGES = ["en", "ru", "es", "cs", "de"];
 
 class IDESettings : SettingsFile {
 

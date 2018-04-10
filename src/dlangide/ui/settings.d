@@ -75,6 +75,7 @@ SettingsPage createSettingsPages() {
             StringListValue("en", "MENU_VIEW_LANGUAGE_EN"c), 
             StringListValue("ru", "MENU_VIEW_LANGUAGE_RU"c), 
             StringListValue("es", "MENU_VIEW_LANGUAGE_ES"c),
+            StringListValue("de", "MENU_VIEW_LANGUAGE_DE"c),
 	    StringListValue("cs", "MENU_VIEW_LANGUAGE_CS"c)]);
 
     // UI font faces
