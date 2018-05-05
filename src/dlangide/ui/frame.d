@@ -1533,8 +1533,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                                 tryOpenSourceFile(newFolder.child(0).filename);
                             }
                         }
-                        updateTreeGraph();
-                    }
+						updateTreeGraph();
+						_wsPanel.selectItem(newFolder);
+					}
                 }
             };
             return dialog;
