@@ -443,6 +443,7 @@
       <Link>3rdparty\dsymbol\symbols.d</Link>
     </Compile>
     <Compile Include="src\dlangide\ui\terminal.d" />
+    <Compile Include="src\dlangide\ui\newfolder.d" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="src\ddebug\gdb\" />

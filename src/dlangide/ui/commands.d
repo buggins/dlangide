@@ -6,6 +6,7 @@ import dlangui.widgets.editors;
 enum IDEActions : int {
     //ProjectOpen = 1010000,
     FileNew = 1010000,
+    FileNewDirectory,
     FileNewWorkspace,
     FileNewProject,
     FileOpen,
@@ -100,6 +101,7 @@ const Action ACTION_PROJECT_FOLDER_COLLAPSE_ALL = new Action(IDEActions.ProjectF
 
 const Action ACTION_FILE_WORKSPACE_CLOSE = new Action(IDEActions.CloseWorkspace, "MENU_FILE_WORKSPACE_CLOSE"c).disableByDefault();
 
+const Action ACTION_FILE_NEW_DIRECTORY = new Action(IDEActions.FileNewDirectory, "MENU_FILE_NEW_DIRECTORY"c);
 const Action ACTION_FILE_NEW_SOURCE_FILE = new Action(IDEActions.FileNew, "MENU_FILE_NEW_SOURCE_FILE"c, "document-new", KeyCode.KEY_N, KeyFlag.Control);
 const Action ACTION_FILE_NEW_PROJECT = new Action(IDEActions.FileNewProject, "MENU_FILE_NEW_PROJECT"c);
 const Action ACTION_FILE_NEW_WORKSPACE = new Action(IDEActions.FileNewWorkspace, "MENU_FILE_NEW_WORKSPACE"c);

@@ -20,3 +20,7 @@ index.html
 api.html
 screenshots.html
 *.log
+
+*.userprefs
+
+\.dlangidews\.wssettings

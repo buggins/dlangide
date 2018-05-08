@@ -422,7 +422,7 @@ class Project : WorkspaceItem {
     			includePath ~= obj.str;
         }
 
-        _items = new ProjectFolder(fname);
+        _items = new ProjectFolder(fname.dirName);
         _dependencyVersion = dependencyVersion;
         _isDependency = _dependencyVersion.length > 0;
         _projectFile = new SettingsFile(fname);
@@ -607,8 +607,8 @@ class Project : WorkspaceItem {
         return settings.runInExternalConsole;
     }
 
-    ProjectFolder findItems(string[] srcPaths) {
-        auto folder = new ProjectFolder(_filename);
+    private ProjectFolder findItems(string[] srcPaths) {
+        auto folder = new ProjectFolder(_filename.dirName);
         folder.project = this;
         foreach(customPath; srcPaths) {
             string path = relativeToAbsolutePath(customPath);
