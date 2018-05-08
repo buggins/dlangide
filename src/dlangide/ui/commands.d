@@ -72,6 +72,8 @@ enum IDEActions : int {
     GetDocComments,
     GetParenCompletion,
     GotoLine,
+    GotoNextPosition,
+    GotoPrevPosition,
 
     InsertCompletion,
     FindInFiles,
@@ -176,7 +178,9 @@ const Action ACTION_GET_DOC_COMMENTS = (new Action(IDEActions.GetDocComments,  "
 const Action ACTION_GO_TO_DEFINITION = (new Action(IDEActions.GoToDefinition,  "GO_TO_DEFINITION"c, ""c, KeyCode.KEY_G, KeyFlag.Control)).addAccelerator(KeyCode.F12, 0).disableByDefault();
 const Action ACTION_GET_COMPLETIONS = (new Action(IDEActions.GetCompletionSuggestions,  "SHOW_COMPLETIONS"c, ""c, KeyCode.KEY_G, KeyFlag.Control|KeyFlag.Shift)).addAccelerator(KeyCode.SPACE, KeyFlag.Control).disableByDefault();
 const Action ACTION_GET_PAREN_COMPLETION = (new Action(IDEActions.GetParenCompletion,  "SHOW_PAREN_COMPLETION"c, ""c, KeyCode.SPACE, KeyFlag.Control|KeyFlag.Shift)).disableByDefault();
-const Action ACTION_GO_TO_LINE = (new Action(IDEActions.GotoLine,  "GO_TO_LINE"c, ""c, KeyCode.KEY_L,  KeyFlag.Control|KeyFlag.Option)).disableByDefault();;
+const Action ACTION_GO_TO_LINE = (new Action(IDEActions.GotoLine,  "GO_TO_LINE"c, ""c, KeyCode.KEY_L,  KeyFlag.Control|KeyFlag.Option)).disableByDefault();
+const Action ACTION_GO_TO_PREV_POSITION = (new Action(IDEActions.GotoPrevPosition,  "GO_TO_PREV_POSITION"c, ""c, KeyCode.LEFT,  KeyFlag.Alt)).disableByDefault();
+const Action ACTION_GO_TO_NEXT_POSITION = (new Action(IDEActions.GotoNextPosition,  "GO_TO_NEXT_POSITION"c, ""c, KeyCode.RIGHT,  KeyFlag.Alt)).disableByDefault();
 
 const Action ACTION_FIND_TEXT = (new Action(IDEActions.FindInFiles,  "FIND_IN_FILES"c, "edit-find"c, KeyCode.KEY_F, KeyFlag.Control | KeyFlag.Shift)).disableByDefault();
 const Action ACTION_TOOLS_OPEN_DMD_TRACE_LOG = (new Action(IDEActions.ToolsOpenDMDTraceLog,  "OPEN_DMD_TRACE_LOG"c));
@@ -204,5 +208,7 @@ const Action[] STD_IDE_ACTIONS = [
     ACTION_GET_COMPLETIONS,
     ACTION_GET_PAREN_COMPLETION,
     ACTION_GO_TO_LINE,
+    ACTION_GO_TO_PREV_POSITION,
+    ACTION_GO_TO_NEXT_POSITION,
     ACTION_FIND_TEXT,
 ];
