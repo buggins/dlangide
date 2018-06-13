@@ -352,9 +352,11 @@ class SearchWidget : TabWidget {
                 line--;
                 if (line == 0) {
                     if (_frame.openSourceFile(matchList.filename)) {
+                        _frame.caretHistory.pushNewPosition();
                         _frame.currentEditor.setCaretPos(match.line, to!int(match.col));
                         _frame.currentEditor.setTextToHighlight(_findText.text, makeSearchFlags);
                         _frame.currentEditor.setFocus();
+                        _frame.caretHistory.pushNewPosition();
                     }
                     return true;
                 }

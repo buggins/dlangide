@@ -108,6 +108,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         window.onCanClose = &onCanClose;
         window.onClose = &onWindowClose;
         applySettings(_settings);
+        caretHistory = new CaretHistory;
     }
 
     ~this() {
@@ -401,8 +402,10 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             Log.d("found source file");
             if (sourceFile)
                 _wsPanel.selectItem(sourceFile);
+            caretHistory.pushNewPosition();
             currentEditor().setCaretPos(line, 0);
             currentEditor().setCaretPos(line, column);
+            caretHistory.pushNewPosition();
         }
         return true;
     }
@@ -770,7 +773,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         MenuItem navItem = new MenuItem(new Action(21, "MENU_NAVIGATE"));
         navItem.add(ACTION_GO_TO_DEFINITION, ACTION_GET_COMPLETIONS, ACTION_GET_DOC_COMMENTS, 
             ACTION_GET_PAREN_COMPLETION, ACTION_EDITOR_GOTO_PREVIOUS_BOOKMARK, 
-            ACTION_EDITOR_GOTO_NEXT_BOOKMARK, ACTION_GO_TO_LINE);
+            ACTION_EDITOR_GOTO_NEXT_BOOKMARK, ACTION_GO_TO_LINE, ACTION_GO_TO_PREV_POSITION, ACTION_GO_TO_NEXT_POSITION);
 
         MenuItem projectItem = new MenuItem(new Action(21, "MENU_PROJECT"));
         projectItem.add(ACTION_PROJECT_SET_STARTUP, ACTION_PROJECT_REFRESH, ACTION_PROJECT_UPDATE_DEPENDENCIES, ACTION_PROJECT_SETTINGS);
@@ -988,6 +991,8 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             case IDEActions.FileSaveAll:
             case IDEActions.FileSaveAs:
             case IDEActions.GotoLine:
+            case IDEActions.GotoPrevPosition:
+            case IDEActions.GotoNextPosition:
             case EditorActions.Find:
             case EditorActions.FindNext:
             case EditorActions.FindPrev:
@@ -1284,6 +1289,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                 case IDEActions.GoToDefinition:
                     if (currentEditor) {
                         Log.d("Trying to go to definition.");
+                        caretHistory.pushNewPosition();
                         currentEditor.editorTool.goToDefinition(currentEditor(), currentEditor.caretPos);
                     }
                     return true;
@@ -1302,14 +1308,28 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                                         return;
                                     }
                                     // Go to line
+                                    caretHistory.pushNewPosition();
                                     currentEditor.setCaretPos(num - 1, 0);
                                     currentEditor.setFocus();
+                                    caretHistory.pushNewPosition();
                                 }
                                 catch (ConvException e) {
                                     currentEditor.setFocus();
                                     window.showMessageBox(UIString.fromId("ERROR"c), UIString.fromId("ERROR_INVALID_NUMBER"c));
                                 }
                             });
+                    }
+                    return true;
+                case IDEActions.GotoPrevPosition:
+                    if (currentEditor) {
+                        Log.d("Go to prev position");
+                        caretHistory.moveToPrev();
+                    }
+                    return true;
+                case IDEActions.GotoNextPosition:
+                    if (currentEditor) {
+                        Log.d("Go to next position");
+                        caretHistory.moveToNext();
                     }
                     return true;
                 case IDEActions.GetDocComments:
@@ -2029,5 +2049,58 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         Log.i("onWindowClose()");
         stopExecution();
     }
+
+    static struct CaretPosition {
+        string filePath;
+        uint line;
+        uint pos;
+    };
+
+    class CaretHistory {
+        private CaretPosition[] caretHistory;
+        private int currentPos = -1;
+
+        private bool checkIfCurentPosIsCurrentHistoryPos() {
+            if (caretHistory.length == 0) {
+                return false;
+            }
+            return currentEditor.caretPos.line == caretHistory[currentPos].line &&
+                currentEditor.caretPos.pos == caretHistory[currentPos].pos;
+        }
+
+        void pushNewPosition() {
+            if (!checkIfCurentPosIsCurrentHistoryPos()) {
+                pushNewPosition(currentEditor().filename, currentEditor.caretPos.line, currentEditor.caretPos.pos);
+            }
+        }
+
+        void pushNewPosition(string filePath, uint line, uint pos) {
+            if (caretHistory.length != 0) {
+                caretHistory = caretHistory[0..currentPos + 1];
+            }
+            caretHistory ~= CaretPosition(filePath, line, pos);
+            ++currentPos;
+        }
+
+        void moveToNext() {
+            if (currentPos + 1 < caretHistory.length) {
+                ++currentPos;
+                openSourceFile(caretHistory[currentPos].filePath);
+                currentEditor.setCaretPos(caretHistory[currentPos].line, caretHistory[currentPos].pos);
+                currentEditor.setFocus();
+            }
+        }
+
+        void moveToPrev() {
+            if (currentPos > 0) {
+                --currentPos;
+                openSourceFile(caretHistory[currentPos].filePath);
+                currentEditor.setCaretPos(caretHistory[currentPos].line, caretHistory[currentPos].pos);
+                currentEditor.setFocus();
+            }
+        }
+    }
+
+    CaretHistory caretHistory;
 }
 
