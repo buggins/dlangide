@@ -224,17 +224,17 @@ class CompilerLogWidget : LogWidget {
     }
     
     void resolveRelativePath(ref string path, int line) {
-        import std.path : getcwd, absolutePath;
-        Log.d("resolveRelativePath ", path, " current directory: ", getcwd);
+        import std.path : absolutePath;
+        Log.d("resolveRelativePath ", path);
         string prjName = findProjectForLine(line);
         if (prjName) {
             Log.d("Error is in project ", prjName);
         }
         string base = _baseDirectory;
         if (!base)
-            base = getcwd;
-        // TODO: select proper base
-        path = absolutePath(path, base);
+            path = absolutePath(path, base);
+        else
+            path = absolutePath(path);
         Log.d("converted to absolute path: ", path);
     }
     ///
