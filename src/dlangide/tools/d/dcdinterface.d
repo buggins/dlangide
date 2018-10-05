@@ -15,8 +15,8 @@ import std.experimental.allocator;
 import std.experimental.allocator.mallocator;
 import std.experimental.allocator.gc_allocator;
 
-import server.autocomplete;
-import common.messages;
+import dcd.server.autocomplete;
+import dcd.common.messages;
 import dsymbol.modulecache;
 
 //alias SharedASTAllocator = CAllocatorImpl!(Mallocator);

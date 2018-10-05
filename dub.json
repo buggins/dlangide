@@ -12,9 +12,9 @@
     "stringImportPaths": ["views"],
 
     "dependencies": {
-        "dlangui": "==0.9.179",
-        "dsymbol": "~>0.2.9",
-        "dcd": "~>0.9.1"
+        "dlangui": "==0.9.180",
+        "dsymbol": "~>0.4.8",
+        "dcd": "~>0.9.13"
     },
 
     "copyFiles-windows": [
