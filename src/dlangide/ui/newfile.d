@@ -97,7 +97,7 @@ class NewFileDlg : Dialog {
                             TextWidget { text: OPTION_FILE_PATH }
                             EditLine { id: edFilePath; text: ""; layoutWidth: fill; readOnly: true }
                         }
-                        TextWidget { id: statusText; text: ""; layoutWidth: fill; textColor: #FF0000 }
+                        TextWidget { id: statusText; text: ""; layoutWidth: fill; textColor: 0xFF0000 }
                     }
                 });
         } catch (Exception e) {
