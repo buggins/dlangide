@@ -61,7 +61,7 @@ class NewFolderDialog : Dialog {
                             CheckBox { id: makePackage }
                             TextWidget { text: OPTION_MAKE_PACKAGE}
                         }
-                        TextWidget { id: statusText; text: ""; layoutWidth: fill; textColor: #FF0000 }
+                        TextWidget { id: statusText; text: ""; layoutWidth: fill; textColor: 0xFF0000 }
                     }
                 });
         } catch (Exception e) {
