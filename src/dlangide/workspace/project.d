@@ -11,6 +11,7 @@ import std.file;
 import std.path;
 import std.process;
 import std.utf;
+import std.ascii;
 
 string[] includePath;
 
@@ -934,19 +935,19 @@ class DubPackageFinder {
 bool isValidProjectName(in string s) pure {
     if (s.empty)
         return false;
-    return reduce!q{ a && (b == '_' || b == '-' || std.ascii.isAlphaNum(b)) }(true, s);
+    return reduce!((a,b) => a && (b == '_' || b == '-' || std.ascii.isAlphaNum(b)))(true, s);
 }
 
 bool isValidModuleName(in string s) pure {
     if (s.empty)
         return false;
-    return reduce!q{ a && (b == '_' || std.ascii.isAlphaNum(b)) }(true, s);
+    return reduce!((a,b) => a && (b == '_' || std.ascii.isAlphaNum(b)))(true, s);
 }
 
 bool isValidFileName(in string s) pure {
     if (s.empty)
         return false;
-    return reduce!q{ a && (b == '_' || b == '.' || b == '-' || std.ascii.isAlphaNum(b)) }(true, s);
+    return reduce!((a,b) => a && (b == '_' || b == '.' || b == '-' || std.ascii.isAlphaNum(b)))(true, s);
 }
 
 unittest {
