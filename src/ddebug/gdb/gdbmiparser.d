@@ -144,6 +144,14 @@ DebugThreadList parseThreadList(MIValue params) {
                 res.threads ~= t;
         }
     }
+    // Workaround for answer  threads=[] 
+    if (res.length == 0)
+    {
+        auto mainTh = new DebugThread();
+        mainTh.id = res.currentThreadId;
+        mainTh.name = "Single";
+        res.threads ~= mainTh;
+    }
     return res;
 }
 
