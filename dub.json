@@ -12,7 +12,7 @@
     "stringImportPaths": ["views"],
 
     "dependencies": {
-        "dlangui": "==0.9.182",
+        "dlangui": "==0.9.186",
         "dsymbol": "~>0.4.8",
         "dcd": "~>0.9.13"
     },
