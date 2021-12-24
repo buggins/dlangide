@@ -3,6 +3,10 @@
 Dlang IDE
 =========
 
+2021年底 从 Github 导入: https://github.com/buggins/dlangide .
+更新了dlangui 到 0.9.186, 现可正常编译运行。 基于libui, 暂不能drag-n-drop,
+其它功能都正常。
+
 Cross platform D language IDE written using DlangUI library.
 
 Screenshot of Default theme
