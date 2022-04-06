@@ -322,7 +322,7 @@ class DCDInterface : Thread {
                 if (i < response.completionKinds.length)
                     type = response.completionKinds[i];
                 result.output[i].kind = type;
-                result.output[i].name = to!dstring(s);
+                result.output[i].name = to!dstring(s.identifier);
                 i++;
             }
             if (response.completionType == "calltips") {

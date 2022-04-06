@@ -12,7 +12,7 @@
     "stringImportPaths": ["views"],
 
     "dependencies": {
-        "dlangui": "==0.9.182",
+        "dlangui": { "path": "../dlangui"},
         "dsymbol": "~>0.4.8",
         "dcd": "~>0.9.13"
     },
@@ -30,19 +30,19 @@
     "configurations" : [
         {
             "name" : "default"
-        }, 
+        },
         {
             "name" : "minimal",
             "subConfigurations" : {
                 "dlangui" : "minimal"
             }
-        }, 
+        },
         {
             "name" : "console",
             "subConfigurations" : {
                 "dlangui" : "console"
             }
-        }, 
+        },
         {
             "name" : "x11",
             "subConfigurations" : {
