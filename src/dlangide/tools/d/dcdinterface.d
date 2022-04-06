@@ -238,7 +238,7 @@ class DCDInterface : Thread {
         override void performRequest() {
             AutocompleteResponse response = getDoc(request, *getModuleCache(_importPaths));
 
-            result.docComments = response.docComments.dup;
+            //result.docComments = response.docComments.dup; TODO_GRIM: Fix
             result.result = DCDResult.SUCCESS;
 
             debug(DCD) Log.d("DCD doc comments:\n", result.docComments);
@@ -318,9 +318,7 @@ class DCDInterface : Thread {
             result.output.length = response.completions.length;
             int i=0;
             foreach(s;response.completions) {
-                char type = 0;
-                if (i < response.completionKinds.length)
-                    type = response.completionKinds[i];
+                char type = s.kind;
                 result.output[i].kind = type;
                 result.output[i].name = to!dstring(s.identifier);
                 i++;
