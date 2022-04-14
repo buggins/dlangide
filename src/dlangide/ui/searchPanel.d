@@ -372,11 +372,11 @@ SearchMatchList findMatches(in string filename, in dstring searchString) {
     SearchMatchList match;
     match.filename = filename;
 
-    foreach(int lineIndex, dstring line; content.lines) {
+    foreach(lineIndex, dstring line; content.lines) {
         auto colIndex = line.indexOf(searchString);
         
         if (colIndex != -1) {
-            match.matches ~= SearchMatch(lineIndex, colIndex, line);
+            match.matches ~= SearchMatch(cast(int)lineIndex, colIndex, line);
         }
     }
     return match;  

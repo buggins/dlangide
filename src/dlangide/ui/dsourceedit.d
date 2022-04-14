@@ -790,7 +790,7 @@ class CompletionPopupMenu : PopupMenu {
 
     MenuItem updateItems() {
         MenuItem res = new MenuItem();
-        foreach(int i, dstring suggestion ; _suggestions) {
+        foreach(i, dstring suggestion ; _suggestions) {
             if (_prefix.length && !suggestion.startsWith(_prefix))
                 continue;
             string iconId;

@@ -69,7 +69,7 @@ class BasicTypeX : Lexem {
     in {
         assert(isBasicTypeXToken(token));
     }
-    body {
+    do {
         _token = token;
     }
 }
@@ -97,7 +97,7 @@ class TypeCtor : Lexem {
     in {
         assert(isTypeCtorToken(token));
     }
-    body {
+    do {
         _token = token;
     }
 }
@@ -112,14 +112,14 @@ class TypeCtors : Lexem {
     in {
         assert(isTypeCtorToken(token));
     }
-    body {
+    do {
         _list ~= new TypeCtor(token);
     }
     public void append(Token token)
     in {
         assert(isTypeCtorToken(token));
     }
-    body {
+    do {
         _list ~= new TypeCtor(token);
     }
 }
@@ -134,7 +134,7 @@ class Identifier : Lexem {
     in {
         assert(identifier.type == TokenType.IDENTIFIER);
     }
-    body {
+    do {
         _token = cast(IdentToken)identifier;
     }
 }
@@ -157,14 +157,14 @@ class IdentifierList : Lexem {
     in {
         assert(ident.type == TokenType.IDENTIFIER);
     }
-    body {
+    do {
         _identifier = new Identifier(ident);
         _identifierList = identifierList;
     }
     public this(TemplateInstance templateInstance, IdentifierList identifierList = null)
     in {
     }
-    body {
+    do {
         _templateInstance = templateInstance;
         _identifierList = identifierList;
     }
@@ -181,7 +181,7 @@ class TemplateInstance : Lexem {
     public this()
     in {
     }
-    body {
+    do {
     }
 }
 
@@ -207,7 +207,7 @@ class BasicType : Lexem {
     public this()
     in {
     }
-    body {
+    do {
     }
 }
 
@@ -228,7 +228,7 @@ class Typeof : Lexem {
     public this(Expression expression)
     in {
     }
-    body {
+    do {
         _expression = expression;
     }
 }
@@ -245,7 +245,7 @@ class Type : Lexem {
     public this()
     in {
     }
-    body {
+    do {
     }
 }
 
@@ -259,7 +259,7 @@ class Expression : Lexem {
     public this()
     in {
     }
-    body {
+    do {
     }
 }
 
@@ -273,7 +273,7 @@ class AltDeclarator : Lexem {
     public this()
     in {
     }
-    body {
+    do {
     }
 }
 
