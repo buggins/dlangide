@@ -49,7 +49,7 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         onThemeChanged();
         //setTokenHightlightColor(TokenCategory.Identifier, 0x206000);  // no colors
         MenuItem editPopupItem = new MenuItem(null);
-        editPopupItem.add(ACTION_EDIT_COPY, ACTION_EDIT_PASTE, ACTION_EDIT_CUT, ACTION_EDIT_UNDO, 
+        editPopupItem.add(ACTION_EDIT_COPY, ACTION_EDIT_PASTE, ACTION_EDIT_CUT, ACTION_EDIT_UNDO,
                           ACTION_EDIT_REDO, ACTION_EDIT_INDENT, ACTION_EDIT_UNINDENT, ACTION_EDIT_TOGGLE_LINE_COMMENT,
                           ACTION_GET_COMPLETIONS, ACTION_GO_TO_DEFINITION, ACTION_DEBUG_TOGGLE_BREAKPOINT);
         popupMenu = editPopupItem;
@@ -125,12 +125,12 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
 
     protected EditorTool _editorTool;
     @property EditorTool editorTool() { return _editorTool; }
-    @property EditorTool editorTool(EditorTool tool) { 
+    @property EditorTool editorTool(EditorTool tool) {
         if (_editorTool && _editorTool !is tool) {
             destroy(_editorTool);
             _editorTool = null;
         }
-        return _editorTool = tool; 
+        return _editorTool = tool;
     };
 
     protected ProjectSourceFile _projectSourceFile;
@@ -585,7 +585,7 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         _docsPopup.popupClosed = delegate(PopupWidget source) {
             Log.d("Closed Docs popup");
             _docsPopup = null;
-            //setFocus(); 
+            //setFocus();
         };
         _docsPopup.flags = PopupFlags.CloseOnClickOutside | PopupFlags.CloseOnMouseMoveOutside;
         invalidate();
@@ -641,7 +641,8 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
             return;
         }
 
-        if (suggestions.length == 1) {
+        // Only insert singular autocompletion if automatic autocomplete is turned off!
+        if (!_settings.autoAutoComplete && suggestions.length == 1) {
             insertCompletion(suggestions[0]);
             return;
         }
@@ -680,7 +681,7 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
                                              popupPositionX,
                                              popupPositionY + yOffset);
         _completionPopup.setFocus();
-        _completionPopup.popupClosed = delegate(PopupWidget source) { 
+        _completionPopup.popupClosed = delegate(PopupWidget source) {
             setFocus();
             _completionPopup = null;
         };
@@ -721,13 +722,23 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         super.handleFocusChange(focused, receivedFocusFromKeyboard);
     }
 
+    private bool isAutoCompleteKey(ref KeyEvent event) {
+        if((event.keyCode >= KeyCode.KEY_0 && event.keyCode <= KeyCode.KEY_Z) ||
+            event.keyCode == KeyCode.KEY_PERIOD)
+            return true;
+        return false;
+    }
+
     protected uint _lastKeyDownCode;
     protected uint _periodKeyCode;
     /// handle keys: support autocompletion after . press with delay
     override bool onKeyEvent(KeyEvent event) {
         if (event.action == KeyAction.KeyDown)
             _lastKeyDownCode = event.keyCode;
-        if (event.action == KeyAction.Text && event.noModifiers && event.text==".") {
+        if(_settings.autoAutoComplete && !_completionPopup) {
+            window.dispatchAction(ACTION_GET_COMPLETIONS, this);
+        }
+        else if (event.action == KeyAction.Text && event.noModifiers && event.text==".") {
             _periodKeyCode = _lastKeyDownCode;
             startCompletionTimer();
         } else {
@@ -775,7 +786,7 @@ class CompletionPopupMenu : PopupMenu {
         //maxHeight(400);
         selectItem(0);
     }
-    
+
     Point fullContentSizeWithBorders() {
         measure(2000.pointsToPixels, 2000.pointsToPixels);
         Point sz;

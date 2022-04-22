@@ -23,6 +23,7 @@ class IDESettings : SettingsFile {
         ed.setBooleanDef("smartIndentsAfterPaste", true);
         ed.setBooleanDef("showWhiteSpaceMarks", true);
         ed.setBooleanDef("showTabPositionMarks", true);
+        ed.setBooleanDef("autoAutoComplete", true);
         ed.setStringDef("fontFace", "Default");
         ed.setIntegerDef("fontSize", 11);
         Setting ui = uiSettings();
@@ -59,7 +60,7 @@ class IDESettings : SettingsFile {
     /// override to do something after loading - e.g. set defaults
     override void afterLoad() {
     }
-    
+
     @property Setting editorSettings() {
         Setting res = _setting.objectByPath("editors/textEditor", true);
         return res;
@@ -168,6 +169,16 @@ class IDESettings : SettingsFile {
     /// text editor setting, true if need to insert spaces instead of tabs
     @property IDESettings tabSize(int v) {
         editorSettings.setInteger("tabSize", limitInt(v, 1, 16));
+        return this;
+    }
+
+    /// Text editor setting, true if auto-complete is triggered on each key press
+    @property bool autoAutoComplete() {
+        return editorSettings.getBoolean("autoAutoComplete", true);
+    }
+    ///
+    @property IDESettings autoAutoComplete(bool v) {
+        editorSettings.setBoolean("autoAutoComplete", v);
         return this;
     }
 
@@ -317,7 +328,7 @@ class IDESettings : SettingsFile {
         obj["recentWorkspaces"] = list;
         save();
     }
-    
+
     @property bool autoOpenLastProject() {
         Setting obj =_setting.objectByPath("common", true);
         return obj.getBoolean("autoOpenLastProject", false);

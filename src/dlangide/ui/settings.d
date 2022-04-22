@@ -69,36 +69,36 @@ SettingsPage createSettingsPages() {
     // UI settings page
     SettingsPage ui = res.addChild("interface", UIString.fromId("OPTION_INTERFACE"c));
     ui.addStringComboBox("interface/theme", UIString.fromId("OPTION_THEME"c), [
-            StringListValue("ide_theme_default", "OPTION_DEFAULT"c), 
+            StringListValue("ide_theme_default", "OPTION_DEFAULT"c),
             StringListValue("ide_theme_dark", "OPTION_DARK"c)]);
     ui.addStringComboBox("interface/language", UIString.fromId("OPTION_LANGUAGE"c), [
-            StringListValue("en", "MENU_VIEW_LANGUAGE_EN"c), 
-            StringListValue("ru", "MENU_VIEW_LANGUAGE_RU"c), 
+            StringListValue("en", "MENU_VIEW_LANGUAGE_EN"c),
+            StringListValue("ru", "MENU_VIEW_LANGUAGE_RU"c),
             StringListValue("es", "MENU_VIEW_LANGUAGE_ES"c),
             StringListValue("de", "MENU_VIEW_LANGUAGE_DE"c),
-	    StringListValue("cs", "MENU_VIEW_LANGUAGE_CS"c)]);
+        StringListValue("cs", "MENU_VIEW_LANGUAGE_CS"c)]);
 
     // UI font faces
-    ui.addStringComboBox("interface/uiFontFace", UIString.fromId("OPTION_FONT_FACE"c), 
+    ui.addStringComboBox("interface/uiFontFace", UIString.fromId("OPTION_FONT_FACE"c),
                       createFaceList(false));
-    ui.addIntComboBox("interface/uiFontSize", UIString.fromId("OPTION_FONT_SIZE"c), 
+    ui.addIntComboBox("interface/uiFontSize", UIString.fromId("OPTION_FONT_SIZE"c),
                       createIntValueList([6,7,8,9,10,11,12,14,16,18,20,22,24,26,28,30,32]));
 
 
-    ui.addIntComboBox("interface/hintingMode", UIString.fromId("OPTION_FONT_HINTING"c), [StringListValue(0, "OPTION_FONT_HINTING_NORMAL"c), 
-                StringListValue(1, "OPTION_FONT_HINTING_FORCE"c), 
+    ui.addIntComboBox("interface/hintingMode", UIString.fromId("OPTION_FONT_HINTING"c), [StringListValue(0, "OPTION_FONT_HINTING_NORMAL"c),
+                StringListValue(1, "OPTION_FONT_HINTING_FORCE"c),
                 StringListValue(2, "OPTION_FONT_HINTING_DISABLED"c), StringListValue(3, "OPTION_FONT_HINTING_LIGHT"c)]);
-    ui.addIntComboBox("interface/minAntialiasedFontSize", UIString.fromId("OPTION_FONT_ANTIALIASING"c), 
-                      [StringListValue(0, "OPTION_FONT_ANTIALIASING_ALWAYS_ON"c), 
-                      StringListValue(12, "12"d), 
-                      StringListValue(14, "14"d), 
-                      StringListValue(16, "16"d), 
-                      StringListValue(20, "20"d), 
-                      StringListValue(24, "24"d), 
-                      StringListValue(32, "32"d), 
-                      StringListValue(48, "48"d), 
+    ui.addIntComboBox("interface/minAntialiasedFontSize", UIString.fromId("OPTION_FONT_ANTIALIASING"c),
+                      [StringListValue(0, "OPTION_FONT_ANTIALIASING_ALWAYS_ON"c),
+                      StringListValue(12, "12"d),
+                      StringListValue(14, "14"d),
+                      StringListValue(16, "16"d),
+                      StringListValue(20, "20"d),
+                      StringListValue(24, "24"d),
+                      StringListValue(32, "32"d),
+                      StringListValue(48, "48"d),
                       StringListValue(255, "OPTION_FONT_ANTIALIASING_ALWAYS_OFF"c)]);
-    ui.addFloatComboBox("interface/fontGamma", UIString.fromId("OPTION_FONT_GAMMA"c), 
+    ui.addFloatComboBox("interface/fontGamma", UIString.fromId("OPTION_FONT_GAMMA"c),
                    [
                     StringListValue(500,  "0.5   "d),
                     StringListValue(600,  "0.6   "d),
@@ -109,25 +109,25 @@ SettingsPage createSettingsPages() {
                     StringListValue(950,  "0.95  "d),
                     StringListValue(1000, "1.0   "d),
                     StringListValue(1050, "1.05  "d),
-                    StringListValue(1100, "1.1   "d), 
-                    StringListValue(1150, "1.15  "d), 
-                    StringListValue(1200, "1.2   "d), 
-                    StringListValue(1250, "1.25  "d), 
-                    StringListValue(1300, "1.3   "d), 
-                    StringListValue(1400, "1.4   "d), 
-                    StringListValue(1500, "1.5   "d), 
-                    StringListValue(1700, "1.7   "d), 
+                    StringListValue(1100, "1.1   "d),
+                    StringListValue(1150, "1.15  "d),
+                    StringListValue(1200, "1.2   "d),
+                    StringListValue(1250, "1.25  "d),
+                    StringListValue(1300, "1.3   "d),
+                    StringListValue(1400, "1.4   "d),
+                    StringListValue(1500, "1.5   "d),
+                    StringListValue(1700, "1.7   "d),
                     StringListValue(2000, "2.0   "d)]);
 
-    ui.addIntComboBox("interface/screenDpiOverride", UIString.fromId("OPTION_SCREEN_DPI_OVERRIDE"c), 
-                      [StringListValue(0, UIString.fromId("OPTION_SCREEN_DPI_OVERRIDE_NONE"c).value ~ " ("d ~ to!dstring(systemScreenDPI) ~ ")"d), 
-                      StringListValue(72, "72"d), 
-                      StringListValue(96, "96"d), 
-                      StringListValue(120, "120"d), 
-                      StringListValue(140, "140"d), 
-                      StringListValue(150, "150"d), 
-                      StringListValue(300, "300"d), 
-                      StringListValue(400, "400"d), 
+    ui.addIntComboBox("interface/screenDpiOverride", UIString.fromId("OPTION_SCREEN_DPI_OVERRIDE"c),
+                      [StringListValue(0, UIString.fromId("OPTION_SCREEN_DPI_OVERRIDE_NONE"c).value ~ " ("d ~ to!dstring(systemScreenDPI) ~ ")"d),
+                      StringListValue(72, "72"d),
+                      StringListValue(96, "96"d),
+                      StringListValue(120, "120"d),
+                      StringListValue(140, "140"d),
+                      StringListValue(150, "150"d),
+                      StringListValue(300, "300"d),
+                      StringListValue(400, "400"d),
                       StringListValue(600, "600"d)]);
 
     SettingsPage ed = res.addChild("editors", UIString.fromId("OPTION_EDITORS"c));
@@ -144,6 +144,7 @@ SettingsPage createSettingsPages() {
     texted.addCheckbox("editors/textEditor/smartIndentsAfterPaste", UIString.fromId("OPTION_SMART_INDENTS_PASTE"c));
     texted.addCheckbox("editors/textEditor/showWhiteSpaceMarks", UIString.fromId("OPTION_SHOW_SPACES"c));
     texted.addCheckbox("editors/textEditor/showTabPositionMarks", UIString.fromId("OPTION_SHOW_TABS"c));
+    texted.addCheckbox("editors/textEditor/autoAutoComplete", UIString.fromId("OPTION_AUTO_AUTOCOMPLETE"c));
 
     // Common page
     SettingsPage common = res.addChild("common", UIString.fromId("OPTION_COMMON"c));
@@ -189,14 +190,14 @@ SettingsPage createProjectSettingsPages() {
 
     SettingsPage build = res.addChild("build", UIString.fromId("OPTION_BUILD"c));
     build.addStringComboBox("build/toolchain", UIString.fromId("OPTION_TOOLCHAIN"c), [
-            StringListValue("default", UIString.fromId("OPTION_DEFAULT"c)), 
-            StringListValue("dmd", "DMD"d), 
-            StringListValue("ldc", "LDC"d), 
-            StringListValue("ldmd", "LDMD"d), 
+            StringListValue("default", UIString.fromId("OPTION_DEFAULT"c)),
+            StringListValue("dmd", "DMD"d),
+            StringListValue("ldc", "LDC"d),
+            StringListValue("ldmd", "LDMD"d),
             StringListValue("gdc", "GDC"d)]);
     build.addStringComboBox("build/arch", UIString.fromId("OPTION_ARCHITECTURE"c), [
-            StringListValue("default", UIString.fromId("OPTION_DEFAULT"c)), 
-            StringListValue("x86", "x86"d), 
+            StringListValue("default", UIString.fromId("OPTION_DEFAULT"c)),
+            StringListValue("x86", "x86"d),
             StringListValue("x86_64", "x86_64"d),
             StringListValue("arm", "arm"d),
             StringListValue("arm64", "arm64"d),
