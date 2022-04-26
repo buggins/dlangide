@@ -724,7 +724,9 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
 
     private bool isAutoCompleteKey(ref KeyEvent event) {
         if((event.keyCode >= KeyCode.KEY_0 && event.keyCode <= KeyCode.KEY_Z) ||
-            event.keyCode == KeyCode.KEY_PERIOD)
+            event.keyCode == KeyCode.KEY_PERIOD ||
+            event.keyCode == KeyCode.BACK ||
+            event.text == "_")
             return true;
         return false;
     }
@@ -735,7 +737,7 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
     override bool onKeyEvent(KeyEvent event) {
         if (event.action == KeyAction.KeyDown)
             _lastKeyDownCode = event.keyCode;
-        if(_settings.autoAutoComplete && !_completionPopup) {
+        if(_settings.autoAutoComplete && isAutoCompleteKey(event) && !_completionPopup) {
             window.dispatchAction(ACTION_GET_COMPLETIONS, this);
         }
         else if (event.action == KeyAction.Text && event.noModifiers && event.text==".") {
@@ -817,19 +819,12 @@ class CompletionPopupMenu : PopupMenu {
     /// handle keys
     override bool onKeyEvent(KeyEvent event) {
         if (event.action == KeyAction.Text) {
-            _prefix ~= event.text;
-            MenuItem newItems = updateItems();
-            if (newItems.subitemCount == 0) {
-                // no matches anymore
-                _editor.onKeyEvent(event);
-                _editor.closeCompletionPopup(this);
-                return true;
-            } else {
-                _editor.onKeyEvent(event);
-                menuItems = newItems;
-                selectItem(0);
-                return true;
-            }
+            _editor.onKeyEvent(event);
+            _editor.closeCompletionPopup(this);
+            return true;
+        } else if (event.keyCode == KeyCode.ESCAPE) {
+            _editor.closeCompletionPopup(this);
+            return true;
         } else if (event.action == KeyAction.KeyDown && event.keyCode == KeyCode.BACK && event.noModifiers) {
             if (_prefix.length > _initialPrefix.length) {
                 _prefix.length = _prefix.length - 1;
@@ -842,8 +837,8 @@ class CompletionPopupMenu : PopupMenu {
                 _editor.closeCompletionPopup(this);
             }
             return true;
-        } else if (event.action == KeyAction.KeyDown && event.keyCode == KeyCode.RETURN) {
-        } else if (event.action == KeyAction.KeyDown && event.keyCode == KeyCode.SPACE) {
+        } else if ((event.action == KeyAction.KeyDown && event.keyCode == KeyCode.RETURN) ||
+            (event.action == KeyAction.KeyDown && event.keyCode == KeyCode.SPACE)) {
         }
         return super.onKeyEvent(event);
     }
