@@ -12,9 +12,8 @@
     "stringImportPaths": ["views"],
 
     "dependencies": {
-        "dlangui": "~>0.9.187",
-        "dsymbol": "~>0.11.2",
-        "dcd": "~>0.13.6"
+        "dlangui": "~>0.9.188",
+        "dcd": "~>0.15.0-beta.1"
     },
 
     "copyFiles-windows": [

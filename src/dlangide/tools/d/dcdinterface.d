@@ -19,11 +19,6 @@ import dcd.server.autocomplete;
 import dcd.common.messages;
 import dsymbol.modulecache;
 
-//alias SharedASTAllocator = CAllocatorImpl!(Mallocator);
-//alias SharedASTAllocator = CAllocatorImpl!(Mallocator);
-//alias SharedASTAllocator = CSharedAllocatorImpl!(Mallocator);
-alias SharedASTAllocator = ASTAllocator;
-
 enum DCDResult : int {
     SUCCESS,
     NO_RESULT,
@@ -92,11 +87,9 @@ class DCDTask {
 }
 
 class ModuleCacheAccessor {
-    import dsymbol.modulecache;
-    //protected ASTAllocator _astAllocator;
     protected ModuleCache _moduleCache;
     this(in string[] importPaths) {
-        _moduleCache = ModuleCache(new SharedASTAllocator);
+        _moduleCache = ModuleCache();
         _moduleCache.addImportPaths(importPaths);
     }
     protected ModuleCache * getModuleCache(in string[] importPaths) {
@@ -109,8 +102,6 @@ class ModuleCacheAccessor {
 class DCDInterface : Thread {
 
     import dsymbol.modulecache;
-    //protected ASTAllocator _astAllocator;
-    //protected ModuleCache * _moduleCache;
     ModuleCacheAccessor _moduleCache;
     protected BlockingQueue!DCDTask _queue;
 
@@ -362,6 +353,7 @@ int completionTypePriority(char t) {
             return 3;
         case 'k': // - keyword, built-in version, scope statement
             return 20;
+        case 'F':
         case 'f': // - function or method
             return 2;
         case 'g': // - enum name
