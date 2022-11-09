@@ -28,15 +28,15 @@ extern (C) int UIAppMain(string[] args) {
 
     version(Windows) {
         debug {
-            sharedLog = new FileLogger("dcd.log");
+            sharedLog = cast(shared)new FileLogger("dcd.log");
         } else {
-            sharedLog = new NullLogger();
+            sharedLog = cast(shared)new NullLogger();
         }
     } else {
         debug {
             //sharedLog = new FileLogger("dcd.log");
         } else {
-            sharedLog = new NullLogger();
+            sharedLog = cast(shared)new NullLogger();
         }
     }
 
