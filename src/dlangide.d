@@ -26,6 +26,7 @@ extern (C) int UIAppMain(string[] args) {
         runParserTests();
     }
 
+/* Comment out this for now due to changes in behavior (https://dlang.org/changelog/2.101.0.html#logger_sharedLog_returning_shared_logger)
     version(Windows) {
         debug {
             sharedLog = cast(shared)new FileLogger("dcd.log");
@@ -39,6 +40,7 @@ extern (C) int UIAppMain(string[] args) {
             sharedLog = cast(shared)new NullLogger();
         }
     }
+*/
 
     //version (Windows) {
     //    import derelict.lldb.lldbtest;
