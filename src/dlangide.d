@@ -6,7 +6,15 @@ import std.conv;
 import dlangide.ui.frame;
 import dlangide.ui.commands;
 import dlangide.workspace.workspace;
-import std.experimental.logger;
+
+static if(__VERSION__ > 2100)
+{
+    import std.logger;
+}
+else
+{
+    import std.experimental.logger;
+}
 
 mixin APP_ENTRY_POINT;
 
@@ -26,15 +34,17 @@ extern (C) int UIAppMain(string[] args) {
         runParserTests();
     }
 
-    version(Windows) {
+    static if(__VERSION__ > 2100) {
+        debug {
+            sharedLog = cast(shared)new FileLogger("dcd.log");
+        } else {
+            sharedLog = cast(shared)new NullLogger();
+        }
+    }
+    else
+    {
         debug {
             sharedLog = new FileLogger("dcd.log");
-        } else {
-            sharedLog = new NullLogger();
-        }
-    } else {
-        debug {
-            //sharedLog = new FileLogger("dcd.log");
         } else {
             sharedLog = new NullLogger();
         }
@@ -94,12 +104,12 @@ extern (C) int UIAppMain(string[] args) {
             // set window icon
             window.windowIcon = drawableCache.getImage("dlangui-logo1");
         }
-    
+
         //Widget w = new Widget();
         //pragma(msg, w.click.return_t, "", w.click.params_t);
 
         IDEFrame frame = new IDEFrame(window);
-        
+
         // Open project, if it specified in command line
         if (args.length > 1)
         {
