@@ -13,7 +13,7 @@
 
     "dependencies": {
         "dlangui": "~>0.10.2",
-        "dcd": "~>0.15.0-beta.1"
+        "dcd": "~>0.16.0-beta.1"
     },
 
     "copyFiles-windows": [
