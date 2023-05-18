@@ -43,7 +43,7 @@ class DMDProfilerView : WidgetGroupDefaultDrawing {
 
 class TraceFuncionGrid : StringGridWidgetBase {
     protected FunctionNode[] _list;
-    protected dstring[] _colTitles;
+    protected UIString[] _colTitles;
     protected ulong _ticksPerSecond;
     this(string ID, FunctionNode[] list, ulong ticks_per_second) {
         super(ID);
@@ -53,10 +53,10 @@ class TraceFuncionGrid : StringGridWidgetBase {
         fullColumnOnLeft(false);
         fullRowOnTop(false);
         resize(4, cast(int)list.length);
-        setColTitle(0, "Function name"d);
-        setColTitle(1, "Called"d);
-        setColTitle(2, "F us"d);
-        setColTitle(3, "F+D us"d);
+        setColTitle(0, UIString.fromRaw("Function name"));
+        setColTitle(1, UIString.fromRaw("Called"));
+        setColTitle(2, UIString.fromRaw("F us"));
+        setColTitle(3, UIString.fromRaw("F+D us"));
         showRowHeaders = false;
         rowSelect = true;
         minVisibleRows = 10;
@@ -80,54 +80,54 @@ class TraceFuncionGrid : StringGridWidgetBase {
             buffer[i] = buf[k - i - 1];
         return cast(dstring)buffer[0..k];
     }
-    dstring formatDurationTicks(ulong n) {
+    auto formatDurationTicks(ulong n) {
         ulong v = n * 1000000 / _ticksPerSecond;
-        return formatNumber(v, _numberFormatBuf[]);
+        return UIString.fromRaw(formatNumber(v, _numberFormatBuf[]));
     }
 
     /// get cell text
-    override dstring cellText(int col, int row) {
+    override UIString cellText(int col, int row) {
         import std.conv : to;
         if (row < 0 || row >= _list.length)
-            return ""d;
+            return UIString.fromRaw(""d);
         FunctionNode entry = _list[row];
         switch (col) {
             case 0:
                 string fn = entry.name;
                 if (fn.length > 256)
                     fn = fn[0..256] ~ "...";
-                return fn.to!dstring;
+                return UIString.fromRaw(fn.to!dstring);
             case 1:
-                return formatNumber(entry.number_of_calls, _numberFormatBuf);
+                return UIString.fromRaw(formatNumber(entry.number_of_calls, _numberFormatBuf));
             case 2:
                 return formatDurationTicks(entry.function_time);
             case 3:
                 return formatDurationTicks(entry.function_and_descendant_time);
             default:
-                return ""d;
+                return UIString.fromRaw(""d);
         }
     }
     /// set cell text
-    override StringGridWidgetBase setCellText(int col, int row, dstring text) {
+    override StringGridWidgetBase setCellText(int col, int row, UIString text) {
         // do nothing
         return this;
     }
     /// returns row header title
-    override dstring rowTitle(int row) {
-        return ""d;
+    override UIString rowTitle(int row) {
+        return UIString.fromRaw(""d);
     }
     /// set row header title
-    override StringGridWidgetBase setRowTitle(int row, dstring title) {
+    override StringGridWidgetBase setRowTitle(int row, UIString title) {
         return this;
     }
 
     /// returns row header title
-    override dstring colTitle(int col) {
+    override UIString colTitle(int col) {
         return _colTitles[col];
     }
 
     /// set col header title
-    override StringGridWidgetBase setColTitle(int col, dstring title) {
+    override StringGridWidgetBase setColTitle(int col, UIString title) {
         _colTitles[col] = title;
         return this;
     }

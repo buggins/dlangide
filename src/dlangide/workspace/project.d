@@ -312,19 +312,19 @@ struct ProjectConfiguration {
     string name;
     /// type, for libraries one can run tests, for apps - execute them
     Type type;
-    
+
     /// How to display default configuration in ui
     immutable static string DEFAULT_NAME = "default";
     /// Default project configuration
     immutable static ProjectConfiguration DEFAULT = ProjectConfiguration(DEFAULT_NAME, Type.Default);
-    
+
     /// Type of configuration
     enum Type {
         Default,
         Executable,
         Library
     }
-    
+
     private static Type parseType(string s)
     {
         switch(s)
@@ -336,7 +336,7 @@ struct ProjectConfiguration {
             default: return Type.Default;
         }
     }
-    
+
     /// parsing from setting file
     static ProjectConfiguration[] load(Setting s)
     {
@@ -491,7 +491,7 @@ class Project : WorkspaceItem {
     /// name
     override @property void name(dstring s) {
         super.name(s);
-        _projectFile.setString("name", toUTF8(s));
+        _projectFile.setting.setString("name", toUTF8(s));
     }
 
     /// name
@@ -502,7 +502,7 @@ class Project : WorkspaceItem {
     /// name
     override @property void description(dstring s) {
         super.description(s);
-        _projectFile.setString("description", toUTF8(s));
+        _projectFile.setting.setString("description", toUTF8(s));
     }
 
     /// returns project's own source paths
@@ -577,12 +577,12 @@ class Project : WorkspaceItem {
         if (!isExecutable)
             return null;
         string exename = toUTF8(name);
-        exename = _projectFile.getString("targetName", exename);
+        exename = _projectFile.setting.getString("targetName", exename);
         // TODO: use targetName
         version (Windows) {
             exename = exename ~ ".exe";
         }
-        string targetPath = _projectFile.getString("targetPath", null);
+        string targetPath = _projectFile.setting.getString("targetPath", null);
         string exePath;
         if (targetPath.length)
             exePath = buildNormalizedPath(_filename.dirName, targetPath, exename); // int $targetPath directory
@@ -686,10 +686,10 @@ class Project : WorkspaceItem {
     protected string[] findSourcePaths() {
         string[] res;
         res.assumeSafeAppend;
-        string[] srcPaths = _projectFile.getStringArray("sourcePaths");
+        string[] srcPaths = _projectFile.setting.getStringArray("sourcePaths");
         foreach(s; srcPaths)
             addRelativePathIfExists(res, s);
-        Setting configs = _projectFile.objectByPath("configurations");
+        Setting configs = _projectFile.setting.objectByPath("configurations");
         if (configs) {
             for (int i = 0; i < configs.length; i++) {
                 Setting s = configs[i];
@@ -711,7 +711,7 @@ class Project : WorkspaceItem {
     void processSubpackages() {
         import dlangui.core.files;
         _subPackages.length = 0;
-        Setting subPackages = _projectFile.settingByPath("subPackages", SettingType.ARRAY, false);
+        Setting subPackages = _projectFile.setting.settingByPath("subPackages", SettingType.ARRAY, false);
         if (subPackages) {
             string p = _projectFile.filename.dirName;
             for(int i = 0; i < subPackages.length; i++) {
@@ -762,7 +762,7 @@ class Project : WorkspaceItem {
         //
         _mainSourceFile = null;
         try {
-            _name = toUTF32(_projectFile.getString("name"));
+            _name = toUTF32(_projectFile.setting.getString("name"));
             _originalName = _name;
             if (_baseProjectName) {
                 _name = _baseProjectName ~ ":" ~ _name;
@@ -771,7 +771,7 @@ class Project : WorkspaceItem {
                 _name ~= "-"d;
                 _name ~= toUTF32(_dependencyVersion.startsWith("~") ? _dependencyVersion[1..$] : _dependencyVersion);
             }
-            _description = toUTF32(_projectFile.getString("description"));
+            _description = toUTF32(_projectFile.setting.getString("description"));
             Log.d("  project name: ", _name);
             Log.d("  project description: ", _description);
 
@@ -787,7 +787,7 @@ class Project : WorkspaceItem {
             if (!_isDependency)
                 loadSelections();
 
-            _configurations = ProjectConfiguration.load(_projectFile);
+            _configurations = ProjectConfiguration.load(_projectFile.setting);
             Log.i("Project configurations: ", _configurations);
 
 
@@ -843,7 +843,7 @@ class Project : WorkspaceItem {
             _dependencies = newdeps;
             return false;
         }
-        Setting versions = selectionsFile.objectByPath("versions");
+        Setting versions = selectionsFile.setting.objectByPath("versions");
         if (!versions.isObject) {
             _dependencies = newdeps;
             return false;

@@ -38,7 +38,7 @@ class NewProjectDlg : Dialog {
     IDEFrame _ide;
 
     this(IDEFrame parent, bool newWorkspace, Workspace currentWorkspace, string dir) {
-        super(newWorkspace ? UIString.fromId("OPTION_NEW_WORKSPACE"c) : UIString.fromId("OPTION_NEW_PROJECT"c), parent.window, 
+        super(newWorkspace ? UIString.fromId("OPTION_NEW_WORKSPACE"c) : UIString.fromId("OPTION_NEW_PROJECT"c), parent.window,
               DialogFlag.Modal | DialogFlag.Resizable | DialogFlag.Popup, 500, 400);
         _ide = parent;
         _icon = "dlangui-logo1";
@@ -64,8 +64,8 @@ class NewProjectDlg : Dialog {
                                 margins: 5
                                 layoutWidth: 25%; layoutHeight: fill
                                 TextWidget { text: OPTION_PROJECT_TEMPLATE }
-                                StringListWidget { 
-                                    id: projectTemplateList 
+                                StringListWidget {
+                                    id: projectTemplateList
                                     layoutWidth: wrap; layoutHeight: fill
                                 }
                             }
@@ -73,8 +73,8 @@ class NewProjectDlg : Dialog {
                                 margins: 5
                                 layoutWidth: 40%; layoutHeight: fill
                                 TextWidget { text: OPTION_TEMPLATE_DESCR }
-                                EditBox { 
-                                    id: templateDescription; readOnly: true 
+                                EditBox {
+                                    id: templateDescription; readOnly: true
                                     layoutWidth: fill; layoutHeight: fill
                                 }
                             }
@@ -82,7 +82,7 @@ class NewProjectDlg : Dialog {
                                 layoutWidth: 35%; layoutHeight: fill
                                 margins: 5
                                 TextWidget { text: OPTION_DIRECTORY_LAYOUT }
-                                EditBox { 
+                                EditBox {
                                     id: directoryLayout; readOnly: true
                                     layoutWidth: fill; layoutHeight: fill
                                 }
@@ -362,13 +362,13 @@ class NewProjectDlg : Dialog {
         project.name = toUTF32(_projectName);
         if (!project.save())
             return setError("Cannot save project");
-        project.content.setString("targetName", _projectName);
+        project.content.setting.setString("targetName", _projectName);
         if (_currentTemplate.isLibrary) {
-            project.content.setString("targetType", "staticLibrary");
-            project.content.setString("targetPath", "lib");
+            project.content.setting.setString("targetType", "staticLibrary");
+            project.content.setting.setString("targetPath", "lib");
         } else {
-            project.content.setString("targetType", "executable");
-            project.content.setString("targetPath", "bin");
+            project.content.setting.setString("targetType", "executable");
+            project.content.setting.setString("targetPath", "bin");
         }
         if (_currentTemplate.json)
             project.content.merge(_currentTemplate.json);
@@ -500,7 +500,7 @@ extern (C) int UIAppMain(string[] args) {
     };
     // show message box with content of editors
     window.mainWidget.childById!Button("btnOk").click = delegate(Widget w) {
-        window.showMessageBox(UIString.fromId("MSG_OK_BUTTON"c), 
+        window.showMessageBox(UIString.fromId("MSG_OK_BUTTON"c),
                               UIString.fromId("EDITOR_CONTENT"c) ~ "\nEdit1: "d ~ edit1.text ~ "\nEdit2: "d ~ edit2.text);
         return true;
     };

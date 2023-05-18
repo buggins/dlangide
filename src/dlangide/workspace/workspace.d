@@ -54,9 +54,9 @@ class Workspace : WorkspaceItem {
     protected Project[] _projects;
     protected SettingsFile _workspaceFile;
     protected WorkspaceSettings _settings;
-    
+
     protected IDEFrame _frame;
-    
+
     this(IDEFrame frame, string fname = WORKSPACE_EXTENSION) {
         super(fname);
         _workspaceFile = new SettingsFile(fname);
@@ -74,9 +74,9 @@ class Workspace : WorkspaceItem {
     }
 
     @property Setting includePath(){
-        Setting res = _workspaceFile.objectByPath("includePath", true);
+        Setting res = _workspaceFile.setting.objectByPath("includePath", true);
         return res;
-    }    
+    }
 
     @property Project[] projects() { return _projects; }
 
@@ -91,19 +91,19 @@ class Workspace : WorkspaceItem {
     protected Project _startupProject;
 
     @property Project startupProject() { return _startupProject; }
-    @property void startupProject(Project project) { 
+    @property void startupProject(Project project) {
         if (_startupProject is project)
             return;
         _startupProject = project;
         _settings.startupProjectName = toUTF8(project.name);
         _frame.updateProjectConfigurations();
     }
-    
+
     /// Last opened files in workspace
     @property WorkspaceFile[] files() {
         return _settings.files();
     }
-    
+
     /// Last opened files in workspace
     @property void files(WorkspaceFile[] fs) {
         _settings.files(fs);
@@ -159,7 +159,7 @@ class Workspace : WorkspaceItem {
         updateBreakpointFiles(res);
         return res;
     }
-    
+
     void setSourceFileBreakpoints(ProjectSourceFile file, Breakpoint[] breakpoints) {
         _settings.setProjectBreakpoints(toUTF8(file.project.name), file.projectFilePath, breakpoints);
     }
@@ -169,7 +169,7 @@ class Workspace : WorkspaceItem {
         updateBookmarkFiles(res);
         return res;
     }
-    
+
     void setSourceFileBookmarks(ProjectSourceFile file, EditorBookmark[] bookmarks) {
         _settings.setProjectBookmarks(toUTF8(file.project.name), file.projectFilePath, bookmarks);
     }
@@ -180,7 +180,7 @@ class Workspace : WorkspaceItem {
         updateBreakpointFiles(res);
         return res;
     }
-    
+
     protected void fillStartupProject() {
         string s = _settings.startupProjectName;
         if ((!_startupProject || !_startupProject.name.toUTF8.equal(s)) && _projects.length) {
@@ -312,13 +312,13 @@ class Workspace : WorkspaceItem {
             if (nf && !_name.empty) // cut off last comma
                 _name = _name[ 0 .. $ - 1 ];
             if (df && !_description.empty) // cut off last delimiter
-                _description = _description[ 0 .. $ - 3 ]; 
+                _description = _description[ 0 .. $ - 3 ];
         }
-        _workspaceFile.setString("name", toUTF8(_name));
-        _workspaceFile.setString("description", toUTF8(_description));
+        _workspaceFile.setting.setString("name", toUTF8(_name));
+        _workspaceFile.setting.setString("description", toUTF8(_description));
         Log.d("workspace name: ", _name);
         Log.d("workspace description: ", _description);
-        Setting projects = _workspaceFile.objectByPath("projects", true);
+        Setting projects = _workspaceFile.setting.objectByPath("projects", true);
         projects.clear(SettingType.OBJECT);
         foreach (Project p; _projects) {
             if (p.isDependency)
@@ -346,8 +346,8 @@ class Workspace : WorkspaceItem {
             return false;
         }
         _settings.load(filename ~ WORKSPACE_SETTINGS_EXTENSION);
-        _name = toUTF32(_workspaceFile["name"].str);
-        _description = toUTF32(_workspaceFile["description"].str);
+        _name = toUTF32(_workspaceFile.setting["name"].str);
+        _description = toUTF32(_workspaceFile.setting["description"].str);
         Log.d("workspace name: ", _name);
         Log.d("workspace description: ", _description);
         if (_name.empty()) {
@@ -355,7 +355,7 @@ class Workspace : WorkspaceItem {
             return false;
         }
         auto originalStartupProjectName = _settings.startupProjectName;
-        Setting projects = _workspaceFile.objectByPath("projects", true);
+        Setting projects = _workspaceFile.setting.objectByPath("projects", true);
         foreach(string key, Setting value; projects) {
             string path = value.str;
             Log.d("project: ", key, " path:", path);
