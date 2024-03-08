@@ -126,6 +126,9 @@ SettingsPage createSettingsPages() {
                       StringListValue(120, "120"d),
                       StringListValue(140, "140"d),
                       StringListValue(150, "150"d),
+                      StringListValue(150, "180"d),
+                      StringListValue(150, "200"d),
+                      StringListValue(150, "250"d),
                       StringListValue(300, "300"d),
                       StringListValue(400, "400"d),
                       StringListValue(600, "600"d)]);

@@ -7,6 +7,12 @@ res/i18n/cs.ini
 res/i18n/de.ini
 res/hdpi/hdpi_configure.png
 res/hdpi/hdpi_debug-run.png
+res/hdpi/hdpi_debug-pause.png
+res/hdpi/hdpi_debug-stop.png
+res/hdpi/hdpi_debug-restart.png
+res/hdpi/hdpi_debug-step-into.png
+res/hdpi/hdpi_debug-step-out.png
+res/hdpi/hdpi_debug-step-over.png
 res/hdpi/hdpi_document-close.png
 res/hdpi/hdpi_document-open-recent.png
 res/hdpi/hdpi_document-open.png
