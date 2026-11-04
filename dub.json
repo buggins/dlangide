@@ -22,6 +22,8 @@
 
     "libs-linux": ["z"],
 
+    "libs-windows": ["gdi32", "user32"],
+
     "versions-windows": [
         "USE_FREETYPE"
     ],

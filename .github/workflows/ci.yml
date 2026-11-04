@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: ${{ matrix.os }} / ${{ matrix.dc }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+        dc:
+          - dmd-latest
+          - ldc-latest
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup D compiler
+        uses: dlang-community/setup-dlang@v2
+        with:
+          compiler: ${{ matrix.dc }}
+
+      - name: Install system libraries (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y zlib1g-dev libx11-dev libgl-dev
+
+      - name: Unit tests
+        run: dub test
+
+      - name: Build (default configuration)
+        run: dub build
+
+      - name: Build (console configuration)
+        run: dub build -c console
+
+      - name: Build (x11 configuration)
+        if: runner.os == 'Linux'
+        run: dub build -c x11

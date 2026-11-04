@@ -35,8 +35,8 @@ class StackPanel : DockWindow, OnItemSelectedHandler, CellActivatedHandler {
         _grid.showRowHeaders = false;
         _grid.layoutHeight = FILL_PARENT;
         _grid.layoutWidth = FILL_PARENT;
-        _grid.setColTitle(0, "Function"d);
-        _grid.setColTitle(1, "Address"d);
+        _grid.setColTitle(0, UIString.fromRaw("Function"d));
+        _grid.setColTitle(1, UIString.fromRaw("Address"d));
         _grid.layoutWidth = FILL_PARENT;
         _grid.layoutHeight = FILL_PARENT;
         root.addChild(_comboBox);
@@ -78,17 +78,17 @@ class StackPanel : DockWindow, OnItemSelectedHandler, CellActivatedHandler {
                 _grid.resize(2, _selectedThread.length);
                 for (int i = 0; i < _selectedThread.length; i++) {
                     if (_selectedThread[i].func)
-                        _grid.setCellText(0, i, _selectedThread[i].func.toUTF32);
+                        _grid.setCellText(0, i, UIString.fromRaw(_selectedThread[i].func.toUTF32));
                     else if (_selectedThread[i].from)
-                        _grid.setCellText(0, i, baseName(_selectedThread[i].from.toUTF32));
+                        _grid.setCellText(0, i, UIString.fromRaw(baseName(_selectedThread[i].from.toUTF32)));
                     else
-                        _grid.setCellText(0, i, _selectedThread[i].file.toUTF32);
-                    _grid.setCellText(1, i, _selectedThread[i].formattedAddress.toUTF32);
+                        _grid.setCellText(0, i, UIString.fromRaw(_selectedThread[i].file.toUTF32));
+                    _grid.setCellText(1, i, UIString.fromRaw(_selectedThread[i].formattedAddress.toUTF32));
                 }
             } else {
                 _grid.resize(2, 1);
-                _grid.setCellText(0, 0, "No info"d);
-                _grid.setCellText(1, 0, ""d);
+                _grid.setCellText(0, 0, UIString.fromRaw("No info"d));
+                _grid.setCellText(1, 0, UIString.fromRaw(""d));
             }
         } else {
             _comboBox.enabled = false;
