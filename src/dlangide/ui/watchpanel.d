@@ -14,9 +14,9 @@ class VariablesWindow : StringGridWidget {
         showRowHeaders = false;
         layoutHeight = FILL_PARENT;
         layoutWidth = FILL_PARENT;
-        setColTitle(0, "Variable"d);
-        setColTitle(1, "Value"d);
-        setColTitle(2, "Type"d);
+        setColTitle(0, UIString.fromRaw("Variable"d));
+        setColTitle(1, UIString.fromRaw("Value"d));
+        setColTitle(2, UIString.fromRaw("Type"d));
         autoFit();
     }
     void setFrame(DebugFrame frame) {
@@ -25,9 +25,9 @@ class VariablesWindow : StringGridWidget {
             resize(3, frame.locals.length);
             for (int i = 0; i < frame.locals.length; i++) {
                 DebugVariable var = frame.locals[i];
-                setCellText(0, i, var.name.toUTF32);
-                setCellText(1, i, var.value.toUTF32);
-                setCellText(2, i, var.type.toUTF32);
+                setCellText(0, i, UIString.fromRaw(var.name.toUTF32));
+                setCellText(1, i, UIString.fromRaw(var.value.toUTF32));
+                setCellText(2, i, UIString.fromRaw(var.type.toUTF32));
             }
             autoFit();
         } else {
