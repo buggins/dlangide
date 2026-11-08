@@ -723,6 +723,9 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
     }
 
     private bool isAutoCompleteKey(ref KeyEvent event) {
+        // shortcuts like Ctrl+Z, Ctrl+H must not trigger completion (Shift is fine: capitals, '_')
+        if (event.flags & (KeyFlag.Control | KeyFlag.Alt | KeyFlag.Menu))
+            return false;
         if((event.keyCode >= KeyCode.KEY_0 && event.keyCode <= KeyCode.KEY_Z) ||
             event.keyCode == KeyCode.KEY_PERIOD ||
             event.keyCode == KeyCode.BACK ||
@@ -791,14 +794,8 @@ class CompletionPopupMenu : PopupMenu {
 
     Point fullContentSizeWithBorders() {
         measure(2000.pointsToPixels, 2000.pointsToPixels);
-        Point sz;
-        sz.x = measuredWidth;
-        sz.y = measuredHeight;
-        Rect pad = padding;
-        Rect marg = margins;
-        sz.x += pad.left + pad.right + marg.left + marg.right;
-        sz.y += pad.top + pad.bottom + marg.top + marg.bottom;
-        return sz;
+        // measured size already includes padding and margins
+        return Point(measuredWidth, measuredHeight);
     }
 
     MenuItem updateItems() {
