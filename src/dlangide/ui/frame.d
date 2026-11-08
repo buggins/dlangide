@@ -579,6 +579,14 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         return res;
     }
 
+    /// save all modified documents (File -> Save all)
+    void saveAllDocuments() {
+        foreach (ed; allOpenedEditors()) {
+            if (ed.content.modified)
+                ed.save();
+        }
+    }
+
     /// close editor tabs for which files are removed from filesystem
     void closeRemovedDocuments() {
         import std.file;
@@ -1125,6 +1133,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     return true;
                 case StandardAction.OpenUrl:
                     platform.openURL(a.stringParam);
+                    return true;
+                case IDEActions.FileSaveAll:
+                    saveAllDocuments();
                     return true;
                 case IDEActions.FileSaveAs:
                     DSourceEdit ed = currentEditor;
