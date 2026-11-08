@@ -19,17 +19,50 @@ jobs:
         dc:
           - dmd-latest
           - ldc-latest
+        include:
+          # minimum supported frontend (same as dlangui: DMD 2.100.2)
+          - os: ubuntu-latest
+            dc: dmd-2.100.2
+          - os: ubuntu-latest
+            dc: ldc-1.30.0
+          - os: windows-latest
+            dc: dmd-2.100.2
+          # LDC packaged by Ubuntu 24.04 (frontend 2.106)
+          - os: ubuntu-latest
+            dc: ldc-1.36.0
+          # macOS (arm64; DMD doesn't support arm64)
+          - os: macos-latest
+            dc: ldc-latest
 
     runs-on: ${{ matrix.os }}
 
     steps:
       - name: Checkout source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup D compiler
         uses: dlang-community/setup-dlang@v2
         with:
           compiler: ${{ matrix.dc }}
+
+      # Cache DUB packages so that jobs keep working when code.dlang.org downloads fail:
+      # dub warns and uses the cached packages. The key includes the compiler (each comes with its
+      # own dub, and dub versions differ in package layout) and the month (dependency ranges pick
+      # up new versions; an existing cache entry is never updated).
+      - name: Get month for DUB cache key
+        id: month
+        shell: bash
+        run: echo "month=$(date -u +%Y-%m)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache DUB packages
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.dub/packages
+            ~/AppData/Local/dub/packages
+          key: dub-${{ runner.os }}-${{ matrix.dc }}-${{ hashFiles('dub.json') }}-${{ steps.month.outputs.month }}
+          restore-keys: |
+            dub-${{ runner.os }}-${{ matrix.dc }}-
 
       - name: Install system libraries (Linux)
         if: runner.os == 'Linux'
