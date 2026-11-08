@@ -1072,12 +1072,12 @@ struct CompilerImportPathsCache {
         import std.path : isAbsolute;
         string compilerPath = compiler;
         if (compiler == "default") {
-            // try to autodetect default compiler
-            compilerPath = findExecutablePath("dmd");
-            if (!compilerPath)
-                compilerPath = findExecutablePath("ldc");
-            if (!compilerPath)
-                compilerPath = findExecutablePath("gdc");
+            // try to autodetect default compiler (LDC's executables are ldc2 and ldmd2)
+            foreach (candidate; ["dmd", "ldc2", "ldmd2", "gdc"]) {
+                compilerPath = findExecutablePath(candidate);
+                if (compilerPath)
+                    break;
+            }
         } else if (compilerPath && !compilerPath.isAbsolute)
             compilerPath = findExecutablePath(compiler);
         string[] res;
