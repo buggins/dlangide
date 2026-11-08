@@ -345,7 +345,6 @@ class OutputPanel : DockWindow {
             _terminalWidget = new TerminalWidget("TERMINAL");
             _terminalWidget.layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT);
             _tabs.addTab(_terminalWidget, "Output"d);
-            _terminalWidget.write("Hello\nSecond line\nTest\n"d);
         }
         static if (ENABLE_INTERNAL_TERMINAL_TEST) {
             _terminalWidget.write("Hello\nSecond line\nTest\n"d);
