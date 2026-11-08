@@ -307,14 +307,16 @@ class DCDInterface : Thread {
 
             result.result = DCDResult.SUCCESS;
             result.output.length = response.completions.length;
+            // for call tips, DCD puts the function signature into `definition` (identifier is just the name)
+            bool callTips = response.completionType == "calltips";
             int i=0;
             foreach(s;response.completions) {
                 char type = s.kind;
                 result.output[i].kind = type;
-                result.output[i].name = to!dstring(s.identifier);
+                result.output[i].name = to!dstring(callTips && s.definition.length ? s.definition : s.identifier);
                 i++;
             }
-            if (response.completionType == "calltips") {
+            if (callTips) {
                 result.type = CompletionTypes.CallTips;
             } else {
                 result.type = CompletionTypes.IdentifierList;
