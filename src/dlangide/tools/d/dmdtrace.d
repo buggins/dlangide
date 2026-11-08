@@ -65,6 +65,7 @@ class DMDTraceLogParser {
     FunctionNode[] nodesByName;
     //FunctionEdge[string] caller_graph;
     //FunctionEdge[string] called_graph;
+    /// timer frequency from trace.log; 0 if unknown (times are then in ticks)
     ulong ticks_per_second;
 
     this(string fname) {
@@ -124,11 +125,14 @@ class DMDTraceLogParser {
             if (line.length == 0) {
                 continue; // Ignore blank lines
             } else if (line[0] == '=') { // Seperator between call graph and summary data
+                // "======== Timer Is 3579545 Ticks/Sec, Times are in Microsecs ========" or, when druntime
+                // doesn't know the timer frequency (e.g. Linux x86-64), "======== Timer frequency unknown, ..."
                 auto number = indexOfAny(line, "1234567890");
                 if (number < 0)
                 {
-                    Log.e("Corrupt trace.log (can't compute ticks per second), please re-profile and try again");
-                    return false;
+                    Log.i("trace.log: timer frequency unknown, times will be shown in ticks");
+                    ticks_per_second = 0;
+                    break;
                 }
                 auto space = indexOf(line[number .. $], ' ') + number;
                 ticks_per_second = to!ulong(line[number .. space]);
@@ -208,6 +212,27 @@ class DMDTraceLogParser {
         sortFunctionNodes(nodesByTotalTime, TraceSortOrder.BY_TOTAL_TIME);
         sortFunctionNodes(nodesByCallCount, TraceSortOrder.BY_CALL_COUNT);
         sortFunctionNodes(nodesByName, TraceSortOrder.BY_NAME);
+    }
+}
+
+/// trace.log with known timer frequency and with "Timer frequency unknown" (druntime on Linux x86-64)
+unittest {
+    enum callGraph = "------------------\n"
+        ~ "\t    1\t_Dmain\n"
+        ~ "_D3app6addTwoFiiZi\t1\t25\t20\n"
+        ~ "------------------\n";
+    foreach (sep, tps; [
+            "======== Timer Is 3579545 Ticks/Sec, Times are in Microsecs ========": 3579545UL,
+            "======== Timer frequency unknown, Times are in Megaticks ========": 0UL]) {
+        auto parser = new DMDTraceLogParser("trace.log");
+        parser.splitLines(cast(void[])(callGraph ~ "\n" ~ sep ~ "\n\n  Num          Tree        Func        Per\n"));
+        assert(parser.parse());
+        assert(parser.ticks_per_second == tps);
+        assert("_D3app6addTwoFiiZi" in parser.nodes);
+        auto node = parser.nodes["_D3app6addTwoFiiZi"];
+        assert(node.number_of_calls == 1);
+        assert(node.function_and_descendant_time == 25);
+        assert(node.function_time == 20);
     }
 }
 

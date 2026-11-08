@@ -55,8 +55,9 @@ class TraceFuncionGrid : StringGridWidgetBase {
         resize(4, cast(int)list.length);
         setColTitle(0, UIString.fromRaw("Function name"));
         setColTitle(1, UIString.fromRaw("Called"));
-        setColTitle(2, UIString.fromRaw("F us"));
-        setColTitle(3, UIString.fromRaw("F+D us"));
+        // timer frequency unknown (0): durations are shown in ticks instead of microseconds
+        setColTitle(2, UIString.fromRaw(ticks_per_second ? "F us" : "F ticks"));
+        setColTitle(3, UIString.fromRaw(ticks_per_second ? "F+D us" : "F+D ticks"));
         showRowHeaders = false;
         rowSelect = true;
         minVisibleRows = 10;
@@ -81,7 +82,7 @@ class TraceFuncionGrid : StringGridWidgetBase {
         return cast(dstring)buffer[0..k];
     }
     auto formatDurationTicks(ulong n) {
-        ulong v = n * 1000000 / _ticksPerSecond;
+        ulong v = _ticksPerSecond ? n * 1000000 / _ticksPerSecond : n;
         return UIString.fromRaw(formatNumber(v, _numberFormatBuf[]));
     }
 
