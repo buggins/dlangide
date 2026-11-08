@@ -836,7 +836,7 @@ class Project : WorkspaceItem {
     bool loadSelections() {
         Project[] newdeps;
         _dependencies.length = 0;
-        auto finder = new DubPackageFinder;
+        auto finder = new DubPackageFinder(_dir);
         scope(exit) destroy(finder);
         SettingsFile selectionsFile = new SettingsFile(buildNormalizedPath(_dir, "dub.selections.json"));
         if (!selectionsFile.load()) {
@@ -876,21 +876,36 @@ class Project : WorkspaceItem {
 }
 
 class DubPackageFinder {
-    string systemDubPath;
-    string userDubPath;
-    string tempPath;
-    this() {
-        version(Windows){
-            systemDubPath = buildNormalizedPath(environment.get("ProgramData"), "dub", "packages");
-            userDubPath = buildNormalizedPath(environment.get("APPDATA"), "dub", "packages");
-            tempPath = buildNormalizedPath(environment.get("TEMP"), "dub", "packages");
-        } else version(Posix){
-            systemDubPath = "/var/lib/dub/packages";
-            userDubPath = buildNormalizedPath(environment.get("HOME"), ".dub", "packages");
-            if(!userDubPath.isAbsolute)
-                userDubPath = buildNormalizedPath(getcwd(), userDubPath);
-            tempPath = "/tmp/packages";
+    /// directories with DUB packages, in search order: project local, user, system
+    string[] packageDirs;
+
+    /// projectDir: if not null, <projectDir>/.dub/packages is searched first
+    this(string projectDir = null) {
+        if (projectDir.length)
+            packageDirs ~= buildNormalizedPath(projectDir, ".dub", "packages");
+        // user packages: $DUB_HOME/packages or $DPATH/dub/packages override the default location
+        string dubHome = environment.get("DUB_HOME");
+        if (!dubHome.length && environment.get("DPATH").length)
+            dubHome = buildNormalizedPath(environment.get("DPATH"), "dub");
+        if (dubHome.length) {
+            packageDirs ~= buildNormalizedPath(dubHome, "packages");
+        } else {
+            version(Windows) {
+                // dub >= 1.31 uses %LOCALAPPDATA%, older versions used %APPDATA%
+                if (environment.get("LOCALAPPDATA").length)
+                    packageDirs ~= buildNormalizedPath(environment.get("LOCALAPPDATA"), "dub", "packages");
+                packageDirs ~= buildNormalizedPath(environment.get("APPDATA"), "dub", "packages");
+            } else version(Posix) {
+                packageDirs ~= buildNormalizedPath(environment.get("HOME"), ".dub", "packages");
+            }
         }
+        version(Windows) {
+            packageDirs ~= buildNormalizedPath(environment.get("ProgramData"), "dub", "packages");
+        } else version(Posix) {
+            packageDirs ~= "/var/lib/dub/packages";
+        }
+        foreach (ref dir; packageDirs)
+            dir = absolutePath(dir);
     }
 
     /// find package file (dub.json, package.json) in specified dir; returns absoulute path to found file or null if not found
@@ -907,29 +922,66 @@ class DubPackageFinder {
         return null;
     }
 
-    protected string findPackage(string packageDir, string packageName, string packageVersion) {
+    /// find package in one packages directory; returns package file name or null
+    static string findPackage(string packageDir, string packageName, string packageVersion) {
+        // dub >= 1.31: <packages>/<name>/<version>/<name>/ (branch versions keep the '~', e.g. ~master)
+        string fn = findPackageDir(buildNormalizedPath(packageDir, packageName, packageVersion, packageName));
+        if (fn)
+            return fn;
+        // older dub: <packages>/<name>-<version>/ or <packages>/<name>-<version>/<name>/
         string fullName = packageVersion.startsWith("~") ? packageName ~ "-" ~ packageVersion[1..$] : packageName ~ "-" ~ packageVersion;
-        string pathName = absolutePath(buildNormalizedPath(packageDir, fullName));
-        if (pathName.exists && pathName.isDir) {
-            string fn = findPackageFile(pathName);
-            if (fn)
-                return fn;
-            // new DUB support - with package subdirectory
-            fn = findPackageFile(buildNormalizedPath(pathName, packageName));
-            if (fn)
-                return fn;
-        }
+        string pathName = buildNormalizedPath(packageDir, fullName);
+        fn = findPackageDir(pathName);
+        if (fn)
+            return fn;
+        return findPackageDir(buildNormalizedPath(pathName, packageName));
+    }
+
+    /// find package file in a directory if it exists
+    private static string findPackageDir(string pathName) {
+        pathName = absolutePath(pathName);
+        if (pathName.exists && pathName.isDir)
+            return findPackageFile(pathName);
         return null;
     }
 
+    /// find package in all package directories; returns package file name or null
     string findPackage(string packageName, string packageVersion) {
-        string res = null;
-        res = findPackage(userDubPath, packageName, packageVersion);
-        if (res)
-            return res;
-        res = findPackage(systemDubPath, packageName, packageVersion);
-        return res;
+        foreach (dir; packageDirs) {
+            string res = findPackage(dir, packageName, packageVersion);
+            if (res)
+                return res;
+        }
+        return null;
     }
+}
+
+unittest {
+    import std.conv : to;
+    string root = buildNormalizedPath(tempDir, "dlangide-dubfinder-test-" ~ to!string(thisProcessID));
+    void addPackage(string dir, string file) {
+        mkdirRecurse(buildNormalizedPath(root, dir));
+        std.file.write(buildNormalizedPath(root, dir, file), "{}");
+    }
+    scope(exit) if (root.exists) rmdirRecurse(root);
+    addPackage("new/dlangui/0.11.0/dlangui", "dub.json");    // dub >= 1.31
+    addPackage("new/dcd/~master/dcd", "dub.sdl");             // branch version
+    addPackage("old/inilike-1.2.3", "dub.json");              // old flat layout
+    addPackage("old/x11-1.0.21/x11", "package.json");         // old layout with subdirectory
+    addPackage("old/x11-master/x11", "dub.json");             // old branch layout
+    string p(string s) { return buildNormalizedPath(root, s); }
+    assert(DubPackageFinder.findPackage(p("new"), "dlangui", "0.11.0") == p("new/dlangui/0.11.0/dlangui/dub.json"));
+    assert(DubPackageFinder.findPackage(p("new"), "dcd", "~master") == p("new/dcd/~master/dcd/dub.sdl"));
+    assert(DubPackageFinder.findPackage(p("old"), "inilike", "1.2.3") == p("old/inilike-1.2.3/dub.json"));
+    assert(DubPackageFinder.findPackage(p("old"), "x11", "1.0.21") == p("old/x11-1.0.21/x11/package.json"));
+    assert(DubPackageFinder.findPackage(p("old"), "x11", "~master") == p("old/x11-master/x11/dub.json"));
+    assert(DubPackageFinder.findPackage(p("new"), "dlangui", "0.10.8") is null);
+    assert(DubPackageFinder.findPackage(p("missing"), "dlangui", "0.11.0") is null);
+    // search order: the first directory that has the package wins
+    auto finder = new DubPackageFinder;
+    finder.packageDirs = [p("missing"), p("old"), p("new")];
+    assert(finder.findPackage("dlangui", "0.11.0") == p("new/dlangui/0.11.0/dlangui/dub.json"));
+    assert(finder.findPackage("x11", "1.0.21") == p("old/x11-1.0.21/x11/package.json"));
 }
 
 bool isValidProjectName(in string s) pure {
