@@ -850,6 +850,9 @@ class TerminalDevice : Thread {
         HANDLE hpipe;
     } else {
         int masterfd;
+        /// slave side of the pty, kept open by the IDE itself: while it's open, read() on masterfd blocks
+        /// instead of failing with EIO after a program that used the terminal has exited (busy loop, #363)
+        int slavefd = -1;
         import core.sys.posix.fcntl: open_=open, O_WRONLY;
         import core.sys.posix.unistd: close_=close;
         import core.sys.posix.unistd: write_=write;
@@ -916,13 +919,18 @@ class TerminalDevice : Thread {
             }
         } else {
             // posix
+            import core.time : msecs;
             char[4096] buf;
             while(!closed) {
                 auto bytesRead = read_(masterfd, buf.ptr, buf.length);
                 if (closed)
                     break;
-                if (bytesRead > 0 && onBytesRead.assigned) {
-                    onBytesRead(buf[0 .. bytesRead].dup);
+                if (bytesRead > 0) {
+                    if (onBytesRead.assigned)
+                        onBytesRead(buf[0 .. bytesRead].dup);
+                } else {
+                    // EOF or error (e.g. EIO when no process has the slave side open): don't spin
+                    Thread.sleep(20.msecs);
                 }
             }
         }
@@ -994,6 +1002,10 @@ class TerminalDevice : Thread {
                 hpipe = null;
             }
         } else {
+            if (slavefd != -1) {
+                close_(slavefd);
+                slavefd = -1;
+            }
             if (masterfd && masterfd != -1) {
                 close_(masterfd);
                 masterfd = 0;
@@ -1047,6 +1059,10 @@ class TerminalDevice : Thread {
                     close();
                     return false;
                 }
+                // keep the slave side open ourselves, so that read() on the master blocks between programs
+                slavefd = open(s, O_RDWR | O_NOCTTY);
+                if (slavefd == -1)
+                    Log.w("cannot open pty slave ", fromStringz(s), " - terminal reader will poll");
             }
             _name = fromStringz(s).dup;
         }
