@@ -510,6 +510,13 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
     }
 
     PopupWidget _docsPopup;
+    /// close doc comments / call tips popup if shown
+    void closeDocsPopup() {
+        if (_docsPopup) {
+            _docsPopup.close();
+            _docsPopup = null;
+        }
+    }
     void showDocCommentsPopup(string[] comments, Point pt = Point(-1, -1)) {
         if (!visible)
             return;
@@ -738,6 +745,18 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
     protected uint _periodKeyCode;
     /// handle keys: support autocompletion after . press with delay
     override bool onKeyEvent(KeyEvent event) {
+        // doc comments / call tips popup doesn't take focus: close it on Escape, at the end of the call,
+        // or when the caret moves to another line
+        if (_docsPopup) {
+            if (event.action == KeyAction.KeyDown && event.keyCode == KeyCode.ESCAPE) {
+                closeDocsPopup();
+                return true;
+            }
+            if ((event.action == KeyAction.KeyDown && (event.keyCode == KeyCode.RETURN || event.keyCode == KeyCode.UP
+                    || event.keyCode == KeyCode.DOWN || event.keyCode == KeyCode.PAGEUP || event.keyCode == KeyCode.PAGEDOWN))
+                    || (event.action == KeyAction.Text && (event.text == ")" || event.text == ";")))
+                closeDocsPopup();
+        }
         if (event.action == KeyAction.KeyDown)
             _lastKeyDownCode = event.keyCode;
         if(_settings.autoAutoComplete && isAutoCompleteKey(event) && !_completionPopup) {
