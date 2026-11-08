@@ -84,6 +84,12 @@ class ProjectSettings : SettingsFile {
     @property string runArgs() {
         return debugSettings.getString("run_args", "");
     }
+
+    /// working directory for running and debugging (Project Settings -> Run/Debug -> Working directory);
+    /// empty if not set
+    @property string workingDir() {
+        return debugSettings.getString("working_dir", "");
+    }
 }
 
 /// join parameter lists separating with space
