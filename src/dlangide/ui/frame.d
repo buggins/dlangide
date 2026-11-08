@@ -684,6 +684,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
     /// create app body widget
     override protected Widget createBody() {
         _dockHost = new DockHost();
+        // workspace and output panels start at 25% of the window width/height (default 20%)
+        _dockHost.setInitialSpace(DockAlignment.Left, 25);
+        _dockHost.setInitialSpace(DockAlignment.Bottom, 25);
 
         //=============================================================
         // Create body - Tabs
