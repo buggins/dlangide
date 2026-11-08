@@ -89,6 +89,23 @@ struct TerminalContent {
         lines.length = 0;
         cursorx = cursory = topLine= 0;
     }
+    /// set default colors (e.g. from the UI theme); cells and current attributes using the old default get the new one
+    void setDefaultAttr(TerminalAttr attr) {
+        TerminalAttr old = defAttr;
+        if (old == attr)
+            return;
+        foreach (ref l; lines)
+            foreach (ref ch; l.line)
+                if (ch.attr == old)
+                    ch.attr = attr;
+        if (currentAttr == old)
+            currentAttr = attr;
+        defAttr = attr;
+    }
+    /// background color for areas without characters
+    @property uint defaultBackgroundColor() {
+        return attrToColor(defAttr.bgColor);
+    }
     void resetTerminal() {
         for (int i = topLine; i < cast(int)lines.length; i++) {
             lines[i] = TerminalLine.init;
@@ -148,6 +165,10 @@ struct TerminalContent {
                 currentAttr.textColor = cast(ubyte)(attr - 30);
             } else if (attr >= 40 && attr <= 47) {
                 currentAttr.bgColor = cast(ubyte)(attr - 40);
+            } else if (attr == 39) { // default foreground
+                currentAttr.textColor = defAttr.textColor;
+            } else if (attr == 49) { // default background
+                currentAttr.bgColor = defAttr.bgColor;
             } else if (attr >= 0 && attr <= 10) {
                 switch(attr) {
                     case 0:
@@ -209,7 +230,7 @@ struct TerminalContent {
             // draw line in rect
             for (int x = 0; x < width; x++) {
                 bool isCursorPos = x == cursorx && i + topLine == cursory;
-                TerminalChar ch = x < p.line.length ? p.line[x] : TerminalChar.init;
+                TerminalChar ch = x < p.line.length ? p.line[x] : TerminalChar(defAttr, ' ');
                 uint bgcolor = attrToColor(ch.attr.bgColor);
                 uint textcolor = attrToColor(ch.attr.textColor);
                 if (isCursorPos && focused) {
@@ -363,6 +384,7 @@ class TerminalWidget : WidgetGroup, OnScrollHandler {
         _verticalScrollBar.minValue = 0;
         _verticalScrollBar.scrollEvent = this;
         addChild(_verticalScrollBar);
+        updateColorsFromTheme();
         _device = new TerminalDevice();
         TerminalWidget _this = this;
         if (_device.create()) {
@@ -384,6 +406,23 @@ class TerminalWidget : WidgetGroup, OnScrollHandler {
     ~this() {
         if (_device)
             destroy(_device);
+    }
+
+    /// terminal colors follow the UI theme: black on white for light themes, light gray on black for dark ones
+    void updateColorsFromTheme() {
+        uint bg = style.customColor("edit_background", 0xFFFFFF);
+        uint r = (bg >> 16) & 0xFF, g = (bg >> 8) & 0xFF, b = bg & 0xFF;
+        bool dark = (r * 299 + g * 587 + b * 114) / 1000 < 128;
+        TerminalAttr attr;
+        attr.bgColor = dark ? 0 : 15;   // TERMINAL_PALETTE: black / bright white
+        attr.textColor = dark ? 7 : 0;  // white (0xC0C0C0) / black
+        _content.setDefaultAttr(attr);
+        invalidate();
+    }
+
+    override void onThemeChanged() {
+        super.onThemeChanged();
+        updateColorsFromTheme();
     }
 
     /// returns terminal/tty device (or named pipe for windows) name
@@ -612,10 +651,8 @@ class TerminalWidget : WidgetGroup, OnScrollHandler {
         Rect rc = _pos;
         applyMargins(rc);
         auto saver = ClipRectSaver(buf, rc, alpha);
-        DrawableRef bg = backgroundDrawable;
-        if (!bg.isNull) {
-            bg.drawTo(buf, rc, state);
-        }
+        // whole pane in the terminal's default background, so that the area below the last line matches the text
+        buf.fillRect(rc, _content.defaultBackgroundColor);
         applyPadding(rc);
         _verticalScrollBar.onDraw(buf);
         _content.draw(buf);
