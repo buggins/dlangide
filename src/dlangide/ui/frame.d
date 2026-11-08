@@ -728,7 +728,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         if (!compiler)
             return;
         if (compiler) {
-            string[] imports = compilerImportPathsCache.getImportPathsFor(compilerName);
+            string[] imports = compilerImportPathsCache.getImportPathsFor(compiler);
             if (imports.length > 0) {
                 Log.d(compilerName, " imports:", imports);
                 _logPanel.appendText(null, to!dstring(compilerName) ~ " imports:\n"d);
