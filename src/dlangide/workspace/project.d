@@ -592,9 +592,14 @@ class Project : WorkspaceItem {
     }
 
     /// working directory for running and debugging project
+    /// working directory for running and debugging project: from project settings if set
+    /// (absolute, or relative to project directory), otherwise project directory
     @property string workingDirectory() {
-        // TODO: get from settings
-        return _filename.dirName;
+        string projectDir = _filename.dirName;
+        string dir = settings.workingDir;
+        if (!dir.length)
+            return projectDir;
+        return dir.isAbsolute ? buildNormalizedPath(dir) : buildNormalizedPath(projectDir, dir);
     }
 
     /// commandline parameters for running and debugging project
