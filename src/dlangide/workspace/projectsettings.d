@@ -79,6 +79,11 @@ class ProjectSettings : SettingsFile {
     @property bool runInExternalConsole() {
         return debugSettings.getBoolean("external_console", true);
     }
+
+    /// command line arguments for running and debugging (Project Settings -> Run/Debug -> Command line)
+    @property string runArgs() {
+        return debugSettings.getString("run_args", "");
+    }
 }
 
 /// join parameter lists separating with space

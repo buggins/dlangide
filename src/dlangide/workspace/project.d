@@ -599,8 +599,7 @@ class Project : WorkspaceItem {
 
     /// commandline parameters for running and debugging project
     @property string runArgs() {
-        // TODO: get from settings
-        return null;
+        return settings.runArgs;
     }
 
     @property bool runInExternalConsole() {
@@ -982,6 +981,54 @@ unittest {
     finder.packageDirs = [p("missing"), p("old"), p("new")];
     assert(finder.findPackage("dlangui", "0.11.0") == p("new/dlangui/0.11.0/dlangui/dub.json"));
     assert(finder.findPackage("x11", "1.0.21") == p("old/x11-1.0.21/x11/package.json"));
+}
+
+/// split command line into arguments: separated by whitespace, "..." and '...' group (quotes are removed),
+/// \" inside "..." is a quote; other backslashes are kept as is (Windows paths)
+string[] splitCommandLine(string s) pure {
+    import std.ascii : isWhite;
+    string[] res;
+    char[] arg;
+    bool inArg = false;
+    char quote = 0;
+    for (size_t i = 0; i < s.length; i++) {
+        char ch = s[i];
+        if (quote) {
+            if (ch == quote) {
+                quote = 0;
+            } else if (ch == '\\' && quote == '"' && i + 1 < s.length && s[i + 1] == '"') {
+                arg ~= s[++i];
+            } else {
+                arg ~= ch;
+            }
+        } else if (ch == '"' || ch == '\'') {
+            quote = ch;
+            inArg = true;
+        } else if (isWhite(ch)) {
+            if (inArg) {
+                res ~= arg.idup;
+                arg.length = 0;
+                inArg = false;
+            }
+        } else {
+            arg ~= ch;
+            inArg = true;
+        }
+    }
+    if (inArg)
+        res ~= arg.idup;
+    return res;
+}
+
+unittest {
+    assert(splitCommandLine("") == []);
+    assert(splitCommandLine("   ") == []);
+    assert(splitCommandLine("a b  c") == ["a", "b", "c"]);
+    assert(splitCommandLine(`"hello world" x`) == ["hello world", "x"]);
+    assert(splitCommandLine(`--name='a b' --x=1`) == ["--name=a b", "--x=1"]);
+    assert(splitCommandLine(`"" a`) == ["", "a"]);
+    assert(splitCommandLine(`"q\"uote"`) == [`q"uote`]);
+    assert(splitCommandLine(`C:\dir\file.txt "C:\Program Files\x"`) == [`C:\dir\file.txt`, `C:\Program Files\x`]);
 }
 
 bool isValidProjectName(in string s) pure {
