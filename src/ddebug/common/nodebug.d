@@ -103,6 +103,19 @@ exit $exit_code
             newstdin = stdin;
             newstdout = stdout;
             newstderr = stderr;
+            // run in the IDE's internal terminal (Output panel) if one is given
+            if (!_terminalTty.empty && _terminalTty != "external-console" && _terminalExecutable.empty) {
+                try {
+                    newstdin = File(_terminalTty, "r");
+                    newstdout = File(_terminalTty, "w");
+                    newstderr = newstdout;
+                } catch (Exception e) {
+                    Log.e("ProgramExecutionNoDebug: cannot open terminal ", _terminalTty, ": ", e.msg);
+                    newstdin = stdin;
+                    newstdout = stdout;
+                    newstderr = stderr;
+                }
+            }
         }
         try {
             _pid = spawnProcess(params, newstdin, newstdout, newstderr, null, Config.none, _executableWorkingDir);
