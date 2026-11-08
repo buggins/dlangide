@@ -1041,7 +1041,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     showDMDTraceLog(parser);
                 } else {
                     Log.e("Trace log is failed");
-                    window.showMessageBox(UIString.fromId("ERROR"c), UIString.fromId("ERROR_FAILED_TO_PARSE_FILE"c));
+                    window.showMessageBox(UIString.fromId("ERROR"c), UIString.fromId("ERROR_FAILED_TO_PARSE_TRACE_LOG_FILE"c));
                 }
             }
             );
