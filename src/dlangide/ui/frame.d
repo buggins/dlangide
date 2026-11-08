@@ -286,7 +286,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
     }
 
     bool setExecutableParameters(ProgramExecution program, Project project, string executableFileName) {
-        string[] args;
+        string[] args = splitCommandLine(project.runArgs);
         string externalConsoleExecutable = null;
         string workingDirectory = project.workingDirectory;
         string tty = _logPanel.terminalDeviceName;
