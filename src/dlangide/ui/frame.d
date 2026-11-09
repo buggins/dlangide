@@ -1249,7 +1249,11 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     updateTreeGraph();
                     return true;
                 case IDEActions.RevealProjectInExplorer:
-                    revealProjectInExplorer(cast(Project)a.objectParam);
+                    // project, or a source folder/file from the Workspace Explorer context menu
+                    if (Project project = cast(Project)a.objectParam)
+                        revealProjectInExplorer(project);
+                    else if (ProjectItem item = cast(ProjectItem)a.objectParam)
+                        Platform.instance.showInFileManager(item.filename);
                     return true;
                 case IDEActions.WindowCloseDocument:
                     onTabClose(_tabs.selectedTabId);
