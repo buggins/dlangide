@@ -527,28 +527,13 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
             pt.x += left + _leftPaneWidth;
             pt.y += top;
         }
+        // one doc comment per matching symbol (e.g. overloads), separated by an empty line
         dchar[] text;
-        int lineCount = 0;
         foreach(s; comments) {
-            int lineStart = 0;
-            for (int i = 0; i <= s.length; i++) {
-                if (i == s.length || (i < s.length - 1 && s[i] == '\\' && s[i + 1] == 'n')) {
-                    if (i > lineStart) {
-                        if (text.length)
-                            text ~= "\n"d;
-                        text ~= toUTF32(s[lineStart .. i]);
-                        lineCount++;
-                    }
-                    if (i < s.length)
-                        i++;
-                    lineStart = i + 1;
-                }
-            }
+            if (text.length)
+                text ~= "\n\n"d;
+            text ~= toUTF32(s);
         }
-        if (lineCount > _numVisibleLines / 4)
-            lineCount = _numVisibleLines / 4;
-        if (lineCount < 1)
-            lineCount = 1;
         // TODO
         EditBox widget = new EditBox("docComments");
         widget.styleId = "POPUP_MENU";
