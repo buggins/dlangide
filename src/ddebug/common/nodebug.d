@@ -15,6 +15,11 @@ class ProgramExecutionNoDebug : Thread, ProgramExecution {
     mixin TerminalParams;
 
     protected ProgramExecutionStatusListener _listener;
+
+    protected string _errorMessage;
+    /// why the program could not be started (ExecutionStatus.Error), e.g. "Executable file not found: xterm"
+    @property string errorMessage() { return _errorMessage; }
+
     void setProgramExecutionStatusListener(ProgramExecutionStatusListener listener) {
         _listener = listener;
     }
@@ -121,6 +126,7 @@ exit $exit_code
             _pid = spawnProcess(params, newstdin, newstdout, newstderr, null, Config.none, _executableWorkingDir);
         } catch (Exception e) {
             Log.e("ProgramExecutionNoDebug: Failed to spawn process: ", e);
+            _errorMessage = e.msg;
             killProcess();
             _status = ExecutionStatus.Error;
         }
