@@ -155,7 +155,12 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                 // TODO: update state
                 switch(status) {
                     case ExecutionStatus.Error:
-                        _logPanel.logLine("Cannot run program " ~ process.executableFile);
+                        string msg = "Cannot run program " ~ process.executableFile;
+                        if (auto noDebug = cast(ProgramExecutionNoDebug)process)
+                            if (noDebug.errorMessage.length)
+                                msg ~= ": " ~ noDebug.errorMessage;
+                        _logPanel.logLine(msg);
+                        _logPanel.activateLogTab();
                         break;
                     case ExecutionStatus.Finished:
                         _logPanel.logLine("Program " ~ process.executableFile ~ " finished with exit code " ~ to!string(exitCode));
@@ -345,15 +350,20 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             }
             args ~= sourceFileName;
         }
-        string externalConsoleExecutable = null;
-        version(Windows) {
-        } else {
-            externalConsoleExecutable = _settings.terminalExecutable;
-        }
         _logPanel.logLine("Starting " ~ sourceFileName ~ " with rdmd");
         _statusLine.setBackgroundOperationStatus("run-rdmd", "running..."d);
         program.setExecutableParams(rdmdExecutable, args, workingDirectory, null);
-        program.setTerminalExecutable(externalConsoleExecutable);
+        // run in the internal terminal (Output panel) like Run project; external terminal only if there is none
+        string tty = _logPanel.terminalDeviceName;
+        if (!tty.empty) {
+            program.setTerminalTty(tty);
+            _logPanel.activateTerminalTab(true);
+        } else {
+            version(Windows) {
+            } else {
+                program.setTerminalExecutable(_settings.terminalExecutable);
+            }
+        }
         program.setProgramExecutionStatusListener(this);
         _execution = program;
         program.run();
