@@ -1116,7 +1116,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     //debug {
                     //    testDCDFailAfterThreadCreation();
                     //}
-                    dstring msg = "DLangIDE\n(C) Vadim Lopatin, 2014-2017\nhttp://github.com/buggins/dlangide\n" 
+                    dstring msg = "DLangIDE\n(C) Vadim Lopatin, 2014-2026\nhttp://github.com/buggins/dlangide\n" 
                         ~ "IDE for D programming language written in D\nUses DlangUI library " 
                             ~ DLANGUI_VERSION ~ " for GUI"d;
                     window.showMessageBox(UIString.fromId("ABOUT"c) ~ " " ~ DLANGIDE_VERSION,
