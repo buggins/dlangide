@@ -119,6 +119,7 @@ class WorkspacePanel : DockWindow {
         _folderPopupMenu.add(ACTION_FILE_NEW_SOURCE_FILE, 
                              ACTION_FILE_NEW_DIRECTORY,
                              ACTION_PROJECT_FOLDER_REFRESH, ACTION_PROJECT_FOLDER_OPEN_ITEM,
+                             ACTION_PROJECT_REVEAL_IN_EXPLORER,
                              ACTION_PROJECT_FOLDER_EXPAND_ALL, ACTION_PROJECT_FOLDER_COLLAPSE_ALL
                              //ACTION_PROJECT_FOLDER_REMOVE_ITEM, 
                              //ACTION_PROJECT_FOLDER_RENAME_ITEM
@@ -128,6 +129,7 @@ class WorkspacePanel : DockWindow {
         _filePopupMenu.add(ACTION_FILE_NEW_SOURCE_FILE, 
                            ACTION_PROJECT_FOLDER_REFRESH,
                            ACTION_PROJECT_FOLDER_OPEN_ITEM,
+                           ACTION_PROJECT_REVEAL_IN_EXPLORER,
                            ACTION_PROJECT_FOLDER_REMOVE_ITEM,
                            //ACTION_PROJECT_FOLDER_RENAME_ITEM
                            );
