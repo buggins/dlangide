@@ -37,6 +37,42 @@ alias FindDeclarationResultSet = Tuple!(DCDResult, "result", string, "fileName",
 alias CompletionResultSet = Tuple!(DCDResult, "result", CompletionSymbol[], "output", CompletionTypes, "type");
 
 
+/// Strips the decoration of /** */ and /++ +/ doc comments (leading "*" or "+" on lines,
+/// like DMD's DDoc does) and leading and trailing empty lines from a doc comment returned by DCD.
+/// The decoration character is taken from the first non-empty line.
+string cleanDocComment(string doc) {
+    import std.string : splitLines, strip, stripLeft;
+    import std.array : join;
+    string[] lines = doc.splitLines;
+    while (lines.length && !lines[0].strip.length)
+        lines = lines[1 .. $];
+    while (lines.length && !lines[$ - 1].strip.length)
+        lines = lines[0 .. $ - 1];
+    if (!lines.length)
+        return null;
+    char deco = lines[0].stripLeft[0];
+    if (deco == '*' || deco == '+') {
+        foreach (ref line; lines) {
+            string t = line.stripLeft;
+            if (t.length && t[0] == deco) {
+                t = t[1 .. $];
+                if (t.length && t[0] == ' ')
+                    t = t[1 .. $];
+                line = t;
+            }
+        }
+    }
+    return lines.join("\n");
+}
+
+unittest {
+    assert(cleanDocComment("Adds two numbers.\n\nReturns: the sum.") == "Adds two numbers.\n\nReturns: the sum.");
+    assert(cleanDocComment(" * Equivalent to `write(args, '\\n')`.\n *\n * Params:\n *     args = items\n---\nvoid main()\n{\n}\n---\n ") ==
+        "Equivalent to `write(args, '\\n')`.\n\nParams:\n    args = items\n---\nvoid main()\n{\n}\n---");
+    assert(cleanDocComment("+ Text\n+ more\n") == "Text\nmore");
+    assert(cleanDocComment(" \n ") is null);
+}
+
 class DCDTask {
     protected bool _cancelled;
     protected CustomEventTarget _guiExecutor;
@@ -229,7 +265,11 @@ class DCDInterface : Thread {
         override void performRequest() {
             AutocompleteResponse response = getDoc(request, *getModuleCache(_importPaths));
 
-            //result.docComments = response.docComments.dup; TODO_GRIM: Fix
+            foreach (c; response.completions) {
+                string doc = cleanDocComment(c.documentation);
+                if (doc.length)
+                    result.docComments ~= doc;
+            }
             result.result = DCDResult.SUCCESS;
 
             debug(DCD) Log.d("DCD doc comments:\n", result.docComments);
