@@ -487,6 +487,17 @@ class TerminalWidget : WidgetGroup, OnScrollHandler {
         return true;
     }
 
+    /// mouse wheel scrolls the terminal output, 3 lines per wheel step
+    override bool onMouseEvent(MouseEvent event) {
+        if (event.action == MouseAction.Wheel && event.wheelDelta != 0) {
+            scrollTo(_content.topLine - event.wheelDelta * 3);
+            _content.updateScrollBar(_verticalScrollBar);
+            invalidate();
+            return true;
+        }
+        return super.onMouseEvent(event);
+    }
+
     override bool onKeyEvent(KeyEvent event) {
         if (event.action == KeyAction.Text) {
             dstring text = event.text;
