@@ -776,14 +776,24 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
     class LocalVariableListRequest : GDBRequest {
         ulong _threadId;
         int _frameId;
-        this(ulong threadId, int frameId) {
+        bool _localsOnly;
+        this(ulong threadId, int frameId, bool localsOnly = false) {
             _threadId = threadId;
             _frameId = frameId;
-            //command = "-stack-list-variables --thread " ~ to!string(_threadId) ~ " --frame " ~ to!string(_frameId) ~ " --simple-values"; 
-            command = "-stack-list-locals --thread " ~ to!string(_threadId) ~ " --frame " ~ to!string(_frameId) ~ " 1"; 
+            _localsOnly = localsOnly;
+            // -stack-list-variables returns function parameters and local variables, -stack-list-locals only locals
+            if (localsOnly)
+                command = "-stack-list-locals --thread " ~ to!string(_threadId) ~ " --frame " ~ to!string(_frameId) ~ " 1";
+            else
+                command = "-stack-list-variables --thread " ~ to!string(_threadId) ~ " --frame " ~ to!string(_frameId) ~ " --all-values";
+        }
+        override void onError() {
+            // debugger without -stack-list-variables support: retry with locals only
+            if (!_localsOnly)
+                submitRequest(new LocalVariableListRequest(_threadId, _frameId, true));
         }
         override void onResult() {
-            DebugVariableList variables = parseVariableList(params, "locals");
+            DebugVariableList variables = parseVariableList(params, _localsOnly ? "locals" : "variables");
             if (variables) {
                 // TODO
                 Log.d("Variable list is parsed: " ~ to!string(variables));
