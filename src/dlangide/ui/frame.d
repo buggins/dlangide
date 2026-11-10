@@ -428,6 +428,12 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             dstring name = toUTF32((modified ? "* " : "") ~ baseName(source.id));
             _tabs.renameTab(index, name);
         }
+        if (!modified) {
+            // saved: the file exists again
+            if (DSourceEdit ed = cast(DSourceEdit)source)
+                ed.hideMessage(DELETED_FILE_MESSAGE);
+            _deletedFileKept.remove(source.id);
+        }
     }
 
     bool tryOpenSourceFile(string filename) {
@@ -466,6 +472,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                 TabItem tab = _tabs.tab(filename);
                 tab.objectParam = file;
                 editor.modifiedStateChange = &onModifiedStateChange;
+                editor.messageAction = &onEditorMessageAction;
                 if (file) {
                     editor.breakpointListChanged = this; //onBreakpointListChanged
                     editor.bookmarkListChanged = this; //onBreakpointListChanged
@@ -597,26 +604,64 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         }
     }
 
+    /// id of the editor message bar shown when the file of an editor with unsaved changes is deleted on disk
+    enum DELETED_FILE_MESSAGE = "deleted-on-disk";
+    /// files deleted on disk for which the user chose Keep (don't show the message again until saved or recreated)
+    protected bool[string] _deletedFileKept;
+
     /// close editor tabs for which files are removed from filesystem;
-    /// tabs with unsaved edits are kept open and marked as deleted (saving recreates the file)
+    /// tabs with unsaved edits are kept open and show a message bar: Keep / Save / Close
     void closeRemovedDocuments() {
         import std.file;
         for (int i = _tabs.tabCount - 1; i >= 0; i--) {
             DSourceEdit ed = cast(DSourceEdit)_tabs.tabBody(i);
-            if (ed) {
-                if (!exists(ed.id) || !isFile(ed.id)) {
-                    if (ed.content.modified) {
-                        dstring name = toUTF32("* " ~ baseName(ed.id) ~ " (deleted)");
-                        TabItem tab = _tabs.tab(ed.id);
-                        if (tab && tab.text.value != name) {
-                            _tabs.renameTab(ed.id, name);
-                            _logPanel.logLine("File was deleted on disk, kept open with unsaved changes: " ~ ed.id);
-                        }
-                    } else {
-                        closeTab(ed.id);
+            if (!ed)
+                continue;
+            if (!exists(ed.id) || !isFile(ed.id)) {
+                if (ed.content.modified) {
+                    if (!ed.findMessage(DELETED_FILE_MESSAGE) && !(ed.id in _deletedFileKept)) {
+                        ed.showMessage(DELETED_FILE_MESSAGE, UIString.fromId("MSG_FILE_DELETED_UNSAVED"c).value,
+                            EditorMessageKind.Warning, [
+                                // Ignore: the bar dismisses itself
+                                new Action(StandardAction.Ignore, "ACTION_KEEP"c),
+                                ACTION_SAVE,
+                                // not StandardAction.Close, so that the bar stays if closing is cancelled
+                                new Action(IDEActions.WindowCloseDocument, "ACTION_CLOSE"c),
+                            ]);
+                        _logPanel.logLine("File was deleted on disk, kept open with unsaved changes: " ~ ed.id);
                     }
+                } else {
+                    closeTab(ed.id);
                 }
+            } else {
+                // the file is back (e.g. restored by git): no more "deleted" message
+                ed.hideMessage(DELETED_FILE_MESSAGE);
+                _deletedFileKept.remove(ed.id);
             }
+        }
+    }
+
+    /// buttons of editor message bars
+    protected bool onEditorMessageAction(EditBox source, string messageId, const Action action) {
+        DSourceEdit ed = cast(DSourceEdit)source;
+        if (!ed || messageId != DELETED_FILE_MESSAGE)
+            return false;
+        string filename = ed.id;
+        switch (action.id) {
+            case StandardAction.Ignore: // Keep: the bar is hidden by the editor
+                _deletedFileKept[filename] = true;
+                return true;
+            case StandardAction.Save: // recreate the file with the editor content
+                if (ed.save()) {
+                    ed.hideMessage(DELETED_FILE_MESSAGE);
+                    _deletedFileKept.remove(filename);
+                }
+                return true;
+            case IDEActions.WindowCloseDocument: // close the tab, asking about the unsaved changes as usual
+                onTabClose(filename);
+                return true;
+            default:
+                return false;
         }
     }
 
