@@ -336,6 +336,7 @@ class WorkspacePanel : DockWindow {
             TreeItem defaultItem = null;
             TreeItem root = _tree.items.newChild(_workspace.filename, _workspace.name, "project-development");
             root.intParam = ProjectItemType.Workspace;
+            root.objectParam = _workspace;
             foreach(project; _workspace.projects) {
                 TreeItem p = root.newChild(project.filename, project.name, project.isDependency ? "project-d-dependency" : "project-d");
                 p.intParam = ProjectItemType.Project;
