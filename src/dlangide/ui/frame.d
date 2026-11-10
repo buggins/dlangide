@@ -597,14 +597,24 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         }
     }
 
-    /// close editor tabs for which files are removed from filesystem
+    /// close editor tabs for which files are removed from filesystem;
+    /// tabs with unsaved edits are kept open and marked as deleted (saving recreates the file)
     void closeRemovedDocuments() {
         import std.file;
         for (int i = _tabs.tabCount - 1; i >= 0; i--) {
             DSourceEdit ed = cast(DSourceEdit)_tabs.tabBody(i);
             if (ed) {
                 if (!exists(ed.id) || !isFile(ed.id)) {
-                    closeTab(ed.id);
+                    if (ed.content.modified) {
+                        dstring name = toUTF32("* " ~ baseName(ed.id) ~ " (deleted)");
+                        TabItem tab = _tabs.tab(ed.id);
+                        if (tab && tab.text.value != name) {
+                            _tabs.renameTab(ed.id, name);
+                            _logPanel.logLine("File was deleted on disk, kept open with unsaved changes: " ~ ed.id);
+                        }
+                    } else {
+                        closeTab(ed.id);
+                    }
                 }
             }
         }
