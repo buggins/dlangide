@@ -28,6 +28,14 @@ interface CompilerLogIssueClickHandler {
     bool onCompilerLogIssueClick(dstring projectname, dstring filename, int line, int column);
 }
 
+/// a compiler error / warning found in the build log
+struct CompilerLogIssue {
+    /// absolute, normalized file name
+    string filename;
+    /// true for errors, false for warnings and deprecations
+    bool error;
+}
+
 class ErrorPosition {
     dstring projectname;
     dstring filename;
@@ -197,6 +205,25 @@ class CompilerLogWidget : LogWidget {
         return null;
     }
 
+    /// all errors, warnings and deprecations in the log; relative file names are resolved against baseDirectory
+    CompilerLogIssue[] collectIssues() {
+        import std.path : isAbsolute, buildNormalizedPath, absolutePath;
+        import dlangui.core.types : toUTF8;
+        CompilerLogIssue[] res;
+        for (int i = 0; i < _content.length; i++) {
+            auto match = matchFirst(_content[i], ctr);
+            if (match.empty)
+                continue;
+            string fn = match[1].toUTF8.strip;
+            if (!fn.length)
+                continue;
+            if (!fn.isAbsolute)
+                fn = _baseDirectory.length ? absolutePath(fn, _baseDirectory) : absolutePath(fn);
+            res ~= CompilerLogIssue(buildNormalizedPath(fn), match[4] == "Error"d);
+        }
+        return res;
+    }
+
     /// returns first error line info from log
     ErrorPosition firstError() {
         for (int i = 0; i < _content.length; i++) {
@@ -266,6 +293,11 @@ class OutputPanel : DockWindow {
     TabWidget _tabs;
 
     @property TabWidget getTabs() { return _tabs;}
+
+    /// errors and warnings in the compiler log (see CompilerLogWidget.collectIssues)
+    CompilerLogIssue[] compilerLogIssues() {
+        return _logWidget ? _logWidget.collectIssues() : null;
+    }
 
     void setLogWidgetBaseDirectory(string baseDir) {
         _logWidget.baseDirectory = baseDir;
