@@ -1246,7 +1246,8 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     buildProject(BuildOperation.Upgrade, cast(Project)a.objectParam);
                     return true;
                 case IDEActions.RefreshProject:
-                    updateTreeGraph();
+                    // re-read all project folders from disk, not only rebuild the tree
+                    refreshProjectItem(currentWorkspace);
                     return true;
                 case IDEActions.RevealProjectInExplorer:
                     // project, or a source folder/file from the Workspace Explorer context menu
@@ -1509,7 +1510,13 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                 project = srcfile.project;
             }
         }
-        if (project) {
+        if (folder && project && folder is project.items)
+            folder = null; // root of the project items: refresh source folders only, not the whole project directory
+        if (folder) {
+            // only the selected folder (or the folder of the selected file)
+            folder.refresh();
+            updateTreeGraph();
+        } else if (project) {
             project.refresh();
             updateTreeGraph();
         }
