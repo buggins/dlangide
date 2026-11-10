@@ -428,6 +428,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             dstring name = toUTF32((modified ? "* " : "") ~ baseName(source.id));
             _tabs.renameTab(index, name);
         }
+        _wsPanel.setFileMark(source.id, FileMark.Unsaved, modified);
         if (!modified) {
             // saved: the file exists again
             if (DSourceEdit ed = cast(DSourceEdit)source)
@@ -556,6 +557,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
 
     /// close tab w/o confirmation
     void closeTab(string tabId) {
+        _wsPanel.setFileMark(tabId, FileMark.Unsaved, false); // closed, changes saved or discarded
         _wsPanel.selectItem(null);
         _tabs.removeTab(tabId);
         _statusLine.hideEditorState();
@@ -2061,6 +2063,20 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             }
         }
 
+        // build errors / warnings marks in the Workspace Explorer: cleared when a build starts, set from the log when it ends
+        if (buildOp == BuildOperation.Build || buildOp == BuildOperation.Rebuild || buildOp == BuildOperation.Run
+                || buildOp == BuildOperation.Clean) {
+            _wsPanel.replaceFileMarks(FileMark.Error | FileMark.Warning, null);
+            if (buildOp != BuildOperation.Clean) {
+                BuildResultListener resultListener = listener;
+                listener = delegate(int result) {
+                    updateBuildIssueMarks();
+                    if (resultListener)
+                        resultListener(result);
+                };
+            }
+        }
+
         Builder op = new Builder(this, project, _logPanel, project.projectConfiguration, currentWorkspace.buildConfiguration, buildOp, 
             dubExecutable, dubAdditionalParams,
             toolchain,
@@ -2069,6 +2085,14 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         setBackgroundOperation(op);
     }
     
+    /// set error / warning marks of files in the Workspace Explorer from the compiler log
+    protected void updateBuildIssueMarks() {
+        uint[string] marks;
+        foreach (issue; _logPanel.compilerLogIssues())
+            marks[issue.filename] = marks.get(issue.filename, 0) | (issue.error ? FileMark.Error : FileMark.Warning);
+        _wsPanel.replaceFileMarks(FileMark.Error | FileMark.Warning, marks);
+    }
+
     void updateProjectConfigurations() {
         if (currentWorkspace && currentWorkspace.startupProject) {
             if (_projectConfigurationCombo) {

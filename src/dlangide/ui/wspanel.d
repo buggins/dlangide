@@ -14,6 +14,16 @@ enum ProjectItemType : int {
     Workspace
 }
 
+/// marks of files in the Workspace Explorer (flags of TreeItem.marks); folders and projects show what their files have
+enum FileMark : uint {
+    /// open in an editor with unsaved changes
+    Unsaved = 1,
+    /// the last build reported errors in the file
+    Error = 2,
+    /// the last build reported warnings or deprecations in the file
+    Warning = 4,
+}
+
 interface SourceFileSelectionHandler {
     bool onSourceFileSelected(ProjectSourceFile file, bool activate);
 }
@@ -90,6 +100,11 @@ class WorkspacePanel : DockWindow {
         _tree.fontSize = 16;
         _tree.noCollapseForSingleTopLevelItem = true;
         _tree.popupMenu = &onTreeItemPopupMenu;
+        _tree.items.markDefs = [
+            TreeItemMark(FileMark.Unsaved, "emblem-modified", OverlayCorner.TopRight, 0, UIString.fromId("MARK_UNSAVED_CHANGES"c).value, '*'),
+            TreeItemMark(FileMark.Error, "emblem-error", OverlayCorner.BottomLeft, 10, UIString.fromId("MARK_BUILD_ERRORS"c).value, '!'),
+            TreeItemMark(FileMark.Warning, "emblem-warning", OverlayCorner.BottomLeft, 5, UIString.fromId("MARK_BUILD_WARNINGS"c).value, '?'),
+        ];
 
         _workspacePopupMenu = new MenuItem();
         _workspacePopupMenu.add(ACTION_FILE_NEW_PROJECT,
@@ -327,6 +342,62 @@ class WorkspacePanel : DockWindow {
         }
     }
 
+    /// marks of files, by normalized full path
+    protected uint[string] _fileMarks;
+
+    /// set or clear a mark of a file
+    void setFileMark(string filename, uint flag, bool on) {
+        import std.path : buildNormalizedPath;
+        string key = buildNormalizedPath(filename);
+        uint m = _fileMarks.get(key, 0);
+        uint nm = on ? (m | flag) : (m & ~flag);
+        if (nm == m)
+            return;
+        if (nm)
+            _fileMarks[key] = nm;
+        else
+            _fileMarks.remove(key);
+        applyMarks();
+    }
+
+    /// clear the given flags of all files, then set flags for the given files
+    void replaceFileMarks(uint flags, uint[string] fileFlags) {
+        import std.path : buildNormalizedPath;
+        foreach (key; _fileMarks.keys) {
+            uint m = _fileMarks[key] & ~flags;
+            if (m)
+                _fileMarks[key] = m;
+            else
+                _fileMarks.remove(key);
+        }
+        foreach (fn, f; fileFlags) {
+            string key = buildNormalizedPath(fn);
+            uint m = _fileMarks.get(key, 0) | (f & flags);
+            if (m)
+                _fileMarks[key] = m;
+        }
+        applyMarks();
+    }
+
+    /// set tree item marks from the file marks; folders, projects and the workspace get the marks of their files
+    protected void applyMarks() {
+        import std.path : buildNormalizedPath;
+        uint walk(TreeItem item) {
+            if (item.intParam == ProjectItemType.SourceFile) {
+                uint m = _fileMarks.get(buildNormalizedPath(item.id), 0);
+                item.marks = m;
+                return m;
+            }
+            uint m = 0;
+            for (int i = 0; i < item.childCount; i++)
+                m |= walk(item.child(i));
+            if (item !is _tree.items)
+                item.marks = m;
+            return m;
+        }
+        walk(_tree.items);
+    }
+
     void reloadItems() {
         _tree.expandedChange.disconnect(&onTreeExpandedStateChange);
         _tree.selectionChange.disconnect(&onTreeItemSelected);
@@ -355,6 +426,7 @@ class WorkspacePanel : DockWindow {
         }
         _tree.expandedChange.connect(&onTreeExpandedStateChange);
         _tree.selectionChange.connect(&onTreeItemSelected);
+        applyMarks();
 
         // expand default project if no information about expanded items
         if (!_itemStates.length) {
