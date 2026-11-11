@@ -2178,19 +2178,13 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
     /// save current sizes of the left and bottom dock areas, in percent, so that they fit after window size or DPI changes;
     /// the saved size of an empty (hidden) area is not changed
     protected void saveDockSizes() {
-        // dock host client rect: the dock areas take the space between it and the editor tabs (body widget)
-        Rect rc = _dockHost.pos;
-        _dockHost.applyMargins(rc);
-        _dockHost.applyPadding(rc);
-        Rect content = _tabs.pos;
-        if (rc.width <= 0 || rc.height <= 0 || content.width <= 0 || content.height <= 0)
-            return;
         Setting state = _settings.uiState;
-        // rounded, so that a restored size gives the same value again
-        if (content.left > rc.left)
-            state.setInteger(DOCK_LEFT_PERCENT, ((content.left - rc.left) * 100 + rc.width / 2) / rc.width);
-        if (content.bottom < rc.bottom)
-            state.setInteger(DOCK_BOTTOM_PERCENT, ((rc.bottom - content.bottom) * 100 + rc.height / 2) / rc.height);
+        int left = _dockHost.dockSpacePercent(DockAlignment.Left);
+        int bottom = _dockHost.dockSpacePercent(DockAlignment.Bottom);
+        if (left > 0)
+            state.setInteger(DOCK_LEFT_PERCENT, left);
+        if (bottom > 0)
+            state.setInteger(DOCK_BOTTOM_PERCENT, bottom);
     }
 
     /// return false to prevent closing
