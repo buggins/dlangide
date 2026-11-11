@@ -1832,11 +1832,19 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
     }
 
     void restoreListOfOpenedFiles() {
+        import std.file : exists, isFile;
         // All was opened, attempt to restore files
         WorkspaceFile[] files = currentWorkspace.files();
+        WorkspaceFile[] kept;
         for (int i; i < files.length; i++) 
             with (files[i])
         {
+            // a file deleted since the last session is not an error (#495): no message box, a line in the log
+            if (!exists(filename) || !isFile(filename)) {
+                _logPanel.logLine("File not found, not reopened: " ~ filename);
+                continue;
+            }
+            kept ~= files[i];
             // Opening file
             if (openSourceFile(filename))
             {
@@ -1851,6 +1859,8 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                 source.setCaretPos(column, row, true, true);
             }
         }
+        if (kept.length < files.length)
+            currentWorkspace.files(kept); // drop missing files from the saved list
     }
 
     void saveListOfOpenedFiles() {
