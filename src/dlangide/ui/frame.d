@@ -1904,7 +1904,53 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         return false;
     }
 
+    /**
+        For a directory: the file to open in it (#505) -- a workspace file (`<dirname>.dlangidews` preferred,
+        else the first in name order), else `dub.json`, `dub.sdl` or `package.json`; null if there is none.
+    */
+    protected string findWorkspaceOrProjectInDir(string dir) {
+        import std.file : dirEntries, SpanMode, exists, isFile;
+        import std.path : baseName, buildPath, buildNormalizedPath, filenameCmp;
+        import std.algorithm : sort;
+        string[] workspaces;
+        try {
+            foreach (e; dirEntries(dir, "*" ~ WORKSPACE_EXTENSION, SpanMode.shallow))
+                if (e.isFile)
+                    workspaces ~= e.name;
+        } catch (Exception e) {
+            Log.e("Cannot list directory ", dir, ": ", e.msg);
+        }
+        if (workspaces.length) {
+            sort!((a, b) => filenameCmp(a, b) < 0)(workspaces);
+            string preferred = buildPath(dir, baseName(buildNormalizedPath(dir)) ~ WORKSPACE_EXTENSION);
+            string res = workspaces[0];
+            foreach (ws; workspaces)
+                if (filenameCmp(ws, preferred) == 0)
+                    res = ws;
+            if (workspaces.length > 1)
+                _logPanel.logLine("Several workspace files in " ~ dir ~ ", opening " ~ baseName(res));
+            return res;
+        }
+        foreach (name; ["dub.json", "dub.sdl", "package.json"]) {
+            string f = buildPath(dir, name);
+            if (exists(f) && isFile(f))
+                return f;
+        }
+        return null;
+    }
+
     void openFileOrWorkspace(string filename) {
+        import std.file : exists, isDir;
+        // a directory: its workspace or DUB project file (#505)
+        if (exists(filename) && isDir(filename)) {
+            string found = findWorkspaceOrProjectInDir(filename);
+            if (!found) {
+                _logPanel.logLine("No DlangIDE workspace or DUB project file in " ~ filename);
+                window.showMessageBox(UIString.fromId("ERROR_INVALID_WORKSPACE_FILE"c), UIString.fromId("ERROR_NO_WS_OR_PROJECT_IN_DIR"c));
+                return;
+            }
+            filename = found;
+        }
         // Open DlangIDE workspace file
         if (filename.isWorkspaceFile) {
             Workspace ws = new Workspace(this);
@@ -2173,8 +2219,14 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
     /// handle files dropped to application window
     void onFilesDropped(string[] filenames) {
         //Log.d("onFilesDropped(", filenames, ")");
+        import std.file : exists, isDir;
         bool first = true;
         for (int i = 0; i < filenames.length; i++) {
+            // a dropped folder opens its workspace or DUB project (#505)
+            if (exists(filenames[i]) && isDir(filenames[i])) {
+                openFileOrWorkspace(filenames[i]);
+                continue;
+            }
             openSourceFile(filenames[i], null, first);
             first = false;
         }
