@@ -1,0 +1,85 @@
+name: Windows packages
+
+# Windows binary packages of DlangIDE (#513):
+# - every push to master, pull requests and manual runs: .zip uploaded as a workflow artifact (nightly);
+# - published releases: the .zip is also attached to the release.
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  release:
+    types: [ published ]
+  workflow_dispatch:
+
+jobs:
+  package:
+    name: windows / ${{ matrix.arch }}
+    runs-on: windows-latest
+    permissions:
+      contents: write   # attach the package to a published release
+    strategy:
+      fail-fast: false
+      matrix:
+        arch:
+          - x86_64
+          # x86: arsd-official 12.1.2 (used by dlangui) doesn't compile for 32-bit targets
+          # (dom.d:1124 passes long to Utf8Stream.opSlice(uint, uint)); enable when a fixed arsd is released.
+          # - x86
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v7
+
+      - name: Setup D compiler
+        uses: dlang-community/setup-dlang@v2
+        with:
+          compiler: ldc-latest
+
+      - name: Get month for DUB cache key
+        id: month
+        shell: bash
+        run: echo "month=$(date -u +%Y-%m)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache DUB packages
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.dub/packages
+            ~/AppData/Local/dub/packages
+          key: dub-package-${{ runner.os }}-${{ matrix.arch }}-${{ hashFiles('dub.json') }}-${{ steps.month.outputs.month }}
+          restore-keys: |
+            dub-package-${{ runner.os }}-${{ matrix.arch }}-
+
+      - name: Package version
+        id: version
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            v="${{ github.event.release.tag_name }}"
+          else
+            v="$(tr -d '[:space:]' < views/VERSION)-dev-$(git rev-parse --short HEAD)"
+          fi
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+
+      - name: Build (LDC, release)
+        run: dub build -b release --arch=${{ matrix.arch }} --compiler=ldc2
+
+      - name: Package
+        shell: pwsh
+        run: ./windows/package.ps1 -Arch ${{ matrix.arch }} -Version ${{ steps.version.outputs.version }}
+
+      # the package folder, not the .zip: artifacts are always zipped on download
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dlangide-${{ steps.version.outputs.version }}-windows-${{ matrix.arch }}
+          path: dist/dlangide-${{ steps.version.outputs.version }}-windows-${{ matrix.arch }}/
+          retention-days: 30
+
+      - name: Attach to release
+        if: github.event_name == 'release'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ github.event.release.tag_name }}" "dist/dlangide-${{ steps.version.outputs.version }}-windows-${{ matrix.arch }}.zip" --clobber

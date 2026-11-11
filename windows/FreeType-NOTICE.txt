@@ -1,0 +1,10 @@
+FreeType
+========
+
+This build of DlangIDE uses FreeType 2.8.1 (libfreetype-6.dll) for font
+rendering, under the FreeType License (FTL):
+
+Portions of this software are copyright (c) 2017 The FreeType Project
+(www.freetype.org). All rights reserved.
+
+The FreeType License: https://freetype.org/license.html

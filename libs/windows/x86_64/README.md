@@ -13,7 +13,7 @@ mago loads `msdia140.dll` from its own folder, so no COM registration is needed.
 ## Supported programs
 
 - 64-bit programs built with `-g` by DMD (x64) or LDC (x64): breakpoints, stepping, call stack, threads, locals and parameters with D-formatted values.
-- 32-bit programs (DMD `-m32`) are not supported by the 64-bit mago-mi: it stops on unhandled WOW64 breakpoint exceptions. Upstream's 32-bit `mago-mi.exe` with the 64-bit `MagoRemote.exe` agent handles both.
+- 32-bit programs (DMD `-m32`) are not supported by the 64-bit mago-mi: it stops on unhandled WOW64 breakpoint exceptions. The 32-bit DlangIDE build bundles the 32-bit mago-mi with the 64-bit `MagoRemote.exe` agent ([`../x86`](../x86/README.md)), which handles both.
 
 ## Building
 

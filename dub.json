@@ -16,10 +16,15 @@
         "dcd": "~>0.19.4"
     },
 
-    "copyFiles-windows": [
+    "copyFiles-windows-x86_64": [
         "libs/windows/x86_64/mago-mi.exe",
         "libs/windows/x86_64/udis86.dll",
         "libs/windows/x86_64/msdia140.dll"
+    ],
+    "copyFiles-windows-x86": [
+        "libs/windows/x86/mago-mi.exe",
+        "libs/windows/x86/MagoRemote.exe",
+        "libs/windows/x86/msdia140.dll"
     ],
 
     "libs-linux": ["z"],
