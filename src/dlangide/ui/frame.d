@@ -295,13 +295,16 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         string externalConsoleExecutable = null;
         string workingDirectory = project.workingDirectory;
         string tty = _logPanel.terminalDeviceName;
-        if (project.runInExternalConsole) {
-            version(Windows) {
-                if (program.isMagoDebugger)
-                    tty = "external-console";
-            } else {
+        version(Windows) {
+            import ddebug.common.conpty : isPseudoConsoleDevice;
+            // mago-mi can't run the program in the terminal's pseudo console yet (#508): it gets a console window
+            if (program.isMagoDebugger && (project.runInExternalConsole || isPseudoConsoleDevice(tty)))
+                tty = "external-console";
+            else if (project.runInExternalConsole)
+                tty = null; // a console program started by the IDE gets its own console window
+        } else {
+            if (project.runInExternalConsole)
                 externalConsoleExecutable = _settings.terminalExecutable;
-            }
         }
         if (!program.isDebugger)
             _logPanel.logLine("MSG_STARTING"c ~ " " ~ executableFileName);

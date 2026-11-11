@@ -141,6 +141,20 @@ struct TerminalContent {
             }
         }
     }
+    /// move cursor to column x (1-based) of the current line (ESC [ n G)
+    void moveCursorToColumn(int x) {
+        cursorx = x < 1 ? 0 : (x > width ? width - 1 : x - 1);
+    }
+    /// erase n characters from the cursor on, without moving it (ESC [ n X)
+    void eraseChars(int n) {
+        if (cursory < 0 || cursory >= lines.length)
+            return;
+        TerminalChar[] line = lines[cursory].line;
+        for (int x = cursorx; x < cursorx + n && x < line.length; x++) {
+            line[x].ch = ' ';
+            line[x].attr = currentAttr;
+        }
+    }
     void moveCursorBy(int x, int y) {
         if (x) {
             cursorx += x;
@@ -194,7 +208,7 @@ struct TerminalContent {
             cursory = screenTop;
             return;
         }
-        if (x >= 1 && x <= width + 1 && y >= 1 && x <= height) {
+        if (x >= 1 && x <= width + 1 && y >= 1 && y <= height) {
             cursorx = x - 1;
             cursory = screenTop + y - 1;
         }
@@ -500,9 +514,14 @@ class TerminalWidget : WidgetGroup, OnScrollHandler {
 
     override bool onKeyEvent(KeyEvent event) {
         if (event.action == KeyAction.Text) {
-            dstring text = event.text;
+            // control characters (Enter, Tab, Backspace, Escape) are sent on KeyDown below; the Win32 backend
+            // also reports them as text (WM_CHAR), which would send them twice
+            dchar[] text;
+            foreach (ch; event.text)
+                if (ch >= ' ' && ch != 0x7f)
+                    text ~= ch;
             if (text.length)
-                handleTextInput(text);
+                handleTextInput(cast(dstring)text);
             return true;
         }
         if (event.action == KeyAction.KeyDown) {
@@ -533,11 +552,12 @@ class TerminalWidget : WidgetGroup, OnScrollHandler {
                 case KeyCode.ESCAPE:
                     return handleTextInput("\x1b");
                 case KeyCode.RETURN:
-                    return handleTextInput("\n");
+                    // CR, as terminals send: a pty turns it into LF (ICRNL), a Windows pseudo console needs it (#507)
+                    return handleTextInput("\r");
                 case KeyCode.TAB:
                     return handleTextInput("\t");
                 case KeyCode.BACK:
-                    return handleTextInput("\t");
+                    return handleTextInput("\x7f"); // DEL: the default erase character
                 case KeyCode.F1:
                     return handleTextInput("\x1bO" ~ flagsstr3 ~ "P");
                 case KeyCode.F2:
@@ -649,6 +669,9 @@ class TerminalWidget : WidgetGroup, OnScrollHandler {
         _verticalScrollBar.layout(sbrc);
         rc.right = sbrc.left;
         _content.layout(font, rc);
+        // programs started in the terminal get its size (Windows pseudo console)
+        if (_device)
+            _device.setSize(_content.width, _content.height);
         if (outputChars.length) {
             // push buffered text
             write(""d);
@@ -818,7 +841,37 @@ class TerminalWidget : WidgetGroup, OnScrollHandler {
                             _content.eraseScreen(param1, ch3 == 'K');
                             continue;
                         }
+                        if (ch3 == 'G') { // cursor to column
+                            _content.moveCursorToColumn(param1def1);
+                            continue;
+                        }
+                        if (ch3 == 'X') { // erase characters
+                            _content.eraseChars(param1def1);
+                            continue;
+                        }
                     } else switch(ch2) {
+                    case ']':
+                        // OSC (e.g. window title from ConPTY): ESC ] ... BEL or ESC ] ... ESC \ -- ignored
+                        {
+                            uint j = i + 2;
+                            bool found = false;
+                            for (; j < outputChars.length; j++) {
+                                if (outputChars[j] == 7) {
+                                    found = true;
+                                    break;
+                                }
+                                if (outputChars[j] == 27 && j + 1 < outputChars.length && outputChars[j + 1] == '\\') {
+                                    j++;
+                                    found = true;
+                                    break;
+                                }
+                            }
+                            if (!found && j - i < 4096)
+                                unfinished = true; // wait for the rest
+                            else
+                                i = found ? j : j - 1; // an unterminated sequence that long is dropped
+                        }
+                        break;
                     case 'c':
                         _content.resetTerminal();
                         i++;
@@ -895,7 +948,40 @@ class TerminalDevice : Thread {
     Signal!TerminalInputHandler onBytesRead;
     version (Windows) {
         import core.sys.windows.windows;
-        HANDLE hpipe;
+        import ddebug.common.conpty;
+        /// the program run currently attached to this terminal: a pseudo console per run (#507)
+        private PseudoConsoleSession _session;
+        private ConPtyHost _host;
+        private short _cols = 80;
+        private short _rows = 25;
+
+        /// starts programs in a pseudo console showing in this terminal
+        private static class ConPtyHost : PseudoConsoleHost {
+            private TerminalDevice _device;
+            this(TerminalDevice device) { _device = device; }
+            HANDLE startProcess(string[] args, string workingDir, out string error) {
+                return _device.startProcess(args, workingDir, error);
+            }
+        }
+
+        private HANDLE startProcess(string[] args, string workingDir, out string error) {
+            if (closed) {
+                error = "terminal is closed";
+                return null;
+            }
+            PseudoConsoleSession old;
+            PseudoConsoleSession session = new PseudoConsoleSession(delegate(string data) {
+                if (!closed && onBytesRead.assigned)
+                    onBytesRead(data);
+            });
+            synchronized (this) {
+                old = _session;
+                _session = session;
+            }
+            if (old)
+                old.close();
+            return session.start(args, workingDir, _cols, _rows, error);
+        }
     } else {
         int masterfd;
         /// slave side of the pty, kept open by the IDE itself: while it's open, read() on masterfd blocks
@@ -919,52 +1005,28 @@ class TerminalDevice : Thread {
         close();
     }
 
+    /// terminal size in character cells, used for programs started in it
+    void setSize(int cols, int rows) {
+        version (Windows) {
+            if (cols < 1 || rows < 1)
+                return;
+            if (cols == _cols && rows == _rows)
+                return;
+            _cols = cast(short)cols;
+            _rows = cast(short)rows;
+            PseudoConsoleSession session;
+            synchronized (this)
+                session = _session;
+            if (session)
+                session.resize(_cols, _rows);
+        }
+    }
+
     void threadProc() {
         started = true;
         Log.d("TerminalDevice threadProc() enter");
         version(Windows) {
-            while (!closed) {
-                Log.d("TerminalDevice -- Waiting for client");
-                if (ConnectNamedPipe(hpipe, null)) {
-                    connected = true;
-                    // accept client
-                    Log.d("TerminalDevice client connected");
-                    char[16384] buf;
-                    for (;;) {
-                        if (closed)
-                            break;
-                        DWORD bytesRead = 0;
-                        DWORD bytesAvail = 0;
-                        DWORD bytesInMessage = 0;
-                        // read data from client
-                        //Log.d("TerminalDevice reading from pipe");
-                        if (!PeekNamedPipe(hpipe, buf.ptr, cast(DWORD)1 /*buf.length*/, &bytesRead, &bytesAvail, &bytesInMessage)) {
-                            break;
-                        }
-                        if (closed)
-                            break;
-                        if (!bytesRead) {
-                            Sleep(10);
-                            continue;
-                        }
-                        if (ReadFile(hpipe, &buf, 1, &bytesRead, null)) { //buf.length
-                            Log.d("TerminalDevice bytes read: ", bytesRead);
-                            if (closed)
-                                break;
-                            if (bytesRead && onBytesRead.assigned) {
-                                onBytesRead(buf[0 .. bytesRead].dup);
-                            }
-                        } else {
-                            break;
-                        }
-                    }
-                    Log.d("TerminalDevice client disconnecting");
-                    connected = false;
-                    // disconnect client
-                    FlushFileBuffers(hpipe); 
-                    DisconnectNamedPipe(hpipe);
-                }
-            }
+            // not used: each pseudo console session has its own reader thread
         } else {
             // posix
             import core.time : msecs;
@@ -991,18 +1053,12 @@ class TerminalDevice : Thread {
         if (closed || !started)
             return false;
         version (Windows) {
-            if (!connected)
+            PseudoConsoleSession session;
+            synchronized (this)
+                session = _session;
+            if (!session || !session.running)
                 return false;
-            for (;;) {
-                DWORD bytesWritten = 0;
-                if (WriteFile(hpipe, cast(char*)msg.ptr, cast(int)msg.length, &bytesWritten, null) != TRUE) {
-                    return false;
-                }
-                if (bytesWritten < msg.length)
-                    msg = msg[bytesWritten .. $];
-                else
-                    break;
-            }
+            session.write(msg);
         } else {
             // linux/posix
             if (masterfd && masterfd != -1) {
@@ -1019,22 +1075,14 @@ class TerminalDevice : Thread {
         if (!started)
             return;
         version (Windows) {
-            import std.string;
-            // ping terminal to handle closed flag
-            HANDLE h = CreateFileA(
-                               _name.toStringz,   // pipe name 
-                               GENERIC_READ |  // read and write access 
-                               GENERIC_WRITE,
-                               0,              // no sharing 
-                               null,           // default security attributes
-                               OPEN_EXISTING,  // opens existing pipe 
-                               0,              // default attributes 
-                               null);
-            if (h != INVALID_HANDLE_VALUE) {
-                DWORD bytesWritten = 0;
-                WriteFile(h, "stop".ptr, 4, &bytesWritten, null);
-                CloseHandle(h);
+            unregisterPseudoConsoleHost(_name);
+            PseudoConsoleSession session;
+            synchronized (this) {
+                session = _session;
+                _session = null;
             }
+            if (session)
+                session.close();
         } else {
             if (masterfd && masterfd != -1) {
                 import std.string;
@@ -1042,14 +1090,7 @@ class TerminalDevice : Thread {
                 write_(clientfd, "1".ptr, 1);
                 close_(clientfd);
             }
-        }
-        join(false);
-        version (Windows) {
-            if (hpipe && hpipe != INVALID_HANDLE_VALUE) {
-                CloseHandle(hpipe);
-                hpipe = null;
-            }
-        } else {
+            join(false);
             if (slavefd != -1) {
                 close_(slavefd);
                 slavefd = -1;
@@ -1059,30 +1100,21 @@ class TerminalDevice : Thread {
                 masterfd = 0;
             }
         }
-            _name = null;
+        _name = null;
     }
     bool create() {
         import std.string;
         version (Windows) {
-            import std.uuid;
-            _name = "\\\\.\\pipe\\dlangide-terminal-" ~ randomUUID().toString;
-            SECURITY_ATTRIBUTES sa;
-            sa.nLength = sa.sizeof;
-            sa.bInheritHandle = TRUE;
-            hpipe = CreateNamedPipeA(cast(const(char)*)_name.toStringz, 
-                             PIPE_ACCESS_DUPLEX | FILE_FLAG_WRITE_THROUGH | FILE_FLAG_FIRST_PIPE_INSTANCE, // dwOpenMode
-                             //PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT, // | PIPE_REJECT_REMOTE_CLIENTS,
-                             PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT, // | PIPE_REJECT_REMOTE_CLIENTS,
-                             1,
-                             1, //16384,
-                             1, //16384,
-                             20,
-                             &sa);
-            if (hpipe == INVALID_HANDLE_VALUE) {
-                Log.e("Failed to create named pipe for terminal, error=", GetLastError());
-                close();
+            // ConPTY: Windows 10 1809 or later; without it there is no internal terminal and programs get a console window
+            if (!pseudoConsoleAvailable())
                 return false;
-            }
+            import std.uuid;
+            _name = CONPTY_DEVICE_PREFIX ~ randomUUID().toString;
+            _host = new ConPtyHost(this);
+            registerPseudoConsoleHost(_name, _host);
+            started = true; // no device thread on Windows
+            Log.i("pseudo console terminal created: ", _name);
+            return true;
         } else {
             const(char) * s = null;
             {
@@ -1113,10 +1145,9 @@ class TerminalDevice : Thread {
                     Log.w("cannot open pty slave ", fromStringz(s), " - terminal reader will poll");
             }
             _name = fromStringz(s).dup;
+            Log.i("ptty device created: ", _name);
+            start();
+            return true;
         }
-        Log.i("ptty device created: ", _name);
-        start();
-        return true;
     }
 }
-
