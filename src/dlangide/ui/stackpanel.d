@@ -51,8 +51,12 @@ class StackPanel : DockWindow, OnItemSelectedHandler, CellActivatedHandler {
     ulong _currentThreadId;
     int _currentThreadIndex;
     int _currentFrame;
+    /// true while updateDebugInfo() fills the thread combo box: its item selection is not a user's choice (#500)
+    private bool _updatingThreads;
     void updateDebugInfo(DebugThreadList data, ulong currentThreadId, int currentFrame) {
         import std.path;
+        _updatingThreads = true;
+        scope(exit) _updatingThreads = false;
         _debugInfo = data;
         if (currentThreadId == 0)
             currentThreadId = data.currentThreadId;
@@ -103,6 +107,9 @@ class StackPanel : DockWindow, OnItemSelectedHandler, CellActivatedHandler {
     }
 
     bool onItemSelected(Widget source, int itemIndex) {
+        // assigning the combo box items selects item 0, which would switch to the first thread
+        if (_updatingThreads)
+            return true;
         if (_debugInfo && itemIndex < _debugInfo.length && _currentThreadId != _debugInfo[itemIndex].id) {
             _grid.selectCell(0, 0, true, null, false);
             if (stackFrameSelected.assigned)
