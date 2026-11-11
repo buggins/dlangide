@@ -297,8 +297,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         string tty = _logPanel.terminalDeviceName;
         version(Windows) {
             import ddebug.common.conpty : isPseudoConsoleDevice;
-            // mago-mi can't run the program in the terminal's pseudo console yet (#508): it gets a console window
-            if (program.isMagoDebugger && (project.runInExternalConsole || isPseudoConsoleDevice(tty)))
+            // mago-mi can't run the program in the terminal's pseudo console yet (#508): it gets a console window,
+            // also when there is no internal terminal (no pseudo console before Windows 10 1809)
+            if (program.isMagoDebugger && (project.runInExternalConsole || tty.empty || isPseudoConsoleDevice(tty)))
                 tty = "external-console";
             else if (project.runInExternalConsole)
                 tty = null; // a console program started by the IDE gets its own console window
