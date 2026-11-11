@@ -29,13 +29,13 @@
 
     "libs-linux": ["z"],
 
-    "versions-windows": [
-        "USE_FREETYPE"
-    ],
-
     "configurations" : [
         {
             "name" : "default"
+        },
+        {
+            "name" : "freetype",
+            "versions-windows" : ["USE_FREETYPE"]
         },
         {
             "name" : "minimal",

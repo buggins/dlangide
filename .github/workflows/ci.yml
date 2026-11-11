@@ -79,6 +79,10 @@ jobs:
       - name: Build (console configuration)
         run: dub build -c console
 
+      - name: Build (freetype configuration)
+        if: runner.os == 'Windows'
+        run: dub build -c freetype
+
       - name: Build (x11 configuration)
         if: runner.os == 'Linux'
         run: dub build -c x11

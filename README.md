@@ -99,7 +99,11 @@ Edit / Preferences / Interface: Override screen DPI.
 Windows notes
 -------------
 
-No additional libraries are needed: the default backend uses the Win32 API.
+No additional libraries are needed: the default backend uses the Win32 API and the native Win32 font engine.
+To render fonts with FreeType instead, build the `freetype` configuration (`libfreetype-6.dll` is copied next to `dlangide.exe`):
+
+    dub run dlangide --build=release -c freetype
+
 The 64-bit mago-mi debugger is included in `libs/windows/x86_64` and copied next to `dlangide.exe` by `dub build`. It debugs 64-bit programs built with `-g` by DMD or LDC; see [its README](libs/windows/x86_64/README.md).
 
 

@@ -1,12 +1,14 @@
 # Packages a Windows build of DlangIDE as a .zip (#513).
 #
-# Run from the repository root after `dub build -b release --arch=<arch>`:
-#   pwsh windows/package.ps1 -Arch x86_64 [-Version v0.9.0] [-OutDir dist]
+# Run from the repository root after `dub build -b release --arch=<arch> [-c <config>]`:
+#   pwsh windows/package.ps1 -Arch x86_64 [-Config freetype] [-Version v0.9.0] [-OutDir dist]
 #
 # The archive holds one folder, dlangide-<version>-windows-<arch>, with dlangide.exe, the mago-mi debugger
-# for that architecture, libfreetype-6.dll when the build uses FreeType fonts, licenses and a README.
+# for that architecture, libfreetype-6.dll when the build uses FreeType fonts (`freetype` configuration),
+# licenses and a README.
 param(
     [Parameter(Mandatory = $true)][ValidateSet("x86_64", "x86")][string]$Arch,
+    [string]$Config = "default",
     [string]$Version = "",
     [string]$OutDir = "dist",
     [string]$BinDir = "bin"
@@ -29,9 +31,12 @@ if ($Arch -eq "x86_64") {
     $machine = 0x14c
 }
 
-# FreeType: only when the Windows build uses FreeType fonts instead of the native Win32 font engine
-$dubJson = Get-Content "dub.json" -Raw
-$useFreeType = $dubJson -match '"versions-windows"\s*:\s*\[[^\]]*"USE_FREETYPE"'
+# FreeType: only when the build uses FreeType fonts instead of the native Win32 font engine.
+# dlangui's copyFiles puts libfreetype-6.dll into bin/ in either case. The versions of the build
+# (DlangIDE's and those of its dependencies) tell whether USE_FREETYPE is set (#518).
+$versions = & dub describe "--config=$Config" "--arch=$Arch" --build=release --data=versions --data-list
+if ($LASTEXITCODE -ne 0) { throw "dub describe failed" }
+$useFreeType = @($versions | ForEach-Object { $_.Trim() }) -contains "USE_FREETYPE"
 if ($useFreeType) {
     $binFiles += "libfreetype-6.dll"
 }
