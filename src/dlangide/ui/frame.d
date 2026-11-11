@@ -754,6 +754,8 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         // workspace and output panels start at 25% of the window width/height (default 20%)
         _dockHost.setInitialSpace(DockAlignment.Left, 25);
         _dockHost.setInitialSpace(DockAlignment.Bottom, 25);
+        // sizes saved on last exit
+        restoreDockSizes();
 
         //=============================================================
         // Create body - Tabs
@@ -2153,7 +2155,6 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
 
     void restoreUIStateOnStartup() {
         window.restoreWindowState(_settings.uiState);
-        restoreDockSizes();
     }
 
     /// settings keys (in uiState) for the sizes of the Workspace Explorer and Output panels,
@@ -2162,37 +2163,33 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
     /// ditto
     enum DOCK_BOTTOM_PERCENT = "dockBottomPercent";
 
-    /// restore sizes of docked panels saved by saveDockSizes(); call before the window is shown
+    /// restore sizes of docked panels saved by saveDockSizes(); called from createBody(), before the window is shown
     protected void restoreDockSizes() {
         Setting state = _settings.uiState;
         int left = cast(int)state.getInteger(DOCK_LEFT_PERCENT, 0);
         int bottom = cast(int)state.getInteger(DOCK_BOTTOM_PERCENT, 0);
-        // DockHost allows 10..40%
-        if (left >= 10 && left <= 40)
+        // DockHost clamps the value to its allowed range
+        if (left > 0)
             _dockHost.setInitialSpace(DockAlignment.Left, left);
-        if (bottom >= 10 && bottom <= 40)
+        if (bottom > 0)
             _dockHost.setInitialSpace(DockAlignment.Bottom, bottom);
     }
 
-    /// save current sizes of docked panels, in percent, so that they fit after window size or DPI changes;
-    /// the size of a hidden panel is not changed
+    /// save current sizes of the left and bottom dock areas, in percent, so that they fit after window size or DPI changes;
+    /// the saved size of an empty (hidden) area is not changed
     protected void saveDockSizes() {
-        // dock host client rect: the panels take the space between it and the editor tabs (body widget)
+        // dock host client rect: the dock areas take the space between it and the editor tabs (body widget)
         Rect rc = _dockHost.pos;
-        Rect m = _dockHost.margins;
-        Rect p = _dockHost.padding;
-        rc.left += m.left + p.left;
-        rc.top += m.top + p.top;
-        rc.right -= m.right + p.right;
-        rc.bottom -= m.bottom + p.bottom;
+        _dockHost.applyMargins(rc);
+        _dockHost.applyPadding(rc);
         Rect content = _tabs.pos;
         if (rc.width <= 0 || rc.height <= 0 || content.width <= 0 || content.height <= 0)
             return;
         Setting state = _settings.uiState;
         // rounded, so that a restored size gives the same value again
-        if (_wsPanel.visibility == Visibility.Visible && content.left > rc.left)
+        if (content.left > rc.left)
             state.setInteger(DOCK_LEFT_PERCENT, ((content.left - rc.left) * 100 + rc.width / 2) / rc.width);
-        if (_logPanel.visibility == Visibility.Visible && content.bottom < rc.bottom)
+        if (content.bottom < rc.bottom)
             state.setInteger(DOCK_BOTTOM_PERCENT, ((rc.bottom - content.bottom) * 100 + rc.height / 2) / rc.height);
     }
 
