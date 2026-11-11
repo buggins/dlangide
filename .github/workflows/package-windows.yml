@@ -3,6 +3,7 @@ name: Windows packages
 # Windows binary packages of DlangIDE (#513):
 # - every push to master, pull requests and manual runs: .zip uploaded as a workflow artifact (nightly);
 # - published releases: the .zip is also attached to the release.
+# Each run also builds an Inno Setup installer from the same files (#514), uploaded and attached the same way.
 on:
   push:
     branches: [ master ]
@@ -69,6 +70,19 @@ jobs:
         shell: pwsh
         run: ./windows/package.ps1 -Arch ${{ matrix.arch }} -Version ${{ steps.version.outputs.version }}
 
+      # Windows installer (#514) from the same package folder
+      - name: Installer
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) {
+            choco install innosetup -y --no-progress
+          }
+          $name = "dlangide-${{ steps.version.outputs.version }}-windows-${{ matrix.arch }}"
+          & $iscc /Q "/DAppVersion=${{ steps.version.outputs.version }}" "/DArch=${{ matrix.arch }}" "/DSourceDir=${{ github.workspace }}\dist\$name" "/O${{ github.workspace }}\dist" windows\dlangide.iss
+          if ($LASTEXITCODE -ne 0) { throw "ISCC failed with exit code $LASTEXITCODE" }
+          Get-Item "dist\$name-setup.exe" | Format-Table Name, Length
+
       # the package folder, not the .zip: artifacts are always zipped on download
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -77,9 +91,18 @@ jobs:
           path: dist/dlangide-${{ steps.version.outputs.version }}-windows-${{ matrix.arch }}/
           retention-days: 30
 
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dlangide-${{ steps.version.outputs.version }}-windows-${{ matrix.arch }}-setup
+          path: dist/dlangide-${{ steps.version.outputs.version }}-windows-${{ matrix.arch }}-setup.exe
+          retention-days: 30
+
       - name: Attach to release
         if: github.event_name == 'release'
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "${{ github.event.release.tag_name }}" "dist/dlangide-${{ steps.version.outputs.version }}-windows-${{ matrix.arch }}.zip" --clobber
+        run: |
+          name="dist/dlangide-${{ steps.version.outputs.version }}-windows-${{ matrix.arch }}"
+          gh release upload "${{ github.event.release.tag_name }}" "$name.zip" "$name-setup.exe" --clobber
