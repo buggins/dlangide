@@ -1883,18 +1883,33 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         currentWorkspace.save();
     }
 
+    /// make a loaded workspace current: add it to the recent workspaces and reopen its files
+    protected void openLoadedWorkspace(Workspace ws, string filename) {
+        askForUnsavedEdits(delegate() {
+                setWorkspace(ws);
+                hideHomeScreen();
+                // Write workspace to recent workspaces list
+                _settings.updateRecentWorkspace(filename);
+                restoreListOfOpenedFiles();
+            });
+    }
+
+    /// returns true if the workspace contains a project with this project file
+    protected static bool workspaceHasProject(Workspace ws, string projectFile) {
+        import std.path : absolutePath, buildNormalizedPath, filenameCmp;
+        string normalized = buildNormalizedPath(absolutePath(projectFile));
+        foreach (p; ws.projects)
+            if (filenameCmp(buildNormalizedPath(absolutePath(p.filename)), normalized) == 0)
+                return true;
+        return false;
+    }
+
     void openFileOrWorkspace(string filename) {
         // Open DlangIDE workspace file
         if (filename.isWorkspaceFile) {
             Workspace ws = new Workspace(this);
             if (ws.load(filename)) {
-                askForUnsavedEdits(delegate() {
-                        setWorkspace(ws);
-                        hideHomeScreen();
-                        // Write workspace to recent workspaces list
-                        _settings.updateRecentWorkspace(filename);
-                        restoreListOfOpenedFiles();
-                    });
+                openLoadedWorkspace(ws, filename);
             } else {
                 window.showMessageBox(UIString.fromId("ERROR_OPEN_WORKSPACE"c).value, UIString.fromId("ERROR_OPENING_WORKSPACE"c).value);
                 return;
@@ -1935,6 +1950,18 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                         return true;
                     });
             } else {
+                // a workspace saved for this project before is opened, not overwritten:
+                // it keeps the breakpoints, bookmarks and open files (#503)
+                import std.file : exists, isFile;
+                if (exists(defWsFile) && isFile(defWsFile)) {
+                    Workspace ws = new Workspace(this);
+                    if (ws.load(defWsFile) && workspaceHasProject(ws, project.filename)) {
+                        _logPanel.logLine("Opening existing workspace " ~ defWsFile);
+                        openLoadedWorkspace(ws, defWsFile);
+                        return;
+                    }
+                    _logPanel.logLine("Workspace " ~ defWsFile ~ " doesn't contain this project; creating a new one");
+                }
                 // new workspace file
                 createNewWorkspaceForExistingProject(project);
             }
