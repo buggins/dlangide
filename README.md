@@ -100,7 +100,7 @@ Windows notes
 -------------
 
 No additional libraries are needed: the default backend uses the Win32 API.
-The mago-mi debugger is included in `libs/windows/x86`; set its path in Edit / Preferences / D / Debugger.
+The 64-bit mago-mi debugger is included in `libs/windows/x86_64` and copied next to `dlangide.exe` by `dub build`. It debugs 64-bit programs built with `-g` by DMD or LDC; see [its README](libs/windows/x86_64/README.md).
 
 
 Build tools
@@ -134,7 +134,7 @@ Debugger support
 ================
 
 * Linux and macOS: GDB
-* Windows: mago-mi ([libs/windows/x86/mago-mi.exe](https://github.com/buggins/dlangide/blob/master/libs/windows/x86/mago-mi.exe))
+* Windows: mago-mi, 64-bit ([libs/windows/x86_64](libs/windows/x86_64/README.md)), for 64-bit programs built by DMD or LDC
 
 Set the debugger executable in Edit / Preferences / D / Debugger.
 
