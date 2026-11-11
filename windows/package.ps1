@@ -5,7 +5,7 @@
 #
 # The archive holds one folder, dlangide-<version>-windows-<arch>, with dlangide.exe, the mago-mi debugger
 # for that architecture, libfreetype-6.dll when the build uses FreeType fonts (`freetype` configuration),
-# licenses and a README.
+# licenses (GPL-3.0.txt for DCD, THIRD-PARTY.txt listing all components, #522) and a README.
 param(
     [Parameter(Mandatory = $true)][ValidateSet("x86_64", "x86")][string]$Arch,
     [string]$Config = "default",
@@ -69,6 +69,96 @@ if ($useFreeType) {
     Copy-Item "windows/FreeType-NOTICE.txt" $stage
     $freeTypeLicense = "- FreeType font engine: FreeType License, FreeType-NOTICE.txt"
 }
+Copy-Item "windows/GPL-3.0.txt" $stage
+
+# THIRD-PARTY.txt: everything linked into dlangide.exe and shipped next to it, with licenses and sources (#522).
+# The DUB packages and their versions come from `dub describe`, so the list matches the build.
+$describe = (& dub describe "--config=$Config" "--arch=$Arch" --build=release) -join "`n"
+if ($LASTEXITCODE -ne 0) { throw "dub describe failed" }
+$packages = @(($describe | ConvertFrom-Json).packages | Where-Object { $_.active -ne $false })
+# source repositories (most recipes have no homepage); others: code.dlang.org
+$repos = @{
+    "dlangide" = "https://github.com/buggins/dlangide"; "dlangui" = "https://github.com/buggins/dlangui";
+    "dcd" = "https://github.com/dlang-community/DCD"; "libdparse" = "https://github.com/dlang-community/libdparse";
+    "emsi_containers" = "https://github.com/dlang-community/containers"; "msgpack-d" = "https://github.com/msgpack/msgpack-d";
+    "inilike" = "https://github.com/FreeSlave/inilike"; "icontheme" = "https://github.com/FreeSlave/icontheme";
+    "xdgpaths" = "https://github.com/FreeSlave/xdgpaths"; "isfreedesktop" = "https://github.com/FreeSlave/isfreedesktop";
+    "arsd-official" = "https://github.com/adamdruppe/arsd"
+}
+function Get-LicenseName($pkg) {
+    $l = "$($pkg.license)"
+    if ($pkg.name -eq "dcd:common") { return "GPL-3.0" }          # part of DCD, no license field of its own
+    if ($pkg.name -like "arsd-official:*") { return "BSL-1.0" }   # arsd's root license
+    if ($l -match "^Boost" -or $l -eq "BSL-1.0") { return "BSL-1.0" }
+    if ($l) { return $l }
+    return "see its repository"
+}
+$commit = (& git rev-parse HEAD 2>$null)
+if (-not $commit) { $commit = "(unknown)" }
+$nl = "`r`n"
+$tp = New-Object System.Text.StringBuilder
+$title = "DlangIDE $Version for Windows ($Arch): licenses of the included software"
+[void]$tp.Append("$title$nl$nl")
+[void]$tp.Append("dlangide.exe combines DlangIDE (Boost Software License 1.0, LICENSE.txt) with$nl")
+[void]$tp.Append("DCD, the D Completion Daemon, which is licensed under the GNU General Public$nl")
+[void]$tp.Append("License version 3. The program as a whole is therefore distributed under the$nl")
+[void]$tp.Append("terms of the GNU GPL v3, see GPL-3.0.txt. The other components below use$nl")
+[void]$tp.Append("permissive licenses that are compatible with it.$nl$nl")
+[void]$tp.Append("Linked into dlangide.exe$nl------------------------$nl$nl")
+$groups = $packages | Where-Object { $_.name -ne "dlangide" } | Group-Object { ($_.name -split ":")[0] }
+foreach ($g in $groups) {
+    $root = $g.Name
+    $first = $g.Group[0]
+    $url = $repos[$root]
+    if (-not $url) {
+        if ($root -like "bindbc-*") { $url = "https://github.com/BindBC/$root" } else { $url = "https://code.dlang.org/packages/$root" }
+    }
+    # the license of the package itself, or of its first part when only parts are linked
+    $main = @($g.Group | Where-Object { $_.name -eq $root })
+    if ($main.Count -gt 0) { $license = Get-LicenseName $main[0] } else { $license = Get-LicenseName $first }
+    [void]$tp.Append("- $root $($first.version): $license$nl  $url$nl")
+    $subs = @($g.Group | Where-Object { $_.name -like "*:*" })
+    if ($subs.Count -gt 0) {
+        # a part's license is shown only where it differs from the package's
+        $parts = @($subs | ForEach-Object {
+            $partName = ($_.name -split ":")[1]
+            $partLicense = Get-LicenseName $_
+            if ($partLicense -eq $license) { $partName } else { "$partName ($partLicense)" }
+        }) -join ", "
+        [void]$tp.Append("  parts used: $parts$nl")
+    }
+    if ($root -eq "arsd-official") {
+        [void]$tp.Append("  svg.d is based on NanoSVG, Copyright (c) 2013-14 Mikko Mononen (zlib license);$nl")
+        [void]$tp.Append("  jpeg.d (jpgd) and imageresize.d are in the public domain.$nl")
+    }
+}
+[void]$tp.Append("- D runtime (druntime) and Phobos, the D standard library: BSL-1.0$nl  https://github.com/dlang/phobos$nl")
+[void]$tp.Append("  Phobos includes zlib by Jean-loup Gailly and Mark Adler (zlib license).$nl")
+[void]$tp.Append("- Microsoft C runtime (linked by the compiler): Visual Studio redistributable code$nl$nl")
+[void]$tp.Append("Shipped next to dlangide.exe$nl----------------------------$nl$nl")
+$magoFiles = "mago-mi.exe"
+if ($Arch -eq "x86") { $magoFiles = "mago-mi.exe, MagoRemote.exe" }
+[void]$tp.Append("- $($magoFiles): mago debugger, Apache License 2.0 (mago-LICENSE.txt, mago-NOTICE.txt)$nl")
+[void]$tp.Append("  https://github.com/rainers/mago$nl")
+if ($Arch -eq "x86_64") {
+    [void]$tp.Append("- udis86.dll: udis86 disassembler, BSD 2-clause license (udis86-LICENSE.txt)$nl")
+} else {
+    [void]$tp.Append("- udis86 disassembler (linked into mago-mi.exe): BSD 2-clause license (udis86-LICENSE.txt)$nl")
+}
+[void]$tp.Append("  https://github.com/vmt/udis86$nl")
+[void]$tp.Append("- msdia140.dll: Microsoft Debug Interface Access, Visual Studio redistributable code$nl")
+if ($useFreeType) {
+    [void]$tp.Append("- libfreetype-6.dll: FreeType font engine, FreeType License (FreeType-NOTICE.txt)$nl  https://freetype.org$nl")
+}
+[void]$tp.Append("$($nl)Corresponding source code$nl-------------------------$nl$nl")
+[void]$tp.Append("DlangIDE: https://github.com/buggins/dlangide/tree/$commit$nl")
+[void]$tp.Append("The DUB packages above, in exactly the listed versions, are available from$nl")
+[void]$tp.Append("https://code.dlang.org and from the listed repositories. Build command:$nl")
+$configOption = ""
+if ($Config -ne "default") { $configOption = " -c $Config" }
+[void]$tp.Append("    dub build -b release --arch=$Arch$configOption$nl")
+[System.IO.File]::WriteAllText((Join-Path $stage "THIRD-PARTY.txt"), $tp.ToString())
+
 $readme = (Get-Content "windows/README.txt" -Raw).
     Replace("{VERSION}", $Version).Replace("{ARCH}", $Arch).
     Replace("{DEBUGGER}", $debugger).Replace("{FREETYPE_LICENSE}", $freeTypeLicense)

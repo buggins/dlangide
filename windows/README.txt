@@ -36,7 +36,12 @@ Settings are kept in %APPDATA%\.dlangide
 Licenses
 --------
 
-- DlangIDE: Boost Software License 1.0, LICENSE.txt
+dlangide.exe combines DlangIDE (Boost Software License 1.0, LICENSE.txt)
+with DCD, the D Completion Daemon (GNU GPL v3), so the program as a whole is
+distributed under the GNU General Public License v3, GPL-3.0.txt.
+THIRD-PARTY.txt lists all included components with their licenses and where
+to get the corresponding source code.
+
 - mago debugger: Apache License 2.0, mago-LICENSE.txt, mago-NOTICE.txt
 - udis86 disassembler: BSD, udis86-LICENSE.txt
 - msdia140.dll: Microsoft Debug Interface Access, Visual Studio

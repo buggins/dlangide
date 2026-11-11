@@ -247,3 +247,7 @@ License
 =======
 
 Boost Software License 1.0, see [LICENSE.txt](LICENSE.txt).
+
+DlangIDE links [DCD](https://github.com/dlang-community/DCD), which is licensed under the GNU GPL v3, so DlangIDE binaries
+are distributed under the GPL v3 as a whole. The Windows packages include `GPL-3.0.txt` and `THIRD-PARTY.txt`, which lists all
+included components with their licenses and sources.

@@ -30,7 +30,8 @@ DefaultDirName={autopf}\DlangIDE
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
-LicenseFile={#SourceDir}\LICENSE.txt
+; the program as a whole is GPL-3.0 (DCD is linked in); THIRD-PARTY.txt starts with that summary (#522)
+LicenseFile={#SourceDir}\THIRD-PARTY.txt
 OutputBaseFilename=dlangide-{#AppVersion}-windows-{#Arch}-setup
 Compression=lzma2/max
 SolidCompression=yes
