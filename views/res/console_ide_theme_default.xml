@@ -50,5 +50,9 @@
         textColor="#2020FF"
     />
 
+    <style id="HOME_SCREEN_COPYRIGHT"
+        textColor="#2020FF"
+    />
+
 </theme>
 

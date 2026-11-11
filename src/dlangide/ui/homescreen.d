@@ -36,7 +36,7 @@ class HomeScreen : ScrollWidget {
         _content.addChild(_column2);
         _column1.addChild((new TextWidget(null, "Dlang IDE "d ~ DLANGIDE_VERSION)).styleId("HOME_SCREEN_TITLE"));
         _column1.addChild((new TextWidget(null, UIString.fromId("DESCRIPTION"c))).styleId("HOME_SCREEN_TITLE2"));
-        _column1.addChild((new TextWidget(null, UIString.fromId("COPYRIGHT"c))).styleId("HOME_SCREEN_TITLE2"));
+        _column1.addChild((new TextWidget(null, UIString.fromId("COPYRIGHT"c))).styleId("HOME_SCREEN_COPYRIGHT"));
         _column1.addChild(new VSpacer());
         _column1.addChild((new TextWidget(null, UIString.fromId("START_WITH"c))).styleId("HOME_SCREEN_TITLE"));
         _startItems = new VerticalLayout();
