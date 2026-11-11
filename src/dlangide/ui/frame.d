@@ -948,7 +948,8 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         tb = res.getOrAddToolbar("Standard");
         tb.addButtons(ACTION_FILE_OPEN, ACTION_FILE_SAVE, ACTION_SEPARATOR);
 
-        tb.addButtons(ACTION_DEBUG_START);
+        // run the project, with or without the debugger; Run with rdmd is in the Build menu (#511)
+        tb.addButtons(ACTION_DEBUG_START_NO_DEBUG, ACTION_DEBUG_START);
         
         _projectConfigurationCombo = new ToolBarComboBox("projectConfig", [ProjectConfiguration.DEFAULT_NAME.to!dstring]);//Updateable
         _projectConfigurationCombo.action = ACTION_PROJECT_CONFIGURATIONS;
@@ -964,7 +965,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         _cbBuildConfiguration.action = ACTION_BUILD_CONFIGURATIONS;
         tb.addControl(_cbBuildConfiguration);
 
-        tb.addButtons(ACTION_PROJECT_BUILD, ACTION_SEPARATOR, ACTION_RUN_WITH_RDMD);
+        tb.addButtons(ACTION_PROJECT_BUILD);
 
         tb = res.getOrAddToolbar("Edit");
         tb.addButtons(ACTION_EDIT_COPY, ACTION_EDIT_PASTE, ACTION_EDIT_CUT, ACTION_SEPARATOR,

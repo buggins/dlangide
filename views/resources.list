@@ -36,6 +36,7 @@ res/hdpi/hdpi_project-open.png
 res/hdpi/hdpi_run-build-clean.png
 res/hdpi/hdpi_run-build-configure.png
 res/hdpi/hdpi_run-build.png
+res/hdpi/hdpi_run-project.png
 res/hdpi/hdpi_text-d.png
 res/hdpi/hdpi_text-dml.png
 res/hdpi/hdpi_text-json.png
@@ -87,6 +88,7 @@ res/mdpi/symbol-mixintemplate.png
 res/mdpi/symbol-module.png
 res/mdpi/symbol-package.png
 res/mdpi/run-rdmd.png
+res/mdpi/run-project.png
 res/mdpi/text-d.png
 res/mdpi/text-dml.png
 res/mdpi/text-json.png
