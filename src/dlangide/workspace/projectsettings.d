@@ -30,7 +30,7 @@ class ProjectSettings : SettingsFile {
         build.setBooleanDef("verbose", false);
         build.setStringDef("dub_additional_params", "");
         Setting dbg = debugSettings();
-        dbg.setBooleanDef("external_console", true);
+        dbg.setBooleanDef("external_console", false); // the Output panel terminal
     }
 
     @property Setting buildSettings() {
@@ -77,7 +77,7 @@ class ProjectSettings : SettingsFile {
     }
 
     @property bool runInExternalConsole() {
-        return debugSettings.getBoolean("external_console", true);
+        return debugSettings.getBoolean("external_console", false);
     }
 
     /// command line arguments for running and debugging (Project Settings -> Run/Debug -> Command line)

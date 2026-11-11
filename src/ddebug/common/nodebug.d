@@ -26,6 +26,11 @@ class ProgramExecutionNoDebug : Thread, ProgramExecution {
 
     // status
     protected Pid _pid;
+    version (Windows) {
+        import core.sys.windows.windows : HANDLE;
+        /// process started in the IDE terminal's pseudo console (#507)
+        protected HANDLE _hProcess;
+    }
     protected ExecutionStatus _status = ExecutionStatus.NotStarted;
     protected int _exitCode = 0;
 
@@ -39,6 +44,20 @@ class ProgramExecutionNoDebug : Thread, ProgramExecution {
     }
 
     private bool isProcessActive() {
+        version (Windows) {
+            if (_hProcess) {
+                import core.sys.windows.windows;
+                if (WaitForSingleObject(_hProcess, 0) == WAIT_TIMEOUT)
+                    return true;
+                DWORD code = 0;
+                GetExitCodeProcess(_hProcess, &code);
+                _exitCode = cast(int)code;
+                CloseHandle(_hProcess);
+                _hProcess = null;
+                Log.d("Process ", _executableFile, " is stopped");
+                return false;
+            }
+        }
         if (_pid is null)
             return false;
         auto res = tryWait(_pid);
@@ -53,6 +72,20 @@ class ProgramExecutionNoDebug : Thread, ProgramExecution {
     }
 
     private void killProcess() {
+        version (Windows) {
+            if (_hProcess) {
+                import core.sys.windows.windows;
+                Log.d("Terminating process ", _executableFile);
+                TerminateProcess(_hProcess, 1);
+                WaitForSingleObject(_hProcess, 5000);
+                DWORD code = 0;
+                GetExitCodeProcess(_hProcess, &code);
+                _exitCode = cast(int)code;
+                CloseHandle(_hProcess);
+                _hProcess = null;
+                return;
+            }
+        }
         if (_pid is null)
             return;
         try {
@@ -122,13 +155,34 @@ exit $exit_code
                 }
             }
         }
-        try {
-            _pid = spawnProcess(params, newstdin, newstdout, newstderr, null, Config.none, _executableWorkingDir);
-        } catch (Exception e) {
-            Log.e("ProgramExecutionNoDebug: Failed to spawn process: ", e);
-            _errorMessage = e.msg;
-            killProcess();
-            _status = ExecutionStatus.Error;
+        bool started = false;
+        version (Windows) {
+            // run in the IDE's internal terminal (Output panel): a pseudo console (#507)
+            import ddebug.common.conpty;
+            if (isPseudoConsoleDevice(_terminalTty)) {
+                if (PseudoConsoleHost host = findPseudoConsoleHost(_terminalTty)) {
+                    string error;
+                    _hProcess = host.startProcess(params, _executableWorkingDir, error);
+                    if (!_hProcess) {
+                        Log.e("ProgramExecutionNoDebug: Failed to start process in terminal: ", error);
+                        _errorMessage = error;
+                        _status = ExecutionStatus.Error;
+                    }
+                    started = true;
+                } else {
+                    Log.w("ProgramExecutionNoDebug: terminal ", _terminalTty, " not found, starting the program with its own console");
+                }
+            }
+        }
+        if (!started) {
+            try {
+                _pid = spawnProcess(params, newstdin, newstdout, newstderr, null, Config.none, _executableWorkingDir);
+            } catch (Exception e) {
+                Log.e("ProgramExecutionNoDebug: Failed to spawn process: ", e);
+                _errorMessage = e.msg;
+                killProcess();
+                _status = ExecutionStatus.Error;
+            }
         }
 
         if (_status != ExecutionStatus.Error) {
