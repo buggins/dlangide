@@ -23,6 +23,10 @@
 
     <drawable id="btn_check" value="btn_check_dark"/>
 
+    <!-- as in ide_theme_default: this theme is based on dlangui's theme_dark, not on ide_theme_default -->
+    <style id="TERMINAL" parent="EDIT_BOX_NO_FRAME"
+    />
+
     <style id="HOME_SCREEN_TITLE"
         fontSize="160%"
         textColor="#60A0FF"
