@@ -24,9 +24,7 @@ jobs:
       matrix:
         arch:
           - x86_64
-          # x86: arsd-official 12.1.2 (used by dlangui) doesn't compile for 32-bit targets
-          # (dom.d:1124 passes long to Utf8Stream.opSlice(uint, uint)); enable when a fixed arsd is released.
-          # - x86
+          - x86   # needs arsd-official 12.1.3+ (32-bit fix in dom.d, #516)
 
     steps:
       - name: Checkout source
