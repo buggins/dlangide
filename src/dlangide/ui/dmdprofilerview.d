@@ -9,6 +9,39 @@ import dlangide.ui.frame;
 import dlangide.ui.commands;
 import dlangui.core.i18n;
 import dlangide.tools.d.dmdtrace;
+import std.conv : to;
+
+/// function name for the profiler list: a non-empty parameter list is shown as "(…)", e.g.
+/// "std.format.formatValue!(char).formatValue(…)"; the full name is shown in the status line (#462)
+dstring shortFunctionName(string name) {
+    // the parameter list is the last top-level "(...)" group not preceded by '!' (that is a template argument list)
+    int depth = 0;
+    ptrdiff_t open = -1, close = -1, groupStart = -1;
+    foreach (i, c; name) {
+        if (c == '(') {
+            if (depth == 0)
+                groupStart = i;
+            depth++;
+        } else if (c == ')' && depth > 0) {
+            depth--;
+            if (depth == 0 && !(groupStart > 0 && name[groupStart - 1] == '!')) {
+                open = groupStart;
+                close = i;
+            }
+        }
+    }
+    if (open < 0 || close <= open + 1)
+        return name.to!dstring;
+    return (name[0 .. open + 1] ~ "…" ~ name[close .. $]).to!dstring;
+}
+
+unittest {
+    assert(shortFunctionName("_Dmain") == "_Dmain");
+    assert(shortFunctionName("void app.main()") == "void app.main()");
+    assert(shortFunctionName("void std.stdio.writeln!(int).writeln(int)") == "void std.stdio.writeln!(int).writeln(\u2026)");
+    assert(shortFunctionName("pure @safe bool std.format.FormatSpec!(char).FormatSpec.writeUpToNextSpec!(LockingTextWriter).writeUpToNextSpec(ref LockingTextWriter) const")
+        == "pure @safe bool std.format.FormatSpec!(char).FormatSpec.writeUpToNextSpec!(LockingTextWriter).writeUpToNextSpec(\u2026) const");
+}
 
 class DMDProfilerView : WidgetGroupDefaultDrawing {
     protected IDEFrame _frame;
@@ -20,6 +53,11 @@ class DMDProfilerView : WidgetGroupDefaultDrawing {
         _data = data;
         layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT);
         _fullFunctionList = new TraceFunctionList("FULL_FUNCTION_LIST", "All functions"d, _data.nodesByTotalTime, _data.ticks_per_second); // new TextWidget(null, "DMD profiler view"d);
+        // the list shows shortened names: the full name of the selected function goes to the status line (#462)
+        _fullFunctionList._grid.cellSelected = delegate(GridWidgetBase source, int col, int row) {
+            if (row >= 0 && row < _data.nodesByTotalTime.length)
+                _frame.statusLine.setStatusText(_data.nodesByTotalTime[row].name.to!dstring);
+        };
         addChild(_fullFunctionList);
     }
     /// Set widget rectangle to specified value and layout widget contents. (Step 2 of two phase layout).
@@ -27,9 +65,7 @@ class DMDProfilerView : WidgetGroupDefaultDrawing {
         super.layout(rc);
         applyMargins(rc);
         applyPadding(rc);
-        Rect rc1 = rc;
-        rc1.right = rc1.left + rc.width / 2;
-        _fullFunctionList.layout(rc1);
+        _fullFunctionList.layout(rc);
     }
     /**
     Measure widget according to desired width and height constraints. (Step 1 of two phase layout).
@@ -94,10 +130,7 @@ class TraceFuncionGrid : StringGridWidgetBase {
         FunctionNode entry = _list[row];
         switch (col) {
             case 0:
-                string fn = entry.name;
-                if (fn.length > 256)
-                    fn = fn[0..256] ~ "...";
-                return UIString.fromRaw(fn.to!dstring);
+                return UIString.fromRaw(shortFunctionName(entry.name));
             case 1:
                 return UIString.fromRaw(formatNumber(entry.number_of_calls, _numberFormatBuf));
             case 2:
@@ -133,8 +166,21 @@ class TraceFuncionGrid : StringGridWidgetBase {
         return this;
     }
 
+    /// fit the number columns to their contents; the name column gets the rest of the width, but no more,
+    /// so that the numbers stay visible; long names are cut with an ellipsis (#462)
     void autofit() {
         autoFitColumnWidths();
+        int nameCol = _headerCols; // internal index of column 0 (the hidden row header column is 0)
+        int others = 0;
+        foreach (i; 0 .. _cols)
+            if (i != nameCol)
+                others += colWidth(i);
+        int available = _clientRect.width - others;
+        int minNameWidth = 100.pointsToPixels;
+        if (available < minNameWidth)
+            available = minNameWidth;
+        if (colWidth(nameCol) > available)
+            setColWidth(nameCol, available);
         fillColumnWidth(0);
     }
 
@@ -179,8 +225,13 @@ class TraceFuncionGrid : StringGridWidgetBase {
             rc.right--;
         FontRef fnt = font;
         dstring txt = cellText(col, row);
-        Point sz = fnt.textSize(txt);
         Align ha = Align.Right;
+        if (col == 0) {
+            // names: left aligned, cut at the end when too long (the number columns are right aligned)
+            ha = Align.Left;
+            txt = fnt.ellipsize(txt, rc.width, EllipsisOptions());
+        }
+        Point sz = fnt.textSize(txt);
         //if (sz.y < rc.height)
         applyAlign(rc, sz, ha, Align.VCenter);
         int offset = BACKEND_CONSOLE ? 0 : 1;
