@@ -415,21 +415,25 @@ void main(string[] args) {
 };
 
 immutable string SOURCE_CODE_VIBED_HELLOWORLD = q{
-import vibe.d;
+import vibe.vibe;
 
-shared static this()
+void main()
 {
     auto settings = new HTTPServerSettings;
     settings.port = 8080;
+    settings.bindAddresses = ["::1", "127.0.0.1"];
 
-    listenHTTP(settings, &handleRequest);
+    auto listener = listenHTTP(settings, &handleRequest);
+    scope (exit)
+        listener.stopListening();
+
+    logInfo("Please open http://127.0.0.1:8080/ in your browser.");
+    runApplication();
 }
 
-void handleRequest(HTTPServerRequest req,
-                    HTTPServerResponse res)
+void handleRequest(HTTPServerRequest req, HTTPServerResponse res) @safe
 {
-    if (req.path == "/")
-        res.writeBody("Hello, World!", "text/plain");
+    res.writeBody("Hello, World!", "text/plain");
 }
 
 };
@@ -437,9 +441,8 @@ void handleRequest(HTTPServerRequest req,
 immutable string DUB_JSON_VIBED_HELLOWORLD = q{
 {
     "dependencies": {
-        "vibe-d": "~>0.8.1"
-    },
-    "versions": ["VibeDefaultMain"]
+        "vibe-d": "~>0.10.5"
+    }
 }
 
 };
@@ -517,7 +520,7 @@ extern (C) int UIAppMain(string[] args) {
 immutable string DUB_JSON_DLANGUI_HELLOWORLD = q{
 {
     "dependencies": {
-        "dlangui": "~>0.9.99"
+        "dlangui": "~>0.13.1"
     }
 }
 
