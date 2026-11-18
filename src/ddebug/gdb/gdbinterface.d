@@ -524,11 +524,8 @@ class GDBInterface : ConsoleDebuggerInterface, TextCommandTarget {
         if (msgId == AsyncClass.running) {
             _callback.onDebugState(DebuggingState.running, StateChangeReason.unknown, null, null);
         } else if (msgId == AsyncClass.stopped) {
-            StateChangeReason reasonId = StateChangeReason.unknown;
             DebugFrame location = parseFrame(params["frame"]);
-            string threadId = params.getString("thread-id");
             _stoppedThreadId = params.getUlong("thread-id", 0);
-            string stoppedThreads = params.getString("all");
             Breakpoint bp = null;
             if (reason.equal("end-stepping-range")) {
                 updateState();

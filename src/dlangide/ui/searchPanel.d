@@ -56,7 +56,6 @@ class SearchLogWidget : LogWidget {
             uint cl = defColor;
             flags = 0;
             for (int i = 0; i < txt.length; i++) {
-                dstring rest = txt[i..$];
                 if(i == 11) {
                     cl = _filenameColor;
                     flags = TextFlag.Underline;

@@ -67,7 +67,7 @@ debug(TestParser):
 void testParser(dstring source) {
     Log.setLogLevel(LogLevel.Trace);
     Log.d("Trying to parse\n", source);
-    ASTNode res = parseSource(source, "main.d");
+    parseSource(source, "main.d");
 }
 
 void runParserTests() {

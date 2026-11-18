@@ -106,20 +106,12 @@ class BackgroundReaderBase : Thread {
         return _finished;
     }
 
-    ubyte prevchar;
     void addByte(ubyte data) {
         if (_bytes.length < _len + 1)
             _bytes.length = _bytes.length ? _bytes.length * 2 : 1024;
-        bool eolchar = (data == '\r' || data == '\n');
-        bool preveol = (prevchar == '\r' || prevchar == '\n');
         _bytes[_len++] = data;
         if (data == '\n')
             flush();
-        //if ((eolchar && !preveol) || (!eolchar && preveol) || data == '\n') {
-        //    //Log.d("Flushing for prevChar=", prevchar, " newChar=", data);
-        //    flush();
-        //}
-        prevchar = data;
     }
     void flush() {
         if (!_len)
@@ -329,7 +321,8 @@ class ExternalProcess {
             Log.e("Cannot run program ", _program, " ", e);
         } catch (std.stdio.StdioException e) {
             Log.e("Cannot redirect streams for program ", _program, " ", e);
-        } catch (Throwable e) {
+        } catch (Exception e) {
+            // (was Throwable: Errors are bugs, not failures to start a program)
             Log.e("Exception while trying to run program ", _program, " ", e);
         }
         return _state;
@@ -364,7 +357,6 @@ class ExternalProcess {
     /// polls all available output from process streams
     ExternalProcessState poll() {
         //Log.d("ExternalProcess.poll state = ", _state);
-        bool res = true;
         if (_state == ExternalProcessState.Error || _state == ExternalProcessState.None || _state == ExternalProcessState.Stopped)
             return _state;
         // check for process finishing

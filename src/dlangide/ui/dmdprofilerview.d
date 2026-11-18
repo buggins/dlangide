@@ -188,8 +188,6 @@ class TraceFuncionGrid : StringGridWidgetBase {
     override void resize(int c, int r) {
         if (c == cols && r == rows)
             return;
-        int oldcols = cols;
-        int oldrows = rows;
         super.resize(c, r);
         _colTitles.length = c;
     }
@@ -292,7 +290,6 @@ class TraceFuncionGrid : StringGridWidgetBase {
         else
             buf.fillRect(rc, cl);
         static if (BACKEND_GUI) {
-            uint borderColor = _cellHeaderBorderColor;
             buf.drawLine(Point(rc.right - 1, rc.bottom), Point(rc.right - 1, rc.top), _cellHeaderBorderColor); // vertical
             buf.drawLine(Point(rc.left, rc.bottom - 1), Point(rc.right - 1, rc.bottom - 1), _cellHeaderBorderColor); // horizontal
         }

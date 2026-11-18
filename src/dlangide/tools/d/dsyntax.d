@@ -448,7 +448,6 @@ class SimpleDSyntaxSupport : SyntaxSupport {
             for (int i = range.start.line; i <= range.end.line; i++) {
                 dstring s = content.line(i);
                 int charsRemoved = 0;
-                int minp = 0;
                 if (i == range.start.line) {
                     int maxp = content.lineLength(range.start.line);
                     if (i == range.end.line)
@@ -650,7 +649,6 @@ class SimpleDSyntaxSupport : SyntaxSupport {
         if (line == 0)
             return; // not for first line
         int prevLine = line - 1;
-        dstring lineText = _content.line(line);
         TextLineMeasure lineMeasurement = _content.measureLine(line);
         TextLineMeasure prevLineMeasurement = _content.measureLine(prevLine);
         bool prevLineSpaceOnly = false;
@@ -705,8 +703,6 @@ class SimpleDSyntaxSupport : SyntaxSupport {
         if (lineMeasurement.firstNonSpace != op.newRange.start.pos)
             return; // not in beginning of line
         if (lineMeasurement.firstNonSpaceX >= 0 && lineMeasurement.firstNonSpaceX != prevLineMeasurement.firstNonSpaceX) {
-            dstring prevLineText = _content.line(prevLine);
-            TokenPropString prevLineTokenProps = _content.lineTokenProps(prevLine);
             int spacex = prevLineMeasurement.firstNonSpaceX;
             if (spacex != lineMeasurement.firstNonSpaceX) {
                 dstring txt = _content.fillSpace(spacex);

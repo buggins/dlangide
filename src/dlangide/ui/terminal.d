@@ -684,7 +684,7 @@ class TerminalWidget : WidgetGroup, OnScrollHandler {
             return;
         Rect rc = _pos;
         applyMargins(rc);
-        auto saver = ClipRectSaver(buf, rc, alpha);
+        auto _ = ClipRectSaver(buf, rc, alpha); // keep until the end of the scope
         // whole pane in the terminal's default background, so that the area below the last line matches the text
         buf.fillRect(rc, _content.defaultBackgroundColor);
         applyPadding(rc);
@@ -1062,7 +1062,7 @@ class TerminalDevice : Thread {
         } else {
             // linux/posix
             if (masterfd && masterfd != -1) {
-                auto bytesRead = write_(masterfd, msg.ptr, msg.length);
+                write_(masterfd, msg.ptr, msg.length);
             }
             
         }
