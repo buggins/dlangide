@@ -55,8 +55,15 @@ class ProjectSettings : SettingsFile {
         return buildSettings.getBoolean("verbose", false);
     }
 
+    /// compiler executable for the project's toolchain, or null to let DUB choose
     string getToolchain(IDESettings idesettings) {
         string cfg = buildSettings.getString("toolchain");
+        if (cfg.empty || cfg.equal("default")) {
+            // DUB tries dmd first: use the DMD executable from Preferences if it was set (#364),
+            // otherwise DUB finds a compiler in PATH
+            string dmd = idesettings.getToolchainCompilerExecutable("dmd");
+            return dmd.empty || dmd.equal("dmd") ? null : dmd;
+        }
         return idesettings.getToolchainCompilerExecutable(cfg);
     }
 
@@ -106,4 +113,19 @@ string joinParams(string[] params...) pure {
     if (res.empty)
         return null;
     return res.dup;
+}
+
+/// the Default toolchain uses the DMD executable from Preferences when it was set (#364)
+unittest {
+    auto ide = new IDESettings(null);
+    ide.updateDefaults();
+    auto project = new ProjectSettings(null);
+    project.updateDefaults();
+    assert(project.getToolchain(ide) is null); // DMD executable "dmd": DUB chooses the compiler
+    ide.dmdToolchainSettings.setString("executable", "/opt/dmd/bin/dmd");
+    assert(project.getToolchain(ide) == "/opt/dmd/bin/dmd");
+    project.buildSettings.setString("toolchain", "ldc");
+    assert(project.getToolchain(ide) == "ldc2");
+    project.buildSettings.setString("toolchain", "dmd");
+    assert(project.getToolchain(ide) == "/opt/dmd/bin/dmd");
 }
