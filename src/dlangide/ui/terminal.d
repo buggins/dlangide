@@ -49,8 +49,9 @@ struct TerminalLine {
         overflowFlag = false;
         eolFlag = false;
     }
-    void markLineOverflow() {}
-    void markLineEol() {}
+    /// the text continues on the next line (wrapped at the terminal width): joined without a line break when copied
+    void markLineOverflow() { overflowFlag = true; }
+    void markLineEol() { eolFlag = true; }
     void putCharAt(dchar ch, int x, TerminalAttr currentAttr) {
         if (x >= line.length) {
             TerminalChar d;
@@ -66,6 +67,23 @@ struct TerminalLine {
     }
 }
 
+/// a cell boundary (or a cell) in the terminal buffer: line index in TerminalContent.lines, column
+struct TerminalPos {
+    int line;
+    int col;
+    int opCmp(const TerminalPos b) const {
+        if (line != b.line)
+            return line < b.line ? -1 : 1;
+        return col < b.col ? -1 : (col > b.col ? 1 : 0);
+    }
+}
+
+/// characters that end a word for selection by double-click (paths and file:line:column stay one word)
+private bool isTerminalWordChar(dchar ch) {
+    import std.algorithm : canFind;
+    return ch > ' ' && !"()[]{}<>\"'`,;|"d.canFind(ch);
+}
+
 struct TerminalContent {
     TerminalLine[] lines;
     Rect rc;
@@ -73,6 +91,11 @@ struct TerminalContent {
     TerminalAttr currentAttr;
     TerminalAttr defAttr;
     int maxBufferLines = 3000;
+    // selection by mouse (#401): from selectionAnchor to selectionEnd (cell boundaries, in either order)
+    bool hasSelection;
+    TerminalPos selectionAnchor;
+    TerminalPos selectionEnd;
+    uint selectionColor = 0xB060A0FF;
     int topLine;
     int width; // width in chars
     int height; // height in chars
@@ -86,6 +109,7 @@ struct TerminalContent {
         _lineWrap = v;
     }
     void clear() {
+        hasSelection = false;
         lines.length = 0;
         cursorx = cursory = topLine= 0;
     }
@@ -258,6 +282,8 @@ struct TerminalContent {
                 charrc.right = charrc.left + charw;
                 charrc.bottom = charrc.top + charh;
                 buf.fillRect(charrc, bgcolor);
+                if (isSelected(i + topLine, x))
+                    buf.fillRect(charrc, selectionColor);
                 if (isCursorPos) {
                     buf.drawFrame(charrc, focused ? (textcolor | 0xC0000000) : (textcolor | 0x80000000), Rect(1,1,1,1));
                 }
@@ -278,6 +304,17 @@ struct TerminalContent {
                 lines[i] = lines[i + delta];
             }
             lines.length = lines.length - delta;
+            if (hasSelection) {
+                // the selection stays on its text; cut where its lines were dropped
+                selectionAnchor.line -= delta;
+                selectionEnd.line -= delta;
+                if (selectionAnchor.line < 0 && selectionEnd.line < 0)
+                    hasSelection = false;
+                if (selectionAnchor.line < 0)
+                    selectionAnchor = TerminalPos(0, 0);
+                if (selectionEnd.line < 0)
+                    selectionEnd = TerminalPos(0, 0);
+            }
             yy -= delta;
             topLine -= delta;
             if (topLine < 0)
@@ -367,6 +404,106 @@ struct TerminalContent {
             cursory = topLine;
     }
 
+    /// selection start and end in text order (end exclusive)
+    void orderedSelection(out TerminalPos start, out TerminalPos end) const {
+        start = selectionAnchor < selectionEnd ? selectionAnchor : selectionEnd;
+        end = selectionAnchor < selectionEnd ? selectionEnd : selectionAnchor;
+    }
+
+    /// true if the cell at column x of line lineIndex is selected
+    bool isSelected(int lineIndex, int x) const {
+        if (!hasSelection)
+            return false;
+        TerminalPos start, end;
+        orderedSelection(start, end);
+        TerminalPos cell = TerminalPos(lineIndex, x);
+        return start <= cell && cell < end;
+    }
+
+    void setSelection(TerminalPos anchor, TerminalPos end) {
+        hasSelection = true;
+        selectionAnchor = anchor;
+        selectionEnd = end;
+    }
+
+    /// selected text: trailing spaces of lines removed; lines wrapped at the terminal width are joined without
+    /// a line break
+    @property dstring selectedText() const {
+        if (!hasSelection)
+            return null;
+        TerminalPos start, end;
+        orderedSelection(start, end);
+        dchar[] res;
+        for (int l = start.line < 0 ? 0 : start.line; l <= end.line && l < cast(int)lines.length; l++) {
+            const(TerminalChar)[] chars = lines[l].line;
+            int from = l == start.line ? start.col : 0;
+            int to = l == end.line ? end.col : int.max;
+            dchar[] text;
+            for (int x = from; x < to && x < cast(int)chars.length; x++)
+                text ~= chars[x].ch >= ' ' ? chars[x].ch : ' ';
+            bool wrapped = lines[l].overflowFlag && l < end.line;
+            if (!wrapped) {
+                while (text.length && text[$ - 1] == ' ')
+                    text.length = text.length - 1;
+            }
+            res ~= text;
+            if (l < end.line && !wrapped)
+                res ~= '\n';
+        }
+        return res.idup;
+    }
+
+    /// line index for a y coordinate (may be outside the buffer)
+    private int lineAtY(int y) const {
+        int dy = y - rc.top;
+        int row = dy >= 0 ? dy / charh : -1 - (-dy - 1) / charh;
+        return topLine + row;
+    }
+
+    /// nearest cell boundary to a point, inside the buffer
+    TerminalPos posAt(int x, int y) const {
+        if (!lines.length || charw <= 0 || charh <= 0)
+            return TerminalPos(0, 0);
+        int line = lineAtY(y);
+        if (line < 0)
+            return TerminalPos(0, 0);
+        if (line >= cast(int)lines.length)
+            return TerminalPos(cast(int)lines.length - 1, width);
+        int col = (x - rc.left + charw / 2) / charw;
+        if (x < rc.left || col < 0)
+            col = 0;
+        if (col > width)
+            col = width;
+        return TerminalPos(line, col);
+    }
+
+    /// the word under a point (or the single character there, if it isn't a word character): start and end
+    TerminalPos[2] wordAt(int x, int y) const {
+        TerminalPos p = posAt(x, y);
+        if (charw > 0 && x >= rc.left)
+            p.col = (x - rc.left) / charw; // the cell under the point, not the nearest boundary
+        if (p.line >= cast(int)lines.length || p.col >= cast(int)lines[p.line].line.length)
+            return [p, p];
+        const(TerminalChar)[] chars = lines[p.line].line;
+        if (!isTerminalWordChar(chars[p.col].ch))
+            return [p, TerminalPos(p.line, p.col + 1)];
+        int start = p.col, end = p.col + 1;
+        while (start > 0 && isTerminalWordChar(chars[start - 1].ch))
+            start--;
+        while (end < cast(int)chars.length && isTerminalWordChar(chars[end].ch))
+            end++;
+        return [TerminalPos(p.line, start), TerminalPos(p.line, end)];
+    }
+
+    /// the whole line under a point, with its line break: start and end
+    TerminalPos[2] lineAt(int x, int y) const {
+        TerminalPos p = posAt(x, y);
+        if (p.line + 1 < cast(int)lines.length)
+            return [TerminalPos(p.line, 0), TerminalPos(p.line + 1, 0)];
+        int len = p.line < cast(int)lines.length ? cast(int)lines[p.line].line.length : 0;
+        return [TerminalPos(p.line, 0), TerminalPos(p.line, len)];
+    }
+
     void updateScrollBar(ScrollBar sb) {
         sb.pageSize = height;
         sb.maxValue = cast(int)lines.length;
@@ -381,6 +518,60 @@ struct TerminalContent {
         topLine = y;
     }
 
+}
+
+/// selection by mouse and selected text (#401)
+unittest {
+    TerminalContent c;
+    c.width = 10;
+    c.height = 4;
+    c.charw = 10;
+    c.charh = 20;
+    c.rc = Rect(0, 0, 100, 80);
+    void put(dstring s) {
+        foreach (ch; s)
+            c.putChar(ch);
+    }
+    put("abc   \nline two\n0123456789ABC\n"d); // the third text line wraps: lines 2 and 3
+    alias P = TerminalPos;
+    c.setSelection(P(1, 4), P(0, 1)); // either order
+    assert(c.selectedText == "bc\nline"d); // trailing spaces of "abc   " removed
+    assert(c.isSelected(0, 1) && c.isSelected(0, 9) && c.isSelected(1, 3) && !c.isSelected(1, 4) && !c.isSelected(0, 0));
+    c.setSelection(P(2, 5), P(3, 2));
+    assert(c.selectedText == "56789AB"d); // wrapped line: no line break
+    // mouse positions: nearest cell boundary, clamped to the buffer
+    c.topLine = 0; // writing 5 lines into the 4 line view scrolled it
+    assert(c.posAt(14, 25) == P(1, 1) && c.posAt(16, 25) == P(1, 2));
+    assert(c.posAt(-5, -5) == P(0, 0));
+    assert(c.posAt(50, 500) == P(cast(int)c.lines.length - 1, 10));
+    // double-click: word (paths and file:line stay one word), triple-click: line with its line break
+    c.clear();
+    put("x src/app.d:12: error\nnext\n"d);
+    c.topLine = 0;
+    // wrapped at 10 columns: "x src/app.", "d:12: erro", "r"; a word ends at the end of its screen line
+    c.setSelection(c.wordAt(55, 5)[0], c.wordAt(55, 5)[1]);
+    assert(c.selectedText == "src/app."d);
+    c.setSelection(c.wordAt(15, 25)[0], c.wordAt(15, 25)[1]);
+    assert(c.selectedText == "d:12:"d); // ':' keeps file:line together
+    TerminalPos[2] w = c.wordAt(5, 5);
+    assert(w[0] == P(0, 0) && w[1] == P(0, 1)); // "x"
+    w = c.wordAt(15, 5);
+    assert(w[0] == P(0, 1) && w[1] == P(0, 2)); // a space: just that cell
+    TerminalPos[2] l = c.lineAt(30, 45);
+    c.setSelection(l[0], l[1]);
+    assert(c.selectedText == "r\n"d); // line 2 is the rest of the wrapped line: "r"
+    // old lines dropped from the buffer: the selection stays on its text
+    c.clear();
+    c.maxBufferLines = 4;
+    put("one\ntwo\nthree\n"d);
+    c.setSelection(P(1, 0), P(2, 5));
+    assert(c.selectedText == "two\nthree"d);
+    put("four\n"d); // "one" is dropped
+    assert(c.selectedText == "two\nthree"d);
+    put("five\n"d); // "two" is dropped: the selection is cut
+    assert(c.selectedText == "three"d);
+    put("six\n"d); // all selected lines are dropped
+    assert(!c.hasSelection);
 }
 
 class TerminalWidget : WidgetGroup, OnScrollHandler {
@@ -431,6 +622,7 @@ class TerminalWidget : WidgetGroup, OnScrollHandler {
         attr.bgColor = dark ? 0 : 15;   // TERMINAL_PALETTE: black / bright white
         attr.textColor = dark ? 7 : 0;  // white (0xC0C0C0) / black
         _content.setDefaultAttr(attr);
+        _content.selectionColor = style.customColor("editor_selection_focused", 0xB060A0FF);
         invalidate();
     }
 
@@ -501,8 +693,78 @@ class TerminalWidget : WidgetGroup, OnScrollHandler {
         return true;
     }
 
-    /// mouse wheel scrolls the terminal output, 3 lines per wheel step
+    /// what dragging with the left button selects: characters, or whole words or lines after a double or triple click
+    protected enum SelectionMode { characters, words, lines }
+    protected SelectionMode _selectionMode;
+    protected bool _mouseSelecting;
+    /// the word or line selected by the double or triple click: dragging keeps it selected
+    protected TerminalPos[2] _selectionClicked;
+
+    /// selected text (empty if nothing is selected)
+    @property dstring selectedText() { return _content.selectedText; }
+
+    /// extend the selection to the mouse position while dragging
+    protected void extendSelection(int x, int y) {
+        if (_selectionMode == SelectionMode.characters) {
+            _content.setSelection(_content.selectionAnchor, _content.posAt(x, y));
+            return;
+        }
+        TerminalPos[2] r = _selectionMode == SelectionMode.words ? _content.wordAt(x, y) : _content.lineAt(x, y);
+        TerminalPos start = r[0] < _selectionClicked[0] ? r[0] : _selectionClicked[0];
+        TerminalPos end = _selectionClicked[1] < r[1] ? r[1] : _selectionClicked[1];
+        _content.setSelection(start, end);
+    }
+
+    /// select text by mouse (#401): drag; double-click selects a word, triple-click a line. The selection is copied
+    /// to the clipboard (and the X11 primary selection) when the button is released, as in many terminals.
+    /// The mouse wheel scrolls the terminal output, 3 lines per wheel step.
     override bool onMouseEvent(MouseEvent event) {
+        if (event.action == MouseAction.ButtonDown && event.button == MouseButton.Left) {
+            setFocus();
+            if (event.tripleClick || event.doubleClick) {
+                _selectionMode = event.tripleClick ? SelectionMode.lines : SelectionMode.words;
+                _selectionClicked = event.tripleClick ? _content.lineAt(event.x, event.y) : _content.wordAt(event.x, event.y);
+                _content.setSelection(_selectionClicked[0], _selectionClicked[1]);
+            } else {
+                _selectionMode = SelectionMode.characters;
+                TerminalPos p = _content.posAt(event.x, event.y);
+                _content.setSelection(p, p);
+            }
+            _mouseSelecting = true;
+            invalidate();
+            return true;
+        }
+        // while selecting: moves, also outside the widget (FocusOut must return true to keep getting them), and back in
+        if (_mouseSelecting && (event.action == MouseAction.FocusOut || event.action == MouseAction.FocusIn
+                || event.action == MouseAction.Move)) {
+            // only with the button down: a FocusOut made from a mouse Leave has no position (0, 0) and no buttons
+            if ((event.flags & MouseButton.Left) != 0) {
+                // dragging above or below the text scrolls it
+                if (event.y < _content.rc.top || event.y >= _content.rc.bottom) {
+                    scrollTo(_content.topLine + (event.y < _content.rc.top ? -1 : 1));
+                    _content.updateScrollBar(_verticalScrollBar);
+                }
+                extendSelection(event.x, event.y);
+                invalidate();
+            }
+            return true;
+        }
+        if (event.action == MouseAction.Cancel && _mouseSelecting) {
+            _mouseSelecting = false; // the selection stays, not copied
+            return true;
+        }
+        if (event.action == MouseAction.ButtonUp && event.button == MouseButton.Left && _mouseSelecting) {
+            _mouseSelecting = false;
+            dstring text = _content.selectedText;
+            if (text.length) {
+                platform.setClipboardText(text);
+                platform.setClipboardText(text, true); // X11 primary selection (middle-click paste)
+            } else {
+                _content.hasSelection = false;
+            }
+            invalidate();
+            return true;
+        }
         if (event.action == MouseAction.Wheel && event.wheelDelta != 0) {
             scrollTo(_content.topLine - event.wheelDelta * 3);
             _content.updateScrollBar(_verticalScrollBar);
