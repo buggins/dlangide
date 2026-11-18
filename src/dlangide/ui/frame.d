@@ -448,6 +448,22 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         return false;
     }
     
+    /// true if the file is in an import folder of the standard library of the startup project's compiler; for files
+    /// opened by name (go to definition, restored tabs), which have no project item (#279)
+    protected bool isStandardLibraryFile(string filename) {
+        import std.path : buildNormalizedPath, filenameCmp;
+        Project project = currentWorkspace ? currentWorkspace.startupProject : null;
+        if (!project)
+            return false;
+        string fn = buildNormalizedPath(filename);
+        foreach (dir; project.builderSourcePaths(_settings)) {
+            string d = buildNormalizedPath(dir);
+            if (fn.length > d.length && filenameCmp(fn[0 .. d.length], d) == 0 && (fn[d.length] == '/' || fn[d.length] == '\\'))
+                return true;
+        }
+        return false;
+    }
+
     bool openSourceFile(string filename, ProjectSourceFile file = null, bool activate = true) {
         if (!file && !filename)
             return false;
@@ -485,6 +501,11 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     editor.setBookmarkList(currentWorkspace.getSourceFileBookmarks(file));
                 }
                 applySettings(editor, settings);
+                if (file ? file.readOnly : isStandardLibraryFile(filename)) {
+                    // a file of a DUB package or of the standard library (#279)
+                    editor.readOnly = true;
+                    editor.showMessage("library-read-only", UIString.fromId("MSG_LIBRARY_FILE_READ_ONLY"c).value);
+                }
                 _tabs.selectTab(index, true);
                 if( filename.endsWith(".d") || filename.endsWith(".di") )
                     editor.editorTool = new DEditorTool(this);
@@ -799,6 +820,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         _wsPanel = new WorkspacePanel("workspace");
         _wsPanel.sourceFileSelectionListener = &onSourceFileSelected;
         _wsPanel.workspaceActionListener = &handleAction;
+        _wsPanel.standardLibraryPaths = delegate(Project project) { return project.builderSourcePaths(_settings); };
         _wsPanel.linkWithEditor = _settings.uiState.getBoolean(LINK_WITH_EDITOR, true);
         _wsPanel.onLinkWithEditorChange = &onLinkWithEditorChange;
         _wsPanel.dockAlignment = DockAlignment.Left;
