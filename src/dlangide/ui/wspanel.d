@@ -212,6 +212,14 @@ class WorkspacePanel : DockWindow {
         return null;
     }
 
+    /// expand or collapse a tree item as saved; call it after adding the item's children
+    protected void restoreExpandedState(TreeItem item, string itemPath) {
+        if (restoreItemState(itemPath))
+            item.expand();
+        else
+            item.collapse();
+    }
+
     /// Adding elements to the tree
     void addProjectItems(TreeItem root, ProjectItem items) {
         for (int i = 0; i < items.childCount; i++) {
@@ -220,11 +228,10 @@ class WorkspacePanel : DockWindow {
                 TreeItem p = root.newChild(child.filename, child.name, "folder");
                 p.intParam = ProjectItemType.SourceFolder;
                 p.objectParam = child;
-                if (restoreItemState(child.filename))
-                    p.expand();
-                else
-                    p.collapse();
                 addProjectItems(p, child);
+                // after the children: expanding a child expands its parents too, so a collapsed folder with an
+                // expanded subfolder was shown expanded (#342)
+                restoreExpandedState(p, child.filename);
             } else {
                 string icon = "text-other";
                 if (child.isDSourceFile)
@@ -412,13 +419,11 @@ class WorkspacePanel : DockWindow {
                 TreeItem p = root.newChild(project.filename, project.name, project.isDependency ? "project-d-dependency" : "project-d");
                 p.intParam = ProjectItemType.Project;
                 p.objectParam = project;
-                if (restoreItemState(project.filename))
-                    p.expand();
-                else
-                    p.collapse();
                 if (project && _workspace.startupProject is project)
                     defaultItem = p;
                 addProjectItems(p, project.items);
+                restoreExpandedState(p, project.filename); // after the children, see addProjectItems
+
             }
             _tree.items.setDefaultItem(defaultItem);
         } else {
