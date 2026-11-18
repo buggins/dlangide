@@ -11,7 +11,9 @@ enum ProjectItemType : int {
     SourceFile,
     SourceFolder,
     Project,
-    Workspace
+    Workspace,
+    /// "Standard Library" and "DUB Libraries" nodes of a project (#279)
+    LibraryGroup
 }
 
 /// marks of files in the Workspace Explorer (flags of TreeItem.marks); folders and projects show what their files have
@@ -35,6 +37,8 @@ interface WorkspaceActionHandler {
 class WorkspacePanel : DockWindow {
     protected Workspace _workspace;
     protected TreeWidget _tree;
+    /// import folders of the standard library for a project (the project's compiler), for the "Standard Library" node
+    string[] delegate(Project project) standardLibraryPaths;
 
     /// handle source file selection change
     Signal!SourceFileSelectionHandler sourceFileSelectionListener;
@@ -166,7 +170,11 @@ class WorkspacePanel : DockWindow {
         MenuItem menu = null;
         _popupMenuSelectedItemId = selectedItem.id;
         _popupMenuSelectedItem = selectedItem;
-        if (selectedItem.intParam == ProjectItemType.SourceFolder) {
+        ProjectItem projectItem = cast(ProjectItem)selectedItem.objectParam;
+        bool library = projectItem && projectItem.readOnly && cast(Project)projectItem is null;
+        if (library || selectedItem.intParam == ProjectItemType.LibraryGroup) {
+            menu = null; // library files and folders are read-only (#279)
+        } else if (selectedItem.intParam == ProjectItemType.SourceFolder) {
             menu = _folderPopupMenu;
         } else if (selectedItem.intParam == ProjectItemType.SourceFile) {
             menu = _filePopupMenu;
@@ -218,6 +226,66 @@ class WorkspacePanel : DockWindow {
             item.expand();
         else
             item.collapse();
+    }
+
+    /// "Standard Library" and "DUB Libraries" nodes of a project, collapsed unless saved expanded (#279)
+    protected void addLibraryItems(TreeItem projectItem, Project project) {
+        import std.file : exists, isDir;
+        string[] stdPaths = standardLibraryPaths ? standardLibraryPaths(project) : null;
+        if (stdPaths.length) {
+            string id = project.filename ~ "#stdlib";
+            TreeItem lib = projectItem.newChild(id, UIString.fromId("WORKSPACE_STANDARD_LIBRARY"c).value, "folder");
+            lib.intParam = ProjectItemType.LibraryGroup;
+            foreach (path; stdPaths) {
+                if (!exists(path) || !isDir(path))
+                    continue;
+                auto folder = new ProjectFolder(path);
+                folder.project = project; // completion in its files uses the project's import paths
+                folder.readOnly = true;
+                folder.loadItems();
+                TreeItem f = lib.newChild(folder.filename, libraryFolderName(folder.filename), "folder");
+                f.intParam = ProjectItemType.SourceFolder;
+                f.objectParam = folder;
+                addProjectItems(f, folder);
+                restoreExpandedState(f, folder.filename);
+            }
+            restoreExpandedState(lib, id);
+        }
+        Project[] deps = sortedDependencies(project);
+        if (deps.length) {
+            string id = project.filename ~ "#dub";
+            TreeItem libs = projectItem.newChild(id, UIString.fromId("WORKSPACE_DUB_LIBRARIES"c).value, "folder");
+            libs.intParam = ProjectItemType.LibraryGroup;
+            foreach (dep; deps) {
+                TreeItem d = libs.newChild(dep.filename, dep.originalName ~ " "d ~ toUTF32(dep.dependencyVersion), "project-d-dependency");
+                d.intParam = ProjectItemType.Project;
+                d.objectParam = dep;
+                addProjectItems(d, dep.items);
+                restoreExpandedState(d, dep.filename);
+            }
+            restoreExpandedState(libs, id);
+        }
+    }
+
+    /// the project's DUB packages: direct dependencies first, each group by name
+    protected static Project[] sortedDependencies(Project project) {
+        import std.algorithm : sort, canFind;
+        import std.uni : icmp;
+        string[] direct = project.directDependencyNames;
+        Project[] res = project.dependencies.dup;
+        bool isDirect(Project p) { return direct.canFind(toUTF8(p.originalName)); }
+        sort!((a, b) => isDirect(a) != isDirect(b) ? isDirect(a) : icmp(a.originalName, b.originalName) < 0)(res);
+        return res;
+    }
+
+    /// shown name of a standard library folder: "druntime/import" for generic last names, else the folder name
+    protected static dstring libraryFolderName(string path) {
+        import std.algorithm : canFind;
+        import std.path : baseName, dirName;
+        string name = baseName(path);
+        if (["import", "include", "d", "src"].canFind(name))
+            name = baseName(dirName(path)) ~ "/" ~ name;
+        return toUTF32(name);
     }
 
     /// Adding elements to the tree
@@ -342,8 +410,9 @@ class WorkspacePanel : DockWindow {
     void onTreeExpandedStateChange(TreeItems source, TreeItem item) {
         bool expanded = item.expanded;
         ProjectItem prjItem = cast(ProjectItem)item.objectParam;
-        if (prjItem) {
-            string fn = prjItem.filename;
+        // library group nodes have no project item: their state is saved by id (#279)
+        string fn = prjItem ? prjItem.filename : (item.intParam == ProjectItemType.LibraryGroup ? item.id : null);
+        if (fn) {
             debug Log.d("onTreeExpandedStateChange expanded=", expanded, " fn=", fn);
             saveItemState(fn, expanded);
         }
@@ -416,12 +485,15 @@ class WorkspacePanel : DockWindow {
             root.intParam = ProjectItemType.Workspace;
             root.objectParam = _workspace;
             foreach(project; _workspace.projects) {
-                TreeItem p = root.newChild(project.filename, project.name, project.isDependency ? "project-d-dependency" : "project-d");
+                if (project.isDependency)
+                    continue; // shown in "DUB Libraries" of the projects that use them (#279)
+                TreeItem p = root.newChild(project.filename, project.name, "project-d");
                 p.intParam = ProjectItemType.Project;
                 p.objectParam = project;
                 if (project && _workspace.startupProject is project)
                     defaultItem = p;
                 addProjectItems(p, project.items);
+                addLibraryItems(p, project);
                 restoreExpandedState(p, project.filename); // after the children, see addProjectItems
 
             }

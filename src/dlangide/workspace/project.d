@@ -49,6 +49,13 @@ class ProjectItem {
 
     @property ProjectItem parent() { return _parent; }
 
+    protected bool _readOnly;
+    /// true for files of libraries (DUB packages and the standard library), which are opened read-only (#279)
+    @property bool readOnly() {
+        return _readOnly || (_project && _project.isDependency) || (_parent && _parent.readOnly);
+    }
+    @property void readOnly(bool value) { _readOnly = value; }
+
     @property Project project() { return _project; }
 
     @property void project(Project p) { _project = p; }
@@ -259,6 +266,9 @@ class WorkspaceItem {
     protected dstring _originalName;
     protected dstring _description;
 
+    /// name from the project file (a dependency's name has its version appended)
+    @property dstring originalName() { return _originalName; }
+
     this(string fname = null) {
         filename = fname;
     }
@@ -463,6 +473,20 @@ class Project : WorkspaceItem {
 
     @property bool isDependency() { return _isDependency; }
     @property string dependencyVersion() { return _dependencyVersion; }
+
+    /// names of the DUB packages in the "dependencies" of the project file (a sub-package as its package name)
+    @property string[] directDependencyNames() {
+        string[] res;
+        Setting deps = _projectFile.setting.objectByPath("dependencies");
+        if (deps && deps.isObject) {
+            foreach (string key, Setting value; deps) {
+                import std.string : indexOf;
+                ptrdiff_t colon = key.indexOf(':');
+                res ~= colon > 0 ? key[0 .. colon] : key;
+            }
+        }
+        return res;
+    }
 
     /// returns project configurations
     @property const(ProjectConfiguration[]) configurations() const
