@@ -39,6 +39,14 @@ class WorkspacePanel : DockWindow {
     protected TreeWidget _tree;
     /// import folders of the standard library for a project (the project's compiler), for the "Standard Library" node
     string[] delegate(Project project) standardLibraryPaths;
+    /// title bar toggle: the tree follows the active editor (#341)
+    protected ImageCheckButton _linkWithEditorButton;
+    /// called when the user switches "Link with Editor" on or off
+    void delegate(bool linked) onLinkWithEditorChange;
+
+    /// true if the tree selection follows the active editor (title bar toggle button)
+    @property bool linkWithEditor() { return _linkWithEditorButton.checked; }
+    @property void linkWithEditor(bool linked) { _linkWithEditorButton.checked = linked; }
 
     /// handle source file selection change
     Signal!SourceFileSelectionHandler sourceFileSelectionListener;
@@ -49,6 +57,16 @@ class WorkspacePanel : DockWindow {
         workspace = null;
         //layoutWidth = 200;
         _caption.text = "Workspace Explorer"d;
+        // "Link with Editor" toggle left of the Close button, as in Eclipse
+        _linkWithEditorButton = new ImageCheckButton("LINK_WITH_EDITOR", "link-with-editor");
+        _linkWithEditorButton.tooltipText = "HINT_LINK_WITH_EDITOR";
+        _linkWithEditorButton.checked = true;
+        _linkWithEditorButton.click = delegate(Widget source) {
+            if (onLinkWithEditorChange)
+                onLinkWithEditorChange(_linkWithEditorButton.checked);
+            return true;
+        };
+        _captionLayout.insertChild(_linkWithEditorButton, _captionLayout.childIndex(_closeButton));
         acceleratorMap.add([ACTION_PROJECT_FOLDER_EXPAND_ALL, ACTION_PROJECT_FOLDER_COLLAPSE_ALL,
             ACTION_PROJECT_FOLDER_REFRESH, ACTION_PROJECT_FOLDER_RENAME_ITEM,
             ACTION_PROJECT_FOLDER_REMOVE_ITEM, ACTION_PROJECT_FOLDER_OPEN_ITEM]);

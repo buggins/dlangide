@@ -248,6 +248,9 @@ License
 
 Boost Software License 1.0, see [LICENSE.txt](LICENSE.txt).
 
+Some icons are icons of the JetBrains IntelliJ Platform (Apache License 2.0), see
+[LICENSE_JetBrains_icons.txt](LICENSE_JetBrains_icons.txt).
+
 DlangIDE links [DCD](https://github.com/dlang-community/DCD), which is licensed under the GNU GPL v3, so DlangIDE binaries
 are distributed under the GPL v3 as a whole. The Windows packages include `GPL-3.0.txt` and `THIRD-PARTY.txt`, which lists all
 included components with their licenses and sources.

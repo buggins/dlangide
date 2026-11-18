@@ -414,7 +414,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         ProjectSourceFile sourceFile = _wsPanel.findSourceFileItem(fname, isAbsolute(fname) ? true : false, projectname);
         if (openSourceFile(fname, sourceFile)) {
             Log.d("found source file");
-            if (sourceFile)
+            if (sourceFile && _wsPanel.linkWithEditor)
                 _wsPanel.selectItem(sourceFile);
             caretHistory.pushNewPosition();
             currentEditor().setCaretPos(line, 0);
@@ -557,6 +557,20 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         _tabs.removeTab(HOME_SCREEN_ID);
     }
 
+    /// uiState key: the Workspace Explorer follows the active editor (#341)
+    enum LINK_WITH_EDITOR = "workspaceLinkWithEditor";
+
+    /// "Link with Editor" switched on or off in the Workspace Explorer title bar
+    protected void onLinkWithEditorChange(bool linked) {
+        _settings.uiState.setBoolean(LINK_WITH_EDITOR, linked);
+        // switched on: select the file of the active editor, as Eclipse does
+        if (linked) {
+            if (DSourceEdit ed = currentEditor)
+                if (ed.projectSourceFile)
+                    _wsPanel.selectItem(ed.projectSourceFile);
+        }
+    }
+
     void onTabChanged(string newActiveTabId, string previousTabId) {
         int index = _tabs.tabIndex(newActiveTabId);
         if (index >= 0) {
@@ -565,7 +579,8 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             if (file) {
                 //setCurrentProject(file.project);
                 // tab is source file editor
-                _wsPanel.selectItem(file);
+                if (_wsPanel.linkWithEditor)
+                    _wsPanel.selectItem(file);
                 focusEditor(file.filename);
             }
             //window.windowCaption(tab.text.value ~ " - "d ~ frameWindowCaptionSuffix);
@@ -583,7 +598,8 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
     /// close tab w/o confirmation
     void closeTab(string tabId) {
         _wsPanel.setFileMark(tabId, FileMark.Unsaved, false); // closed, changes saved or discarded
-        _wsPanel.selectItem(null);
+        if (_wsPanel.linkWithEditor)
+            _wsPanel.selectItem(null);
         _tabs.removeTab(tabId);
         _statusLine.hideEditorState();
         _tabs.focusSelectedTab();
@@ -805,6 +821,8 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         _wsPanel.sourceFileSelectionListener = &onSourceFileSelected;
         _wsPanel.workspaceActionListener = &handleAction;
         _wsPanel.standardLibraryPaths = delegate(Project project) { return project.builderSourcePaths(_settings); };
+        _wsPanel.linkWithEditor = _settings.uiState.getBoolean(LINK_WITH_EDITOR, true);
+        _wsPanel.onLinkWithEditorChange = &onLinkWithEditorChange;
         _wsPanel.dockAlignment = DockAlignment.Left;
         _dockHost.addDockedWindow(_wsPanel);
         _wsPanel.visibility = Visibility.Gone;

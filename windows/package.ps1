@@ -70,6 +70,7 @@ if ($useFreeType) {
     $freeTypeLicense = "- FreeType font engine: FreeType License, FreeType-NOTICE.txt"
 }
 Copy-Item "windows/GPL-3.0.txt" $stage
+Copy-Item "LICENSE_JetBrains_icons.txt" $stage
 
 # THIRD-PARTY.txt: everything linked into dlangide.exe and shipped next to it, with licenses and sources (#522).
 # The DUB packages and their versions come from `dub describe`, so the list matches the build.
@@ -132,6 +133,7 @@ foreach ($g in $groups) {
         [void]$tp.Append("  jpeg.d (jpgd) and imageresize.d are in the public domain.$nl")
     }
 }
+[void]$tp.Append("- JetBrains IntelliJ Platform icons (embedded resources): Apache-2.0, LICENSE_JetBrains_icons.txt$nl  https://github.com/JetBrains/intellij-community$nl")
 [void]$tp.Append("- D runtime (druntime) and Phobos, the D standard library: BSL-1.0$nl  https://github.com/dlang/phobos$nl")
 [void]$tp.Append("  Phobos includes zlib by Jean-loup Gailly and Mark Adler (zlib license).$nl")
 [void]$tp.Append("- Microsoft C runtime (linked by the compiler): Visual Studio redistributable code$nl$nl")
