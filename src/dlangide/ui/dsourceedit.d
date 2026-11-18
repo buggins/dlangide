@@ -131,7 +131,7 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
             _editorTool = null;
         }
         return _editorTool = tool;
-    };
+    }
 
     protected ProjectSourceFile _projectSourceFile;
     @property ProjectSourceFile projectSourceFile() { return _projectSourceFile; }

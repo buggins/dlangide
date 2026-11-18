@@ -1827,7 +1827,6 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             window.showMessageBox(UIString.fromId("ERROR_OPEN_PROJECT"c).value, UIString.fromId("ERROR_OPENING_PROJECT"c).value ~ toUTF32(project.filename));
             return false;
         }
-        const auto msg = UIString.fromId("MSG_OPENED_PROJECT"c);
         _logPanel.logLine(toUTF32("Project file " ~ project.filename ~  " is opened ok"));
         
         warmUpImportPaths(project);
@@ -2301,7 +2300,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         string filePath;
         uint line;
         uint pos;
-    };
+    }
 
     class CaretHistory {
         private CaretPosition[] caretHistory;

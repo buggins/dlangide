@@ -505,7 +505,7 @@ enum OpCode : ubyte {
     AT,         //    @
     EQ_GT,         //    =>
     SHARP         //    #
-};
+}
 
 immutable dstring[] OP_CODE_STRINGS = [
     "",
@@ -576,7 +576,7 @@ immutable dstring[] OP_CODE_STRINGS = [
 
 dstring getOpNameD(OpCode op) pure nothrow {
     return OP_CODE_STRINGS[op];
-};
+}
 
 enum Keyword : ubyte {
     NONE,
@@ -884,7 +884,7 @@ immutable dstring[] KEYWORD_STRINGS = [
 
 public dstring getKeywordNameD(Keyword keyword) pure nothrow {
     return KEYWORD_STRINGS[keyword];
-};
+}
 
 public Keyword findKeyword(Keyword start, Keyword end, dchar * name, int len, ref int pos) pure nothrow {
     for (Keyword i = start; i <= end; i++) {
@@ -1581,7 +1581,7 @@ class Tokenizer
     enum : int {
         EOF_CHAR = 0x001A,
         EOL_CHAR = 0x000A
-    };
+    }
     
     protected WhiteSpaceToken _sharedWhiteSpaceToken = new WhiteSpaceToken();
     protected CommentToken _sharedCommentToken = new CommentToken();
@@ -1780,7 +1780,6 @@ class Tokenizer
         _sharedCommentToken.isDocumentationComment = _pos + 1 < _lineText.length && _lineText[_pos + 1] == '+';
         _sharedCommentToken.isMultilineComment = true;
         _commentAppender.reset();
-        dchar[] text;
         int textStart = _pos + 1;
         int level = 1;
         for (;;) {
@@ -2044,7 +2043,6 @@ class Tokenizer
         ulong divider = 1;
         ulong number = 0;
         int i = _pos;
-        bool overflow = false;
         for (;i < _len; i++) {
             dchar ch = _lineText[i];
             uint digit = 0;

@@ -211,12 +211,10 @@ unittest {
         m["aaa2"] = cast(ulong)5u;
         m["aaa3"] = false;
         s["param9_object"] = m;
-        string json = s.toJSON(true);
         s.save("test_file.json");
 
         Setting loaded = new Setting();
         loaded.load("test_file.json");
-        string json2 = loaded.toJSON(true);
         loaded.save("test_file2.json");
     }
 
