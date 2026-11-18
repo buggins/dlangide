@@ -512,7 +512,34 @@ class TerminalWidget : WidgetGroup, OnScrollHandler {
         return super.onMouseEvent(event);
     }
 
+    /// control character sent for Ctrl+key: Ctrl+A .. Ctrl+Z, Ctrl+[ \ ] (0x01 .. 0x1D), or 0 for other keys (#539)
+    static dchar controlCharFor(uint keyCode) {
+        if (keyCode >= KeyCode.KEY_A && keyCode <= KeyCode.KEY_Z)
+            return cast(dchar)(keyCode - KeyCode.KEY_A + 1);
+        switch (keyCode) {
+            case KeyCode.KEY_BRACKETOPEN:
+                return 0x1B;
+            case 0xDC: // backslash (VK_OEM_5; no KeyCode name)
+                return 0x1C;
+            case KeyCode.KEY_BRACKETCLOSE:
+                return 0x1D;
+            default:
+                return 0;
+        }
+    }
+
     override bool onKeyEvent(KeyEvent event) {
+        // Ctrl+letter goes to the program as a control character (Ctrl+C interrupts it, Ctrl+D ends its input)
+        // instead of reaching the frame's actions (Copy, Undo, ...) (#539)
+        if ((event.action == KeyAction.KeyDown || event.action == KeyAction.KeyUp)
+                && (event.flags & KeyFlag.MainFlags) == KeyFlag.Control) {
+            dchar ch = controlCharFor(event.keyCode);
+            if (ch) {
+                if (event.action == KeyAction.KeyDown)
+                    handleTextInput([ch].idup);
+                return true;
+            }
+        }
         if (event.action == KeyAction.Text) {
             // control characters (Enter, Tab, Backspace, Escape) are sent on KeyDown below; the Win32 backend
             // also reports them as text (WM_CHAR), which would send them twice
@@ -1150,4 +1177,17 @@ class TerminalDevice : Thread {
             return true;
         }
     }
+}
+
+/// Ctrl+key control characters (#539)
+unittest {
+    assert(TerminalWidget.controlCharFor(KeyCode.KEY_A) == 0x01);
+    assert(TerminalWidget.controlCharFor(KeyCode.KEY_C) == 0x03); // interrupt
+    assert(TerminalWidget.controlCharFor(KeyCode.KEY_D) == 0x04); // end of input
+    assert(TerminalWidget.controlCharFor(KeyCode.KEY_Z) == 0x1A);
+    assert(TerminalWidget.controlCharFor(KeyCode.KEY_BRACKETOPEN) == 0x1B);
+    assert(TerminalWidget.controlCharFor(0xDC) == 0x1C);
+    assert(TerminalWidget.controlCharFor(KeyCode.KEY_BRACKETCLOSE) == 0x1D);
+    assert(TerminalWidget.controlCharFor(KeyCode.KEY_0) == 0);
+    assert(TerminalWidget.controlCharFor(KeyCode.RETURN) == 0);
 }
