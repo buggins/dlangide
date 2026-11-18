@@ -35,6 +35,8 @@ res/hdpi/hdpi_project-development.png
 res/hdpi/hdpi_project-open.png
 res/hdpi/hdpi_run-build-clean.png
 res/hdpi/hdpi_run-build-configure.png
+res/hdpi/hdpi_link-with-editor.png
+res/hdpi/hdpi_link-with-editor_dark.png
 res/hdpi/hdpi_run-build.png
 res/hdpi/hdpi_run-project.png
 res/hdpi/hdpi_text-d.png
@@ -71,6 +73,8 @@ res/mdpi/project-open.png
 res/mdpi/run-build.png
 res/mdpi/run-build-clean.png
 res/mdpi/run-build-configure.png
+res/mdpi/link-with-editor.png
+res/mdpi/link-with-editor_dark.png
 res/mdpi/symbol-function.png
 res/mdpi/symbol-keyword.png
 res/mdpi/symbol-var.png
