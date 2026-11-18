@@ -231,17 +231,23 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         return true;
     }
 
-    /// save to the same file
+    /// save to the same file; shows an error message if it fails
     bool save() {
-        return _content.save();
+        return reportSaveResult(_content.save(), filename);
     }
 
-    /// save to the same file
+    /// save to file fn; shows an error message if it fails
     override bool save(string fn) {
-        bool res = super.save(fn);
-        //if (res && projectSourceFile)
-        //    projectSourceFile.setFilename(filename);
-        return res;
+        return reportSaveResult(super.save(fn), fn);
+    }
+
+    /// shows an error message for a failed save (e.g. a full disk or a read-only file; #212); returns ok
+    protected bool reportSaveResult(bool ok, string fn) {
+        import std.path : baseName;
+        if (!ok && window)
+            window.showMessageBox(UIString.fromId("ERROR_CANNOT_SAVE_FILE"c) ~ " " ~ toUTF32(baseName(fn)),
+                    UIString.fromRaw(toUTF32(fn) ~ "\n\n"d ~ UIString.fromId("MSG_SAVE_FAILED"c).value));
+        return ok;
     }
 
     void insertCompletion(dstring completionText) {
@@ -270,7 +276,7 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         if (a) {
             switch (a.id) {
                 case IDEActions.FileSave:
-                    save();
+                    save(); // shows an error message if it fails
                     return true;
                 case IDEActions.InsertCompletion:
                     insertCompletion(a.label);

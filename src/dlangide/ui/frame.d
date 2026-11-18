@@ -605,8 +605,8 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
     /// save all modified documents (File -> Save all)
     void saveAllDocuments() {
         foreach (ed; allOpenedEditors()) {
-            if (ed.content.modified)
-                ed.save();
+            if (ed.content.modified && !ed.save())
+                return; // the error is shown; stop instead of showing one message per file
         }
     }
 
@@ -696,8 +696,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             [ACTION_SAVE, ACTION_SAVE_ALL, ACTION_DISCARD_CHANGES, ACTION_DISCARD_ALL, ACTION_CANCEL], 
             0, delegate(const Action result) {
                 if (result == StandardAction.Save) {
-                    // save and close
-                    ed.save();
+                    // save and close; if saving fails, the error is shown and nothing is closed (#212)
+                    if (!ed.save())
+                        return true;
                     askForUnsavedEdits(onConfirm);
                 } else if (result == StandardAction.DiscardChanges) {
                     // close, don't save
@@ -705,12 +706,15 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     closeAllDocuments();
                     onConfirm();
                 } else if (result == StandardAction.SaveAll) {
-                    ed.save();
+                    // a failed save keeps the editor modified: stop, or this loop would never end (#212)
+                    if (!ed.save())
+                        return true;
                     for(;;) {
                         DSourceEdit editor = hasUnsavedEdits();
                         if (!editor)
                             break;
-                        editor.save();
+                        if (!editor.save())
+                            return true;
                     }
                     closeAllDocuments();
                     onConfirm();
@@ -735,9 +739,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     [ACTION_SAVE, ACTION_DISCARD_CHANGES, ACTION_CANCEL], 
                     0, delegate(const Action result) {
                         if (result == StandardAction.Save) {
-                            // save and close
-                            d.save();
-                            closeTab(tabId);
+                            // save and close; keep the tab open if saving fails (the error is shown)
+                            if (d.save())
+                                closeTab(tabId);
                         } else if (result == StandardAction.DiscardChanges) {
                             // close, don't save
                             closeTab(tabId);
@@ -1227,7 +1231,8 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                         if (result.id == ACTION_SAVE.id) {
                             string oldfilename = ed.filename;
                             string filename = result.stringParam;
-                            ed.save(filename);
+                            if (!ed.save(filename))
+                                return; // the error is shown; the tab keeps the old file
                             if (oldfilename == filename)
                                 return;
                             renameTab(oldfilename, filename);
