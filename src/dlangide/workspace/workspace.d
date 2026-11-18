@@ -64,11 +64,25 @@ class Workspace : WorkspaceItem {
         _frame = frame;
     }
 
+    /// finds a source file by its full path, else by its path relative to a project (startup project first)
     ProjectSourceFile findSourceFile(string projectFileName, string fullFileName) {
-        foreach(p; _projects) {
-            ProjectSourceFile res = p.findSourceFile(projectFileName, fullFileName);
-            if (res)
-                return res;
+        // the full path first, in all projects: a relative path like source/app.d matches in every project that
+        // has such a file, so the first project used to win (debugger showed the wrong file, #340)
+        if (fullFileName.length) {
+            foreach(p; _projects) {
+                if (ProjectSourceFile res = p.findSourceFile(null, fullFileName))
+                    return res;
+            }
+        }
+        if (projectFileName.length) {
+            if (_startupProject) {
+                if (ProjectSourceFile res = _startupProject.findSourceFile(projectFileName, null))
+                    return res;
+            }
+            foreach(p; _projects) {
+                if (ProjectSourceFile res = p.findSourceFile(projectFileName, null))
+                    return res;
+            }
         }
         return null;
     }
@@ -96,7 +110,8 @@ class Workspace : WorkspaceItem {
             return;
         _startupProject = project;
         _settings.startupProjectName = toUTF8(project.name);
-        _frame.updateProjectConfigurations();
+        if (_frame) // null in unittests
+            _frame.updateProjectConfigurations();
     }
 
     /// Last opened files in workspace
@@ -383,3 +398,35 @@ class Workspace : WorkspaceItem {
 
 /// global workspace
 __gshared Workspace currentWorkspace;
+
+/// source files with the same relative path in two projects are found by their full path (#340)
+unittest {
+    import std.process : thisProcessID;
+    string dir = buildPath(tempDir, "dlangide-findsource-test-" ~ to!string(thisProcessID));
+    scope(exit) if (exists(dir)) rmdirRecurse(dir);
+    Project[] projects;
+    foreach (name; ["first", "second"]) {
+        mkdirRecurse(buildPath(dir, name, "source"));
+        std.file.write(buildPath(dir, name, "dub.json"), `{"name": "` ~ name ~ `"}`);
+        std.file.write(buildPath(dir, name, "source", "app.d"), "void main() {}\n");
+    }
+    auto ws = new Workspace(null, buildPath(dir, "test" ~ WORKSPACE_EXTENSION));
+    foreach (name; ["first", "second"]) {
+        auto p = new Project(ws, buildPath(dir, name, "dub.json"));
+        assert(p.load());
+        ws.addProject(p);
+        projects ~= p;
+    }
+    string second = buildPath(dir, "second", "source", "app.d");
+    string relative = buildPath("source", "app.d");
+    ProjectSourceFile f = ws.findSourceFile(relative, second);
+    assert(f && f.filename == second && f.project is projects[1]);
+    // only the relative path: the startup project first
+    ws.startupProject = projects[1];
+    f = ws.findSourceFile(relative, null);
+    assert(f && f.project is projects[1]);
+    ws.startupProject = projects[0];
+    f = ws.findSourceFile(relative, null);
+    assert(f && f.project is projects[0]);
+    assert(ws.findSourceFile(buildPath("source", "missing.d"), buildPath(dir, "missing.d")) is null);
+}
