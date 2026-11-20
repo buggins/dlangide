@@ -191,7 +191,9 @@ class SearchWidget : VerticalLayout {
         _layout.layoutWidth = FILL_PARENT;
 
         _findText = new EditLine();
-        _findText.padding(Rect(5,4,50,4));
+        // 5,4,50,4 px at 100% in points, so it scales with the screen DPI (#547); console builds keep their values
+        _findText.padding(WIDGET_STYLE_CONSOLE ? Rect(5, 4, 50, 4)
+                : Rect(makePointSize(4), makePointSize(3), makePointSize(38), makePointSize(3)));
         _findText.layoutWidth = FILL_PARENT;
         // to handle Enter key press in editor
         _findText.enterKey = delegate (EditWidgetBase editor) {

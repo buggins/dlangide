@@ -61,12 +61,12 @@ class NewFileDlg : Dialog {
             content = parseML(q{
                     VerticalLayout {
                     id: vlayout
-                        padding: Rect { 5, 5, 5, 5 }
+                        padding: Rect { 4pt, 4pt, 4pt, 4pt }
                     layoutWidth: fill; layoutHeight: fill
                         HorizontalLayout {
                         layoutWidth: fill; layoutHeight: fill
                             VerticalLayout {
-                            margins: 5
+                            margins: 4pt
                                     layoutWidth: 50%; layoutHeight: fill
                                 TextWidget { text: OPTION_PROJECT_TEMPLATE }
                                 StringListWidget { 
@@ -75,7 +75,7 @@ class NewFileDlg : Dialog {
                                 }
                             }
                             VerticalLayout {
-                            margins: 5
+                            margins: 4pt
                                     layoutWidth: 50%; layoutHeight: fill
                                 TextWidget { text: OPTION_TEMPLATE_DESCR }
                                 EditBox { 
@@ -85,7 +85,7 @@ class NewFileDlg : Dialog {
                             }
                         }
                         TableLayout {
-                        margins: 5
+                        margins: 4pt
                                 colCount: 2
                                     layoutWidth: fill; layoutHeight: wrap
                             TextWidget { text: NAME }

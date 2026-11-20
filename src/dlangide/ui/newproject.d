@@ -56,12 +56,12 @@ class NewProjectDlg : Dialog {
             content = parseML(q{
                     VerticalLayout {
                         id: vlayout
-                        padding: Rect { 5, 5, 5, 5 }
+                        padding: Rect { 4pt, 4pt, 4pt, 4pt }
                         layoutWidth: fill; layoutHeight: fill
                         HorizontalLayout {
                             layoutWidth: fill; layoutHeight: fill
                             VerticalLayout {
-                                margins: 5
+                                margins: 4pt
                                 layoutWidth: 25%; layoutHeight: fill
                                 TextWidget { text: OPTION_PROJECT_TEMPLATE }
                                 StringListWidget {
@@ -70,7 +70,7 @@ class NewProjectDlg : Dialog {
                                 }
                             }
                             VerticalLayout {
-                                margins: 5
+                                margins: 4pt
                                 layoutWidth: 40%; layoutHeight: fill
                                 TextWidget { text: OPTION_TEMPLATE_DESCR }
                                 EditBox {
@@ -80,7 +80,7 @@ class NewProjectDlg : Dialog {
                             }
                             VerticalLayout {
                                 layoutWidth: 35%; layoutHeight: fill
-                                margins: 5
+                                margins: 4pt
                                 TextWidget { text: OPTION_DIRECTORY_LAYOUT }
                                 EditBox {
                                     id: directoryLayout; readOnly: true
@@ -89,7 +89,7 @@ class NewProjectDlg : Dialog {
                             }
                         }
                         TableLayout {
-                            margins: 5
+                            margins: 4pt
                             colCount: 2
                             layoutWidth: fill; layoutHeight: wrap
                             TextWidget { text: "" }

@@ -116,10 +116,10 @@ class WorkspacePanel : DockWindow {
 
     override protected Widget createBodyWidget() {
         _tree = new TreeWidget("wstree", ScrollBarMode.Auto, ScrollBarMode.Auto);
-        _tree.layoutHeight(FILL_PARENT).layoutHeight(FILL_PARENT);
+        _tree.layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT);
         _tree.selectionChange = &onTreeItemSelected;
         _tree.expandedChange.connect(&onTreeExpandedStateChange);
-        _tree.fontSize = 16;
+        _tree.fontSize = WIDGET_STYLE_CONSOLE ? 16 : makePointSize(12); // 16 px at 100% (#547)
         _tree.noCollapseForSingleTopLevelItem = true;
         _tree.popupMenu = &onTreeItemPopupMenu;
         _tree.items.markDefs = [
