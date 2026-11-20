@@ -145,7 +145,9 @@ struct SearchMatchList {
     SearchMatch[] matches;
 }
 
-class SearchWidget : TabWidget {
+/// Search In Files panel: a tab of the log panel. Not a TabWidget: it removed the tab parts, and since dlangui 0.13
+/// TabWidget.addChild() added the panel's children through the destroyed tab control (#549, buggins/dlangui#1016)
+class SearchWidget : VerticalLayout {
     HorizontalLayout _layout;
     EditLine _findText;
     SearchLogWidget _resultLog;
@@ -178,12 +180,12 @@ class SearchWidget : TabWidget {
     this(string ID, IDEFrame frame) {
         super(ID);
         _frame = frame;
-        
+        // the look and focus behavior it had as a TabWidget
+        styleId = STYLE_TAB_WIDGET;
+        focusGroup = true;
+
         layoutHeight(FILL_PARENT);
-        
-        //Remove title, more button
-        removeAllChildren();
-        
+
         _layout = new HorizontalLayout();
         _layout.addChild(new TextWidget("FindLabel", "Find: "d));
         _layout.layoutWidth = FILL_PARENT;
