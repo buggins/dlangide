@@ -28,7 +28,7 @@ class HomeScreen : ScrollWidget {
         _content = new HorizontalLayout("HOME_SCREEN_BODY");
         _content.layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT);
         VerticalLayout _column1 = new VerticalLayout();
-        int pad = BACKEND_GUI ? 20 : 1;
+        int pad = BACKEND_GUI ? makePointSize(15) : 1; // 20 px at 100%, scales with the screen DPI (#547)
         _column1.layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT).padding(Rect(pad, pad, pad, pad));
         VerticalLayout _column2 = new VerticalLayout();
         _column2.layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT).padding(Rect(pad, pad, pad, pad));

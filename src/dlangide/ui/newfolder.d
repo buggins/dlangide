@@ -50,10 +50,10 @@ class NewFolderDialog : Dialog {
             content = parseML(q{
                     VerticalLayout {
                     id: vlayout
-                        padding: Rect { 5, 5, 5, 5 }
+                        padding: Rect { 4pt, 4pt, 4pt, 4pt }
                     layoutWidth: fill; layoutHeight: wrap
                         TableLayout {
-                        margins: 5
+                        margins: 4pt
                                 colCount: 2
                                     layoutWidth: fill; layoutHeight: wrap
                             TextWidget { text: NAME }
