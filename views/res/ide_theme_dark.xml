@@ -36,6 +36,22 @@
     <drawable id="run-build" value="run-build_dark"/>
     <drawable id="run-build-clean" value="run-build-clean_dark"/>
     <drawable id="run-rdmd" value="run-rdmd_dark"/>
+    <drawable id="symbol-alias" value="symbol-alias_dark"/>
+    <drawable id="symbol-array" value="symbol-array_dark"/>
+    <drawable id="symbol-class" value="symbol-class_dark"/>
+    <drawable id="symbol-enum" value="symbol-enum_dark"/>
+    <drawable id="symbol-function" value="symbol-function_dark"/>
+    <drawable id="symbol-interface" value="symbol-interface_dark"/>
+    <drawable id="symbol-keyword" value="symbol-keyword_dark"/>
+    <drawable id="symbol-membervar" value="symbol-membervar_dark"/>
+    <drawable id="symbol-mixintemplate" value="symbol-mixintemplate_dark"/>
+    <drawable id="symbol-module" value="symbol-module_dark"/>
+    <drawable id="symbol-other" value="symbol-other_dark"/>
+    <drawable id="symbol-package" value="symbol-package_dark"/>
+    <drawable id="symbol-struct" value="symbol-struct_dark"/>
+    <drawable id="symbol-template" value="symbol-template_dark"/>
+    <drawable id="symbol-union" value="symbol-union_dark"/>
+    <drawable id="symbol-var" value="symbol-var_dark"/>
 
     <!-- as in ide_theme_default: this theme is based on dlangui's theme_dark, not on ide_theme_default -->
     <style id="TERMINAL" parent="EDIT_BOX_NO_FRAME"

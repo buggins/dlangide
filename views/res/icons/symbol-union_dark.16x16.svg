@@ -1,0 +1,5 @@
+<!-- Based on nodes/class_dark.svg of the IntelliJ Platform icons, Copyright 2000-2022 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license. Changed for DlangIDE: the letter C replaced with U (drawn as a 1px stroke). -->
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+<circle cx="8" cy="8" r="6.5" fill="#25324D" stroke="#548AF7"/>
+<path d="M5.5 4.5V8.5C5.5 10 6.6 11 8 11C9.4 11 10.5 10 10.5 8.5V4.5" stroke="#548AF7"/>
+</svg>
