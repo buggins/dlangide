@@ -22,8 +22,8 @@
     <color id="build_log_deprecation_color" value="#F05080"/>
 
     <drawable id="btn_check" value="btn_check_dark"/>
-    <drawable id="link-with-editor" value="link-with-editor_dark"/>
     <!-- SVG icons in views/res/icons (#526) -->
+    <drawable id="link-with-editor" value="link-with-editor_dark"/>
     <drawable id="debug-start" value="debug-start_dark"/>
     <drawable id="debug-continue" value="debug-continue_dark"/>
     <drawable id="run-project" value="run-project_dark"/>
@@ -52,6 +52,13 @@
     <drawable id="symbol-template" value="symbol-template_dark"/>
     <drawable id="symbol-union" value="symbol-union_dark"/>
     <drawable id="symbol-var" value="symbol-var_dark"/>
+    <drawable id="project-d" value="project-d_dark"/>
+    <drawable id="project-d-dependency" value="project-d-dependency_dark"/>
+    <drawable id="project-development" value="project-development_dark"/>
+    <drawable id="text-d" value="text-d_dark"/>
+    <drawable id="text-dml" value="text-dml_dark"/>
+    <drawable id="text-json" value="text-json_dark"/>
+    <drawable id="text-other" value="text-other_dark"/>
 
     <!-- as in ide_theme_default: this theme is based on dlangui's theme_dark, not on ide_theme_default -->
     <style id="TERMINAL" parent="EDIT_BOX_NO_FRAME"

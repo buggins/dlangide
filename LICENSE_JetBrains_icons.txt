@@ -1,19 +1,11 @@
 JetBrains IntelliJ Platform icons
 
-The following PNG icons are icons of the IntelliJ Platform ("new UI" icons,
-platform/icons/src/expui in the intellij-community repository), rendered
-from SVG to PNG (16x16 px, and 32x32 px for hdpi) and renamed to DlangIDE
-resource names. Files ending in _dark are the icons' dark theme variants.
-
-    views/res/mdpi/link-with-editor.png          general/locate.svg
-    views/res/hdpi/hdpi_link-with-editor.png     general/locate.svg
-    views/res/mdpi/link-with-editor_dark.png     general/locate_dark.svg
-    views/res/hdpi/hdpi_link-with-editor_dark.png  general/locate_dark.svg
-
-The following SVG icons are the same icons, used unchanged (they keep the
-license comment; the copies embedded in the executable don't, it is dropped
-at compile time); only the file names were changed to DlangIDE resource ids
-with a size suffix:
+The following SVG icons are icons of the IntelliJ Platform ("new UI" icons,
+platform/icons/src/expui in the intellij-community repository), used
+unchanged (they keep the license comment; the copies embedded in the
+executable don't, it is dropped at compile time); only the file names were
+changed to DlangIDE resource ids with a size suffix. Files ending in _dark
+are the icons' dark theme variants.
 
     views/res/icons/debug-start.16x16.svg               run/debug.svg
     views/res/icons/debug-start_dark.16x16.svg          run/debug_dark.svg
@@ -67,15 +59,30 @@ with a size suffix:
     views/res/icons/symbol-template_dark.16x16.svg      nodes/template_dark.svg
     views/res/icons/symbol-var.16x16.svg                nodes/variable.svg
     views/res/icons/symbol-var_dark.16x16.svg           nodes/variable_dark.svg
+    views/res/icons/link-with-editor.16x16.svg          general/locate.svg
+    views/res/icons/link-with-editor_dark.16x16.svg     general/locate_dark.svg
+    views/res/icons/project-d-dependency.16x16.svg      nodes/libraryFolder.svg
+    views/res/icons/project-d-dependency_dark.16x16.svg nodes/libraryFolder_dark.svg
+    views/res/icons/project-development.16x16.svg       nodes/ideaProject.svg
+    views/res/icons/project-development_dark.16x16.svg  nodes/ideaProject_dark.svg
+    views/res/icons/text-dml.16x16.svg                  fileTypes/html.svg
+    views/res/icons/text-dml_dark.16x16.svg             fileTypes/html_dark.svg
+    views/res/icons/text-json.16x16.svg                 fileTypes/json.svg
+    views/res/icons/text-json_dark.16x16.svg            fileTypes/json_dark.svg
+    views/res/icons/text-other.16x16.svg                fileTypes/anyType.svg
+    views/res/icons/text-other_dark.16x16.svg           fileTypes/anyType_dark.svg
 
-The following SVG icons are modified versions of nodes/class.svg and
-nodes/class_dark.svg (the letter C replaced with S or U, drawn for
-DlangIDE; each file says so in its comment):
+The following SVG icons are modified versions of IntelliJ Platform icons,
+changed for DlangIDE (each file says so in its comment):
 
-    views/res/icons/symbol-struct.16x16.svg       nodes/class.svg, letter S
-    views/res/icons/symbol-struct_dark.16x16.svg  nodes/class_dark.svg, letter S
-    views/res/icons/symbol-union.16x16.svg        nodes/class.svg, letter U
-    views/res/icons/symbol-union_dark.16x16.svg   nodes/class_dark.svg, letter U
+    views/res/icons/symbol-struct.16x16.svg             nodes/class.svg, letter C replaced with S
+    views/res/icons/symbol-struct_dark.16x16.svg        nodes/class_dark.svg, letter C replaced with S
+    views/res/icons/symbol-union.16x16.svg              nodes/class.svg, letter C replaced with U
+    views/res/icons/symbol-union_dark.16x16.svg         nodes/class_dark.svg, letter C replaced with U
+    views/res/icons/text-d.16x16.svg                    fileTypes/c.svg, letter C replaced with D, D colors
+    views/res/icons/text-d_dark.16x16.svg               fileTypes/c_dark.svg, letter C replaced with D, D colors
+    views/res/icons/project-d.16x16.svg                 nodes/module.svg, badge in D colors
+    views/res/icons/project-d_dark.16x16.svg            nodes/module_dark.svg, badge in D colors
 
 Source: https://github.com/JetBrains/intellij-community
 License: Apache License, Version 2.0 (text below)
