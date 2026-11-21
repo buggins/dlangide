@@ -63,6 +63,10 @@
     <!-- as in ide_theme_default: this theme is based on dlangui's theme_dark, not on ide_theme_default -->
     <style id="TERMINAL" parent="EDIT_BOX_NO_FRAME"
     />
+    <!-- documentation popup (Show documentation): a popup with the tooltip background, not the one of menus (#561) -->
+    <style id="DOC_POPUP" parent="POPUP_MENU"
+        backgroundImageId="tooltip_background_dark"
+    />
 
     <style id="HOME_SCREEN_TITLE"
         fontSize="160%"
