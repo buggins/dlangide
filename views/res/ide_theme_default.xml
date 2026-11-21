@@ -23,6 +23,10 @@
     <drawable id="btn_check" value="btn_check"/>
     <style id="TERMINAL" parent="EDIT_BOX_NO_FRAME"
     />
+    <!-- documentation popup (Show documentation): a popup with the tooltip background, not the one of menus (#561) -->
+    <style id="DOC_POPUP" parent="POPUP_MENU"
+        backgroundImageId="tooltip_background"
+    />
 
     <style id="TOOLBAR_HOST"
         backgroundImageId="#eceffa"

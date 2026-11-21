@@ -542,7 +542,7 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         }
         // TODO
         EditBox widget = new EditBox("docComments");
-        widget.styleId = "POPUP_MENU";
+        widget.styleId = "DOC_POPUP";
         widget.readOnly = true;
         //TextWidget widget = new TextWidget("docComments");
         //widget.maxLines = lineCount * 2;

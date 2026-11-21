@@ -22,6 +22,9 @@
 
     <style id="TERMINAL" parent="EDIT_BOX_NO_FRAME"
     />
+    <!-- documentation popup (Show documentation), as POPUP_MENU in console builds (#561) -->
+    <style id="DOC_POPUP" parent="POPUP_MENU"
+    />
 
     <drawable id="document-open" value="{'Opn' #00FF00}"/>
     <drawable id="document-save" value="{'Sav' #FFFF00}"/>
