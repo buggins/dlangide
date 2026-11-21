@@ -23,6 +23,19 @@
 
     <drawable id="btn_check" value="btn_check_dark"/>
     <drawable id="link-with-editor" value="link-with-editor_dark"/>
+    <!-- SVG icons in views/res/icons (#526) -->
+    <drawable id="debug-start" value="debug-start_dark"/>
+    <drawable id="debug-continue" value="debug-continue_dark"/>
+    <drawable id="run-project" value="run-project_dark"/>
+    <drawable id="debug-pause" value="debug-pause_dark"/>
+    <drawable id="debug-stop" value="debug-stop_dark"/>
+    <drawable id="debug-restart" value="debug-restart_dark"/>
+    <drawable id="debug-step-into" value="debug-step-into_dark"/>
+    <drawable id="debug-step-over" value="debug-step-over_dark"/>
+    <drawable id="debug-step-out" value="debug-step-out_dark"/>
+    <drawable id="run-build" value="run-build_dark"/>
+    <drawable id="run-build-clean" value="run-build-clean_dark"/>
+    <drawable id="run-rdmd" value="run-rdmd_dark"/>
 
     <!-- as in ide_theme_default: this theme is based on dlangui's theme_dark, not on ide_theme_default -->
     <style id="TERMINAL" parent="EDIT_BOX_NO_FRAME"

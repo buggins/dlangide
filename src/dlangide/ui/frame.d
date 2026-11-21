@@ -312,7 +312,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         else
             _logPanel.logLine("MSG_STARTING_DEBUGGER"c ~ " " ~ executableFileName);
         const auto status =  program.isDebugger ?  UIString.fromId("DEBUGGING"c).value : UIString.fromId("RUNNING"c).value;
-        _statusLine.setBackgroundOperationStatus("debug-run", status);
+        _statusLine.setBackgroundOperationStatus("debug-start", status);
         string[string] env;
         program.setExecutableParams(executableFileName, args, workingDirectory, env);
         if (!tty.empty) {
