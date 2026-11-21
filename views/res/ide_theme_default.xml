@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <theme id="ide_theme_default" parent="theme_default"
-        fontFace="Verdana,Arial,DejaVu Sans"
+        fontFace="Segoe UI,Helvetica Neue,Verdana,Arial,DejaVu Sans,Liberation Sans,Helvetica,Roboto,Droid Sans"
         fontFamily="SansSerif"
 	>
     <color id="edit_background" value="#FFFFFF"/>
