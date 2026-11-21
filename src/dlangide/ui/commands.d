@@ -131,9 +131,9 @@ const Action ACTION_RUN_WITH_RDMD = new Action(IDEActions.RunWithRdmd, "MENU_BUI
 const Action ACTION_PROJECT_BUILD_CONFIGURATION = new Action(IDEActions.BuildSetConfiguration, "MENU_BUILD_CONFIGURATION"c).disableByDefault();
 const Action ACTION_PROJECT_CONFIGURATION = new Action(IDEActions.ProjectSetConfiguration, "MENU_PROJECT_CONFIGURATION"c).disableByDefault();
 
-const Action ACTION_DEBUG_START = new Action(IDEActions.DebugStart, "MENU_DEBUG_START_DEBUGGING"c, "debug-run"c, KeyCode.F5, KeyFlag.Control | KeyFlag.Shift);
+const Action ACTION_DEBUG_START = new Action(IDEActions.DebugStart, "MENU_DEBUG_START_DEBUGGING"c, "debug-start"c, KeyCode.F5, KeyFlag.Control | KeyFlag.Shift);
 const Action ACTION_DEBUG_START_NO_DEBUG = new Action(IDEActions.DebugStartNoDebug, "MENU_DEBUG_START_NO_DEBUGGING"c, "run-project"c, KeyCode.F5, KeyFlag.Control);
-const Action ACTION_DEBUG_CONTINUE = new Action(IDEActions.DebugContinue, "MENU_DEBUG_CONTINUE"c, "debug-run");
+const Action ACTION_DEBUG_CONTINUE = new Action(IDEActions.DebugContinue, "MENU_DEBUG_CONTINUE"c, "debug-continue");
 const Action ACTION_DEBUG_STOP = (new Action(IDEActions.DebugStop, "MENU_DEBUG_STOP"c, "debug-stop")).disableByDefault();
 const Action ACTION_DEBUG_PAUSE = (new Action(IDEActions.DebugPause, "MENU_DEBUG_PAUSE"c, "debug-pause")).disableByDefault();
 const Action ACTION_DEBUG_RESTART = new Action(IDEActions.DebugRestart, "MENU_DEBUG_RESTART"c, "debug-restart"c, KeyCode.F5, 0);
