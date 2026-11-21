@@ -69,14 +69,8 @@ extern (C) int UIAppMain(string[] args) {
     FontManager.minAnitialiasedFontSize = 0;
     /// set font gamma (1.0 is neutral, < 1.0 makes glyphs lighter, >1.0 makes glyphs bolder)
     FontManager.fontGamma = 1.0;
-    version (NO_OPENGL) {
-        FontManager.subpixelRenderingMode = SubpixelRenderingMode.BGR;
-    } else {
-        FontManager.subpixelRenderingMode = SubpixelRenderingMode.None;
-    }
+    // subpixel rendering: dlangui's default follows the system settings (ClearType on Windows, #529)
     version (USE_OPENGL) {
-        // you can turn on subpixel font rendering (ClearType) here
-        FontManager.subpixelRenderingMode = SubpixelRenderingMode.None; //
         FontManager.fontGamma = 0.9;
         FontManager.hintingMode = HintingMode.AutoHint;
     } else {

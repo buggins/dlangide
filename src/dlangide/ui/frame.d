@@ -1841,7 +1841,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         string oldFontFace = currentTheme.fontFace;
         string newFontFace = settings.uiFontFace;
         if (newFontFace == "Default")
-            newFontFace = "Helvetica Neue,Verdana,Arial,DejaVu Sans,Liberation Sans,Helvetica,Roboto,Droid Sans";
+            newFontFace = "Segoe UI,Helvetica Neue,Verdana,Arial,DejaVu Sans,Liberation Sans,Helvetica,Roboto,Droid Sans"; // as dlangui's theme_default (#529)
         int oldFontSize = currentTheme.fontSize;
         if (oldFontFace != newFontFace) {
             currentTheme.fontFace = newFontFace;
