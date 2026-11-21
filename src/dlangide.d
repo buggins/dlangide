@@ -96,7 +96,7 @@ extern (C) int UIAppMain(string[] args) {
         Window window = Platform.instance.createWindow("Dlang IDE", null, WindowFlag.Resizable, 900, 730);
         static if (BACKEND_GUI) {
             // set window icon
-            window.windowIcon = drawableCache.getImage("dlangui-logo1");
+            window.windowIconId = "dlangide-logo"; // SVG: rendered in each size the desktop uses (#560)
         }
 
         //Widget w = new Widget();
