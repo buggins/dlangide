@@ -24,3 +24,7 @@ screenshots.html
 *.userprefs
 
 \.dlangidews\.wssettings
+
+# files DlangIDE creates when the sample project is opened (#581)
+workspaces/tetris/tetris.dlangidews*
+workspaces/tetris/tetris.settings

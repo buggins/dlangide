@@ -39,7 +39,7 @@ struct FigureCell {
 /// Single figure shape for some particular orientation - 4 cells
 struct FigureShape {
     /// by cell index 0..3
-    FigureCell[4] cells; 
+    FigureCell[4] cells;
     /// lowest y coordinate - to show next figure above cup
     int extent;
     /// upper y coordinate - initial Y offset to place figure to cup
@@ -69,65 +69,70 @@ struct Figure {
 }
 
 /// All shapes
-const Figure[7] FIGURES = [
-    // FIGURE1 ===========================================
-    //   ##     ####
-    // 00##       00##
-    // ##       
-    Figure([FigureShape([1, 0], [ 1, 1], [0,-1]),
-            FigureShape([0, 1], [-1, 1], [1, 0]),
-            FigureShape([1, 0], [ 1, 1], [0,-1]),
-            FigureShape([0, 1], [-1, 1], [1, 0])]),
-    // FIGURE2 ===========================================
-    // ##         ####
-    // 00##     ##00
-    //   ##     
-    Figure([FigureShape([1, 0], [0, 1], [ 1,-1]),
-            FigureShape([0, 1], [1, 1], [-1, 0]),
-            FigureShape([1, 0], [0, 1], [ 1,-1]),
-            FigureShape([0, 1], [1, 1], [-1, 0])]),
-    // FIGURE3 ===========================================
-    //            ##        ##      ####
-    // ##00##     00    ##00##        00
-    // ##         ####                ##
-    Figure([FigureShape([1, 0], [-1, 0], [-1,-1]),
-            FigureShape([0, 1], [ 0,-1], [ 1,-1]),
-            FigureShape([1, 0], [-1, 0], [ 1, 1]),
-            FigureShape([0, 1], [-1, 1], [ 0,-1])]),
-    // FIGURE4 ===========================================
-    //            ####  ##            ##
-    // ##00##     00    ##00##        00
-    //     ##     ##                ####
-    Figure([FigureShape([1, 0], [-1, 0], [ 1,-1]),
-            FigureShape([0, 1], [ 0,-1], [ 1, 1]),
-            FigureShape([1, 0], [-1, 0], [-1, 1]),
-            FigureShape([0, 1], [-1,-1], [ 0,-1])]),
-    // FIGURE5 ===========================================
-    //   ####
-    //   00##
-    //       
-    Figure([FigureShape([1, 0], [0, 1], [ 1, 1]),
-            FigureShape([1, 0], [0, 1], [ 1, 1]),
-            FigureShape([1, 0], [0, 1], [ 1, 1]),
-            FigureShape([1, 0], [0, 1], [ 1, 1])]),
-    // FIGURE6 ===========================================
-    //   ##
-    //   ##
-    //   00     ##00####
-    //   ##    
-    Figure([FigureShape([0, 1], [0, 2], [ 0,-1]),
-            FigureShape([1, 0], [2, 0], [-1, 0]),
-            FigureShape([0, 1], [0, 2], [ 0,-1]),
-            FigureShape([1, 0], [2, 0], [-1, 0])]),
-    // FIGURE7 ===========================================
-    //            ##      ##          ##
-    // ##00##     00##  ##00##      ##00
-    //   ##       ##                  ##
-    Figure([FigureShape([1, 0], [-1,0], [ 0,-1]),
-            FigureShape([0, 1], [0,-1], [ 1, 0]),
-            FigureShape([1, 0], [-1,0], [ 0, 1]),
-            FigureShape([0, 1], [0,-1], [-1, 0])]),
-];
+__gshared const Figure[7] FIGURES;
+
+// workaround for dmd 2.0.67 - move initialization to a module constructor
+shared static this() {
+    FIGURES = [
+        // FIGURE1 ===========================================
+        //   ##     ####
+        // 00##       00##
+        // ##
+        Figure([FigureShape([1, 0], [ 1, 1], [0,-1]),
+                FigureShape([0, 1], [-1, 1], [1, 0]),
+                FigureShape([1, 0], [ 1, 1], [0,-1]),
+                FigureShape([0, 1], [-1, 1], [1, 0])]),
+        // FIGURE2 ===========================================
+        // ##         ####
+        // 00##     ##00
+        //   ##
+        Figure([FigureShape([1, 0], [0, 1], [ 1,-1]),
+                FigureShape([0, 1], [1, 1], [-1, 0]),
+                FigureShape([1, 0], [0, 1], [ 1,-1]),
+                FigureShape([0, 1], [1, 1], [-1, 0])]),
+        // FIGURE3 ===========================================
+        //            ##        ##      ####
+        // ##00##     00    ##00##        00
+        // ##         ####                ##
+        Figure([FigureShape([1, 0], [-1, 0], [-1,-1]),
+                FigureShape([0, 1], [ 0,-1], [ 1,-1]),
+                FigureShape([1, 0], [-1, 0], [ 1, 1]),
+                FigureShape([0, 1], [-1, 1], [ 0,-1])]),
+        // FIGURE4 ===========================================
+        //            ####  ##            ##
+        // ##00##     00    ##00##        00
+        //     ##     ##                ####
+        Figure([FigureShape([1, 0], [-1, 0], [ 1,-1]),
+                FigureShape([0, 1], [ 0,-1], [ 1, 1]),
+                FigureShape([1, 0], [-1, 0], [-1, 1]),
+                FigureShape([0, 1], [-1,-1], [ 0,-1])]),
+        // FIGURE5 ===========================================
+        //   ####
+        //   00##
+        //
+        Figure([FigureShape([1, 0], [0, 1], [ 1, 1]),
+                FigureShape([1, 0], [0, 1], [ 1, 1]),
+                FigureShape([1, 0], [0, 1], [ 1, 1]),
+                FigureShape([1, 0], [0, 1], [ 1, 1])]),
+        // FIGURE6 ===========================================
+        //   ##
+        //   ##
+        //   00     ##00####
+        //   ##
+        Figure([FigureShape([0, 1], [0, 2], [ 0,-1]),
+                FigureShape([1, 0], [2, 0], [-1, 0]),
+                FigureShape([0, 1], [0, 2], [ 0,-1]),
+                FigureShape([1, 0], [2, 0], [-1, 0])]),
+        // FIGURE7 ===========================================
+        //            ##      ##          ##
+        // ##00##     00##  ##00##      ##00
+        //   ##       ##                  ##
+        Figure([FigureShape([1, 0], [-1,0], [ 0,-1]),
+                FigureShape([0, 1], [0,-1], [ 1, 0]),
+                FigureShape([1, 0], [-1,0], [ 0, 1]),
+                FigureShape([0, 1], [0,-1], [-1, 0])]),
+    ];
+}
 
 /// colors for different figure types
 const uint[7] _figureColors = [0xC00000, 0x80A000, 0xA00080, 0x0000C0, 0x800020, 0x408000, 0x204000];
@@ -171,7 +176,7 @@ struct FigurePosition {
     }
 }
 
-/** 
+/**
 Cup content
 
 Coordinates are relative to bottom left corner.
@@ -185,11 +190,11 @@ struct Cup {
 
     private FigurePosition _currentFigure;
     /// current figure index, orientation, position
-    @property ref FigurePosition currentFigure() { return _currentFigure; }
+    @property ref FigurePosition currentFigure() return { return _currentFigure; }
 
     private FigurePosition _nextFigure;
     /// next figure
-    @property ref FigurePosition nextFigure() { return _nextFigure; }
+    @property ref FigurePosition nextFigure() return { return _nextFigure; }
 
     /// returns number of columns
     @property int cols() {
@@ -200,7 +205,7 @@ struct Cup {
         return _rows;
     }
     /// inits empty cup of specified size
-    void init(int cols, int rows) {
+    void initialize(int cols, int rows) {
         _cols = cols;
         _rows = rows;
         _cup = new int[_cols * _rows];
@@ -363,9 +368,52 @@ struct Cup {
         return 1;
     }
 
+    /// 1 == next cell below is occupied, 2 == one empty cell
+    private int distanceToOccupiedCellBelowForGroup(int group) {
+        int minDistanceFound = 0;
+        for (int y = 0; y < _rows; y++) {
+            for (int x = 0; x < _cols; x++) {
+                if (cellGroup(x, y) != group)
+                    continue;
+                if (y == 0)
+                    return 1; // right below
+                if (this[x, y - 1] != EMPTY) // check only lowest cell of group
+                    continue;
+                int dist = 0;
+                for (int d = 1; y - d >= 0; d++) {
+                    if (this[x, y - d] == EMPTY) {
+                        dist = d + 1;
+                    } else {
+                        // reached non-empty cell
+                        if (cellGroup(x, y - d) == group) {
+                            // non-empty cell of the same group after empty space - ignore
+                            dist = 0;
+                        }
+                        break;
+                    }
+                }
+                if (dist > 0) {
+                    // found some empty space below
+                    if (minDistanceFound == 0 || minDistanceFound > dist)
+                        minDistanceFound = dist;
+                }
+            }
+        }
+        if (minDistanceFound == 0)
+            return 1;
+        return minDistanceFound;
+    }
+
     /// mark cells in _cellGroups[] matrix which can fall down (value > 0 is distance to fall)
     bool markFallingCells() {
-        _cellGroups = new int[_cols * _rows];
+        // clear cellGroups matrix
+        if (_cellGroups.length != _cols * _rows) {
+            _cellGroups = new int[_cols * _rows];
+        } else {
+            foreach(ref cell; _cellGroups)
+                cell = 0;
+        }
+        // find and mark all groups
         int groupId = 1;
         for (int y = 0; y < _rows; y++) {
             for (int x = 0; x < _cols; x++) {
@@ -377,18 +425,23 @@ struct Cup {
         }
         // check space below each group - can it fall down?
         int[] spaceBelowGroup = new int[groupId];
-        for (int y = 0; y < _rows; y++) {
-            for (int x = 0; x < _cols; x++) {
-                int group = cellGroup(x, y);
-                if (group > 0) {
-                    if (y == 0)
-                        spaceBelowGroup[group] = 1;
-                    else if (this[x, y - 1] != EMPTY && cellGroup(x, y - 1) != group)
-                        spaceBelowGroup[group] = 1;
-                    else if (this[x, y - 1] == EMPTY) {
-                        int dist = distanceToOccupiedCellBelow(x, y);
-                        if (spaceBelowGroup[group] == 0 || spaceBelowGroup[group] > dist)
-                            spaceBelowGroup[group] = dist;
+        static if (true) {
+            for (int i = 1; i < groupId; i++)
+                spaceBelowGroup[i] = distanceToOccupiedCellBelowForGroup(i);
+        } else {
+            for (int y = 0; y < _rows; y++) {
+                for (int x = 0; x < _cols; x++) {
+                    int group = cellGroup(x, y);
+                    if (group > 0) {
+                        if (y == 0)
+                            spaceBelowGroup[group] = 1;
+                        else if (this[x, y - 1] != EMPTY && cellGroup(x, y - 1) != group)
+                            spaceBelowGroup[group] = 1;
+                        else if (this[x, y - 1] == EMPTY) {
+                            int dist = distanceToOccupiedCellBelow(x, y);
+                            if (spaceBelowGroup[group] == 0 || spaceBelowGroup[group] > dist)
+                                spaceBelowGroup[group] = dist;
+                        }
                     }
                 }
             }
