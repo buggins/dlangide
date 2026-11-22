@@ -40,7 +40,7 @@ class NewFileDlg : Dialog {
     string[] _sourcePaths;
     this(IDEFrame parent, Project currentProject, ProjectFolder folder) {
         super(UIString.fromId("OPTION_NEW_SOURCE_FILE"c), parent.window, 
-            DialogFlag.Modal | DialogFlag.Resizable | DialogFlag.Popup, 500, 400);
+            DialogFlag.Modal | DialogFlag.Resizable | userDialogPopupFlag, 500, 400);
         _ide = parent;
         this._project = currentProject;
         this._folder = folder;

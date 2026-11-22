@@ -29,7 +29,7 @@ class NewFolderDialog : Dialog {
     
     this(IDEFrame parent, Project currentProject, ProjectFolder folder) {
         super(UIString.fromId("MENU_FILE_NEW_DIRECTORY"c), parent.window, 
-            DialogFlag.Modal | DialogFlag.Popup, 800, 0);
+            DialogFlag.Modal | userDialogPopupFlag); // size: measured (#567)
         layoutWidth = FILL_PARENT;
         _ide = parent;
         this._project = currentProject;
@@ -56,7 +56,7 @@ class NewFolderDialog : Dialog {
                                 colCount: 2
                                     layoutWidth: fill; layoutHeight: wrap
                             TextWidget { text: NAME }
-                            EditLine { id: fileName; text: "newfolder"; layoutWidth: fill }
+                            EditLine { id: fileName; text: "newfolder"; layoutWidth: fill; minWidth: 150pt }
                             CheckBox { id: makePackage }
                             TextWidget { text: OPTION_MAKE_PACKAGE}
                         }

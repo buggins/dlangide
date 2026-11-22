@@ -39,7 +39,7 @@ class NewProjectDlg : Dialog {
 
     this(IDEFrame parent, bool newWorkspace, Workspace currentWorkspace, string dir) {
         super(newWorkspace ? UIString.fromId("OPTION_NEW_WORKSPACE"c) : UIString.fromId("OPTION_NEW_PROJECT"c), parent.window,
-              DialogFlag.Modal | DialogFlag.Resizable | DialogFlag.Popup, 500, 400);
+              DialogFlag.Modal | DialogFlag.Resizable | userDialogPopupFlag, 500, 400);
         _ide = parent;
         this._currentWorkspace = currentWorkspace;
         _newWorkspace = newWorkspace;

@@ -50,6 +50,11 @@ import std.path;
 //version is now stored in file views/VERSION
 immutable dstring DLANGIDE_VERSION = toUTF32(import("VERSION"));
 
+/// DialogFlag.Popup when DlangIDE's own dialogs are shown as popups in the main window (console build), else 0 (#567)
+@property uint userDialogPopupFlag() {
+    return Platform.instance.uiDialogDisplayMode & DialogDisplayMode.userDialogInPopup ? DialogFlag.Popup : 0;
+}
+
 bool isSupportedSourceTextFileFormat(string filename) {
     return (filename.endsWith(".d") || filename.endsWith(".di") || filename.endsWith(".dt") || filename.endsWith(".txt") || filename.endsWith(".cpp") || filename.endsWith(".h") || filename.endsWith(".c")
         || filename.endsWith(".json") || filename.endsWith(".sdl") || filename.endsWith(".dd") || filename.endsWith(".ddoc") || filename.endsWith(".xml") || filename.endsWith(".html")
