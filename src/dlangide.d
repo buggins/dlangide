@@ -101,6 +101,12 @@ extern (C) int UIAppMain(string[] args) {
         //pragma(msg, w.click.return_t, "", w.click.params_t);
 
         IDEFrame frame = new IDEFrame(window);
+        static if (BACKEND_GUI) {
+            // the smallest window size the IDE is usable at, without window scrollbars for the toolbar row (#573):
+            // dlangui limits a resizable window to the main widget's min size; in points, so it scales with the DPI
+            // (console builds measure in cells)
+            frame.minWidth(makePointSize(520)).minHeight(makePointSize(360));
+        }
 
         // Open project, if it specified in command line
         if (args.length > 1)

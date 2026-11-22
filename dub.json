@@ -14,7 +14,7 @@
     "dependencies": {
         "dlangui": {
             "repository": "git+https://github.com/buggins/dlangui.git",
-            "version": "9a5ce859152bfa6796ed667c9f7e680a058b06c2"
+            "version": "d88b9d715443b0fb00527a82eee7a79105d770d6"
         },
         "dcd": "~>0.19.4"
     },
