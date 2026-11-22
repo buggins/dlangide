@@ -664,6 +664,8 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         Point bestSize = _completionPopupMenu.fullContentSizeWithBorders();
         if (bestSize.y > space) {
             bestSize.y = space;
+            // the items scroll: the vertical scrollbar takes part of the width, which cut off the longest names (#579)
+            bestSize.x += _completionPopupMenu.scrollbarWidth;
         }
         if (bestSize.x > width * 3 / 4) {
             bestSize.x = width * 3 / 4;
@@ -806,6 +808,11 @@ class CompletionPopupMenu : PopupMenu {
         measure(2000.pointsToPixels, 2000.pointsToPixels);
         // measured size already includes padding and margins
         return Point(measuredWidth, measuredHeight);
+    }
+
+    /// width of the vertical scrollbar shown when the items don't fit the height, after fullContentSizeWithBorders (#579)
+    @property int scrollbarWidth() {
+        return _scrollbar ? _scrollbar.measuredWidth : 0;
     }
 
     MenuItem updateItems() {
