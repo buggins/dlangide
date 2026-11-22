@@ -28,6 +28,7 @@
 
     <drawable id="document-open" value="{'Opn' #00FF00}"/>
     <drawable id="document-save" value="{'Sav' #FFFF00}"/>
+    <drawable id="run-project" value="{'Run' #00FF00}"/>
     <drawable id="debug-start" value="{'►' #00FF00}"/>
     <drawable id="debug-continue" value="{'►' #00FF00}"/>
     <drawable id="run-build" value="{'B' #FFFF00}"/>
