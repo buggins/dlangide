@@ -36,7 +36,7 @@ OutputBaseFilename=dlangide-{#AppVersion}-windows-{#Arch}-setup
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
-SetupIconFile=..\views\res\mdpi\dlangui-shortcut1.ico
+SetupIconFile=dlangide.ico
 UninstallDisplayIcon={app}\dlangide.ico
 UninstallDisplayName=DlangIDE {#AppVersion}
 ChangesAssociations=yes
@@ -73,8 +73,9 @@ Name: "foldermenu"; Description: "{cm:FolderMenu}"; Flags: unchecked
 
 [Files]
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs
-; dlangide.exe has no icon resource: shortcuts, the uninstaller entry and the file type use this
-Source: "..\views\res\mdpi\dlangui-shortcut1.ico"; DestDir: "{app}"; DestName: "dlangide.ico"; Flags: ignoreversion
+; the icon of the shortcuts, the uninstaller entry and the file types; dlangide.exe has the same icon as a resource
+; (both made from views/res/dlangide-logo.32x32.svg by windows/makeicon.d)
+Source: "dlangide.ico"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{autoprograms}\DlangIDE"; Filename: "{app}\dlangide.exe"; IconFilename: "{app}\dlangide.ico"

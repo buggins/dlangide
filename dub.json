@@ -19,6 +19,8 @@
         "dcd": "~>0.19.4"
     },
 
+    "sourceFiles-windows": ["windows/dlangide.res"],
+
     "copyFiles-windows-x86_64": [
         "libs/windows/x86_64/mago-mi.exe",
         "libs/windows/x86_64/udis86.dll",
