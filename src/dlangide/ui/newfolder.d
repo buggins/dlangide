@@ -28,7 +28,7 @@ class NewFolderDialog : Dialog {
 
     
     this(IDEFrame parent, Project currentProject, ProjectFolder folder) {
-        super(UIString.fromId("OPTION_NEW_SOURCE_FILE"c), parent.window, 
+        super(UIString.fromId("MENU_FILE_NEW_DIRECTORY"c), parent.window, 
             DialogFlag.Modal | DialogFlag.Popup, 800, 0);
         layoutWidth = FILL_PARENT;
         _ide = parent;
