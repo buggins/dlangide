@@ -32,7 +32,6 @@ class NewFolderDialog : Dialog {
             DialogFlag.Modal | DialogFlag.Popup, 800, 0);
         layoutWidth = FILL_PARENT;
         _ide = parent;
-        _icon = "dlangide-logo";
         this._project = currentProject;
         this._folder = folder;
         if (folder){

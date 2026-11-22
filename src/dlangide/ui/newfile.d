@@ -42,7 +42,6 @@ class NewFileDlg : Dialog {
         super(UIString.fromId("OPTION_NEW_SOURCE_FILE"c), parent.window, 
             DialogFlag.Modal | DialogFlag.Resizable | DialogFlag.Popup, 500, 400);
         _ide = parent;
-        _icon = "dlangide-logo";
         this._project = currentProject;
         this._folder = folder;
         _location = folder ? folder.filename : currentProject.dir;
