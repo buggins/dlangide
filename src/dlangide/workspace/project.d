@@ -52,7 +52,8 @@ class ProjectItem {
     protected bool _readOnly;
     /// true for files of libraries (DUB packages and the standard library), which are opened read-only (#279)
     @property bool readOnly() {
-        return _readOnly || (_project && _project.isDependency) || (_parent && _parent.readOnly);
+        // files of DUB packages are read-only, except path dependencies: usually the user's own libraries (#559)
+        return _readOnly || (_project && _project.isDependency && !_project.isPathDependency) || (_parent && _parent.readOnly);
     }
     @property void readOnly(bool value) { _readOnly = value; }
 
@@ -380,6 +381,7 @@ class Project : WorkspaceItem {
     protected SettingsFile _projectFile;
     protected ProjectSettings _settingsFile;
     protected bool _isDependency;
+    protected bool _isPathDependency;
     protected bool _isSubproject;
     protected bool _isEmbeddedSubproject;
     protected dstring _baseProjectName;
@@ -443,6 +445,7 @@ class Project : WorkspaceItem {
         if (p) {
             _isSubproject = true;
             _isDependency = p._isDependency;
+            _isPathDependency = p._isPathDependency;
             _baseProjectName = p._originalName;
             _dependencyVersion = p._dependencyVersion;
         } else {
@@ -472,6 +475,10 @@ class Project : WorkspaceItem {
     }
 
     @property bool isDependency() { return _isDependency; }
+    /// a DUB path dependency (`{"path": "../lib"}`): shown with the DUB packages, but its files are editable (#559)
+    @property bool isPathDependency() { return _isPathDependency; }
+    /// ditto
+    @property void isPathDependency(bool value) { _isPathDependency = value; }
     @property string dependencyVersion() { return _dependencyVersion; }
 
     /// names of the DUB packages in the "dependencies" of the project file (a sub-package as its package name)
@@ -876,18 +883,22 @@ class Project : WorkspaceItem {
             _dependencies = newdeps;
             return false;
         }
-        string[string] versionMap = versions.strMap;
-        foreach(packageName, packageVersion; versionMap) {
-            string fn = finder.findPackage(packageName, packageVersion);
+        foreach(string packageName, ref Setting selection; versions) {
+            string packageVersion;
+            bool isPath;
+            string fn = findSelectedPackage(finder, _dir, packageName, selection, packageVersion, isPath);
             Log.d("dependency ", packageName, " ", packageVersion, " : ", fn ? fn : "NOT FOUND");
             if (fn) {
                 Project p = findDependencyProject(fn);
+                if (!p && _workspace)
+                    p = _workspace.findProjectInWorkspace(fn); // e.g. a path dependency that is a workspace project
                 if (p) {
                     Log.d("Found existing dependency project ", fn);
                     newdeps ~= p;
                     continue;
                 }
-                p = new Project(_workspace, fn, packageVersion);
+                p = new Project(_workspace, fn, dependencyVersionLabel(packageVersion));
+                p.isPathDependency = isPath;
                 if (p.load()) {
                     newdeps ~= p;
                     if (_workspace)
@@ -901,6 +912,52 @@ class Project : WorkspaceItem {
         _dependencies = newdeps;
         return true;
     }
+}
+
+/**
+    Package file of an entry of the "versions" object of dub.selections.json (#559), null if not found:
+    $(UL
+        $(LI `"name": "1.2.3"`: a package from the registry, in the DUB package cache)
+        $(LI `"name": {"path": "../lib"}`: a path dependency, relative to the project directory)
+        $(LI `"name": {"repository": "git+https://...", "version": "<commit>"}`: a repository dependency,
+            checked out into the DUB package cache under its version)
+    )
+    packageVersion is set to the version of the dependency, or the path as written; isPath is set for a path dependency.
+*/
+string findSelectedPackage(DubPackageFinder finder, string projectDir, string packageName, Setting selection,
+        out string packageVersion, out bool isPath) {
+    if (selection.isString) {
+        packageVersion = selection.str;
+        return packageVersion.length ? finder.findPackage(packageName, packageVersion) : null;
+    }
+    if (!selection.isObject)
+        return null;
+    string path = selection.getString("path");
+    if (path.length) {
+        packageVersion = path;
+        isPath = true;
+        string dir = isAbsolute(path) ? path : buildNormalizedPath(projectDir, path);
+        return dir.exists && dir.isDir ? DubPackageFinder.findPackageFile(absolutePath(dir)) : null;
+    }
+    packageVersion = selection.getString("version");
+    return packageVersion.length ? finder.findPackage(packageName, packageVersion) : null;
+}
+
+/// version of a dependency as shown (#559): a commit hash of a repository dependency is shortened to 8 characters
+string dependencyVersionLabel(string packageVersion) pure {
+    import std.ascii : isHexDigit;
+    if (packageVersion.length == 40 && packageVersion.all!isHexDigit)
+        return packageVersion[0 .. 8];
+    return packageVersion;
+}
+
+unittest {
+    assert(dependencyVersionLabel("3164e4f22e9b6e718e15799178bbc2f88751bf7e") == "3164e4f2");
+    assert(dependencyVersionLabel("1.2.3") == "1.2.3");
+    assert(dependencyVersionLabel("~master") == "~master");
+    assert(dependencyVersionLabel("../mylib") == "../mylib");
+    // not a full commit hash
+    assert(dependencyVersionLabel("3164e4f2") == "3164e4f2");
 }
 
 class DubPackageFinder {
@@ -1010,6 +1067,44 @@ unittest {
     finder.packageDirs = [p("missing"), p("old"), p("new")];
     assert(finder.findPackage("dlangui", "0.11.0") == p("new/dlangui/0.11.0/dlangui/dub.json"));
     assert(finder.findPackage("x11", "1.0.21") == p("old/x11-1.0.21/x11/package.json"));
+}
+
+// entries of dub.selections.json: registry versions, path and repository dependencies (#559)
+unittest {
+    import std.array : replace;
+    import std.conv : to;
+    string root = buildNormalizedPath(tempDir, "dlangide-selections-test-" ~ to!string(thisProcessID));
+    scope(exit) if (root.exists) rmdirRecurse(root);
+    string p(string s) { return buildNormalizedPath(root, s); }
+    void addPackage(string dir, string file) {
+        mkdirRecurse(p(dir));
+        std.file.write(buildNormalizedPath(p(dir), file), "{}");
+    }
+    addPackage("app", "dub.json");
+    addPackage("mylib", "dub.sdl");                                       // path dependency next to the project
+    addPackage("libs/other", "dub.json");                                 // path dependency, absolute path
+    addPackage("cache/inilike/1.2.3/inilike", "dub.json");               // registry package
+    addPackage("cache/dlangui/d88b9d715443b0fb00527a82eee7a79105d770d6/dlangui", "dub.json"); // repository
+    auto finder = new DubPackageFinder;
+    finder.packageDirs = [p("cache")];
+    Setting versions = new Setting();
+    versions.parseJSON(`{"inilike": "1.2.3", "mylib": {"path": "../mylib"}, "other": {"path": "` ~ p("libs/other").replace("\\", "/") ~ `"},
+        "dlangui": {"repository": "git+https://github.com/buggins/dlangui.git", "version": "d88b9d715443b0fb00527a82eee7a79105d770d6"},
+        "missinglib": {"path": "../missing"}, "missingpkg": "0.1.0", "empty": {}}`);
+    string ver;
+    bool isPath;
+    assert(findSelectedPackage(finder, p("app"), "inilike", versions["inilike"], ver, isPath) == p("cache/inilike/1.2.3/inilike/dub.json"));
+    assert(ver == "1.2.3" && !isPath);
+    assert(findSelectedPackage(finder, p("app"), "mylib", versions["mylib"], ver, isPath) == p("mylib/dub.sdl"));
+    assert(ver == "../mylib" && isPath);
+    assert(findSelectedPackage(finder, p("app"), "other", versions["other"], ver, isPath) == p("libs/other/dub.json"));
+    assert(isPath);
+    assert(findSelectedPackage(finder, p("app"), "dlangui", versions["dlangui"], ver, isPath)
+        == p("cache/dlangui/d88b9d715443b0fb00527a82eee7a79105d770d6/dlangui/dub.json"));
+    assert(ver == "d88b9d715443b0fb00527a82eee7a79105d770d6" && !isPath);
+    assert(findSelectedPackage(finder, p("app"), "missinglib", versions["missinglib"], ver, isPath) is null);
+    assert(findSelectedPackage(finder, p("app"), "missingpkg", versions["missingpkg"], ver, isPath) is null);
+    assert(findSelectedPackage(finder, p("app"), "empty", versions["empty"], ver, isPath) is null);
 }
 
 /// split command line into arguments: separated by whitespace, "..." and '...' group (quotes are removed),
