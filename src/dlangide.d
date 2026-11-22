@@ -59,6 +59,8 @@ extern (C) int UIAppMain(string[] args) {
     embeddedResourceList.addResources(embedResourcesFromList!("resources.list")());
 
     Platform.instance.uiTheme = "ide_theme_default";
+    // the icon of all windows: main window, dialogs, message boxes; SVG, rendered in each size the desktop uses (#560, #569)
+    Platform.instance.defaultWindowIcon = "dlangide-logo";
 
     // you can override default hinting mode here
     //FontManager.hintingMode = HintingMode.Light;
@@ -94,10 +96,6 @@ extern (C) int UIAppMain(string[] args) {
 
         // create window
         Window window = Platform.instance.createWindow("Dlang IDE", null, WindowFlag.Resizable, 900, 730);
-        static if (BACKEND_GUI) {
-            // set window icon
-            window.windowIconId = "dlangide-logo"; // SVG: rendered in each size the desktop uses (#560)
-        }
 
         //Widget w = new Widget();
         //pragma(msg, w.click.return_t, "", w.click.params_t);
