@@ -3,6 +3,7 @@ module gui;
 import model;
 
 import dlangui;
+import std.algorithm;
 
 /// game action codes
 enum TetrisAction : int {
@@ -21,25 +22,25 @@ const Action ACTION_FAST_DOWN   = (new Action(TetrisAction.FastDown,  KeyCode.SP
 const Action ACTION_PAUSE       = (new Action(TetrisAction.Pause,     KeyCode.ESCAPE)).addAccelerator(KeyCode.PAUSE).iconId("pause");
 const Action ACTION_LEVEL_UP    = (new Action(TetrisAction.LevelUp,   KeyCode.ADD)).addAccelerator(KeyCode.INS).iconId("levelup");
 
-const Action[] CUP_ACTIONS = [ACTION_PAUSE,     ACTION_ROTATE,      ACTION_LEVEL_UP, 
+const Action[] CUP_ACTIONS = [ACTION_PAUSE,     ACTION_ROTATE,      ACTION_LEVEL_UP,
                               ACTION_MOVE_LEFT, ACTION_FAST_DOWN,   ACTION_MOVE_RIGHT];
 
 /// about dialog
 Widget createAboutWidget()
 {
-	LinearLayout res = new VerticalLayout();
-	res.padding(Rect(10,10,10,10));
-	res.addChild(new TextWidget(null, "DLangUI Tetris demo app"d));
-	res.addChild(new TextWidget(null, "(C) Vadim Lopatin, 2014"d));
-	res.addChild(new TextWidget(null, "http://github.com/buggins/dlangui"d));
-	Button closeButton = new Button("close", "Close"d);
-	closeButton.click = delegate(Widget src) {
-		Log.i("Closing window");
-		res.window.close();
-		return true;
-	};
-	res.addChild(closeButton);
-	return res;
+    LinearLayout res = new VerticalLayout();
+    res.padding(Rect(10,10,10,10));
+    res.addChild(new TextWidget(null, "DLangUI Tetris demo app"d));
+    res.addChild(new TextWidget(null, "(C) Vadim Lopatin, 2014"d));
+    res.addChild(new TextWidget(null, "http://github.com/buggins/dlangui"d));
+    Button closeButton = new Button("close", "Close"d);
+    closeButton.click = delegate(Widget src) {
+        Log.i("Closing window");
+        res.window.close();
+        return true;
+    };
+    res.addChild(closeButton);
+    return res;
 }
 
 /// Cup States
@@ -89,7 +90,7 @@ class CupWidget : Widget {
 
     protected int _totalRowsDestroyed;
 
-    static const int[10] LEVEL_SPEED = [15000000, 10000000, 7000000, 6000000, 5000000, 4000000, 300000, 2000000, 1500000, 1000000];
+    static const int[10] LEVEL_SPEED = [15000000, 10000000, 7000000, 6000000, 5000000, 4000000, 3000000, 2000000, 1500000, 1000000];
 
     static const int RESERVED_ROWS = 5; // reserved for next figure
 
@@ -264,7 +265,7 @@ class CupWidget : Widget {
     /// start new game
     void newGame() {
         setLevel(1);
-        init(_cols, _rows);
+        initialize(_cols, _rows);
         _cup.dropNextFigure();
         setCupState(CupState.NewFigure);
         if (window && _gameOverPopup) {
@@ -278,8 +279,8 @@ class CupWidget : Widget {
     }
 
     /// init cup
-    void init(int cols, int rows) {
-        _cup.init(cols, rows);
+    void initialize(int cols, int rows) {
+        _cup.initialize(cols, rows);
         _cols = cols;
         _rows = rows;
     }
@@ -376,8 +377,8 @@ class CupWidget : Widget {
         super.onDraw(buf);
         Rect rc = _pos;
         applyMargins(rc);
-		auto saver = ClipRectSaver(buf, rc, alpha);
-	    applyPadding(rc);
+        auto _ = ClipRectSaver(buf, rc, alpha);
+        applyPadding(rc);
 
         Rect topLeft = cellRect(rc, 0, _rows - 1);
         Rect bottomRight = cellRect(rc, _cols - 1, 0);
@@ -439,8 +440,8 @@ class CupWidget : Widget {
 
     }
 
-	/// override to handle specific actions
-	override bool handleAction(const Action a) {
+    /// override to handle specific actions
+    override bool handleAction(const Action a) {
         switch (a.id) {
             case TetrisAction.MoveLeft:
                 _cup.move(-1, 0, falling);
@@ -465,7 +466,7 @@ class CupWidget : Widget {
                     return parent.handleAction(a);
                 return false;
         }
-	}
+    }
 
     /// Measure widget according to desired width and height constraints. (Step 1 of two phase layout).
     override void measure(int parentWidth, int parentHeight) {
@@ -483,7 +484,7 @@ class CupWidget : Widget {
 
         focusable = true;
 
-		acceleratorMap.add(CUP_ACTIONS);
+        acceleratorMap.add(CUP_ACTIONS);
     }
 }
 
@@ -493,12 +494,14 @@ class StatusWidget : VerticalLayout {
     private TextWidget _rowsDestroyed;
     private TextWidget _score;
     private CupWidget _cup;
+    private TextWidget[] _labels;
     void setCup(CupWidget cup) {
         _cup = cup;
     }
     TextWidget createTextWidget(dstring str, uint color) {
         TextWidget res = new TextWidget(null, str);
-        res.layoutWidth(FILL_PARENT).alignment(Align.Center).fontSize(25).textColor(color);
+        res.layoutWidth(FILL_PARENT).alignment(Align.Center).fontSize(18.pointsToPixels).textColor(color);
+        _labels ~= res;
         return res;
     }
 
@@ -507,10 +510,12 @@ class StatusWidget : VerticalLayout {
         res.colCount = 3;
         foreach(const Action a; CUP_ACTIONS) {
             ImageButton btn = new ImageButton(a);
+            btn.padding = 5.pointsToPixels;
             btn.focusable = false;
             res.addChild(btn);
         }
-        res.layoutWidth(WRAP_CONTENT).layoutHeight(WRAP_CONTENT).margins(Rect(10, 10, 10, 10)).alignment(Align.Center);
+        res.alignment = Align.Center;
+        res.layoutWidth(WRAP_CONTENT).layoutHeight(WRAP_CONTENT).margins(Rect(5.pointsToPixels, 5.pointsToPixels, 5.pointsToPixels, 5.pointsToPixels)).alignment(Align.Center);
         return res;
     }
 
@@ -527,7 +532,7 @@ class StatusWidget : VerticalLayout {
             Window wnd = Platform.instance.createWindow("About...", window, WindowFlag.Modal);
             wnd.mainWidget = createAboutWidget();
             wnd.show();
-            return true; 
+            return true;
         };
         addChild(image);
 
@@ -541,10 +546,26 @@ class StatusWidget : VerticalLayout {
         addChild(createTextWidget("Score:"d, 0x800000));
         addChild((_score = createTextWidget(""d, 0x800000)));
         addChild(new VSpacer());
-        addChild(createControls());
+        HorizontalLayout h = new HorizontalLayout();
+        h.layoutWidth = FILL_PARENT;
+        h.layoutHeight = FILL_PARENT;
+        h.addChild(new HSpacer());
+        h.addChild(createControls());
+        h.addChild(new HSpacer());
+        addChild(h);
         addChild(new VSpacer());
 
-        layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT).layoutWeight(2).padding(Rect(10, 10, 10, 10));
+        layoutWidth(FILL_PARENT).layoutHeight(FILL_PARENT).layoutWeight(2).padding(Rect(5.pointsToPixels, 5.pointsToPixels, 5.pointsToPixels, 5.pointsToPixels));
+    }
+
+    /// Measure widget according to desired width and height constraints. (Step 1 of two phase layout).
+    override void measure(int parentWidth, int parentHeight) {
+        import std.algorithm: min;
+        int minw = min(parentWidth, parentHeight);
+        foreach(lbl; _labels) {
+            lbl.fontSize = minw / 20;
+        }
+        super.measure(parentWidth, parentHeight);
     }
 
     void setLevel(int level) {
@@ -574,11 +595,13 @@ class CupPage : HorizontalLayout {
         _status = new StatusWidget();
         _cup = new CupWidget(_status);
         _status.setCup(_cup);
+        _cup.layoutWidth = 50.makePercentSize;
+        _status.layoutWidth = 50.makePercentSize;
         addChild(_cup);
         addChild(_status);
     }
     /// Measure widget according to desired width and height constraints. (Step 1 of two phase layout).
-    override void measure(int parentWidth, int parentHeight) { 
+    override void measure(int parentWidth, int parentHeight) {
         super.measure(parentWidth, parentHeight);
         /// fixed size
         measuredContent(parentWidth, parentHeight, 600, 550);
@@ -594,6 +617,6 @@ class GameWidget : FrameLayout {
         _cupPage = new CupPage();
         addChild(_cupPage);
         //showChild(_cupPage.id, Visibility.Invisible, true);
-		backgroundImageId = "tx_fabric.tiled";
+        backgroundImageId = "tx_fabric.tiled";
     }
 }
