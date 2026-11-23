@@ -439,9 +439,13 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         }
         _wsPanel.setFileMark(source.id, FileMark.Unsaved, modified);
         if (!modified) {
-            // saved: the file exists again
-            if (DSourceEdit ed = cast(DSourceEdit)source)
+            // saved (or changes undone): the file exists again
+            if (DSourceEdit ed = cast(DSourceEdit)source) {
                 ed.hideMessage(DELETED_FILE_MESSAGE);
+                // the saved file has U+FFFD instead of the invalid bytes (not on undo to the loaded state)
+                if (!ed.content.invalidCharCount)
+                    ed.hideMessage(INVALID_CHARS_MESSAGE);
+            }
             _deletedFileKept.remove(source.id);
         }
     }
@@ -511,6 +515,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     editor.readOnly = true;
                     editor.showMessage("library-read-only", UIString.fromId("MSG_LIBRARY_FILE_READ_ONLY"c).value);
                 }
+                showInvalidCharsMessage(editor);
                 _tabs.selectTab(index, true);
                 if( filename.endsWith(".d") || filename.endsWith(".di") )
                     editor.editorTool = new DEditorTool(this);
@@ -531,6 +536,28 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         }
         requestLayout();
         return true;
+    }
+
+    /// id of the editor message bar shown when a file was loaded with invalid characters (#532)
+    enum INVALID_CHARS_MESSAGE = "invalid-chars";
+
+    /// warns that invalid characters (byte sequences) were replaced by U+FFFD when the file of the editor was
+    /// loaded (#532): saving writes U+FFFD instead of the original bytes
+    protected void showInvalidCharsMessage(DSourceEdit editor) {
+        import std.array : replace;
+        uint count = editor.content.invalidCharCount;
+        if (!count)
+            return;
+        dstring position;
+        auto positions = editor.content.invalidCharPositions;
+        if (positions.length)
+            position = ", "d ~ UIString.fromId("MSG_INVALID_CHARS_FIRST_AT"c).value
+                .replace("{line}"d, to!dstring(positions[0].line)).replace("{column}"d, to!dstring(positions[0].pos));
+        dstring text = UIString.fromId("MSG_INVALID_CHARS_REPLACED"c).value
+            .replace("{count}"d, to!dstring(count)).replace("{position}"d, position);
+        editor.showMessage(INVALID_CHARS_MESSAGE, text, EditorMessageKind.Warning, null,
+            EditorPanelPosition.Top, true).dismissOnEscape = true;
+        _logPanel.logLine(toUTF32(editor.filename) ~ ": "d ~ text);
     }
 
     void showWorkspaceExplorer() {
