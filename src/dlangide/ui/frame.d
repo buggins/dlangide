@@ -24,6 +24,7 @@ import dlangide.ui.newfile;
 import dlangide.ui.newfolder;
 import dlangide.ui.newproject;
 import dlangide.ui.dsourceedit;
+import dlangide.ui.messages;
 import dlangide.ui.homescreen;
 import dlangide.ui.settings;
 import dlangide.ui.debuggerui;
@@ -113,6 +114,10 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         window.onCanClose = &onCanClose;
         window.onClose = &onWindowClose;
         applySettings(_settings);
+        // after applySettings: the messages are translated when written, in the UI language from the settings
+        _logPanel.logLine(trMsg("MSG_IDE_STARTED"));
+        _logPanel.logLine(trMsg("MSG_HINT_OPEN_PROJECT"));
+        dumpCompilerPaths();
         caretHistory = new CaretHistory;
     }
 
@@ -129,7 +134,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
     /// stop current program execution
     void stopExecution() {
         if (_execution) {
-            _logPanel.logLine("Stopping program execution");
+            _logPanel.logLine(trMsg("MSG_STOPPING_PROGRAM"));
             Log.d("Stopping execution");
             _execution.stop();
             //destroy(_execution);
@@ -160,21 +165,22 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                 // TODO: update state
                 switch(status) {
                     case ExecutionStatus.Error:
-                        string msg = "Cannot run program " ~ process.executableFile;
+                        string error;
                         if (auto noDebug = cast(ProgramExecutionNoDebug)process)
-                            if (noDebug.errorMessage.length)
-                                msg ~= ": " ~ noDebug.errorMessage;
-                        _logPanel.logLine(msg);
+                            error = noDebug.errorMessage;
+                        _logPanel.logLine(error.length
+                            ? trMsg("MSG_CANNOT_RUN_PROGRAM_ERROR", "file", process.executableFile, "error", error)
+                            : trMsg("MSG_CANNOT_RUN_PROGRAM", "file", process.executableFile));
                         _logPanel.activateLogTab();
                         break;
                     case ExecutionStatus.Finished:
-                        _logPanel.logLine("Program " ~ process.executableFile ~ " finished with exit code " ~ to!string(exitCode));
+                        _logPanel.logLine(trMsg("MSG_PROGRAM_EXIT_CODE", "file", process.executableFile, "code", exitCode));
                         break;
                     case ExecutionStatus.Killed:
-                        _logPanel.logLine("Program " ~ process.executableFile ~ " is killed");
+                        _logPanel.logLine(trMsg("MSG_PROGRAM_KILLED", "file", process.executableFile));
                         break;
                     default:
-                        _logPanel.logLine("Program " ~ process.executableFile ~ " is finished");
+                        _logPanel.logLine(trMsg("MSG_PROGRAM_FINISHED", "file", process.executableFile));
                         break;
                 }
                 _statusLine.setBackgroundOperationStatus(null, null);
@@ -212,17 +218,17 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         _debugHandler = null;
         switch(status) {
             case ExecutionStatus.Error:
-                _logPanel.logLine("Cannot run program " ~ process.executableFile);
+                _logPanel.logLine(trMsg("MSG_CANNOT_RUN_PROGRAM", "file", process.executableFile));
                 _logPanel.activateLogTab();
                 break;
             case ExecutionStatus.Finished:
-                _logPanel.logLine("Program " ~ process.executableFile ~ " finished with exit code " ~ to!string(exitCode));
+                _logPanel.logLine(trMsg("MSG_PROGRAM_EXIT_CODE", "file", process.executableFile, "code", exitCode));
                 break;
             case ExecutionStatus.Killed:
-                _logPanel.logLine("Program " ~ process.executableFile ~ " is killed");
+                _logPanel.logLine(trMsg("MSG_PROGRAM_KILLED", "file", process.executableFile));
                 break;
             default:
-                _logPanel.logLine("Program " ~ process.executableFile ~ " is finished");
+                _logPanel.logLine(trMsg("MSG_PROGRAM_FINISHED", "file", process.executableFile));
                 break;
         }
         _statusLine.setBackgroundOperationStatus(null, null);
@@ -359,8 +365,8 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             }
             args ~= sourceFileName;
         }
-        _logPanel.logLine("Starting " ~ sourceFileName ~ " with rdmd");
-        _statusLine.setBackgroundOperationStatus("run-rdmd", "running..."d);
+        _logPanel.logLine(trMsg("MSG_STARTING_RDMD", "file", sourceFileName));
+        _statusLine.setBackgroundOperationStatus("run-rdmd", UIString.fromId("RUNNING"c).value);
         program.setExecutableParams(rdmdExecutable, args, workingDirectory, null);
         // run in the internal terminal (Output panel) like Run project; external terminal only if there is none
         string tty = _logPanel.terminalDeviceName;
@@ -703,7 +709,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                                 // not StandardAction.Close, so that the bar stays if closing is cancelled
                                 new Action(IDEActions.WindowCloseDocument, "ACTION_CLOSE"c),
                             ]);
-                        _logPanel.logLine("File was deleted on disk, kept open with unsaved changes: " ~ ed.id);
+                        _logPanel.logLine(trMsg("MSG_FILE_DELETED_KEPT_OPEN", "file", ed.id));
                     }
                 } else {
                     closeTab(ed.id);
@@ -861,8 +867,6 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
 
         _logPanel = new OutputPanel("output");
         _logPanel.compilerLogIssueClickHandler = &onCompilerLogIssueClick;
-        _logPanel.appendText(null, "DlangIDE is started\nHINT: Try to open some DUB project\n"d);
-        dumpCompilerPaths();
 
         _dockHost.addDockedWindow(_logPanel);
 
@@ -875,14 +879,14 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         string dmdPath = findExecutablePath("dmd");
         string ldcPath = findExecutablePath("ldc2");
         string gdcPath = findExecutablePath("gdc");
-        _logPanel.appendText(null, dubPath ? ("dub path: "d ~ toUTF32(dubPath) ~ "\n"d) : ("dub is not found! cannot build projects without DUB\n"d));
-        _logPanel.appendText(null, rdmdPath ? ("rdmd path: "d ~ toUTF32(rdmdPath) ~ "\n"d) : ("rdmd is not found!\n"d));
-        _logPanel.appendText(null, dmdPath ? ("dmd path: "d ~ toUTF32(dmdPath) ~ "\n"d) : ("dmd compiler is not found!\n"d));
-        dumpCompilerPath("dmd", dmdPath);
-        _logPanel.appendText(null, ldcPath ? ("ldc path: "d ~ toUTF32(ldcPath) ~ "\n"d) : ("ldc compiler is not found!\n"d));
-        dumpCompilerPath("ldc", ldcPath);
-        _logPanel.appendText(null, gdcPath ? ("gdc path: "d ~ toUTF32(gdcPath) ~ "\n"d) : ("gdc compiler is not found!\n"d));
-        dumpCompilerPath("gdc", gdcPath);
+        _logPanel.logLine(dubPath ? trMsg("MSG_TOOL_PATH", "tool", "dub", "path", dubPath) : trMsg("MSG_DUB_NOT_FOUND"));
+        _logPanel.logLine(rdmdPath ? trMsg("MSG_TOOL_PATH", "tool", "rdmd", "path", rdmdPath)
+            : trMsg("MSG_TOOL_NOT_FOUND", "tool", "rdmd"));
+        foreach (c; [["dmd", dmdPath], ["ldc", ldcPath], ["gdc", gdcPath]]) {
+            _logPanel.logLine(c[1] ? trMsg("MSG_TOOL_PATH", "tool", c[0], "path", c[1])
+                : trMsg("MSG_COMPILER_NOT_FOUND", "tool", c[0]));
+            dumpCompilerPath(c[0], c[1]);
+        }
     }
     private void dumpCompilerPath(string compilerName, string compiler) {
         if (!compiler)
@@ -891,7 +895,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             string[] imports = compilerImportPathsCache.getImportPathsFor(compiler);
             if (imports.length > 0) {
                 Log.d(compilerName, " imports:", imports);
-                _logPanel.appendText(null, to!dstring(compilerName) ~ " imports:\n"d);
+                _logPanel.logLine(trMsg("MSG_COMPILER_IMPORTS", "tool", compilerName));
                 foreach(s; imports)
                     _logPanel.appendText(null, "    "d ~ to!dstring(s) ~ "\n"d);
             }
@@ -1900,11 +1904,11 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
 
     private bool loadProject(Project project) {
         if (!project.load()) {
-            _logPanel.logLine("Cannot read project " ~ project.filename);
+            _logPanel.logLine(trMsg("MSG_CANNOT_READ_PROJECT", "file", project.filename));
             window.showMessageBox(UIString.fromId("ERROR_OPEN_PROJECT"c).value, UIString.fromId("ERROR_OPENING_PROJECT"c).value ~ toUTF32(project.filename));
             return false;
         }
-        _logPanel.logLine(toUTF32("Project file " ~ project.filename ~  " is opened ok"));
+        _logPanel.logLine(trMsg("MSG_PROJECT_OPENED", "file", project.filename));
         
         warmUpImportPaths(project);
         return true;
@@ -1924,7 +1928,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         {
             // a file deleted since the last session is not an error (#495): no message box, a line in the log
             if (!exists(filename) || !isFile(filename)) {
-                _logPanel.logLine("File not found, not reopened: " ~ filename);
+                _logPanel.logLine(trMsg("MSG_FILE_NOT_REOPENED", "file", filename));
                 continue;
             }
             kept ~= files[i];
@@ -2009,7 +2013,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                 if (filenameCmp(ws, preferred) == 0)
                     res = ws;
             if (workspaces.length > 1)
-                _logPanel.logLine("Several workspace files in " ~ dir ~ ", opening " ~ baseName(res));
+                _logPanel.logLine(trMsg("MSG_SEVERAL_WORKSPACES", "dir", dir, "file", baseName(res)));
             return res;
         }
         foreach (name; ["dub.json", "dub.sdl", "package.json"]) {
@@ -2026,7 +2030,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         if (exists(filename) && isDir(filename)) {
             string found = findWorkspaceOrProjectInDir(filename);
             if (!found) {
-                _logPanel.logLine("No DlangIDE workspace or DUB project file in " ~ filename);
+                _logPanel.logLine(trMsg("MSG_NO_WS_OR_PROJECT_IN_DIR", "dir", filename));
                 window.showMessageBox(UIString.fromId("ERROR_INVALID_WORKSPACE_FILE"c), UIString.fromId("ERROR_NO_WS_OR_PROJECT_IN_DIR"c));
                 return;
             }
@@ -2055,7 +2059,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             if (currentWorkspace) {
                 Project existing = currentWorkspace.findProject(project.filename);
                 if (existing) {
-                    _logPanel.logLine("Project is already in workspace"d);
+                    _logPanel.logLine(trMsg("MSG_PROJECT_ALREADY_OPENED"));
                     window.showMessageBox(UIString.fromId("MSG_OPEN_PROJECT"c), UIString.fromId("MSG_PROJECT_ALREADY_OPENED"c));
                     return;
                 }
@@ -2083,30 +2087,30 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                 if (exists(defWsFile) && isFile(defWsFile)) {
                     Workspace ws = new Workspace(this);
                     if (ws.load(defWsFile) && workspaceHasProject(ws, project.filename)) {
-                        _logPanel.logLine("Opening existing workspace " ~ defWsFile);
+                        _logPanel.logLine(trMsg("MSG_OPENING_WORKSPACE", "file", defWsFile));
                         openLoadedWorkspace(ws, defWsFile);
                         return;
                     }
-                    _logPanel.logLine("Workspace " ~ defWsFile ~ " doesn't contain this project; creating a new one");
+                    _logPanel.logLine(trMsg("MSG_WORKSPACE_WITHOUT_PROJECT", "file", defWsFile));
                 }
                 // new workspace file
                 createNewWorkspaceForExistingProject(project);
             }
         } else {
-            _logPanel.logLine("File is not recognized as DlangIDE project or workspace file");
+            _logPanel.logLine(trMsg("MSG_NOT_WS_OR_PROJECT_FILE"));
             window.showMessageBox(UIString.fromId("ERROR_INVALID_WORKSPACE_FILE"c), UIString.fromId("ERROR_INVALID_WS_OR_PROJECT_FILE"c));
         }
     }
 
     void updateTreeGraph() {
-        _logPanel.logLine("Refreshing workspace");
+        _logPanel.logLine(trMsg("MSG_REFRESHING_WORKSPACE"));
         _wsPanel.reloadItems();
         closeRemovedDocuments();
     }
 
     void createNewWorkspaceForExistingProject(Project project) {
         string defWsFile = project.defWorkspaceFile;
-        _logPanel.logLine("Creating new workspace " ~ defWsFile);
+        _logPanel.logLine(trMsg("MSG_CREATING_WORKSPACE", "file", defWsFile));
         // new ws
         Workspace ws = new Workspace(this);
         ws.name = project.name;
@@ -2118,7 +2122,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         loadProject(project);
         ws.save(defWsFile);
         setWorkspace(ws);
-        _logPanel.logLine("Done");
+        _logPanel.logLine(trMsg("MSG_DONE"));
     }
 
     //bool loadWorkspace(string path) {
@@ -2185,13 +2189,13 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
 
     void buildProject(BuildOperation buildOp, Project project, BuildResultListener listener = null) {
         if (!currentWorkspace) {
-            _logPanel.logLine("No workspace is opened");
+            _logPanel.logLine(trMsg("MSG_NO_WORKSPACE_OPENED"));
             return;
         }
         if (!project)
             project = currentWorkspace.startupProject;
         if (!project) {
-            _logPanel.logLine("No project is opened");
+            _logPanel.logLine(trMsg("MSG_NO_PROJECT_OPENED"));
             return;
         }
         _logPanel.activateLogTab();
@@ -2222,7 +2226,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             if (exeFile.exists && exeFile.isFile) {
                 if (!canWrite(exeFile)) {
                     _logPanel.clear();
-                    _logPanel.logLine("Executable file is in use. Stop runing application before build.");
+                    _logPanel.logLine(trMsg("MSG_EXECUTABLE_IN_USE"));
                     handleBuildError(-5, project);
                     return;
                 }

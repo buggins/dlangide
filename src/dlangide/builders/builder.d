@@ -4,6 +4,7 @@ import dlangui.core.logger;
 import dlangide.workspace.project;
 import dlangide.workspace.workspace;
 import dlangide.ui.outputpanel;
+import dlangide.ui.messages;
 import dlangide.builders.extprocess;
 import dlangui.widgets.appframe;
 import std.algorithm;
@@ -200,11 +201,10 @@ class Builder : BackgroundOperationWatcher {
                 }
             }
             
-            auto text = "Running (in " ~ dir ~ "): " ~ program ~ " " ~ params.join(' ') ~ "\n";
-            _box.writeText(to!dstring(text));
+            _box.writeText(trMsg("MSG_BUILDER_RUNNING", "dir", dir, "command", program ~ " " ~ params.join(' ')) ~ "\n"d);
             state = _extprocess.run(program, params, dir, _box, null);
             if (state != ExternalProcessState.Running) {
-                _box.writeText("Failed to run builder tool\n"d);
+                _box.writeText(trMsg("MSG_BUILDER_FAILED") ~ "\n"d);
                 _finished = true;
                 destroy(_extprocess);
                 _extprocess = null;
@@ -214,7 +214,7 @@ class Builder : BackgroundOperationWatcher {
         state = _extprocess.poll();
         if (state == ExternalProcessState.Stopped) {
             _exitCode = _extprocess.result;
-            _box.writeText("Builder finished with result "d ~ to!dstring(_extprocess.result) ~ "\n"d);
+            _box.writeText(trMsg("MSG_BUILDER_FINISHED", "code", _extprocess.result) ~ "\n"d);
             _finished = true;
             return;
         }
