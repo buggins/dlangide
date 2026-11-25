@@ -502,8 +502,8 @@ extern (C) int UIAppMain(string[] args) {
     };
     // show message box with content of editors
     window.mainWidget.childById!Button("btnOk").click = delegate(Widget w) {
-        window.showMessageBox(UIString.fromId("MSG_OK_BUTTON"c),
-                              UIString.fromId("EDITOR_CONTENT"c) ~ "\nEdit1: "d ~ edit1.text ~ "\nEdit2: "d ~ edit2.text);
+        window.showMessageBox(UIString.fromRaw("Ok button pressed"d),
+                              UIString.fromRaw("Editors content\nEdit1: "d ~ edit1.text ~ "\nEdit2: "d ~ edit2.text));
         return true;
     };
 
@@ -519,7 +519,7 @@ extern (C) int UIAppMain(string[] args) {
 immutable string DUB_JSON_DLANGUI_HELLOWORLD = q{
 {
     "dependencies": {
-        "dlangui": "~>0.13.1"
+        "dlangui": "~>0.22.0"
     }
 }
 
