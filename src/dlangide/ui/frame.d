@@ -313,9 +313,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                 externalConsoleExecutable = _settings.terminalExecutable;
         }
         if (!program.isDebugger)
-            _logPanel.logLine("MSG_STARTING"c ~ " " ~ executableFileName);
+            _logPanel.logLine(UIString.fromId("MSG_STARTING"c).value ~ " "d ~ toUTF32(executableFileName));
         else
-            _logPanel.logLine("MSG_STARTING_DEBUGGER"c ~ " " ~ executableFileName);
+            _logPanel.logLine(UIString.fromId("MSG_STARTING_DEBUGGER"c).value ~ " "d ~ toUTF32(executableFileName));
         const auto status =  program.isDebugger ?  UIString.fromId("DEBUGGING"c).value : UIString.fromId("RUNNING"c).value;
         _statusLine.setBackgroundOperationStatus("debug-start", status);
         string[string] env;
