@@ -14,7 +14,7 @@
     "versions": ["EmbedStandardResources", "ForceLogs"],
 
     "dependencies": {
-        "dlangui": {"repository": "git+https://github.com/buggins/dlangui.git", "version": "ec6ccc27b98a4601f425c8a0881b96e765a66a8f"}
+        "dlangui": {"repository": "git+https://github.com/buggins/dlangui.git", "version": "d0195a310c434c278afbf154c8f53e1ffebdfaa3"}
     },
 
     "configurations": [
