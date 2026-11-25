@@ -1,7 +1,7 @@
 #!/usr/bin/env dub
 /+ dub.sdl:
     name "makeicon"
-    dependency "dlangui" repository="git+https://github.com/buggins/dlangui.git" version="d0195a310c434c278afbf154c8f53e1ffebdfaa3"
+    dependency "dlangui" version="~>0.22.0"
     subConfiguration "dlangui" "minimal"
 +/
 /**

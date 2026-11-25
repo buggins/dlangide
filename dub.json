@@ -12,10 +12,7 @@
     "stringImportPaths": ["views"],
 
     "dependencies": {
-        "dlangui": {
-            "repository": "git+https://github.com/buggins/dlangui.git",
-            "version": "d0195a310c434c278afbf154c8f53e1ffebdfaa3"
-        },
+        "dlangui": "~>0.22.0",
         "dcd": "~>0.19.4"
     },
 
