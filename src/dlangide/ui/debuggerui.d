@@ -6,6 +6,7 @@ import dlangui.widgets.docks;
 import dlangide.workspace.project;
 import dlangide.workspace.workspace;
 import dlangide.ui.frame;
+import dlangide.ui.messages;
 import dlangide.ui.commands;
 import dlangide.ui.dsourceedit;
 import dlangide.ui.stackpanel;
@@ -70,8 +71,8 @@ class DebuggerUIHandler : DebuggerCallback, StackFrameSelectedHandler {
 
     /// debugger is started and loaded program, you can set breakpoints at this time
     void onProgramLoaded(bool successful, bool debugInfoLoaded) {
-        _ide.logPanel.logLine("Program is loaded");
-        _ide.statusLine.setStatusText("Loaded"d);
+        _ide.logPanel.logLine(trMsg("MSG_PROGRAM_LOADED"));
+        _ide.statusLine.setStatusText(trMsg("MSG_STATUS_LOADED"));
         switchToDebugPerspective();
         // TODO: check succes status and debug info
         if (_breakpoints.length) {
@@ -111,20 +112,20 @@ class DebuggerUIHandler : DebuggerCallback, StackFrameSelectedHandler {
         Log.d("onDebugState: ", state, " reason=", reason);
         _state = state;
         if (state == DebuggingState.stopped) {
-            _ide.logPanel.logLine("Program is stopped");
-            _ide.statusLine.setStatusText("Stopped"d);
+            _ide.logPanel.logLine(trMsg("MSG_PROGRAM_STOPPED"));
+            _ide.statusLine.setStatusText(trMsg("MSG_STATUS_STOPPED"));
             _debugger.stop();
         } else if (state == DebuggingState.running) {
             //_ide.logPanel.logLine("Program is started");
-            _ide.statusLine.setStatusText("Running"d);
+            _ide.statusLine.setStatusText(trMsg("MSG_STATUS_RUNNING"));
             _ide.window.update();
         } else if (state == DebuggingState.paused) {
             updateLocation(location);
             //_ide.logPanel.logLine("Program is paused.");
             if (reason == StateChangeReason.exception)
-                _ide.statusLine.setStatusText("Signal received"d);
+                _ide.statusLine.setStatusText(trMsg("MSG_STATUS_SIGNAL"));
             else
-                _ide.statusLine.setStatusText("Paused"d);
+                _ide.statusLine.setStatusText(trMsg("MSG_STATUS_PAUSED"));
             _ide.window.update();
         }
     }
