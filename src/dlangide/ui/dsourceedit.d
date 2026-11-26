@@ -683,7 +683,10 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         _completionPopup.setFocus();
         _completionPopup.popupClosed = delegate(PopupWidget source) {
             setFocus();
-            _completionPopup = null;
+            if (source is _completionPopup) {
+                _completionPopup = null;
+                _completionPopupMenu = null; // destroyed with the popup
+            }
         };
         _completionPopup.flags = PopupFlags.CloseOnClickOutside;
 
@@ -774,10 +777,31 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         return false;
     }
 
+    /// set when Ctrl+Space or Alt+Space accepted a completion: the Text event of that key is not typed (#605)
+    protected bool _skipKeyText;
+
+    /// called by the completion popup when a key accepts a suggestion: the space the key types (or the non-breaking
+    /// space some layouts give for AltGr+Space) is dropped, so that e.g. a '.' typed next follows the name directly.
+    /// Only a space Text event before the next other event: some backends send none (X11 for Ctrl+Space), and then
+    /// a key typed before Space is released must still be typed
+    void skipTextOfCurrentKey(bool skip = true) {
+        _skipKeyText = skip;
+    }
+
+    /// true while the completion popup is shown
+    @property bool completionPopupShown() {
+        return _completionPopup !is null;
+    }
+
     protected uint _lastKeyDownCode;
     protected uint _periodKeyCode;
     /// handle keys: support autocompletion after . press with delay
     override bool onKeyEvent(KeyEvent event) {
+        if (_skipKeyText) {
+            _skipKeyText = false;
+            if (event.action == KeyAction.Text && isSpaceText(event.text))
+                return true;
+        }
         // doc comments / call tips popup doesn't take focus: close it on Escape, at the end of the call,
         // or when the caret moves to another line
         if (_docsPopup) {
@@ -822,6 +846,16 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
 /// returns true if character is valid ident character
 bool isIdentChar(dchar ch) {
     return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') || ch == '_';
+}
+
+/// true for the text of a typed space: ' ' or a non-breaking space (AltGr+Space in some layouts) (#605)
+bool isSpaceText(dstring text) {
+    return text.length == 1 && (text[0] == ' ' || text[0] == '\u00A0');
+}
+
+unittest {
+    assert(isSpaceText(" "d) && isSpaceText("\u00A0"d));
+    assert(!isSpaceText(""d) && !isSpaceText("."d) && !isSpaceText("  "d) && !isSpaceText("\t"d));
 }
 
 /// returns true if all characters are valid ident chars
@@ -947,9 +981,20 @@ class CompletionPopupMenu : PopupMenu {
         res.updateActionState(_editor);
         return res;
     }
+    /// accept the selected suggestion, if there is one; this closes and destroys the popup
+    private void acceptSelected() {
+        if (_selectedItemIndex >= 0)
+            itemClicked(_selectedItemIndex);
+    }
+
     /// handle keys
     override bool onKeyEvent(KeyEvent event) {
         if (event.action == KeyAction.Text) {
+            // Ctrl/Alt+Space where only a Text event comes (X11 for Alt+Space): accept, type nothing (#605)
+            if (isSpaceText(event.text) && (event.flags & (KeyFlag.Control | KeyFlag.Alt | KeyFlag.Menu))) {
+                acceptSelected();
+                return true;
+            }
             // close first, then pass the key on: the editor requests completions for the new text (#601);
             // closing destroys this popup, so keep the editor in a local variable
             auto editor = _editor;
@@ -973,8 +1018,20 @@ class CompletionPopupMenu : PopupMenu {
                 editor.onKeyEvent(event);
             }
             return true;
-        } else if ((event.action == KeyAction.KeyDown && event.keyCode == KeyCode.RETURN) ||
-            (event.action == KeyAction.KeyDown && event.keyCode == KeyCode.SPACE)) {
+        } else if (event.action == KeyAction.KeyDown && event.keyCode == KeyCode.SPACE) {
+            // Space doesn't accept the selected suggestion (#605): the menu would activate it on KeyDown. The Text
+            // event that follows closes the popup and types the space into the editor (see above); Enter accepts
+            if (!(event.flags & (KeyFlag.Control | KeyFlag.Alt | KeyFlag.Menu)))
+                return true;
+            // Ctrl+Space, Alt+Space (also AltGr: Ctrl+Alt) accept it, without typing a character: a name accepted
+            // this way can be followed by '.' directly
+            auto editor = _editor;
+            editor.skipTextOfCurrentKey();
+            acceptSelected();
+            if (editor.completionPopupShown)
+                editor.skipTextOfCurrentKey(false); // nothing accepted (no item selected)
+            // handled also then: not the window's Ctrl+Space accelerator, which would show a second popup
+            return true;
         }
         return super.onKeyEvent(event);
     }
