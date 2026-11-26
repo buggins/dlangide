@@ -777,7 +777,7 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         return false;
     }
 
-    /// set when Ctrl+Space or Alt+Space accepted a completion: the Text event of that key is not typed (#605)
+    /// set when Ctrl+Space or AltGr+Space accepted a completion: the Text event of that key is not typed (#605)
     protected bool _skipKeyText;
 
     /// called by the completion popup when a key accepts a suggestion: the space the key types (or the non-breaking
@@ -856,6 +856,36 @@ bool isSpaceText(dstring text) {
 unittest {
     assert(isSpaceText(" "d) && isSpaceText("\u00A0"d));
     assert(!isSpaceText(""d) && !isSpaceText("."d) && !isSpaceText("  "d) && !isSpaceText("\t"d));
+}
+
+/// true for the modifiers of a Space that accepts the selected completion: Ctrl, or AltGr (Win32 reports it as
+/// Ctrl+Alt, SDL and X11 as right Alt). Left Alt+Space (window menu) and Win+Space (keyboard layout) go to the
+/// system (#608)
+bool isCompletionAcceptSpace(uint flags) {
+    if (flags & KeyFlag.Control)
+        return true;
+    version (Windows) {
+        // right Alt without Ctrl is plain Alt here (US layouts): it opens the window menu too
+        return false;
+    } else {
+        return (flags & KeyFlag.RAlt) == KeyFlag.RAlt && (flags & KeyFlag.LAlt) != KeyFlag.LAlt
+            && !(flags & KeyFlag.Menu);
+    }
+}
+
+unittest {
+    assert(isCompletionAcceptSpace(KeyFlag.Control) && isCompletionAcceptSpace(KeyFlag.Control | KeyFlag.Shift));
+    assert(isCompletionAcceptSpace(KeyFlag.LControl | KeyFlag.RAlt)); // AltGr on Win32
+    assert(!isCompletionAcceptSpace(0) && !isCompletionAcceptSpace(KeyFlag.Shift));
+    assert(!isCompletionAcceptSpace(KeyFlag.Alt) && !isCompletionAcceptSpace(KeyFlag.LAlt));
+    assert(!isCompletionAcceptSpace(KeyFlag.Menu) && !isCompletionAcceptSpace(KeyFlag.LMenu));
+    version (Windows) {
+        assert(!isCompletionAcceptSpace(KeyFlag.RAlt));
+    } else {
+        assert(isCompletionAcceptSpace(KeyFlag.RAlt)); // AltGr on SDL and X11
+        assert(!isCompletionAcceptSpace(KeyFlag.RAlt | KeyFlag.LAlt));
+        assert(!isCompletionAcceptSpace(KeyFlag.RAlt | KeyFlag.Menu));
+    }
 }
 
 /// returns true if all characters are valid ident chars
@@ -990,10 +1020,16 @@ class CompletionPopupMenu : PopupMenu {
     /// handle keys
     override bool onKeyEvent(KeyEvent event) {
         if (event.action == KeyAction.Text) {
-            // Ctrl/Alt+Space where only a Text event comes (X11 for Alt+Space): accept, type nothing (#605)
             if (isSpaceText(event.text) && (event.flags & (KeyFlag.Control | KeyFlag.Alt | KeyFlag.Menu))) {
-                acceptSelected();
-                return true;
+                // Ctrl+Space or AltGr+Space as a Text event (SDL sends one for AltGr+Space, Win32 one after a
+                // KeyDown below that accepted nothing): accept, type nothing (#605)
+                if (isCompletionAcceptSpace(event.flags)) {
+                    acceptSelected();
+                    return true;
+                }
+                // left Alt+Space, Win+Space (X11 sends only a Text event when the window manager doesn't take
+                // them): not for the popup, it stays open and nothing is typed (#608)
+                return false;
             }
             // close first, then pass the key on: the editor requests completions for the new text (#601);
             // closing destroys this popup, so keep the editor in a local variable
@@ -1023,8 +1059,13 @@ class CompletionPopupMenu : PopupMenu {
             // event that follows closes the popup and types the space into the editor (see above); Enter accepts
             if (!(event.flags & (KeyFlag.Control | KeyFlag.Alt | KeyFlag.Menu)))
                 return true;
-            // Ctrl+Space, Alt+Space (also AltGr: Ctrl+Alt) accept it, without typing a character: a name accepted
-            // this way can be followed by '.' directly
+            // left Alt+Space opens the window menu (Windows, most Linux window managers), Win+Space switches the
+            // keyboard layout: not handled, so that the system gets them; not passed to the menu either, which
+            // would activate the selected item (#608)
+            if (!isCompletionAcceptSpace(event.flags))
+                return false;
+            // Ctrl+Space and AltGr+Space accept it, without typing a character: a name accepted this way can be
+            // followed by '.' directly
             auto editor = _editor;
             editor.skipTextOfCurrentKey();
             acceptSelected();
