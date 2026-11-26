@@ -34,6 +34,8 @@ class SearchLogWidget : LogWidget {
     protected uint _errorColor = 0xFF0000;
     protected uint _warningColor = 0x606000;
     protected uint _deprecationColor = 0x802040;
+    // characters of the line being drawn that are part of a match, reused between lines
+    protected bool[] _matchMask;
 
     /// handle theme change: e.g. reload some themed resources
     override void onThemeChanged() {
@@ -68,9 +70,20 @@ class SearchLogWidget : LogWidget {
             CustomCharProps[] colors = buf[0..txt.length];
             uint cl = _filenameColor;
             flags = 0;
-            int foundHighlightStart = 0;
-            int foundHighlightEnd = 0;
             bool textStarted = false;
+            // the matches in the line text after "]", found with the options of the search (#260)
+            if (_matchMask.length < txt.length)
+                _matchMask.length = txt.length;
+            bool[] mask = _matchMask[0 .. txt.length];
+            mask[] = false;
+            immutable ptrdiff_t textStart = txt.indexOf(']') + 1;
+            if (textStart > 0 && _textToHighlight.length) {
+                forEachLineMatch(txt[textStart .. $], 0, _textToHighlight,
+                        (_textToHighlightOptions & TextSearchFlag.CaseSensitive) != 0,
+                        (_textToHighlightOptions & TextSearchFlag.WholeWords) != 0, (TextRange r) {
+                    mask[textStart + r.start.pos .. textStart + r.end.pos] = true;
+                });
+            }
             for (int i = 0; i < txt.length; i++) {
                 dstring rest = txt[i..$];
                 if (rest.startsWith(" -->"d)) {
@@ -82,11 +95,7 @@ class SearchLogWidget : LogWidget {
                 }
 
                 if (textStarted && _textToHighlight.length > 0) {
-                    if (rest.startsWith(_textToHighlight)) {
-                        foundHighlightStart = i;
-                        foundHighlightEnd = i + cast(int)_textToHighlight.length;
-                    }
-                    if (i >= foundHighlightStart && i < foundHighlightEnd) {
+                    if (mask[i]) {
                         flags = TextFlag.Underline;
                         cl = _deprecationColor;
                     } else {
@@ -158,6 +167,9 @@ class SearchWidget : VerticalLayout {
 
     protected IDEFrame _frame;
     protected SearchMatchList[] _matchedList;
+    // text and options of the last search: a click on a result highlights its matches (#260)
+    protected dstring _searchedText;
+    protected uint _searchedFlags;
 
     //Sets focus on result;
     void focus() {
@@ -231,20 +243,20 @@ class SearchWidget : VerticalLayout {
     }
     
     //Recursively search for text in projectItem
-    void searchInProject(ProjectItem project, dstring text) {
+    void searchInProject(ProjectItem project, dstring text, uint searchFlags) {
         if (project.isFolder == true) {
             ProjectFolder projFolder = cast(ProjectFolder) project;
             import std.parallelism;
             for (int i = 0; i < projFolder.childCount; i++) {
                 version (PARALLEL_SEARCH)
-                    taskPool.put(task(&searchInProject, projFolder.child(i), text));
+                    taskPool.put(task(&searchInProject, projFolder.child(i), text, searchFlags));
                 else
-                    searchInProject(projFolder.child(i), text);
+                    searchInProject(projFolder.child(i), text, searchFlags);
             }
         }
         else {
             Log.d("Searching in: " ~ project.filename);
-            SearchMatchList match = findMatches(project.filename, text);
+            SearchMatchList match = findMatches(project.filename, text, searchFlags);
             if(match.matches.length > 0) {
                 synchronized {
                     _matchedList ~= match;
@@ -265,13 +277,17 @@ class SearchWidget : VerticalLayout {
 
         _matchedList = [];
         _resultLogMatchIndex = 0;
+        // the Case sensitive and Whole words buttons (#260)
+        immutable uint searchFlags = makeSearchFlags();
+        _searchedText = source;
+        _searchedFlags = searchFlags;
         
         import std.parallelism; //for taskpool.
         
         switch (_searchScope.text) {
             case "File":
                 if (_frame.currentEditor) {
-                    SearchMatchList match = findMatches(_frame.currentEditor.filename, source);
+                    SearchMatchList match = findMatches(_frame.currentEditor.filename, source, searchFlags);
                     if(match.matches.length > 0)
                         _matchedList ~= match;
                 }
@@ -280,9 +296,9 @@ class SearchWidget : VerticalLayout {
                foreach(Project project; _frame._wsPanel.workspace.projects) {
                     if(!project.isDependency) {
                         version (PARALLEL_SEARCH)
-                            taskPool.put(task(&searchInProject, project.items, source));
+                            taskPool.put(task(&searchInProject, project.items, source, searchFlags));
                         else
-                            searchInProject(project.items, source);
+                            searchInProject(project.items, source, searchFlags);
                     }
                }
                break;
@@ -290,24 +306,24 @@ class SearchWidget : VerticalLayout {
                foreach(Project project; _frame._wsPanel.workspace.projects) {
                     if(project.isDependency) {
                         version (PARALLEL_SEARCH)
-                            taskPool.put(task(&searchInProject, project.items, source));
+                            taskPool.put(task(&searchInProject, project.items, source, searchFlags));
                         else
-                            searchInProject(project.items, source);
+                            searchInProject(project.items, source, searchFlags);
                     }
                }
                break;
             case "Everywhere":
                foreach(Project project; _frame._wsPanel.workspace.projects) {
                    version (PARALLEL_SEARCH)
-                       taskPool.put(task(&searchInProject, project.items, source));
+                       taskPool.put(task(&searchInProject, project.items, source, searchFlags));
                    else
-                       searchInProject(project.items, source);
+                       searchInProject(project.items, source, searchFlags);
                }
                break;
             default:
                 assert(0);
         }
-        _resultLog.setTextToHighlight(source, TextSearchFlag.CaseSensitive);
+        _resultLog.setTextToHighlight(source, searchFlags);
         return true;
     }
     
@@ -346,7 +362,7 @@ class SearchWidget : VerticalLayout {
             line--;
             if (line == 0) {
                 if (_frame.openSourceFile(matchList.filename)) {
-                    _frame.currentEditor.setTextToHighlight(_findText.text, makeSearchFlags);
+                    _frame.currentEditor.setTextToHighlight(_searchedText, _searchedFlags);
                     _frame.currentEditor.setFocus();
                 }
                 return true;
@@ -357,7 +373,7 @@ class SearchWidget : VerticalLayout {
                     if (_frame.openSourceFile(matchList.filename)) {
                         _frame.caretHistory.pushNewPosition();
                         _frame.currentEditor.setCaretPos(match.line, to!int(match.col));
-                        _frame.currentEditor.setTextToHighlight(_findText.text, makeSearchFlags);
+                        _frame.currentEditor.setTextToHighlight(_searchedText, _searchedFlags);
                         _frame.currentEditor.setFocus();
                         _frame.caretHistory.pushNewPosition();
                     }
@@ -369,18 +385,43 @@ class SearchWidget : VerticalLayout {
     }
 }
 
-SearchMatchList findMatches(in string filename, in dstring searchString) {
+/// the lines of file filename with a match of searchString; searchFlags: TextSearchFlag.CaseSensitive and WholeWords
+SearchMatchList findMatches(in string filename, in dstring searchString, uint searchFlags) {
     EditableContent content = new EditableContent(true);
     content.load(filename);
     SearchMatchList match;
     match.filename = filename;
 
     foreach(lineIndex, dstring line; content.lines) {
-        auto colIndex = line.indexOf(searchString);
-        
+        immutable ptrdiff_t colIndex = firstMatchColumn(line, searchString, searchFlags);
         if (colIndex != -1) {
             match.matches ~= SearchMatch(cast(int)lineIndex, colIndex, line);
         }
     }
     return match;  
+}
+
+/// column of the first match of pattern in line, or -1; searchFlags: TextSearchFlag.CaseSensitive and WholeWords.
+/// The same matching as the editor's search, which also works around a Phobos bug in case-insensitive indexOf (#260)
+ptrdiff_t firstMatchColumn(dstring line, dstring pattern, uint searchFlags) {
+    ptrdiff_t col = -1;
+    EditBox.forEachLineMatch(line, 0, pattern, (searchFlags & TextSearchFlag.CaseSensitive) != 0,
+            (searchFlags & TextSearchFlag.WholeWords) != 0, (TextRange r) {
+        if (col < 0)
+            col = r.start.pos;
+    });
+    return col;
+}
+
+unittest {
+    enum cs = TextSearchFlag.CaseSensitive, ww = TextSearchFlag.WholeWords;
+    // case: Phobos indexOf missed "text" in "    TextWidget" (dlang/phobos#11160)
+    assert(firstMatchColumn("    TextWidget"d, "text"d, 0) == 4);
+    assert(firstMatchColumn("    TextWidget"d, "text"d, cs) == -1);
+    assert(firstMatchColumn("    TextWidget"d, "Text"d, cs) == 4);
+    // whole words
+    assert(firstMatchColumn("    TextWidget"d, "Text"d, ww) == -1);
+    assert(firstMatchColumn("TextWidget; Text t;"d, "Text"d, ww | cs) == 12);
+    assert(firstMatchColumn("textWidget; TEXT t;"d, "text"d, ww) == 12);
+    assert(firstMatchColumn("no match"d, "Text"d, 0) == -1);
 }
