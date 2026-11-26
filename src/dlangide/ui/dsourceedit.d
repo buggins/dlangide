@@ -722,8 +722,9 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         super.handleFocusChange(focused, receivedFocusFromKeyboard);
     }
 
-    /// true if the character before the caret is an identifier character or '.': completions after Backspace only
-    /// then, not after deleting spaces, brackets or a line break
+    /// true if the text before the caret is something to complete: an identifier or '.', not in a comment or a
+    /// string and not a number (#603); completions after Backspace only then, not after deleting spaces, brackets
+    /// or a line break
     private bool isCompletionContextBeforeCaret() {
         TextPosition p = caretPos;
         if (p.pos <= 0 || p.line < 0 || p.line >= _content.length)
@@ -731,8 +732,33 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         dstring line = _content.line(p.line);
         if (p.pos > line.length)
             return false;
-        immutable dchar ch = line[p.pos - 1];
-        return isIdentChar(ch) || ch == '.';
+        // the token props are updated on each change, before the key handling returns
+        if (isNoCompletionToken(_content.tokenProp(TextPosition(p.line, p.pos - 1))))
+            return false;
+        return isCompletionPrefix(line[0 .. p.pos]);
+    }
+
+    /// where a completion request was made, see isCompletionContextCurrent()
+    static struct CompletionContext {
+        TextPosition caretPos;
+        dstring lineBeforeCaret;
+    }
+
+    /// the caret position and the text before it on its line, to check that a completion answer still fits (#603)
+    @property CompletionContext completionContext() {
+        CompletionContext context;
+        context.caretPos = _caretPos;
+        if (_caretPos.line >= 0 && _caretPos.line < _content.length) {
+            dstring line = _content.line(_caretPos.line);
+            context.lineBeforeCaret = line[0 .. (_caretPos.pos < line.length ? _caretPos.pos : line.length)];
+        }
+        return context;
+    }
+
+    /// true if a completion answer for a request made at context can be shown: the editor has the focus, the caret
+    /// is at the same position and the text before it on its line wasn't changed (#603)
+    bool isCompletionContextCurrent(const ref CompletionContext context) {
+        return focused && completionContext == context;
     }
 
     /// true for a key event that changes the text in a way that should show completions: a typed identifier
@@ -804,6 +830,75 @@ bool isIdentText(dstring s) {
         if (!isIdentChar(ch))
             return false;
     return true;
+}
+
+/// true for a token category without completions: comments, string and character literals (#603)
+bool isNoCompletionToken(ubyte tokenProp) {
+    switch (tokenCategory(tokenProp)) {
+        case TokenCategory.Comment:
+        case TokenCategory.String:
+        case TokenCategory.Character:
+            return true;
+        default:
+            // unterminated strings and comments (also character literals: Error_InvalidString in dsyntax.d)
+            return tokenProp == TokenCategory.Error_InvalidString || tokenProp == TokenCategory.Error_InvalidComment;
+    }
+}
+
+/**
+    True if the text of a line before the caret ends with something to complete (#603): an identifier that doesn't
+    start with a digit, or a '.' after such an identifier or another expression (`foo().`, `a[1].`, `.` for the
+    module scope). Not after a number (`1.`, `1.5`, `0x1F`) or in `..`.
+*/
+bool isCompletionPrefix(dstring textBeforeCaret) {
+    size_t end = textBeforeCaret.length;
+    if (!end)
+        return false;
+    immutable bool dot = textBeforeCaret[end - 1] == '.';
+    if (dot)
+        end--;
+    else if (!isIdentChar(textBeforeCaret[end - 1]))
+        return false;
+    size_t start = end;
+    while (start > 0 && isIdentChar(textBeforeCaret[start - 1]))
+        start--;
+    if (start < end)
+        return !(textBeforeCaret[start] >= '0' && textBeforeCaret[start] <= '9'); // an identifier, not a number
+    // a '.' without an identifier before it: not in ".."
+    return !(start > 0 && textBeforeCaret[start - 1] == '.');
+}
+
+unittest {
+    assert(isCompletionPrefix("    foo"d));
+    assert(isCompletionPrefix("_cur"d));
+    assert(isCompletionPrefix("x1"d));
+    assert(isCompletionPrefix("_currentFigure."d));
+    assert(isCompletionPrefix("x1."d));
+    assert(isCompletionPrefix("foo()."d));
+    assert(isCompletionPrefix("a[1]."d));
+    assert(isCompletionPrefix("."d));
+    assert(isCompletionPrefix("a[0 .. b"d)); // the identifier after ".."
+    assert(!isCompletionPrefix(""d));
+    assert(!isCompletionPrefix("foo("d));
+    assert(!isCompletionPrefix("foo "d));
+    assert(!isCompletionPrefix("1"d));
+    assert(!isCompletionPrefix("x = 1."d));
+    assert(!isCompletionPrefix("x = 1.5"d));
+    assert(!isCompletionPrefix("0x1F"d));
+    assert(!isCompletionPrefix(".5"d));
+    assert(!isCompletionPrefix("a.."d));
+
+    assert(isNoCompletionToken(TokenCategory.Comment_SingleLine));
+    assert(isNoCompletionToken(TokenCategory.Comment_MultyLineDoc));
+    assert(isNoCompletionToken(TokenCategory.String));
+    assert(isNoCompletionToken(TokenCategory.Character));
+    assert(isNoCompletionToken(TokenCategory.Error_InvalidString));
+    assert(isNoCompletionToken(TokenCategory.Error_InvalidComment));
+    assert(!isNoCompletionToken(TokenCategory.Identifier));
+    assert(!isNoCompletionToken(TokenCategory.Identifier_Member));
+    assert(!isNoCompletionToken(TokenCategory.Op));
+    assert(!isNoCompletionToken(TokenCategory.Keyword));
+    assert(!isNoCompletionToken(0)); // no syntax highlight
 }
 
 class CompletionPopupMenu : PopupMenu {
