@@ -1517,13 +1517,22 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     Log.d("Trying to get paren completion.");
                     //auto results = currentEditor.editorTool.getParenCompletion(currentEditor, currentEditor.caretPos);
                     return true;
-                case IDEActions.GetCompletionSuggestions:
+                case IDEActions.GetCompletionSuggestions: {
                     Log.d("Getting auto completion suggestions.");
-                    currentEditor.editorTool.getCompletions(currentEditor, currentEditor.caretPos, delegate(dstring[] results, string[] icons, CompletionTypes type) {
-                            if (currentEditor)
-                                currentEditor.showCompletionPopup(results, icons, type);
+                    DSourceEdit editor = currentEditor;
+                    if (!editor)
+                        return true;
+                    immutable DSourceEdit.CompletionContext context = editor.completionContext;
+                    editor.editorTool.getCompletions(editor, context.caretPos, delegate(dstring[] results, string[] icons, CompletionTypes type) {
+                            // only in the editor that asked, at the same place (#603): the user may have switched
+                            // tabs, moved the caret or edited the text before it in the meantime. currentEditor first:
+                            // the editor may have been closed
+                            if (currentEditor !is editor || !editor.isCompletionContextCurrent(context))
+                                return;
+                            editor.showCompletionPopup(results, icons, type);
                         });
                     return true;
+                }
                 case IDEActions.EditPreferences:
                     showPreferences();
                     return true;

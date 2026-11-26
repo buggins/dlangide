@@ -598,6 +598,7 @@ class SimpleDSyntaxSupport : SyntaxSupport {
                                 category = TokenCategory.Error_InvalidIdentifier;
                                 break;
                             case TokenType.STRING:
+                            case TokenType.CHARACTER: // there is no Error_InvalidCharacter; no completions in it (#603)
                                 category = TokenCategory.Error_InvalidString;
                                 break;
                             case TokenType.COMMENT:
