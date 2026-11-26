@@ -89,6 +89,8 @@ class DCDTask {
         _index = index;
     }
     @property bool cancelled() { return _cancelled; }
+    /// a cancelled task never calls its callback, also when its result was already posted to the UI thread (#601):
+    /// callers do their cleanup when they cancel (e.g. DEditorTool.cancelGetCompletions clears its task field)
     void cancel() {
         synchronized(this) {
             _cancelled = true;
@@ -117,8 +119,16 @@ class DCDTask {
             if (_cancelled)
                 return;
             if (_guiExecutor)
-                _guiExecutor.executeInUiThread(&postResults);
+                _guiExecutor.executeInUiThread(&postResultsIfNotCancelled);
         }
+    }
+    /// runs in the UI thread: a task cancelled after its result was posted doesn't deliver it (#601)
+    private void postResultsIfNotCancelled() {
+        synchronized(this) {
+            if (_cancelled)
+                return;
+        }
+        postResults();
     }
 }
 

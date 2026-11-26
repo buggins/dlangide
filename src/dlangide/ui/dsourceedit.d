@@ -722,15 +722,29 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         super.handleFocusChange(focused, receivedFocusFromKeyboard);
     }
 
-    private bool isAutoCompleteKey(ref KeyEvent event) {
+    /// true if the character before the caret is an identifier character or '.': completions after Backspace only
+    /// then, not after deleting spaces, brackets or a line break
+    private bool isCompletionContextBeforeCaret() {
+        TextPosition p = caretPos;
+        if (p.pos <= 0 || p.line < 0 || p.line >= _content.length)
+            return false;
+        dstring line = _content.line(p.line);
+        if (p.pos > line.length)
+            return false;
+        immutable dchar ch = line[p.pos - 1];
+        return isIdentChar(ch) || ch == '.';
+    }
+
+    /// true for a key event that changes the text in a way that should show completions: a typed identifier
+    /// character or '.' (Text event), or Backspace (it deletes on KeyDown)
+    private bool isAutoCompleteEdit(ref KeyEvent event) {
         // shortcuts like Ctrl+Z, Ctrl+H must not trigger completion (Shift is fine: capitals, '_')
         if (event.flags & (KeyFlag.Control | KeyFlag.Alt | KeyFlag.Menu))
             return false;
-        if((event.keyCode >= KeyCode.KEY_0 && event.keyCode <= KeyCode.KEY_Z) ||
-            event.keyCode == KeyCode.KEY_PERIOD ||
-            event.keyCode == KeyCode.BACK ||
-            event.text == "_")
-            return true;
+        if (event.action == KeyAction.KeyDown)
+            return event.keyCode == KeyCode.BACK;
+        if (event.action == KeyAction.Text && event.text.length == 1)
+            return isIdentChar(event.text[0]) || event.text[0] == '.';
         return false;
     }
 
@@ -752,10 +766,18 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         }
         if (event.action == KeyAction.KeyDown)
             _lastKeyDownCode = event.keyCode;
-        if(_settings.autoAutoComplete && isAutoCompleteKey(event) && !_completionPopup) {
-            window.dispatchAction(ACTION_GET_COMPLETIONS, this);
+        if (_settings.autoAutoComplete) {
+            // request completions after the key has changed the text, once per key (#601): a request on the KeyDown
+            // of '.' got the text without the dot, and its fast answer (identifier completions) opened the popup,
+            // which then blocked the later requests. Keys typed while the popup is open come here after it is closed.
+            cancelCompletionTimer(); // the period timer is used only without auto autocomplete
+            immutable bool edit = isAutoCompleteEdit(event);
+            immutable bool res = super.onKeyEvent(event);
+            if (edit && !_completionPopup && isCompletionContextBeforeCaret())
+                window.dispatchAction(ACTION_GET_COMPLETIONS, this);
+            return res;
         }
-        else if (event.action == KeyAction.Text && event.noModifiers && event.text==".") {
+        if (event.action == KeyAction.Text && event.noModifiers && event.text==".") {
             _periodKeyCode = _lastKeyDownCode;
             startCompletionTimer();
         } else {
@@ -833,8 +855,11 @@ class CompletionPopupMenu : PopupMenu {
     /// handle keys
     override bool onKeyEvent(KeyEvent event) {
         if (event.action == KeyAction.Text) {
-            _editor.onKeyEvent(event);
-            _editor.closeCompletionPopup(this);
+            // close first, then pass the key on: the editor requests completions for the new text (#601);
+            // closing destroys this popup, so keep the editor in a local variable
+            auto editor = _editor;
+            editor.closeCompletionPopup(this);
+            editor.onKeyEvent(event);
             return true;
         } else if (event.keyCode == KeyCode.ESCAPE) {
             _editor.closeCompletionPopup(this);
@@ -847,8 +872,10 @@ class CompletionPopupMenu : PopupMenu {
                 menuItems = newItems;
                 selectItem(0);
             } else {
-                _editor.onKeyEvent(event);
-                _editor.closeCompletionPopup(this);
+                // Backspace past the prefix: close first, as for typed characters
+                auto editor = _editor;
+                editor.closeCompletionPopup(this);
+                editor.onKeyEvent(event);
             }
             return true;
         } else if ((event.action == KeyAction.KeyDown && event.keyCode == KeyCode.RETURN) ||
