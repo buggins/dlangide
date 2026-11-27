@@ -170,6 +170,8 @@ class SearchWidget : VerticalLayout {
     // text and options of the last search: a click on a result highlights its matches (#260)
     protected dstring _searchedText;
     protected uint _searchedFlags;
+    // the text of the files open in editors, by file name, for the running search: unsaved edits are searched (#611)
+    protected const(dstring)[][string] _openFileLines;
 
     //Sets focus on result;
     void focus() {
@@ -256,7 +258,8 @@ class SearchWidget : VerticalLayout {
         }
         else {
             Log.d("Searching in: " ~ project.filename);
-            SearchMatchList match = findMatches(project.filename, text, searchFlags);
+            SearchMatchList match = findMatches(project.filename, text, searchFlags,
+                    _openFileLines.get(project.filename, null));
             if(match.matches.length > 0) {
                 synchronized {
                     _matchedList ~= match;
@@ -281,13 +284,21 @@ class SearchWidget : VerticalLayout {
         immutable uint searchFlags = makeSearchFlags();
         _searchedText = source;
         _searchedFlags = searchFlags;
+        _openFileLines = null;
+        foreach (ed; _frame.allOpenedEditors)
+            _openFileLines[ed.filename] = ed.content.lines;
+        // the search runs here, synchronously (PARALLEL_SEARCH is off; its tasks would need their own copies of
+        // the map and the lines): don't keep the editors' text after it
+        scope (exit)
+            _openFileLines = null;
         
         import std.parallelism; //for taskpool.
         
         switch (_searchScope.text) {
             case "File":
                 if (_frame.currentEditor) {
-                    SearchMatchList match = findMatches(_frame.currentEditor.filename, source, searchFlags);
+                    SearchMatchList match = findMatches(_frame.currentEditor.filename, source, searchFlags,
+                            _frame.currentEditor.content.lines);
                     if(match.matches.length > 0)
                         _matchedList ~= match;
                 }
@@ -334,7 +345,8 @@ class SearchWidget : VerticalLayout {
                 SearchMatchList matchList = _matchedList[_resultLogMatchIndex];
                 _resultLog.appendText("Matches in "d ~ to!dstring(matchList.filename) ~ '\n');
                 foreach(SearchMatch match; matchList.matches) {
-                    _resultLog.appendText(" --> ["d ~ to!dstring(match.line+1) ~ ":"d ~ to!dstring(match.col) ~ "]" ~ match.lineContent ~"\n"d);
+                    // line and column 1-based, as in the status bar, and a space before the text (#611)
+                    _resultLog.appendText(" --> ["d ~ to!dstring(match.line+1) ~ ":"d ~ to!dstring(match.col+1) ~ "] " ~ match.lineContent ~"\n"d);
                 }
             }
         }
@@ -385,20 +397,36 @@ class SearchWidget : VerticalLayout {
     }
 }
 
-/// the lines of file filename with a match of searchString; searchFlags: TextSearchFlag.CaseSensitive and WholeWords
-SearchMatchList findMatches(in string filename, in dstring searchString, uint searchFlags) {
-    EditableContent content = new EditableContent(true);
-    content.load(filename);
+/// the lines of file filename with a match of searchString; searchFlags: TextSearchFlag.CaseSensitive and WholeWords.
+/// lines: the text of an editor that has the file open, with its unsaved edits, or null to read the file (#611)
+SearchMatchList findMatches(in string filename, in dstring searchString, uint searchFlags,
+        const(dstring)[] lines = null) {
+    const(dstring)[] text = lines !is null ? lines : loadLines(filename);
     SearchMatchList match;
     match.filename = filename;
 
-    foreach(lineIndex, dstring line; content.lines) {
+    foreach(lineIndex, dstring line; text) {
         immutable ptrdiff_t colIndex = firstMatchColumn(line, searchString, searchFlags);
         if (colIndex != -1) {
             match.matches ~= SearchMatch(cast(int)lineIndex, colIndex, line);
         }
     }
     return match;  
+}
+
+/// the lines of file filename
+private const(dstring)[] loadLines(in string filename) {
+    EditableContent content = new EditableContent(true);
+    content.load(filename);
+    return content.lines;
+}
+
+unittest {
+    // the text of an open editor is searched, not the file (here: no file at all) (#611)
+    const(dstring)[] edited = ["struct Figure {"d, ""d, "Figure f;"d];
+    SearchMatchList m = findMatches("no-such-file-611.d", "Figure"d, TextSearchFlag.CaseSensitive, edited);
+    assert(m.filename == "no-such-file-611.d" && m.matches.length == 2);
+    assert(m.matches[0].line == 0 && m.matches[0].col == 7 && m.matches[1].line == 2 && m.matches[1].col == 0);
 }
 
 /// column of the first match of pattern in line, or -1; searchFlags: TextSearchFlag.CaseSensitive and WholeWords.
