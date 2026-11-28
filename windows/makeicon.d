@@ -1,7 +1,7 @@
 #!/usr/bin/env dub
 /+ dub.sdl:
     name "makeicon"
-    dependency "dlangui" version="~>0.25.0"
+    dependency "dlangui" version="~>0.25.1"
     subConfiguration "dlangui" "minimal"
 +/
 /**
