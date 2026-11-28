@@ -148,6 +148,12 @@ SettingsPage createSettingsPages() {
     texted.addCheckbox("editors/textEditor/showWhiteSpaceMarks", UIString.fromId("OPTION_SHOW_SPACES"c));
     texted.addCheckbox("editors/textEditor/showTabPositionMarks", UIString.fromId("OPTION_SHOW_TABS"c));
     texted.addCheckbox("editors/textEditor/autoAutoComplete", UIString.fromId("OPTION_AUTO_AUTOCOMPLETE"c));
+    // files changed by other programs (git checkout, code generators): dlangui's EditBox.externalChangeMode
+    texted.addStringComboBox("editors/textEditor/externalChanges", UIString.fromId("OPTION_EXTERNAL_CHANGES"c), [
+            StringListValue("reload", "OPTION_EXTERNAL_CHANGES_RELOAD"c),
+            StringListValue("notify", "OPTION_EXTERNAL_CHANGES_NOTIFY"c),
+            StringListValue("ignore", "OPTION_EXTERNAL_CHANGES_IGNORE"c)]);
+    texted.addCheckbox("editors/textEditor/atomicSave", UIString.fromId("OPTION_ATOMIC_SAVE"c));
 
     // Common page
     SettingsPage common = res.addChild("common", UIString.fromId("OPTION_COMMON"c));

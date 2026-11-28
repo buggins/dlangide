@@ -108,6 +108,8 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         smartIndentsAfterPaste = _settings.smartIndentsAfterPaste;
         showWhiteSpaceMarks = _settings.showWhiteSpaceMarks;
         showTabPositionMarks = _settings.showTabPositionMarks;
+        externalChangeMode = _settings.externalChangeMode;
+        _content.atomicSave = _settings.atomicSave;
         string face = _settings.editorFontFace;
         if (face == "Default")
             face = null;
@@ -236,6 +238,77 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         return reportSaveResult(_content.save(), filename);
     }
 
+    /// runs when the save question is answered and nothing is left to save (see saveChecked)
+    protected void delegate() _afterSaveQuestion;
+
+    /**
+    Saves the text to its file after a check for changes by other programs (File > Save, Save all, Save when
+    closing): if the file was changed since it was loaded, the editor asks first (Overwrite / Reload / Cancel) and
+    false is returned; a failed save shows an error message. afterSaveQuestion, if set, runs (posted to the UI
+    thread) when the user answers the question with Overwrite (and the text is saved) or Reload, e.g. to go on
+    closing; it is dropped if the text is changed before that.
+    */
+    bool saveChecked(void delegate() afterSaveQuestion = null) {
+        _afterSaveQuestion = null; // a new save request replaces an unanswered one
+        if (!checkBeforeSave()) {
+            _afterSaveQuestion = afterSaveQuestion;
+            return false;
+        }
+        return save();
+    }
+
+    override protected bool handleExternalChangeAction(const Action action) {
+        void delegate() afterSaveQuestion = _afterSaveQuestion;
+        _afterSaveQuestion = null; // any answer ends the pending save request
+        bool question = _externalChangeShown == ExternalChangeReaction.confirmSave;
+        bool handled = super.handleExternalChangeAction(action);
+        // Overwrite saved the text, or Reload replaced it with the file: nothing is left to save; posted, because it
+        // may close this editor, whose message bar is still handling the click
+        if (question && afterSaveQuestion && !_content.modified && window
+                && (action.id == EditorActions.SaveFile || action.id == EditorActions.ReloadFile))
+            window.executeInUiThread(afterSaveQuestion);
+        return handled;
+    }
+
+    /// called when the "file deleted" message appears for text with unsaved changes
+    void delegate(DSourceEdit editor) deletedFileKeptOpen;
+
+    override protected void applyExternalChangeReaction(ExternalChangeReaction reaction) {
+        bool shown = findMessage(EXTERNAL_CHANGE_MESSAGE_ID) !is null;
+        // a check after the save question (the focus check when a menu or dialog closes) reporting the same change
+        // keeps the question, or Overwrite would be gone (buggins/dlangui#1290)
+        if (shown && _externalChangeShown == ExternalChangeReaction.confirmSave
+                && (reaction == ExternalChangeReaction.notifyConflict
+                    || reaction == ExternalChangeReaction.notifyChanged))
+            return;
+        bool newDeletedMessage = reaction == ExternalChangeReaction.notifyDeleted && _content.modified
+            && !(shown && _externalChangeShown == ExternalChangeReaction.notifyDeleted);
+        super.applyExternalChangeReaction(reaction);
+        if (newDeletedMessage && deletedFileKeptOpen)
+            deletedFileKeptOpen(this);
+    }
+
+    /// Save and Overwrite on the external change message: like save(), but the failure is shown by the message bar
+    /// only (SourceEdit's save(fn) would also forget the file name)
+    override protected bool saveAfterExternalChange() {
+        return _content.save();
+    }
+
+    /// a change of the text drops a pending save request (see saveChecked)
+    override void onContentChange(EditableContent content, EditOperation operation, ref TextRange rangeBefore,
+            ref TextRange rangeAfter, Object source) {
+        _afterSaveQuestion = null;
+        super.onContentChange(content, operation, rangeBefore, rangeAfter, source);
+    }
+
+    /// the file was deleted: Save / Keep, and Close (closes the tab, asking about unsaved changes as usual)
+    override protected const(Action)[] externalChangeActions(ExternalChangeReaction reaction) {
+        const(Action)[] actions = super.externalChangeActions(reaction);
+        if (reaction == ExternalChangeReaction.notifyDeleted)
+            actions ~= ACTION_CLOSE_DELETED_FILE;
+        return actions;
+    }
+
     /// save to file fn; shows an error message if it fails
     override bool save(string fn) {
         return reportSaveResult(super.save(fn), fn);
@@ -276,7 +349,7 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
         if (a) {
             switch (a.id) {
                 case IDEActions.FileSave:
-                    save(); // shows an error message if it fails
+                    saveChecked(); // asks if the file was changed on disk; shows an error message if saving fails
                     return true;
                 case IDEActions.InsertCompletion:
                     insertCompletion(a.label);
