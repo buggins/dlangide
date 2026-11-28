@@ -55,6 +55,22 @@ Features:
   Repo setting since 2026-11-08: PR branches are deleted automatically on merge.
   Steps: `dub test`, `dub build`, `dub build -c console`, `dub build -c freetype` on Windows, `dub build -c x11` on Linux.
 - Code style follows DlangUI's `CODING_STYLE.md` (D Style, 4 spaces, `_camelCase` private fields).
+- Safer D practices for new and changed code (#627, as in dlangui's AGENTS.md; adapted from
+  [camunda/safer-d](https://github.com/camunda/safer-d), whose checker and no-null style don't fit DlangUI's class-based
+  API):
+  - Never catch `Throwable` or `Error` (an assert, a range error, out of memory: the program is broken), except in an
+    entry point's last-resort handler (DlangUI's backends have them in `DLANGUImain`/`DLANGUIWinMain`). A
+    `catch (Exception)` that swallows the exception says why in a comment.
+  - A `switch` over an enum whose value is always exactly one member, set by our own code, is a `final switch`: list
+    the members it skips as empty cases instead of `default:`, so a new member breaks the build wherever it needs
+    handling. Flag sets (`State`, `KeyFlag`, `WindowFlag`) and values from the OS, files or casts (key codes) keep
+    `default:`: a `final switch` on a value that matches no member throws `SwitchError`, or is undefined in release
+    builds.
+  - `size_t` subtraction wraps (`0 - 1` is huge): compare before subtracting lengths, offsets and indices, or compute
+    in `ptrdiff_t`; keep the comparison and the subtraction together, so an edit can't flip one side.
+  - Test-only imports go into the `unittest` block or the test helper that uses them, not into a module-level
+    `version (unittest)` block: non-test code that uses such an import passes `dub test` and breaks the release build.
+  - A comment directly above every `@trusted` says why it is safe.
 - `AGENTS.md` is tracked (since 2026-11-28; untracked before). `AGENTS.local.md` and `PLAN.md` are local files
   (`.git/info/exclude`): never commit them.
 
