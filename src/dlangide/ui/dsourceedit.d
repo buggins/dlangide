@@ -275,23 +275,21 @@ class DSourceEdit : SourceEdit, EditableContentMarksChangeListener {
 
     override protected void applyExternalChangeReaction(ExternalChangeReaction reaction) {
         bool shown = findMessage(EXTERNAL_CHANGE_MESSAGE_ID) !is null;
-        // a check after the save question (the focus check when a menu or dialog closes) reporting the same change
-        // keeps the question, or Overwrite would be gone (buggins/dlangui#1290)
-        if (shown && _externalChangeShown == ExternalChangeReaction.confirmSave
-                && (reaction == ExternalChangeReaction.notifyConflict
-                    || reaction == ExternalChangeReaction.notifyChanged))
-            return;
         bool newDeletedMessage = reaction == ExternalChangeReaction.notifyDeleted && _content.modified
             && !(shown && _externalChangeShown == ExternalChangeReaction.notifyDeleted);
         super.applyExternalChangeReaction(reaction);
+        // the save question was replaced (the file changed again while it was shown): a pending close is cancelled,
+        // the new message needs its own answer
+        if (_externalChangeShown != ExternalChangeReaction.confirmSave)
+            _afterSaveQuestion = null;
         if (newDeletedMessage && deletedFileKeptOpen)
             deletedFileKeptOpen(this);
     }
 
-    /// Save and Overwrite on the external change message: like save(), but the failure is shown by the message bar
-    /// only (SourceEdit's save(fn) would also forget the file name)
+    /// Save and Overwrite on the external change message: SourceEdit's save(fn), so the failure is shown by the
+    /// message bar only (this class's save(fn) would also show a message box)
     override protected bool saveAfterExternalChange() {
-        return _content.save();
+        return super.save(filename.length ? filename : _content.filename);
     }
 
     /// a change of the text drops a pending save request (see saveChecked)
