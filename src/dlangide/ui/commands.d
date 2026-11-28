@@ -166,6 +166,8 @@ const Action ACTION_HELP_VIEW_HELP = new Action(IDEActions.HelpViewHelp, "MENU_H
 const Action ACTION_HELP_DONATE = new Action(IDEActions.HelpDonate, "MENU_HELP_DONATE"c);
 
 const Action ACTION_WINDOW_CLOSE_DOCUMENT = new Action(IDEActions.WindowCloseDocument, "MENU_WINDOW_CLOSE_DOCUMENT"c, null, KeyCode.KEY_W, KeyFlag.Control).disableByDefault();
+/// Close on the "file deleted" bar of an editor; not StandardAction.Close, so the bar stays if closing is cancelled
+const Action ACTION_CLOSE_DELETED_FILE = new Action(IDEActions.WindowCloseDocument, "ACTION_CLOSE"c);
 const Action ACTION_WINDOW_CLOSE_ALL_DOCUMENTS = new Action(IDEActions.WindowCloseAllDocuments, "MENU_WINDOW_CLOSE_ALL_DOCUMENTS"c).disableByDefault();
 const Action ACTION_WINDOW_SHOW_HOME_SCREEN = new Action(IDEActions.WindowShowHomeScreen, "MENU_WINDOW_SHOW_HOME_SCREEN"c);
 const Action ACTION_WINDOW_SHOW_WORKSPACE_EXPLORER = new Action(IDEActions.WindowShowWorkspaceExplorer, "MENU_WINDOW_SHOW_WORKSPACE_EXPLORER"c).disableByDefault();

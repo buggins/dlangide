@@ -3,6 +3,7 @@ module dlangide.workspace.idesettings;
 import dlangui.core.settings;
 import dlangui.core.i18n;
 import dlangui.graphics.fonts;
+import dlangui.widgets.editors : ExternalChangeMode;
 
 import std.algorithm : equal;
 
@@ -26,6 +27,8 @@ class IDESettings : SettingsFile {
         ed.setBooleanDef("autoAutoComplete", true);
         ed.setStringDef("fontFace", "Default");
         ed.setIntegerDef("fontSize", 11);
+        ed.setStringDef("externalChanges", "reload");
+        ed.setBooleanDef("atomicSave", true);
         Setting ui = uiSettings();
         ui.setStringDef("theme", "ide_theme_default");
         ui.setStringDef("language", "en");
@@ -216,6 +219,22 @@ class IDESettings : SettingsFile {
     @property bool smartIndentsAfterPaste() { return editorSettings.getBoolean("smartIndentsAfterPaste", true); }
     /// set smart indents enabled flag
     @property IDESettings smartIndentsAfterPaste(bool enabled) { editorSettings.setBoolean("smartIndentsAfterPaste", enabled); return this; }
+
+    /// what editors do when another program changes their file: "reload" (text without unsaved changes is reloaded
+    /// at once), "notify" (always a message) or "ignore" (no checks)
+    @property ExternalChangeMode externalChangeMode() {
+        switch (editorSettings.getString("externalChanges", "reload")) {
+            case "ignore":
+                return ExternalChangeMode.ignore;
+            case "notify":
+                return ExternalChangeMode.notify;
+            default:
+                return ExternalChangeMode.reloadUnmodified;
+        }
+    }
+
+    /// true if editors save through a temporary file renamed over the target (EditableContent.atomicSave)
+    @property bool atomicSave() { return editorSettings.getBoolean("atomicSave", true); }
 
     @property double fontGamma() {
         double gamma = uiSettings.getFloating("fontGamma", 1.0);

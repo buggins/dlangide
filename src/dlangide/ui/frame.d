@@ -445,14 +445,11 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
         }
         _wsPanel.setFileMark(source.id, FileMark.Unsaved, modified);
         if (!modified) {
-            // saved (or changes undone): the file exists again
+            // the saved file has U+FFFD instead of the invalid bytes (not on undo to the loaded state)
             if (DSourceEdit ed = cast(DSourceEdit)source) {
-                ed.hideMessage(DELETED_FILE_MESSAGE);
-                // the saved file has U+FFFD instead of the invalid bytes (not on undo to the loaded state)
                 if (!ed.content.invalidCharCount)
                     ed.hideMessage(INVALID_CHARS_MESSAGE);
             }
-            _deletedFileKept.remove(source.id);
         }
     }
 
@@ -509,6 +506,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                 tab.objectParam = file;
                 editor.modifiedStateChange = &onModifiedStateChange;
                 editor.messageAction = &onEditorMessageAction;
+                editor.deletedFileKeptOpen = &onDeletedFileKeptOpen;
                 if (file) {
                     editor.breakpointListChanged = this; //onBreakpointListChanged
                     editor.bookmarkListChanged = this; //onBreakpointListChanged
@@ -680,70 +678,56 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
     /// save all modified documents (File -> Save all)
     void saveAllDocuments() {
         foreach (ed; allOpenedEditors()) {
-            if (ed.content.modified && !ed.save())
-                return; // the error is shown; stop instead of showing one message per file
+            if (ed.content.modified && !saveDocument(ed))
+                return; // stop instead of showing one message per file
         }
     }
 
-    /// id of the editor message bar shown when the file of an editor with unsaved changes is deleted on disk
-    enum DELETED_FILE_MESSAGE = "deleted-on-disk";
-    /// files deleted on disk for which the user chose Keep (don't show the message again until saved or recreated)
-    protected bool[string] _deletedFileKept;
+    /// saves an editor's text (DSourceEdit.saveChecked); if it isn't saved (an error is shown, or the editor asks
+    /// whether to overwrite a file changed on disk), its tab is selected and false is returned; afterSaveQuestion
+    /// runs if the user then chooses Overwrite (and the text is saved) or Reload
+    protected bool saveDocument(DSourceEdit ed, void delegate() afterSaveQuestion = null) {
+        if (ed.saveChecked(afterSaveQuestion))
+            return true;
+        _tabs.selectTab(ed.id);
+        return false;
+    }
 
-    /// close editor tabs for which files are removed from filesystem;
-    /// tabs with unsaved edits are kept open and show a message bar: Keep / Save / Close
+    /**
+    Workspace > Refresh: closes editor tabs of files removed from the file system that have no unsaved changes, and
+    checks the other editors for changes by other programs (reload or message bar, as set in Preferences > Editors;
+    the editors also check their file when they get the focus).
+    */
     void closeRemovedDocuments() {
         import std.file;
         for (int i = _tabs.tabCount - 1; i >= 0; i--) {
             DSourceEdit ed = cast(DSourceEdit)_tabs.tabBody(i);
             if (!ed)
                 continue;
-            if (!exists(ed.id) || !isFile(ed.id)) {
-                if (ed.content.modified) {
-                    if (!ed.findMessage(DELETED_FILE_MESSAGE) && !(ed.id in _deletedFileKept)) {
-                        ed.showMessage(DELETED_FILE_MESSAGE, UIString.fromId("MSG_FILE_DELETED_UNSAVED"c).value,
-                            EditorMessageKind.Warning, [
-                                // Ignore: the bar dismisses itself
-                                new Action(StandardAction.Ignore, "ACTION_KEEP"c),
-                                ACTION_SAVE,
-                                // not StandardAction.Close, so that the bar stays if closing is cancelled
-                                new Action(IDEActions.WindowCloseDocument, "ACTION_CLOSE"c),
-                            ]);
-                        _logPanel.logLine(trMsg("MSG_FILE_DELETED_KEPT_OPEN", "file", ed.id));
-                    }
-                } else {
-                    closeTab(ed.id);
-                }
-            } else {
-                // the file is back (e.g. restored by git): no more "deleted" message
-                ed.hideMessage(DELETED_FILE_MESSAGE);
-                _deletedFileKept.remove(ed.id);
-            }
+            bool missing = !exists(ed.id) || !isFile(ed.id);
+            FileChangeKind kind = ed.checkExternalChange();
+            // not when the user chose Keep for the deleted file: the check then reports no change
+            if (!ed.content.modified && missing
+                    && (kind == FileChangeKind.deleted || ed.externalChangeMode == ExternalChangeMode.ignore))
+                closeTab(ed.id);
         }
+    }
+
+    /// the "file deleted" message appeared in an editor with unsaved changes
+    protected void onDeletedFileKeptOpen(DSourceEdit ed) {
+        _logPanel.logLine(trMsg("MSG_FILE_DELETED_KEPT_OPEN", "file", ed.id));
     }
 
     /// buttons of editor message bars
     protected bool onEditorMessageAction(EditBox source, string messageId, const Action action) {
         DSourceEdit ed = cast(DSourceEdit)source;
-        if (!ed || messageId != DELETED_FILE_MESSAGE)
-            return false;
-        string filename = ed.id;
-        switch (action.id) {
-            case StandardAction.Ignore: // Keep: the bar is hidden by the editor
-                _deletedFileKept[filename] = true;
-                return true;
-            case StandardAction.Save: // recreate the file with the editor content
-                if (ed.save()) {
-                    ed.hideMessage(DELETED_FILE_MESSAGE);
-                    _deletedFileKept.remove(filename);
-                }
-                return true;
-            case IDEActions.WindowCloseDocument: // close the tab, asking about the unsaved changes as usual
-                onTabClose(filename);
-                return true;
-            default:
-                return false;
-        }
+        if (!ed || messageId != EditBox.EXTERNAL_CHANGE_MESSAGE_ID || action.id != IDEActions.WindowCloseDocument)
+            return false; // the editor handles the other buttons of its external change message
+        // Close on the "file deleted" bar: close the tab, asking about the unsaved changes as usual; posted, because
+        // closing the tab destroys the editor and the bar, which is still handling the click
+        string tabId = ed.id;
+        window.executeInUiThread(delegate() { onTabClose(tabId); });
+        return true;
     }
 
     /// returns first unsaved document
@@ -755,6 +739,20 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             }
         }
         return null;
+    }
+
+    /// Save all when closing: saves the modified editors, then closes all tabs and calls onConfirm; stops at a failed
+    /// save (or this would never end, #212) and at a file changed on disk (goes on if the user chooses Overwrite)
+    protected void saveAllAndClose(void delegate() onConfirm) {
+        for (;;) {
+            DSourceEdit editor = hasUnsavedEdits();
+            if (!editor)
+                break;
+            if (!saveDocument(editor, delegate() { saveAllAndClose(onConfirm); }))
+                return;
+        }
+        closeAllDocuments();
+        onConfirm();
     }
 
     protected void askForUnsavedEdits(void delegate() onConfirm) {
@@ -771,8 +769,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
             [ACTION_SAVE, ACTION_SAVE_ALL, ACTION_DISCARD_CHANGES, ACTION_DISCARD_ALL, ACTION_CANCEL], 
             0, delegate(const Action result) {
                 if (result == StandardAction.Save) {
-                    // save and close; if saving fails, the error is shown and nothing is closed (#212)
-                    if (!ed.save())
+                    // save and close; if saving fails, the error is shown and nothing is closed (#212); if the file
+                    // was changed on disk, the editor asks whether to overwrite it
+                    if (!saveDocument(ed, delegate() { askForUnsavedEdits(onConfirm); }))
                         return true;
                     askForUnsavedEdits(onConfirm);
                 } else if (result == StandardAction.DiscardChanges) {
@@ -781,18 +780,7 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     closeAllDocuments();
                     onConfirm();
                 } else if (result == StandardAction.SaveAll) {
-                    // a failed save keeps the editor modified: stop, or this loop would never end (#212)
-                    if (!ed.save())
-                        return true;
-                    for(;;) {
-                        DSourceEdit editor = hasUnsavedEdits();
-                        if (!editor)
-                            break;
-                        if (!editor.save())
-                            return true;
-                    }
-                    closeAllDocuments();
-                    onConfirm();
+                    saveAllAndClose(onConfirm);
                 } else if (result == StandardAction.DiscardAll) {
                     // close, don't save
                     closeAllDocuments();
@@ -814,8 +802,9 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                     [ACTION_SAVE, ACTION_DISCARD_CHANGES, ACTION_CANCEL], 
                     0, delegate(const Action result) {
                         if (result == StandardAction.Save) {
-                            // save and close; keep the tab open if saving fails (the error is shown)
-                            if (d.save())
+                            // save and close; keep the tab open if saving fails (the error is shown) or the
+                            // editor asks whether to overwrite a file changed on disk
+                            if (saveDocument(d, delegate() { closeTab(tabId); }))
                                 closeTab(tabId);
                         } else if (result == StandardAction.DiscardChanges) {
                             // close, don't save
@@ -1307,10 +1296,12 @@ class IDEFrame : AppFrame, ProgramExecutionStatusListener, BreakpointListChangeL
                         if (result.id == ACTION_SAVE.id) {
                             string oldfilename = ed.filename;
                             string filename = result.stringParam;
-                            if (!ed.save(filename))
+                            // the same file: ask if it was changed on disk (and go on with nothing else to do)
+                            if (oldfilename == filename ? !saveDocument(ed) : !ed.save(filename))
                                 return; // the error is shown; the tab keeps the old file
                             if (oldfilename == filename)
                                 return;
+                            ed.checkExternalChange(); // hides a message about the old file
                             renameTab(oldfilename, filename);
                             ed.id = filename;
                             ed.setSyntaxSupport();

@@ -519,7 +519,7 @@ extern (C) int UIAppMain(string[] args) {
 immutable string DUB_JSON_DLANGUI_HELLOWORLD = q{
 {
     "dependencies": {
-        "dlangui": "~>0.24.0"
+        "dlangui": "~>0.25.0"
     }
 }
 
